@@ -2,37 +2,43 @@ package DveAgent.common;
 
 import lombok.Data;
 
+import java.sql.Timestamp;
 import java.util.HashMap;
 import java.util.Map;
 
 @Data
 public class R<T> {
 
-    private Integer code; //编码：1成功，0和其它数字为失败
+    private Integer version; //版本
+    private Timestamp timestamp;//时间
+    private String sender;//发送者
+    private String receiver;//接受者
+    private String type;//功能分区
+    private String auth;//密钥
 
-    private String msg; //错误信息
+    private Body<T> body = new Body<>();//请求体
 
-    private T data; //数据
-
-    private Map map = new HashMap(); //动态数据
-
-    public static <T> R<T> success(T object) {
+    public static <T> R<T> success(T object,String msg) {
         R<T> r = new R<T>();
-        r.data = object;
-        r.code = 1;
+        r.body.setData(object);
+        r.body.setMessage(msg);
+        r.body.setCode(1);
         return r;
     }
 
     public static <T> R<T> error(String msg) {
         R r = new R();
-        r.msg = msg;
-        r.code = 0;
+        r.body.setMessage(msg);
+        r.body.setCode(0);
         return r;
     }
 
-    public R<T> add(String key, Object value) {
-        this.map.put(key, value);
-        return this;
-    }
+}
 
+@Data
+class Body<T> {
+    private String method;
+    private int code;
+    private String message;
+    private T data;
 }

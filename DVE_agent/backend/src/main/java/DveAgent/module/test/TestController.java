@@ -1,5 +1,7 @@
 package DveAgent.module.test;
 
+import DveAgent.common.R;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -10,5 +12,11 @@ public class TestController {
     @RequestMapping("/hello")
     public String hello(){
         return "hello swagger";
+    }
+
+    @PostMapping("/message")
+    public R<?> messaage()
+    {
+        return  R.success("123","123");
     }
 }
