@@ -1,10 +1,12 @@
 package DveAgent.entity;
 
+import com.baomidou.mybatisplus.annotation.TableId;
 import lombok.Data;
 
 @Data
 public class MpcTask {
 
+  @TableId
   private long uid;
   private long applicationId;
   private long centerId;

@@ -26,6 +26,13 @@ public class R<T> {
         return r;
     }
 
+    public static <T> R<T> success(String msg) {
+        R<T> r = new R<T>();
+        r.body.setMessage(msg);
+        r.body.setCode(1);
+        return r;
+    }
+
     public static <T> R<T> error(String msg) {
         R r = new R();
         r.body.setMessage(msg);
@@ -35,10 +42,3 @@ public class R<T> {
 
 }
 
-@Data
-class Body<T> {
-    private String method;
-    private int code;
-    private String message;
-    private T data;
-}
