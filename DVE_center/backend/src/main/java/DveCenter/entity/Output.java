@@ -1,10 +1,12 @@
 package DveCenter.entity;
 
+import com.baomidou.mybatisplus.annotation.TableId;
 import lombok.Data;
 
 @Data
 public class Output {
 
+    @TableId
     private long uid;
     private String name;
     private String type;

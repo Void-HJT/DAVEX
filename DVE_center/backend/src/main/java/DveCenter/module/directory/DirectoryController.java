@@ -48,7 +48,7 @@ public class DirectoryController {
             // 保存文件到目标路径
             Files.copy(file.getInputStream(), targetLocation);
 
-            return "File uploaded successfully: " + targetLocation.toString();
+            return "DveCenter.module.File uploaded successfully: " + targetLocation.toString();
         } catch (IOException ex) {
             ex.printStackTrace();
             return "Could not upload the file: " + ex.getMessage();
