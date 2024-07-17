@@ -1,10 +1,11 @@
 package DveAgent.entity;
 
+import com.baomidou.mybatisplus.annotation.TableId;
 import lombok.Data;
 
 @Data
 public class Agent {
-
+  @TableId
   private long uid;
   private String name;
   private String ip;
