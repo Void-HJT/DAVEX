@@ -9,16 +9,16 @@ import java.util.Map;
 @Data
 public class R<T> {
 
-    private Integer version; //版本
-    private Timestamp timestamp;//时间
-    private String sender;//发送者
-    private String receiver;//接受者
-    private String type;//功能分区
-    private String auth;//密钥
+    private Integer version; // 版本
+    private Timestamp timestamp;// 时间
+    private String sender;// 发送者
+    private String receiver;// 接受者
+    private String type;// 功能分区
+    private String auth;// 密钥
 
-    private Body<T> body = new Body<>();//请求体
+    private Body<T> body = new Body<>();// 请求体
 
-    public static <T> R<T> success(T object,String msg) {
+    public static <T> R<T> success(T object, String msg) {
         R<T> r = new R<T>();
         r.body.setData(object);
         r.body.setMessage(msg);
@@ -33,12 +33,11 @@ public class R<T> {
         return r;
     }
 
-    public static <T> R<T> error(String msg) {
-        R r = new R();
+    public static R<String> error(String msg) {
+        R<String> r = new R<String>();
         r.body.setMessage(msg);
         r.body.setCode(0);
         return r;
     }
 
 }
-

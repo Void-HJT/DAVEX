@@ -1,5 +1,20 @@
+version: "1.0"
+my:
+  id: 123
+  ip: "10.176.34.173"
+
 server:
   port: 8080
+  ssl:
+    enabled: true
+    key-store: classpath:keystore.p12
+    key-store-type: PKCS12
+    key-store-password: your_pass
+    key-alias: alias
+    protocol: TLS
+    enabled-protocols: TLSv1.2
+    # client-auth: need
+
 spring:
   application:
     # 应用的名称，选择性配置
@@ -12,7 +27,7 @@ spring:
       password: Drt1951725
   mvc:
     pathmatch:
-      matching-strategy: ant_path_matcher
+      matching-strategy: ANT_PATH_MATCHER
 mybatis-plus:
   configuration:
     #在映射实体或者属性时，将数据库中表名和字段名中的下划线去掉，按照驼峰命名法映射
