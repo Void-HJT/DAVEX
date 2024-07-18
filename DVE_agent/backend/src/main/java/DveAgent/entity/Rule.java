@@ -12,7 +12,6 @@ public class Rule {
   private long groupId;
   private String allowedMethod;
 
-
   public long getUid() {
     return uid;
   }
@@ -42,10 +41,6 @@ public class Rule {
 
   public String getAllowedMethod() {
     return allowedMethod;
-  }
-
-  public void setAllowedMethod(String allowedMethod) {
-    this.allowedMethod = allowedMethod;
   }
 
 }
