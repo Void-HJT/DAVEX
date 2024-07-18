@@ -10,12 +10,13 @@ public class Output {
     private long uid;
     private String name;
     private String type;
-    private java.sql.Timestamp downloadDate;
+    private java.sql.Timestamp uploadDate;
     private String tag;
     private long size;
     private String description;
     private String path;
     private java.sql.Timestamp expiredTime;
+    private String hash;
 
 
     public long getUid() {
@@ -42,12 +43,12 @@ public class Output {
         this.type = type;
     }
 
-    public java.sql.Timestamp getDownloadDate() {
-        return downloadDate;
+    public java.sql.Timestamp getUploadDate() {
+        return uploadDate;
     }
 
-    public void setDownloadDate(java.sql.Timestamp downloadDate) {
-        this.downloadDate = downloadDate;
+    public void setUploadDate(java.sql.Timestamp uploadDate) {
+        this.uploadDate = uploadDate;
     }
 
     public String getTag() {
@@ -88,5 +89,13 @@ public class Output {
 
     public void setExpiredTime(java.sql.Timestamp expiredTime) {
         this.expiredTime = expiredTime;
+    }
+
+    public String getHash() {
+        return hash;
+    }
+
+    public void setHash(String hash) {
+        this.hash = hash;
     }
 }

@@ -1,15 +1,19 @@
 package DveCenter.entity;
 
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableId;
 import lombok.Data;
 
 @Data
 public class Task {
 
+    @TableId(type = IdType.AUTO)
     private long uid;
     private long fileId;
     private long agentId;
     private long applicationId;
     private long outputId;
+    private java.sql.Timestamp downloadTime;
 
 
     public long getUid() {
@@ -50,5 +54,13 @@ public class Task {
 
     public void setOutputId(long outputId) {
         this.outputId = outputId;
+    }
+
+    public java.sql.Timestamp getDownloadTime() {
+        return downloadTime;
+    }
+
+    public void setDownloadTime(java.sql.Timestamp downloadTime) {
+        this.downloadTime = downloadTime;
     }
 }

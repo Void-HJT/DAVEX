@@ -1,10 +1,12 @@
 package DveCenter.entity;
 
+import com.baomidou.mybatisplus.annotation.TableId;
 import lombok.Data;
 
 @Data
 public class File {
 
+  @TableId
   private long uid;
   private long agentId;
 
