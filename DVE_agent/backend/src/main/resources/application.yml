@@ -1,5 +1,5 @@
 server:
-  port: 8080
+  port: 9090
 spring:
   application:
     # 应用的名称，选择性配置
@@ -9,7 +9,7 @@ spring:
       driver-class-name: com.mysql.cj.jdbc.Driver
       url: jdbc:mysql://localhost:3306/test?useUnicode=true&characterEncoding=utf-8&useSSL=true&serverTimezone=GMT%2B8
       username: root
-      password: Drt1951725
+      password: newpass
   mvc:
     pathmatch:
       matching-strategy: ant_path_matcher
