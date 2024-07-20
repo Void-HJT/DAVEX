@@ -59,4 +59,12 @@ public class FileController {
 
         return fileService.queryFile();
     }
+
+
+    // application文件删除接口
+    @PostMapping("/delete")
+    public Body<String> delete(@RequestParam("fileId") Integer fileId) {
+
+        return fileService.deleteFile(fileId);
+    }
 }

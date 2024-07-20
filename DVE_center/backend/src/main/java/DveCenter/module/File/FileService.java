@@ -10,6 +10,7 @@ import DveCenter.mapper.TaskMapper;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -34,6 +35,8 @@ public class FileService {
     private OutputMapper outputMapper;
     @Autowired
     private TaskMapper taskMapper;
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
 
     public Body<String> uploadFile(MultipartFile file, Integer fileId, String base, java.sql.Timestamp expiredTime) {
 
@@ -131,5 +134,39 @@ public class FileService {
 
         List<Output> outputs = outputMapper.selectList(null);
         return Body.success(outputs, "查询成功");
+    }
+
+
+    public Body<String> deleteFile(Integer fileId) {
+
+        // 根据文件id查找结果表
+        LambdaQueryWrapper<Output> queryWrapper = Wrappers.<Output>lambdaQuery()
+                .eq(Output::getUid, fileId);
+        Output queryOutput = outputMapper.selectOne(queryWrapper);
+        if(queryOutput == null){return Body.error("找不到该文件");}
+        String filePath = queryOutput.getPath();
+        String fileName = queryOutput.getName();
+
+        // 禁用外键检查
+        jdbcTemplate.execute("SET FOREIGN_KEY_CHECKS = 0");
+
+        // 删除文件及结果表
+        try {
+            outputMapper.deleteById(fileId);
+            java.io.File file = new java.io.File(filePath);
+            //路径是个文件且不为空时删除文件
+            if(file.isFile() && file.exists()) {
+                file.delete();
+            }
+            // 启用外键检查
+            jdbcTemplate.execute("SET FOREIGN_KEY_CHECKS = 1");
+        } catch (Exception e) {
+            // 确保在异常情况下重新启用外键检查
+            jdbcTemplate.execute("SET FOREIGN_KEY_CHECKS = 1");
+            e.printStackTrace();
+            return Body.error("删除失败: " + e.getMessage());
+        }
+
+        return Body.success("删除成功");
     }
 }
