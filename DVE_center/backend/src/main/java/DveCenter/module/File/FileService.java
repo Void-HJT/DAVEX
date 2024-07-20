@@ -44,7 +44,7 @@ public class FileService {
         LambdaQueryWrapper<File> queryWrapper = Wrappers.<File>lambdaQuery()
                 .eq(File::getUid, fileId);
         File queryFile = fileMapper.selectOne(queryWrapper);
-        if(queryFile == null){return Body.error("找不到该文件");}
+        if(queryFile == null){return Body.error(String.format("找不到该文件，文件id: %d", fileId));}
 
         // 文件信息加入结果表
         // 若已存在，则进行覆盖
@@ -52,7 +52,9 @@ public class FileService {
                 .eq(Output::getUid, fileId);
         Output queryOutput = outputMapper.selectOne(queryWrapper1);
         if(queryOutput != null){
+            jdbcTemplate.execute("SET FOREIGN_KEY_CHECKS = 0");
             outputMapper.deleteById(fileId);
+            jdbcTemplate.execute("SET FOREIGN_KEY_CHECKS = 1");
         }
         Output newOutput = new Output();
         String fileName = queryFile.getName();
@@ -75,9 +77,9 @@ public class FileService {
 
         } catch (IOException e) {
             e.printStackTrace();
-            return Body.error("上传失败: " + e.getMessage());
+            return Body.error(String.format("上传失败: 文件id %d，文件名: %s，错误信息: %s", fileId, fileName, e.getMessage()));
         }
-        return Body.success("上传成功");
+        return Body.success(String.format("上传成功，文件id: %d，文件名: %s", fileId, fileName));
     }
 
 
@@ -87,11 +89,12 @@ public class FileService {
         LambdaQueryWrapper<Output> queryWrapper = Wrappers.<Output>lambdaQuery()
                 .eq(Output::getUid, fileId);
         Output queryOutput = outputMapper.selectOne(queryWrapper);
-        if(queryOutput == null){return Body.error("找不到该文件");}
+        if(queryOutput == null){return Body.error(String.format("找不到该文件，文件id: %d", fileId));}
         // 判断文件是否过期
         Timestamp expiredTime = queryOutput.getExpiredTime();
         if (expiredTime != null && LocalDateTime.now().isAfter(expiredTime.toLocalDateTime())) {
-            return Body.error("该文件已过期");
+            return Body.error(String.format("该文件已过期，文件id: %d，文件名: %s，失效时间: %s", fileId, queryOutput.getName(),
+                    queryOutput.getExpiredTime()));
         }
 
         // 添加下载任务记录到任务表
@@ -124,16 +127,17 @@ public class FileService {
             os.flush();
         } catch (Exception e) {
             e.printStackTrace();
-            return Body.error("下载失败: " + e.getMessage());
+            return Body.error(String.format("下载失败: 文件id %d，文件名: %s，错误信息: %s", fileId, fileName, e.getMessage()));
         }
-        return Body.success("下载成功");
+        return Body.success(String.format("下载成功，文件id: %d，文件名: %s", fileId, fileName));
     }
 
 
     public Body<List<Output>> queryFile() {
 
         List<Output> outputs = outputMapper.selectList(null);
-        return Body.success(outputs, "查询成功");
+        Integer fileNum = outputs.size();
+        return Body.success(outputs, String.format("查询成功，共查询到%d个文件", fileNum));
     }
 
 
@@ -143,7 +147,7 @@ public class FileService {
         LambdaQueryWrapper<Output> queryWrapper = Wrappers.<Output>lambdaQuery()
                 .eq(Output::getUid, fileId);
         Output queryOutput = outputMapper.selectOne(queryWrapper);
-        if(queryOutput == null){return Body.error("找不到该文件");}
+        if(queryOutput == null){return Body.error(String.format("找不到该文件，文件id: %d", fileId));}
         String filePath = queryOutput.getPath();
         String fileName = queryOutput.getName();
 
@@ -164,9 +168,9 @@ public class FileService {
             // 确保在异常情况下重新启用外键检查
             jdbcTemplate.execute("SET FOREIGN_KEY_CHECKS = 1");
             e.printStackTrace();
-            return Body.error("删除失败: " + e.getMessage());
+            return Body.error(String.format("删除失败: 文件id %d，文件名: %s，错误信息: %s", fileId, fileName, e.getMessage()));
         }
 
-        return Body.success("删除成功");
+        return Body.success(String.format("删除成功，文件id: %d，文件名: %s", fileId, fileName));
     }
 }
