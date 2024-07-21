@@ -24,6 +24,7 @@ import java.net.URLEncoder;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -80,6 +81,76 @@ public class FileService {
             return Body.error(String.format("上传失败: 文件id %d，文件名: %s，错误信息: %s", fileId, fileName, e.getMessage()));
         }
         return Body.success(String.format("上传成功，文件id: %d，文件名: %s", fileId, fileName));
+    }
+
+
+    public Body<List<String>> uploadFiles(List<MultipartFile> files, List<Integer> fileIds, String base, List<java.sql.Timestamp> expiredTimes) {
+        List<String> results = new ArrayList<>();
+
+        if (files.size() != fileIds.size() || files.size() != expiredTimes.size()) {
+            return Body.error("文件数量、文件ID数量和失效时间数量不匹配");
+        }
+
+        boolean flag = true;
+        for (int i = 0; i < files.size(); i++) {
+            MultipartFile file = files.get(i);
+            Integer fileId = fileIds.get(i);
+            java.sql.Timestamp expiredTime = expiredTimes.get(i);
+
+            // 根据文件id查找文件表
+            LambdaQueryWrapper<File> queryWrapper = Wrappers.<File>lambdaQuery()
+                    .eq(File::getUid, fileId);
+            File queryFile = fileMapper.selectOne(queryWrapper);
+            if (queryFile == null) {
+                results.add(String.format("找不到该文件，文件id: %d", fileId));
+                flag = false;
+                continue;
+            }
+
+            // 文件信息加入结果表
+            // 若已存在，则进行覆盖
+            LambdaQueryWrapper<Output> queryWrapper1 = Wrappers.<Output>lambdaQuery()
+                    .eq(Output::getUid, fileId);
+            Output queryOutput = outputMapper.selectOne(queryWrapper1);
+            if (queryOutput != null) {
+                jdbcTemplate.execute("SET FOREIGN_KEY_CHECKS = 0");
+                outputMapper.deleteById(fileId);
+                jdbcTemplate.execute("SET FOREIGN_KEY_CHECKS = 1");
+            }
+            Output newOutput = new Output();
+            String fileName = queryFile.getName();
+            newOutput.setUid(fileId);
+            newOutput.setName(queryFile.getName());
+            newOutput.setType(queryFile.getType());
+            newOutput.setUploadDate(Timestamp.valueOf(LocalDateTime.now()));
+            newOutput.setTag(queryFile.getTag());
+            newOutput.setSize(queryFile.getSize());
+            newOutput.setDescription(queryFile.getDescription());
+            newOutput.setPath(base + fileName);
+            newOutput.setExpiredTime(expiredTime);
+            newOutput.setHash(queryFile.getHash());
+            outputMapper.insert(newOutput);
+
+            // 存储文件到结果管理区
+            try {
+                // 新建一个文件路径
+                java.io.File uploadFile = new java.io.File(base + fileName);
+                // 当父级目录不存在时，自动创建
+                if (!uploadFile.getParentFile().exists()) {
+                    uploadFile.getParentFile().mkdirs();
+                }
+                // 存储文件到电脑磁盘
+                file.transferTo(uploadFile);
+                results.add(String.format("上传成功，文件id: %d，文件名: %s", fileId, fileName));
+            } catch (IOException e) {
+                e.printStackTrace();
+                results.add(String.format("上传失败: 文件id %d，文件名: %s，错误信息: %s", fileId, fileName, e.getMessage()));
+                flag = false;
+            }
+        }
+
+        if (flag == false) return Body.error(results, "部分文件上传失败");
+        return Body.success(results, "文件上传处理完成");
     }
 
 

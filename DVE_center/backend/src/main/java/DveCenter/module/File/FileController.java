@@ -16,6 +16,7 @@ import java.net.URLEncoder;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.stream.Collectors;
 
 // 定义接口路径
 @RestController
@@ -26,7 +27,9 @@ public class FileController {
     private FileService fileService;
 
     // 结果文件存储位置，比如 D:\\, 我这里使用的是本项目的路径
-    private static final String BASE_DIR = "C:\\FDU\\IdeaProject\\DVE\\files\\";
+    private static final String UPLOAD_BASE_DIR = "C:\\FDU\\IdeaProject\\DVE\\files\\";
+    // application输入文件存储位置
+    private static final String INPUT_BASE_DIR = "C:\\FDU\\IdeaProject\\DVE\\inputs\\";
 
     // agent文件上传接口
     @PostMapping("/upload")
@@ -39,7 +42,28 @@ public class FileController {
             expiredTime = java.sql.Timestamp.from(Instant.now().plus(7, ChronoUnit.DAYS));
         }
 
-        return fileService.uploadFile(file, fileId, BASE_DIR, expiredTime);
+        return fileService.uploadFile(file, fileId, UPLOAD_BASE_DIR, expiredTime);
+    }
+
+
+    @PostMapping("/uploads")
+    public Body<List<String>> uploads(@RequestParam("files") List<MultipartFile> files,
+                                     @RequestParam("fileIds") List<Integer> fileIds,
+                                     @RequestParam(value = "expiredTimes", required = false) List<java.sql.Timestamp> expiredTimes) {
+
+        // 如果没有提供失效时间，则设置默认值为当前时间的一周后
+        if (expiredTimes == null) {
+            expiredTimes = files.stream()
+                    .map(f -> java.sql.Timestamp.from(Instant.now().plus(7, ChronoUnit.DAYS)))
+                    .collect(Collectors.toList());
+        }
+
+        // 确保失效时间的数量与文件数量匹配
+        if (expiredTimes.size() != files.size()) {
+            return Body.error("失效时间数量和文件数量不匹配");
+        }
+
+        return fileService.uploadFiles(files, fileIds, UPLOAD_BASE_DIR, expiredTimes);
     }
 
 
