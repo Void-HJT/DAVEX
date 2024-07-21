@@ -5,42 +5,31 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import DveAgent.entity.MpcTask;
+import DveAgent.entity.MpcTaskAgent;
 import DveAgent.module.task.service.MpcTaskService;
 import java.util.Optional;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import java.util.List;
+
 
 @RestController
-@RequestMapping("/api/mpcTask") // 添加基路径，使 API 更加清晰
+@RequestMapping("/MpcTasks")
 public class MpcTaskController {
 
     @Autowired
-    private MpcTaskService mpcTaskService;
+    private MpcTaskService MpcTaskService;
 
-    @PostMapping("/add")
-    public ResponseEntity<String> addMpcTask(@RequestBody MpcTask mpcTask) {
-        try {
-            Long mpcTaskId = mpcTask.getUid();
+    @PostMapping("createMpcTask")
+    public MpcTask createMpcTask(@RequestBody MpcTask mpcTask) {
+        //需要修改一下 还要先填好
+        return MpcTaskService.createMpcTask(mpcTask);
+    }
 
-            if (mpcTaskId != null) {
-                Optional<MpcTask> existingMpcTask = mpcTaskService.getMpcTaskById(mpcTaskId);
-                if (existingMpcTask.isPresent()) {
-                    boolean result = mpcTaskService.saveMpcTask(mpcTask);
-                    if (result) {
-                        return ResponseEntity.ok("Task successfully updated.");
-                    } else {
-                        return ResponseEntity.status(500).body("Failed to update task.");
-                    }
-                }
-            } 
-            
-            boolean result = mpcTaskService.saveMpcTask(mpcTask);
-            if (result) {
-                return ResponseEntity.ok("Task successfully added.");
-            } else {
-                return ResponseEntity.status(500).body("Failed to add task.");
-            }
-            
-        } catch (Exception e) {
-            return ResponseEntity.status(500).body("An error occurred: " + e.getMessage());
-        }
+    @PostMapping("/{mpcTaskId}/agents")
+    //根据mpcTaskId将agents添加到MpcTaskAgent表中
+    public void addAgentToMPCTask(@PathVariable Long mpcTaskId, @RequestBody List<MpcTaskAgent> agents) {
+        MpcTaskService.addAgentToMPCTask(mpcTaskId, agents);
+        //如果存成功了 就把这几个表发送给对应的agent 还得发mpcTask表
     }
 }

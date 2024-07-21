@@ -1,5 +1,5 @@
 server:
-  port: 9090
+  port: 9999
 spring:
   application:
     # 应用的名称，选择性配置
@@ -7,8 +7,8 @@ spring:
   datasource:
     druid:
       driver-class-name: com.mysql.cj.jdbc.Driver
-      url: jdbc:mysql://localhost:3306/test?useUnicode=true&characterEncoding=utf-8&useSSL=true&serverTimezone=GMT%2B8
-      username: root
+      url: jdbc:mysql://localhost:3306/mydatabase?useUnicode=true&characterEncoding=utf-8&useSSL=true&serverTimezone=GMT%2B8
+      username: zw
       password: newpass
   mvc:
     pathmatch:

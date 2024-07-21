@@ -8,7 +8,7 @@ import lombok.Data;
 
 @Data
 @EntityScan
-@TableName("mpc_task")
+@TableName("mpcTask")
 public class MpcTask {
 
   private long uid;
