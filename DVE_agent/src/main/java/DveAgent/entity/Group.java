@@ -8,6 +8,7 @@ import lombok.Data;
 @TableName("`group`")//防止识别成group语句
 public class Group {
 
+  @TableId
   private long uid;
   private long agentId;
   private long centerId;
