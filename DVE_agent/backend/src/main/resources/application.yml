@@ -4,6 +4,10 @@ spring:
   application:
     # 应用的名称，选择性配置
     name: DveAgent
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
   datasource:
     druid:
       driver-class-name: com.mysql.cj.jdbc.Driver
