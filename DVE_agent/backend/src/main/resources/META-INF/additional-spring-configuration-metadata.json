@@ -13,5 +13,40 @@
     "name": "my.ip",
     "type": "java.lang.String",
     "description": "A description for 'my.ip'"
+  },
+  {
+    "name": "ssl.key-store-type",
+    "type": "java.lang.String",
+    "description": "A description for 'ssl.key-store-type'"
+  },
+  {
+    "name": "ssl.keystore-path",
+    "type": "java.lang.String",
+    "description": "A description for 'ssl.keystore-path'"
+  },
+  {
+    "name": "ssl.key-store-password",
+    "type": "java.lang.String",
+    "description": "A description for 'ssl.key-store-password'"
+  },
+  {
+    "name": "ssl.truststore-path",
+    "type": "java.lang.String",
+    "description": "A description for 'ssl.truststore-path'"
+  },
+  {
+    "name": "ssl.trust-store-password",
+    "type": "java.lang.String",
+    "description": "A description for 'ssl.trust-store-password'"
+  },
+  {
+    "name": "ssl.client-auth",
+    "type": "java.lang.String",
+    "description": "A description for 'ssl.client-auth'"
+  },
+  {
+    "name": "my.name",
+    "type": "java.lang.String",
+    "description": "A description for 'my.name'"
   }
 ]}

@@ -30,3 +30,4 @@ build/
 !**/src/test/**/build/
 
 src/main/resources/*.p12
+src/main/resources/*.jks

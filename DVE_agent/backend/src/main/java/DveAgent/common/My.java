@@ -12,15 +12,38 @@ import javax.annotation.PostConstruct;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.stereotype.Component;
 
-import DveAgent.config.SslProperties;
+import DveAgent.entity.Agent;
+import nl.altindag.ssl.SSLFactory;
 
 @Component
 public class My {
     @Value("${version}")
     private String version;
+
+    @Value("${my.name}")
+    private String name;
+
+    private Agent agent;
+
+    public Agent getAgent() {
+        return agent;
+    }
+
+    public void setAgent(Agent agent) {
+        this.agent = agent;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
 
     @Value("${my.id}")
     private int id;
@@ -31,20 +54,38 @@ public class My {
     @Value("${server.port}")
     private int port;
 
-    @Autowired
-    private SslProperties sslProperties;
+    @Value("${ssl.keystore-path}")
+    private String keyStorePath;
 
-    public SslProperties getSslProperties() {
-        return sslProperties;
-    }
+    @Value("${ssl.keystore-password}")
+    private String keyStorePassword;
 
-    public void setSslProperties(SslProperties sslProperties) {
-        this.sslProperties = sslProperties;
-    }
+    @Value("${ssl.truststore-path}")
+    private String trustStorePath;
+
+    @Value("${ssl.truststore-password}")
+    private String trustStorePassword;
+
+    @Value("${ssl.key-store-type}")
+    private String keyStoreType;
+
+    private KeyStore keyStore;
+
+    private KeyStore trustStore;
 
     private PrivateKey privateKey;
 
     private Certificate certificate;
+
+    private SSLFactory baseSslFactory;
+
+    public SSLFactory getBaseSslFactory() {
+        return baseSslFactory;
+    }
+
+    public void setBaseSslFactory(SSLFactory baseSslFactory) {
+        this.baseSslFactory = baseSslFactory;
+    }
 
     public Certificate getCertificate() {
         return certificate;
@@ -54,23 +95,45 @@ public class My {
         this.certificate = certificate;
     }
 
-    @Autowired
-    ResourceLoader resourceLoader;
+    // @Autowired
+    // ResourceLoader resourceLoader;
 
     @PostConstruct
-    public void init() {
+    public void init() throws Exception {
 
-        try (InputStream inputStream = resourceLoader.getResource(sslProperties.getKeyStore()).getInputStream()) {
-            KeyStore keyStore = KeyStore.getInstance(sslProperties.getKeyStoreType());
-            keyStore.load(inputStream, sslProperties.getKeyStorePassword().toCharArray());
-            Key key = keyStore.getKey(sslProperties.getKeyAlias(), sslProperties.getKeyStorePassword().toCharArray());
+        try (InputStream inputStream = new ClassPathResource(keyStorePath).getInputStream()) {
+            keyStore = KeyStore.getInstance(keyStoreType);
+            keyStore.load(inputStream, keyStorePassword.toCharArray());
+            Key key = keyStore.getKey(name, keyStorePassword.toCharArray());
             if (key instanceof PrivateKey) {
                 privateKey = (PrivateKey) key;
-                certificate = keyStore.getCertificate(sslProperties.getKeyAlias());
+                certificate = keyStore.getCertificate(name);
             }
         } catch (Exception e) {
             throw new RuntimeException("Failed to load keys from keystore", e);
         }
+
+        trustStore = KeyStore.getInstance(KeyStore.getDefaultType());
+        trustStore.load(null, null);
+
+        try (InputStream inputStream = new ClassPathResource(trustStorePath).getInputStream()) {
+            trustStore = KeyStore.getInstance(keyStoreType);
+            trustStore.load(inputStream,
+                    trustStorePassword.toCharArray());
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to load trustStore", e);
+        }
+        baseSslFactory = SSLFactory.builder()
+                .withIdentityMaterial(keyStore, keyStorePassword.toCharArray())
+                .withSwappableIdentityMaterial().withSwappableTrustMaterial()
+                .withTrustMaterial(trustStore)
+                .build();
+        agent = new Agent();
+        agent.setUid(id);
+        agent.setName(name);
+        agent.setIp(ip);
+        agent.setPort(port);
+        agent.setCrt(Utlis.certificateToBytes(certificate));
     }
 
     /**
@@ -126,6 +189,62 @@ public class My {
 
     public void setPort(int port) {
         this.port = port;
+    }
+
+    public KeyStore getKeyStore() {
+        return keyStore;
+    }
+
+    public void setKeyStore(KeyStore keyStore) {
+        this.keyStore = keyStore;
+    }
+
+    public KeyStore getTrustStore() {
+        return trustStore;
+    }
+
+    public void setTrustStore(KeyStore trustStore) {
+        this.trustStore = trustStore;
+    }
+
+    public String getKeyStorePath() {
+        return keyStorePath;
+    }
+
+    public void setKeyStorePath(String keyStorePath) {
+        this.keyStorePath = keyStorePath;
+    }
+
+    public String getKeyStorePassword() {
+        return keyStorePassword;
+    }
+
+    public void setKeyStorePassword(String keyStorePassword) {
+        this.keyStorePassword = keyStorePassword;
+    }
+
+    public String getTrustStorePath() {
+        return trustStorePath;
+    }
+
+    public void setTrustStorePath(String trustStorePath) {
+        this.trustStorePath = trustStorePath;
+    }
+
+    public String getTrustStorePassword() {
+        return trustStorePassword;
+    }
+
+    public void setTrustStorePassword(String trustStorePassword) {
+        this.trustStorePassword = trustStorePassword;
+    }
+
+    public String getKeyStoreType() {
+        return keyStoreType;
+    }
+
+    public void setKeyStoreType(String keyStoreType) {
+        this.keyStoreType = keyStoreType;
     }
 
 }

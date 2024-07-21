@@ -10,7 +10,7 @@ public class Agent {
   private String name;
   private String ip;
   private long port;
-  private String crt;
+  private byte[] crt;
   private java.sql.Timestamp lastUpdated;
   private String description;
 
@@ -51,11 +51,11 @@ public class Agent {
   }
 
 
-  public String getCrt() {
+  public byte[] getCrt() {
     return crt;
   }
 
-  public void setCrt(String crt) {
+  public void setCrt(byte[] crt) {
     this.crt = crt;
   }
 

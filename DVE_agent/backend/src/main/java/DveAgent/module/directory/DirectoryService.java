@@ -23,20 +23,25 @@ public class DirectoryService {
     @Autowired
     private FolderMapper folderMapper;
 
-    public Body<String> createFolder(String name, String path,Integer agent_id, Integer parent_id){
-        //1.查询数据库相同父文件夹下是否有同名文件夹
+    public Body<String> createFolder(String name, String path, Integer agent_id, Integer parent_id) {
+        // 1.查询数据库相同父文件夹下是否有同名文件夹
         LambdaQueryWrapper<Folder> queryWrapper = Wrappers.<Folder>lambdaQuery()
-                .eq(Folder::getParentId,parent_id)
-                .eq(Folder::getName,name);
+                .eq(Folder::getParentId, parent_id)
+                .eq(Folder::getName, name);
         List<Folder> folderList = folderMapper.selectList(queryWrapper);
-        if(!folderList.isEmpty()){return Body.error("重名文件夹");}
-        //2.新文件夹插入
+        if (!folderList.isEmpty()) {
+            return Body.error("重名文件夹");
+        }
+        // 2.新文件夹插入
         Folder new_folder = new Folder();
-        new_folder.setName(name);new_folder.setAgentId(agent_id);new_folder.setParentId(parent_id);
-        new_folder.setCreateDate(Timestamp.valueOf(LocalDateTime.now()));new_folder.setLastUpdate(Timestamp.valueOf(LocalDateTime.now()));
+        new_folder.setName(name);
+        new_folder.setAgentId(agent_id);
+        new_folder.setParentId(parent_id);
+        new_folder.setCreateDate(Timestamp.valueOf(LocalDateTime.now()));
+        new_folder.setLastUpdate(Timestamp.valueOf(LocalDateTime.now()));
         folderMapper.insert(new_folder);
-        //3.本地创建新文件夹
-        Path create_path = Paths.get(path,name);
+        // 3.本地创建新文件夹
+        Path create_path = Paths.get(path, name);
         try {
             Files.createDirectories(create_path);
         } catch (IOException e) {
