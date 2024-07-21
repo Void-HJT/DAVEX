@@ -26,9 +26,7 @@ public class FileController {
     private FileService fileService;
 
     // 结果文件存储位置，比如 D:\\, 我这里使用的是本项目的路径
-    private static final String UPLOAD_BASE_DIR = "C:\\FDU\\IdeaProject\\DVE\\files\\";
-    // application输入文件存储位置
-    private static final String INPUT_BASE_DIR = "C:\\FDU\\IdeaProject\\DVE\\inputs\\";
+    private static final String UPLOAD_BASE_DIR = "C:\\FDU\\IdeaProject\\DVE\\DVE_center\\Files\\";
 
     // agent文件上传接口
     @PostMapping("/upload")
