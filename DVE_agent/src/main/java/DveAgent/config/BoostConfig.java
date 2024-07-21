@@ -12,7 +12,9 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import DveAgent.common.My;
 import DveAgent.common.Utlis;
 import DveAgent.entity.Agent;
+import DveAgent.entity.Center;
 import DveAgent.mapper.AgentMapper;
+import DveAgent.mapper.CenterMapper;
 
 @Configuration
 public class BoostConfig {
@@ -21,6 +23,9 @@ public class BoostConfig {
 
     @Autowired
     private AgentMapper agentMapper;
+
+    @Autowired
+    private CenterMapper centerMapper;
 
     @Autowired
     DveAgent.module.auth.service.SSLContextService sslContextService;
@@ -36,13 +41,13 @@ public class BoostConfig {
             agentMapper.update(my.getAgent(), queryWrapper);
         }
 
-        LambdaQueryWrapper<Agent> agentListQuery = Wrappers.<Agent>lambdaQuery();
-        List<Agent> agents = agentMapper.selectList(agentListQuery);
-        for (Agent a : agents) {
-            if (my.getTrustStore().containsAlias(a.getName())) {
-                my.getTrustStore().deleteEntry(a.getName());
+        LambdaQueryWrapper<Center> centerListQuery = Wrappers.<Center>lambdaQuery();
+        List<Center> centers = centerMapper.selectList(centerListQuery);
+        for (Center c : centers) {
+            if (my.getTrustStore().containsAlias(c.getName())) {
+                my.getTrustStore().deleteEntry(c.getName());
             }
-            my.getTrustStore().setCertificateEntry(a.getName(), Utlis.bytesToCertificate(a.getCrt()));
+            my.getTrustStore().setCertificateEntry(c.getName(), Utlis.bytesToCertificate(c.getCrt()));
         }
         sslContextService.configureGlobalSSLContext(my.getTrustStore(), my.getKeyStore());
     }
