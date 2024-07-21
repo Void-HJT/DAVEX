@@ -26,7 +26,7 @@ public class TestController {
     }
 
     @PostMapping("/message")
-    public R<?> messaage() {
+    public R<?> message() {
         return R.success("123", "123");
     }
 

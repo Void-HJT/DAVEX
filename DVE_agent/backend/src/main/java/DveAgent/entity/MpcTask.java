@@ -1,9 +1,14 @@
 package DveAgent.entity;
 
-import com.baomidou.mybatisplus.annotation.TableId;
+import org.springframework.boot.autoconfigure.domain.EntityScan;
+
+import com.baomidou.mybatisplus.annotation.TableName;
+
 import lombok.Data;
 
 @Data
+@EntityScan
+@TableName("mpcTask")
 public class MpcTask {
 
   @TableId

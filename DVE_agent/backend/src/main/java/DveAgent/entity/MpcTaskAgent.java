@@ -1,17 +1,23 @@
 package DveAgent.entity;
 
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableName;
+
 import lombok.Data;
 
 @Data
+@TableName("mpcTask_agent")
 public class MpcTaskAgent {
 
-  @TableId
+  @TableId(value = "uid", type = IdType.AUTO)
   private long uid;
+  // 去数据库里修改表名
+  @TableField("mpcTask_id")
   private long mpcTaskId;
   private long agentId;
   private long part;
-
 
   public long getUid() {
     return uid;
@@ -21,7 +27,6 @@ public class MpcTaskAgent {
     this.uid = uid;
   }
 
-
   public long getMpcTaskId() {
     return mpcTaskId;
   }
@@ -30,7 +35,6 @@ public class MpcTaskAgent {
     this.mpcTaskId = mpcTaskId;
   }
 
-
   public long getAgentId() {
     return agentId;
   }
@@ -38,7 +42,6 @@ public class MpcTaskAgent {
   public void setAgentId(long agentId) {
     this.agentId = agentId;
   }
-
 
   public long getPart() {
     return part;
