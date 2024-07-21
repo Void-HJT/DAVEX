@@ -3,17 +3,13 @@ server:
 spring:
   application:
     # 应用的名称，选择性配置
-    name: DveAgent
-  servlet:
-    multipart:
-      max-file-size: 10MB
-      max-request-size: 10MB
+    name: DveCenter
   datasource:
     druid:
       driver-class-name: com.mysql.cj.jdbc.Driver
-      url: jdbc:mysql://localhost:3306/test?useUnicode=true&characterEncoding=utf-8&useSSL=true&serverTimezone=GMT%2B8
+      url: jdbc:mysql://localhost:3306/center?useUnicode=true&characterEncoding=utf-8&useSSL=true&serverTimezone=GMT%2B8
       username: root
-      password: Drt1951725
+      password: 123456
   mvc:
     pathmatch:
       matching-strategy: ant_path_matcher

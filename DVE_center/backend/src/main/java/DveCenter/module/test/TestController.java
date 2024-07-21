@@ -1,6 +1,6 @@
-package DveAgent.module.test;
+package DveCenter.module.test;
 
-import DveAgent.common.R;
+import DveCenter.common.R;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;

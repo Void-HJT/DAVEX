@@ -1,10 +1,8 @@
-package DveAgent.common;
+package DveCenter.common;
 
 import lombok.Data;
 
 import java.sql.Timestamp;
-import java.util.HashMap;
-import java.util.Map;
 
 @Data
 public class R<T> {
