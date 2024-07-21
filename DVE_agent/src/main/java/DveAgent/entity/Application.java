@@ -9,7 +9,7 @@ public class Application {
   private long uid;
   private long centerId;
   private String name;
-  private String crt;
+  private byte[] crt;
   private java.sql.Timestamp lastUpdated;
   private String description;
 
@@ -41,11 +41,11 @@ public class Application {
   }
 
 
-  public String getCrt() {
+  public byte[] getCrt() {
     return crt;
   }
 
-  public void setCrt(String crt) {
+  public void setCrt(byte[] crt) {
     this.crt = crt;
   }
 

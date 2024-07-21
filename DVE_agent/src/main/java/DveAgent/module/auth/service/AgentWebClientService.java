@@ -38,7 +38,7 @@ public class AgentWebClientService {
         public WebClient agent2CenterWebClient(int center_id) throws Exception {
                 LambdaQueryWrapper<Center> queryWrapper = Wrappers.<Center>lambdaQuery().eq(Center::getUid, center_id);
                 Center center = centerMapper.selectOne(queryWrapper);
-                Certificate certificate = Utlis.bytesToCertificate(center.getCrt().getBytes());
+                Certificate certificate = Utlis.bytesToCertificate(center.getCrt());
                 KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
                 keyStore.load(null, null);
 
