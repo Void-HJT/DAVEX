@@ -6,6 +6,7 @@ import lombok.Data;
 @Data
 public class Application {
 
+  @TableId
   private long uid;
   private long centerId;
   private String name;

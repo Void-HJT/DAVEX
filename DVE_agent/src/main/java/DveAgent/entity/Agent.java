@@ -14,7 +14,6 @@ public class Agent {
   private java.sql.Timestamp lastUpdated;
   private String description;
 
-
   public long getUid() {
     return uid;
   }
@@ -22,7 +21,6 @@ public class Agent {
   public void setUid(long uid) {
     this.uid = uid;
   }
-
 
   public String getName() {
     return name;
@@ -32,7 +30,6 @@ public class Agent {
     this.name = name;
   }
 
-
   public String getIp() {
     return ip;
   }
@@ -40,7 +37,6 @@ public class Agent {
   public void setIp(String ip) {
     this.ip = ip;
   }
-
 
   public long getPort() {
     return port;
@@ -50,7 +46,6 @@ public class Agent {
     this.port = port;
   }
 
-
   public byte[] getCrt() {
     return crt;
   }
@@ -59,7 +54,6 @@ public class Agent {
     this.crt = crt;
   }
 
-
   public java.sql.Timestamp getLastUpdated() {
     return lastUpdated;
   }
@@ -67,7 +61,6 @@ public class Agent {
   public void setLastUpdated(java.sql.Timestamp lastUpdated) {
     this.lastUpdated = lastUpdated;
   }
-
 
   public String getDescription() {
     return description;

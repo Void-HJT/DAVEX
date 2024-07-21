@@ -6,6 +6,7 @@ import lombok.Data;
 @Data
 public class ApplicationGroup {
 
+  @TableId
   private long uid;
   private long agentId;
   private long centerId;

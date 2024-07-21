@@ -6,6 +6,7 @@ import lombok.Data;
 @Data
 public class Rule {
 
+  @TableId
   private long uid;
   private long agentId;
   private long groupId;
