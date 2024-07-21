@@ -2,7 +2,6 @@ package DveAgent.module.auth.service;
 
 import java.security.KeyStore;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import DveAgent.common.My;
