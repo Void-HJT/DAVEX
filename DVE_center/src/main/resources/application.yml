@@ -1,0 +1,43 @@
+version: '1.0'
+
+my:
+  id: 1
+  ip: 10.176.34.171
+  name: '171'
+
+server:
+  port: 8080
+
+ssl:
+  client-auth: false
+  key-store-password: 'agopkljsfoi'
+  key-store-type: JKS
+  keystore-path: jwt.jks
+  trust-store-password: 'dfjlkghalgd'
+  truststore-path: truststore.jks
+
+spring:
+  application:
+    name: DveCenter
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+  datasource:
+    druid:
+      driver-class-name: com.mysql.cj.jdbc.Driver
+      url: jdbc:mysql://10.176.34.171:3306/test
+      username: nhy
+      password: makeMPLgreat*2
+
+  mvc:
+    pathmatch:
+      matching-strategy: ANT_PATH_MATCHER
+
+mybatis-plus:
+  configuration:
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+    map-underscore-to-camel-case: true
+  global-config:
+    db-config:
+      id-type: ASSIGN_ID

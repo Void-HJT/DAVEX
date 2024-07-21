@@ -1,7 +1,7 @@
 package DveAgent.entity;
 
 import org.springframework.boot.autoconfigure.domain.EntityScan;
-
+import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 
 import lombok.Data;
@@ -23,7 +23,6 @@ public class MpcTask {
   private long data;
   private String protocol;
 
-
   public long getUid() {
     return uid;
   }
@@ -31,7 +30,6 @@ public class MpcTask {
   public void setUid(long uid) {
     this.uid = uid;
   }
-
 
   public long getApplicationId() {
     return applicationId;
@@ -41,7 +39,6 @@ public class MpcTask {
     this.applicationId = applicationId;
   }
 
-
   public long getCenterId() {
     return centerId;
   }
@@ -49,7 +46,6 @@ public class MpcTask {
   public void setCenterId(long centerId) {
     this.centerId = centerId;
   }
-
 
   public long getMpcId() {
     return mpcId;
@@ -59,7 +55,6 @@ public class MpcTask {
     this.mpcId = mpcId;
   }
 
-
   public String getParameter() {
     return parameter;
   }
@@ -67,7 +62,6 @@ public class MpcTask {
   public void setParameter(String parameter) {
     this.parameter = parameter;
   }
-
 
   public long getPn() {
     return pn;
@@ -77,7 +71,6 @@ public class MpcTask {
     this.pn = pn;
   }
 
-
   public String getHost() {
     return host;
   }
@@ -85,7 +78,6 @@ public class MpcTask {
   public void setHost(String host) {
     this.host = host;
   }
-
 
   public long getPort() {
     return port;
@@ -95,7 +87,6 @@ public class MpcTask {
     this.port = port;
   }
 
-
   public long getData() {
     return data;
   }
@@ -103,7 +94,6 @@ public class MpcTask {
   public void setData(long data) {
     this.data = data;
   }
-
 
   public String getProtocol() {
     return protocol;

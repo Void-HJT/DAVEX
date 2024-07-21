@@ -1,20 +1,16 @@
-package DveAgent.module.task.dao;
+package DveAgent.mapper;
 
-import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import DveAgent.entity.MpcTask;
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+
+import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Update;
-import org.apache.ibatis.annotations.Insert;
-import java.util.Optional;
 
 @Mapper
 public interface MpcTaskMapper extends BaseMapper<MpcTask> {
-    // 在这里添加自定义的数据库操作方法
-    // @Select("SELECT * FROM mpcTask WHERE id = #{id}")
-    // Optional<MpcTask> getMpcTaskById(@Param("id") Long id);
-
     @Update("UPDATE mpcTask SET name = #{name}, description = #{description} WHERE id = #{id}")
     boolean updateMpcTask(MpcTask mpcTask);
 
@@ -23,6 +19,4 @@ public interface MpcTaskMapper extends BaseMapper<MpcTask> {
 
     @Select("SELECT COUNT(*) FROM mpcTask WHERE uid = #{mpcTaskId}")
     int countByMpcTaskId(@Param("mpcTaskId") Long uid);
-
-
 }
