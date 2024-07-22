@@ -2,20 +2,31 @@ package DveCenter.module.File;
 
 
 import DveAgent.common.Body;
+import DveAgent.module.auth.service.AgentWebClientService;
+import DveCenter.common.CustomMultipartFile;
 import DveCenter.entity.Output;
+import DveCenter.module.auth.service.CenterWebClientService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.publisher.Flux;
 
 import javax.servlet.http.HttpServletResponse;
+import java.io.*;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 
 // 定义接口路径
 @RestController
@@ -27,6 +38,9 @@ public class FileController {
 
     // 结果文件存储位置，比如 D:\\, 我这里使用的是本项目的路径
     private static final String UPLOAD_BASE_DIR = "C:\\FDU\\IdeaProject\\DVE\\DVE_center\\Files\\";
+
+    @Autowired
+    private CenterWebClientService centerWebClientService;
 
     // agent文件上传接口
     @PostMapping("/upload")
@@ -88,4 +102,98 @@ public class FileController {
 
         return fileService.deleteFile(fileId);
     }
+
+
+    // 向agent发送文件传输请求并调用upload接口
+    @PostMapping("/quest")
+    public CompletableFuture<Body<String>> quest(@RequestParam("fileId") Integer fileId,
+                                      @RequestParam("agentId") Integer agentId,
+                                      @RequestParam("folderId") Integer folderId)throws Exception {
+        WebClient webclient=centerWebClientService.center2AgentWebClient(agentId);
+        Flux<byte[]> fileFlux=webclient.post().uri(uriBuilder -> uriBuilder.path("/directory/sendFile")
+                .queryParam("fileId",fileId)
+                .queryParam("agentId",agentId)
+                .queryParam("folderId",folderId).build()).accept(MediaType.APPLICATION_OCTET_STREAM).retrieve()
+                .bodyToFlux(byte[].class);
+
+        // 这里创建一个 CompletableFuture 对象来处理异步结果
+        CompletableFuture<Body<String>> future = new CompletableFuture<>();
+
+        fileFlux.collectList().subscribe(bytesList -> {
+//            try (FileOutputStream fos = new FileOutputStream(new File("D:\\hwl.pdf"))) {
+//                for (byte[] bytes : bytesList) {
+//                    fos.write(bytes);
+//                }
+//            } catch (IOException e) {
+//                e.printStackTrace();
+//            }
+            try {
+                // 将字节数组列表合并为一个完整的字节数组
+                ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+                for (byte[] bytes : bytesList) {
+                    byteArrayOutputStream.write(bytes);
+                }
+                byte[] fileBytes = byteArrayOutputStream.toByteArray();
+
+                // 创建 CustomMultipartFile
+                CustomMultipartFile multipartFile = new CustomMultipartFile(fileBytes, "1.pdf");
+
+                // 调用 upload 方法
+                Body<String> result = upload(multipartFile, fileId, null);
+                future.complete(result);
+            } catch (IOException e) {
+                future.completeExceptionally(e);
+                e.printStackTrace();
+            }
+        });
+
+        return future;
+    }
+
+
+    @PostMapping("/tquest")
+    public CompletableFuture<Body<String>> tquest(@RequestParam("fileId") Integer fileId,
+                                                 @RequestParam("agentId") Integer agentId,
+                                                 @RequestParam("folderId") Integer folderId) throws Exception {
+        // 这里创建一个 CompletableFuture 对象来处理异步结果
+        CompletableFuture<Body<String>> future = new CompletableFuture<>();
+
+        // 修改为从本地文件读取数据而不是从 WebClient 获取
+        File localFile = new File("D:\\hwl.pdf"); // 这里是你的本地文件路径
+        try (FileInputStream fis = new FileInputStream(localFile)) {
+            // 将文件内容读取到字节数组中
+            byte[] fileBytes = fis.readAllBytes();
+
+            // 将字节数组分成多个字节数组以模拟 Flux<byte[]> 的行为
+            // 这里只用一个字节数组模拟，如果需要更复杂的逻辑，可以自行调整
+            Flux<byte[]> fileFlux = Flux.just(fileBytes);
+
+            fileFlux.collectList().subscribe(bytesList -> {
+                try {
+                    // 将字节数组列表合并为一个完整的字节数组
+                    ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+                    for (byte[] bytes : bytesList) {
+                        byteArrayOutputStream.write(bytes);
+                    }
+                    byte[] fileBytesArray = byteArrayOutputStream.toByteArray();
+
+                    // 创建 CustomMultipartFile
+                    CustomMultipartFile multipartFile = new CustomMultipartFile(fileBytesArray, "1.pdf");
+
+                    // 调用 upload 方法
+                    Body<String> result = upload(multipartFile, fileId, null);
+                    future.complete(result);
+                } catch (IOException e) {
+                    future.completeExceptionally(e);
+                    e.printStackTrace();
+                }
+            });
+        } catch (IOException e) {
+            future.completeExceptionally(e);
+            e.printStackTrace();
+        }
+
+        return future;
+    }
+
 }
