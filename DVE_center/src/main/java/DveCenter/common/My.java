@@ -1,20 +1,25 @@
 package DveCenter.common;
 
-import java.io.InputStream;
-import java.security.Key;
 import java.security.KeyStore;
 import java.security.PrivateKey;
 import java.security.Signature;
 import java.security.cert.Certificate;
+import java.time.LocalDateTime;
 import java.util.Base64;
-import DveAgent.common.Utlis;
+
 import javax.annotation.PostConstruct;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+
+import DveAgent.entity.Agent;
 import DveAgent.entity.Center;
+import DveAgent.mapper.AgentMapper;
+import DveAgent.mapper.CenterMapper;
 import nl.altindag.ssl.SSLFactory;
 
 @Component
@@ -22,32 +27,20 @@ public class My {
     @Value("${version}")
     private String version;
 
+    @Value("${my.id}")
+    private long id;
+
     @Value("${my.name}")
     private String name;
 
-    private Center center;
-
-    public Center getCenter() {
-        return center;
-    }
-
-    public void setCenter(Center center) {
-        this.center = center;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    @Value("${my.id}")
-    private int id;
+    @Value("${my.description}")
+    private String description;
 
     @Value("${my.ip}")
     private String ip;
+
+    @Value("${my.garnet_path}")
+    private String garnet_path;
 
     @Value("${server.port}")
     private int port;
@@ -67,6 +60,8 @@ public class My {
     @Value("${ssl.key-store-type}")
     private String keyStoreType;
 
+    private Center center;
+
     private KeyStore keyStore;
 
     private KeyStore trustStore;
@@ -77,61 +72,26 @@ public class My {
 
     private SSLFactory baseSslFactory;
 
-    public SSLFactory getBaseSslFactory() {
-        return baseSslFactory;
-    }
-
-    public void setBaseSslFactory(SSLFactory baseSslFactory) {
-        this.baseSslFactory = baseSslFactory;
-    }
-
-    public Certificate getCertificate() {
-        return certificate;
-    }
-
-    public void setCertificate(Certificate certificate) {
-        this.certificate = certificate;
-    }
-
-    // @Autowired
-    // ResourceLoader resourceLoader;
+    @Autowired
+    private CenterMapper centerMapper;
 
     @PostConstruct
     public void init() throws Exception {
-
-        try (InputStream inputStream = new ClassPathResource(keyStorePath).getInputStream()) {
-            keyStore = KeyStore.getInstance(keyStoreType);
-            keyStore.load(inputStream, keyStorePassword.toCharArray());
-            Key key = keyStore.getKey(name, keyStorePassword.toCharArray());
-            if (key instanceof PrivateKey) {
-                privateKey = (PrivateKey) key;
-                certificate = keyStore.getCertificate(name);
-            }
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to load keys from keystore", e);
-        }
-
-        trustStore = KeyStore.getInstance(KeyStore.getDefaultType());
-        trustStore.load(null, null);
-
-        try (InputStream inputStream = new ClassPathResource(trustStorePath).getInputStream()) {
-            trustStore = KeyStore.getInstance(keyStoreType);
-            trustStore.load(inputStream,
-                    trustStorePassword.toCharArray());
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to load trustStore", e);
-        }
-        baseSslFactory = SSLFactory.builder()
-                .withIdentityMaterial(keyStore, keyStorePassword.toCharArray())
-                .withSwappableIdentityMaterial().withSwappableTrustMaterial()
-                .withTrustMaterial(trustStore)
-                .build();
+        LambdaQueryWrapper<Center> queryWrapper = Wrappers.<Center>lambdaQuery().eq(Center::getUid, id);
+        Center old_center = centerMapper.selectOne(queryWrapper);
         center = new Center();
         center.setUid(id);
         center.setName(name);
         center.setIp(ip);
         center.setPort(port);
-        center.setCrt(Utlis.certificateToBytes(certificate));
+        center.setDescription(description);
+        center.setLastUpdated(LocalDateTime.now());
+        if (old_center == null || !center.equals(old_center)) {
+            centerMapper.insert(center);
+        } else {
+            center = old_center;
+        }
+
     }
 
     /**
@@ -149,11 +109,51 @@ public class My {
         return Base64.getEncoder().encodeToString(signedData);
     }
 
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public Center getCenter() {
+        return center;
+    }
+
+    public void setCenter(Center center) {
+        this.center = center;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public SSLFactory getBaseSslFactory() {
+        return baseSslFactory;
+    }
+
+    public void setBaseSslFactory(SSLFactory baseSslFactory) {
+        this.baseSslFactory = baseSslFactory;
+    }
+
+    public Certificate getCertificate() {
+        return certificate;
+    }
+
+    public void setCertificate(Certificate certificate) {
+        this.certificate = certificate;
+    }
+
     public String getVersion() {
         return version;
     }
 
-    public int getId() {
+    public long getId() {
         return id;
     }
 
@@ -243,6 +243,14 @@ public class My {
 
     public void setKeyStoreType(String keyStoreType) {
         this.keyStoreType = keyStoreType;
+    }
+
+    public String getGarnet_path() {
+        return garnet_path;
+    }
+
+    public void setGarnet_path(String garnet_path) {
+        this.garnet_path = garnet_path;
     }
 
 }
