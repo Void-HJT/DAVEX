@@ -16,16 +16,18 @@ import java.util.Collections;
 public class ServerConfig {
 
     @Bean
-    public ConfigurableServletWebServerFactory webServerFactory(SslContextFactory.Server sslContextFactory, @Value("${server.port}") int serverPort) {
+    public ConfigurableServletWebServerFactory webServerFactory(SslContextFactory.Server sslContextFactory,
+            @Value("${server.port}") int serverPort) {
         JettyServletWebServerFactory factory = new JettyServletWebServerFactory();
 
         JettyServerCustomizer jettyServerCustomizer = server -> {
             ServerConnector serverConnector = new ServerConnector(server, sslContextFactory);
             serverConnector.setPort(serverPort);
-            server.setConnectors(new Connector[]{serverConnector});
+            server.setConnectors(new Connector[] { serverConnector });
+            
         };
         factory.setServerCustomizers(Collections.singletonList(jettyServerCustomizer));
-
+    
         return factory;
     }
 

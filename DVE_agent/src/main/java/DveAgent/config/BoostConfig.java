@@ -2,8 +2,9 @@ package DveAgent.config;
 
 import java.util.List;
 
+import javax.annotation.PostConstruct;
+
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
@@ -30,7 +31,7 @@ public class BoostConfig {
     @Autowired
     DveAgent.module.auth.service.SSLContextService sslContextService;
 
-    @Bean
+    @PostConstruct
     void boost() throws Exception {
         LambdaQueryWrapper<Agent> queryWrapper = Wrappers.<Agent>lambdaQuery().eq(Agent::getUid, my.getId());
         Agent agent = agentMapper.selectOne(queryWrapper);

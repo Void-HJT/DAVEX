@@ -10,13 +10,12 @@ import java.util.Base64;
 
 import javax.annotation.PostConstruct;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
-import org.springframework.core.io.ResourceLoader;
 import org.springframework.stereotype.Component;
 
 import DveAgent.entity.Agent;
+
 import nl.altindag.ssl.SSLFactory;
 
 @Component
@@ -24,29 +23,14 @@ public class My {
     @Value("${version}")
     private String version;
 
+    @Value("${my.id}")
+    private long id;
+
     @Value("${my.name}")
     private String name;
 
-    private Agent agent;
-
-    public Agent getAgent() {
-        return agent;
-    }
-
-    public void setAgent(Agent agent) {
-        this.agent = agent;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    @Value("${my.id}")
-    private int id;
+    @Value("${my.description}")
+    private String description;
 
     @Value("${my.ip}")
     private String ip;
@@ -69,6 +53,8 @@ public class My {
     @Value("${ssl.key-store-type}")
     private String keyStoreType;
 
+    private Agent agent;
+
     private KeyStore keyStore;
 
     private KeyStore trustStore;
@@ -78,25 +64,6 @@ public class My {
     private Certificate certificate;
 
     private SSLFactory baseSslFactory;
-
-    public SSLFactory getBaseSslFactory() {
-        return baseSslFactory;
-    }
-
-    public void setBaseSslFactory(SSLFactory baseSslFactory) {
-        this.baseSslFactory = baseSslFactory;
-    }
-
-    public Certificate getCertificate() {
-        return certificate;
-    }
-
-    public void setCertificate(Certificate certificate) {
-        this.certificate = certificate;
-    }
-
-    // @Autowired
-    // ResourceLoader resourceLoader;
 
     @PostConstruct
     public void init() throws Exception {
@@ -133,6 +100,7 @@ public class My {
         agent.setName(name);
         agent.setIp(ip);
         agent.setPort(port);
+        agent.setDescription(description);
         agent.setCrt(Utlis.certificateToBytes(certificate));
     }
 
@@ -151,11 +119,51 @@ public class My {
         return Base64.getEncoder().encodeToString(signedData);
     }
 
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public Agent getAgent() {
+        return agent;
+    }
+
+    public void setAgent(Agent agent) {
+        this.agent = agent;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public SSLFactory getBaseSslFactory() {
+        return baseSslFactory;
+    }
+
+    public void setBaseSslFactory(SSLFactory baseSslFactory) {
+        this.baseSslFactory = baseSslFactory;
+    }
+
+    public Certificate getCertificate() {
+        return certificate;
+    }
+
+    public void setCertificate(Certificate certificate) {
+        this.certificate = certificate;
+    }
+
     public String getVersion() {
         return version;
     }
 
-    public int getId() {
+    public long getId() {
         return id;
     }
 

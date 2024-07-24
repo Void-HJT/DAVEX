@@ -3,13 +3,14 @@ version: '1.0'
 my:
   id: 1
   ip: 10.176.34.171
-  name: '171'
+  name: '171-center'
+  description: 'DVE Center 171'
 
 server:
-  port: 8080
+  port: 10999
 
 ssl:
-  client-auth: false
+  client-auth: true
   key-store-password: 'agopkljsfoi'
   key-store-type: JKS
   keystore-path: jwt.jks

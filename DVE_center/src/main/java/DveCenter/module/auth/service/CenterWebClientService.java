@@ -17,15 +17,12 @@ import DveCenter.common.My;
 import DveAgent.common.Utlis;
 import DveAgent.entity.Agent;
 import DveAgent.mapper.AgentMapper;
-import DveAgent.mapper.CenterMapper;
 import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.SslContextBuilder;
 import reactor.netty.http.client.HttpClient;
 
 @Service
 public class CenterWebClientService {
-        @Autowired
-        private CenterMapper centerMapper;
         @Autowired
         private AgentMapper agentMapper;
         @Autowired
@@ -34,7 +31,7 @@ public class CenterWebClientService {
         @Autowired
         My my;
 
-        public WebClient center2AgentWebClient(int agent_id) throws Exception {
+        public WebClient center2AgentWebClient(long agent_id) throws Exception {
                 LambdaQueryWrapper<Agent> queryWrapper = Wrappers.<Agent>lambdaQuery().eq(Agent::getUid, agent_id);
                 Agent agent = agentMapper.selectOne(queryWrapper);
                 Certificate certificate = Utlis.bytesToCertificate(agent.getCrt());

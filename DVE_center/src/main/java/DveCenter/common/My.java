@@ -7,13 +7,14 @@ import java.security.PrivateKey;
 import java.security.Signature;
 import java.security.cert.Certificate;
 import java.util.Base64;
-import DveAgent.common.Utlis;
+
 import javax.annotation.PostConstruct;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
 
+import DveAgent.common.Utlis;
 import DveAgent.entity.Center;
 import nl.altindag.ssl.SSLFactory;
 
@@ -22,29 +23,14 @@ public class My {
     @Value("${version}")
     private String version;
 
+    @Value("${my.id}")
+    private long id;
+
     @Value("${my.name}")
     private String name;
 
-    private Center center;
-
-    public Center getCenter() {
-        return center;
-    }
-
-    public void setCenter(Center center) {
-        this.center = center;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    @Value("${my.id}")
-    private int id;
+    @Value("${my.description}")
+    private String description;
 
     @Value("${my.ip}")
     private String ip;
@@ -67,6 +53,8 @@ public class My {
     @Value("${ssl.key-store-type}")
     private String keyStoreType;
 
+    private Center center;
+
     private KeyStore keyStore;
 
     private KeyStore trustStore;
@@ -76,25 +64,6 @@ public class My {
     private Certificate certificate;
 
     private SSLFactory baseSslFactory;
-
-    public SSLFactory getBaseSslFactory() {
-        return baseSslFactory;
-    }
-
-    public void setBaseSslFactory(SSLFactory baseSslFactory) {
-        this.baseSslFactory = baseSslFactory;
-    }
-
-    public Certificate getCertificate() {
-        return certificate;
-    }
-
-    public void setCertificate(Certificate certificate) {
-        this.certificate = certificate;
-    }
-
-    // @Autowired
-    // ResourceLoader resourceLoader;
 
     @PostConstruct
     public void init() throws Exception {
@@ -131,6 +100,7 @@ public class My {
         center.setName(name);
         center.setIp(ip);
         center.setPort(port);
+        center.setDescription(description);
         center.setCrt(Utlis.certificateToBytes(certificate));
     }
 
@@ -149,11 +119,51 @@ public class My {
         return Base64.getEncoder().encodeToString(signedData);
     }
 
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public Center getCenter() {
+        return center;
+    }
+
+    public void setCenter(Center center) {
+        this.center = center;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public SSLFactory getBaseSslFactory() {
+        return baseSslFactory;
+    }
+
+    public void setBaseSslFactory(SSLFactory baseSslFactory) {
+        this.baseSslFactory = baseSslFactory;
+    }
+
+    public Certificate getCertificate() {
+        return certificate;
+    }
+
+    public void setCertificate(Certificate certificate) {
+        this.certificate = certificate;
+    }
+
     public String getVersion() {
         return version;
     }
 
-    public int getId() {
+    public long getId() {
         return id;
     }
 
