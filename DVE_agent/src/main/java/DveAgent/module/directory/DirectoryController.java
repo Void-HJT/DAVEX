@@ -4,6 +4,7 @@ import DveAgent.common.Body;
 import DveAgent.entity.File;
 import DveAgent.entity.Group;
 import DveAgent.info.ApplicationInfo;
+import DveAgent.info.DirectoryInfo;
 import DveAgent.info.FileInfo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
@@ -206,6 +207,25 @@ public class DirectoryController {
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" +encodedFileName+"\"")
                 .body(resource);
     }
+
+
+    @PostMapping("/getDirectory")
+    public Body<DirectoryInfo> getDirectory(@RequestParam("rootId") Integer rootFolderId) {
+        DirectoryInfo directory = directoryService.getDirectoryStructure(rootFolderId);
+        return Body.success(directory,"1");
+    }
+
+    @PostMapping("/getDirectoryByGroup")
+    public Body<DirectoryInfo> getDirectory(@RequestParam("rootId") Integer rootFolderId,
+                                            @RequestParam("agentId") Integer agentId,
+                                            @RequestParam("groupId") Integer groupId) {
+        DirectoryInfo directory = directoryService.getDirectoryStructure(rootFolderId);
+        directory = directoryService.filterFoldersByVisibility(groupId,agentId,directory);
+        directory = directoryService.filterFilesByRule(groupId,agentId,directory);
+        return Body.success(directory,"1");
+    }
+
+
 
 
 

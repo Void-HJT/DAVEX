@@ -3,6 +3,7 @@ package DveAgent.module.directory;
 import DveAgent.common.Body;
 import DveAgent.entity.*;
 import DveAgent.info.ApplicationInfo;
+import DveAgent.info.DirectoryInfo;
 import DveAgent.info.FileInfo;
 import DveAgent.mapper.*;
 import com.baomidou.mybatisplus.core.conditions.Wrapper;
@@ -528,5 +529,119 @@ public class DirectoryService {
         fullPathBuilder.append(java.io.File.separator).append(file.getName());
         String filePath = fullPathBuilder.toString();
         return filePath;
+    }
+
+    public DirectoryInfo getDirectoryStructure(Integer rootFolderId) {
+        Folder rootFolder = folderMapper.select(rootFolderId);
+        DirectoryInfo root = new DirectoryInfo();
+        mapFolderToDirectoryNode(rootFolder, root);
+        root.setType("folder");
+        buildDirectoryTree(root);
+        return root;
+    }
+
+    private void buildDirectoryTree(DirectoryInfo node) {
+        List<Folder> subFolders = folderMapper.selectByParentId(node.getUid());
+        for (Folder subFolder : subFolders) {
+            DirectoryInfo childNode = new DirectoryInfo();
+            mapFolderToDirectoryNode(subFolder, childNode);
+            childNode.setType("folder");
+            node.getChildren().add(childNode);
+            buildDirectoryTree(childNode);
+        }
+
+        List<File> files = fileMapper.selectByFolderId(node.getUid());
+        for (File file : files) {
+            DirectoryInfo childNode = new DirectoryInfo();
+            mapFileToDirectoryNode(file, childNode);
+            childNode.setType("file");
+            node.getChildren().add(childNode);
+        }
+    }
+    private void mapFolderToDirectoryNode(Folder folder, DirectoryInfo node) {
+        node.setUid(folder.getUid());
+        node.setAgentId(folder.getAgentId());
+        node.setParentId(folder.getParentId());
+        node.setName(folder.getName());
+        node.setCreateDate(folder.getCreateDate());
+        node.setLastUpdate(folder.getLastUpdate());
+    }
+
+    private void mapFileToDirectoryNode(File file, DirectoryInfo node) {
+        node.setUid(file.getUid());
+        node.setAgentId(file.getAgentId());
+        node.setParentId(file.getFolderId());
+        node.setName(file.getName());
+        node.setCreateDate(file.getCreateDate());
+        node.setLastUpdate(file.getLastUpdate());
+        node.setTag(file.getTag());
+        node.setSize(file.getSize());
+        node.setPath(file.getPath());
+        node.setDescription(file.getDescription());
+        node.setHash(file.getHash());
+        node.setExample(file.getExample());
+        node.setExpiredTime(file.getExpiredTime());
+    }
+
+    public DirectoryInfo filterFoldersByVisibility(Integer groupId, Integer agentId, DirectoryInfo directoryAll) {
+        return filterFoldersRecursive(groupId, agentId, directoryAll);
+    }
+
+    public DirectoryInfo filterFilesByRule(long groupId, long agentId, DirectoryInfo directoryFiltered) {
+        return filterFilesRecursive(groupId, agentId, directoryFiltered);
+    }
+
+    private DirectoryInfo filterFoldersRecursive(Integer groupId, Integer agentId, DirectoryInfo directory) {
+        List<DirectoryInfo> visibleChildren = new ArrayList<>();
+        for (DirectoryInfo child : directory.getChildren()) {
+            if ("folder".equals(child.getType())) {
+                FolderVisibility visibility = folderVisibilityMapper.selectOne(
+                        new QueryWrapper<FolderVisibility>()
+                                .eq("group_id", groupId)
+                                .eq("agent_id", agentId)
+                                .eq("folder_id", child.getUid())
+                );
+                if (visibility != null) {
+                    visibleChildren.add(filterFoldersRecursive(groupId, agentId, child));
+                }
+            } else {
+                visibleChildren.add(child);//将文件直接插入
+            }
+        }
+        directory.setChildren(visibleChildren);
+        return directory;
+    }
+
+    private DirectoryInfo filterFilesRecursive(long groupId, long agentId, DirectoryInfo directory) {
+        List<DirectoryInfo> allowedChildren = new ArrayList<>();
+        for (DirectoryInfo child : directory.getChildren()) {
+            if ("folder".equals(child.getType())) {
+                allowedChildren.add(filterFilesRecursive(groupId, agentId, child));
+            } else {
+                // 检查文件与用户组的关系
+                List<FileRule> fileRules = fileRuleMapper.selectList(
+                        new QueryWrapper<FileRule>()
+                                .eq("agent_id", agentId)
+                                .eq("file_id", child.getUid())
+                );
+                boolean isAllowed = false;
+                for (FileRule fileRule : fileRules) {
+                    Rule rule = ruleMapper.selectOne(
+                            new QueryWrapper<Rule>()
+                                    .eq("uid", fileRule.getRuleId())
+                                    .eq("group_id", groupId)
+                    );
+                    if (rule != null) {
+                        isAllowed = true;
+                        child.getRuleList().add(rule.getAllowedMethod());
+                    }
+                }
+                if (isAllowed) {
+                    allowedChildren.add(child);
+                }
+            }
+        }
+        directory.setChildren(allowedChildren);
+        return directory;
     }
 }

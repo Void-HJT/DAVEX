@@ -8,7 +8,11 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
+import java.util.List;
+
 @Mapper
 public interface FileMapper extends BaseMapper<File> {
     FileInfo getFileInfo(@Param("fileId") Integer uid, @Param("agentId") Integer agentId, @Param("folderId") Integer folderId);
+
+    List<File> selectByFolderId(long uid);
 }

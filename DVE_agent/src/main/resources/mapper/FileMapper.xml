@@ -58,4 +58,9 @@
           AND f.agent_id = #{agentId}
           AND f.folder_id = #{folderId}
     </select>
+
+    <select id="selectByFolderId" parameterType="long" resultType="DveAgent.entity.File">
+        SELECT * FROM file WHERE folder_id = #{folderId}
+    </select>
+
 </mapper>
