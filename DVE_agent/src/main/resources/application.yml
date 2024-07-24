@@ -1,12 +1,12 @@
 version: '1.0'
 
 my:
-  id: 1
-  ip: 10.176.34.171
-  name: '171'
+  id: 9
+  ip: 10.176.34.173
+  name: '173-zw'
 
 server:
-  port: 8080
+  port: 8081
 
 ssl:
   client-auth: false
@@ -26,9 +26,9 @@ spring:
   datasource:
     druid:
       driver-class-name: com.mysql.cj.jdbc.Driver
-      url: jdbc:mysql://10.176.34.171:3306/test
-      username: nhy
-      password: makeMPLgreat*2
+      url: jdbc:mysql://10.176.34.173:3306/agent
+      username: zw
+      password: newpass
 
   mvc:
     pathmatch:

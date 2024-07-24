@@ -1,20 +1,15 @@
+package DveCenter.module.task;
 
-package DveAgent.module.task.service;
 
-import com.baomidou.mybatisplus.extension.service.IService;
 import DveAgent.entity.MpcTask;
 import DveAgent.entity.MpcTaskAgent;
+import DveCenter.entity.Input;
 import DveAgent.mapper.MpcTaskAgentMapper;
 import DveAgent.mapper.MpcTaskMapper;
-import DveAgent.entity.Agent;
-import java.util.Optional;
+import DveCenter.mapper.InputMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.beans.factory.annotation.Autowired;
 import java.util.List;
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.toolkit.Wrappers;
-
-
 @Service
 public class MpcTaskService {
 
@@ -24,9 +19,17 @@ public class MpcTaskService {
     @Autowired
     private MpcTaskAgentMapper mpcTaskAgentMapper;
 
+    @Autowired
+    private InputMapper inputMapper;
+
     public MpcTask createMpcTask(MpcTask mpcTask) {
         mpcTaskMapper.insert(mpcTask);
         return mpcTask;
+    }
+
+    public Input createInput (Input input) {
+        inputMapper.insert(input);
+        return input;
     }
 
     public void addAgentToMPCTask(Long mpcTaskId, List<MpcTaskAgent> agents) {
@@ -47,20 +50,8 @@ public class MpcTaskService {
 
     }
 
-    public MpcTaskAgent getPartByMpcTaskIdAndAgentId(Long mpcTaskId,Long agentId){
-        // 创建LambdaQueryWrapper实例
-        LambdaQueryWrapper<MpcTaskAgent> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.eq(MpcTaskAgent::getMpcTaskId, mpcTaskId)
-                .eq(MpcTaskAgent::getAgentId, agentId);
-        return mpcTaskAgentMapper.selectOne(queryWrapper);
-    }
 
-
-    public MpcTask getTaskByMpcTaskIdAndCenterId(Long mpcTaskId,Long centerId){
-        // 创建LambdaQueryWrapper实例
-        LambdaQueryWrapper<MpcTask> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.eq(MpcTask::getUid, mpcTaskId)
-                .eq(MpcTask::getCenterId, centerId);
-        return mpcTaskMapper.selectOne(queryWrapper);
+    public MpcTask getMpcTaskById(Long mpcTaskId) {
+        return mpcTaskMapper.selectById(mpcTaskId);
     }
 }

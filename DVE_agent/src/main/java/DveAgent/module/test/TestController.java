@@ -33,7 +33,7 @@ public class TestController {
     @RequestMapping("webClient")
     public String postMethodName() {
         try {
-            WebClient webClient = webClientService.agent2AgentWebClient(2);
+            WebClient webClient = webClientService.agent2CenterWebClient(2);
             return webClient.get().uri("/test/hello").retrieve().bodyToMono(String.class).block();
         } catch (Exception e) {
             e.printStackTrace();

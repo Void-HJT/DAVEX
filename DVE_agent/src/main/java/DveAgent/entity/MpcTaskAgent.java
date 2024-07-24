@@ -18,6 +18,7 @@ public class MpcTaskAgent {
   private long mpcTaskId;
   private long agentId;
   private long part;
+  private long fileId;
 
   public long getUid() {
     return uid;
@@ -52,3 +53,6 @@ public class MpcTaskAgent {
   }
 
 }
+
+
+

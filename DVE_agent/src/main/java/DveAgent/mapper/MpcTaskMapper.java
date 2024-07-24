@@ -19,4 +19,7 @@ public interface MpcTaskMapper extends BaseMapper<MpcTask> {
 
     @Select("SELECT COUNT(*) FROM mpcTask WHERE uid = #{mpcTaskId}")
     int countByMpcTaskId(@Param("mpcTaskId") Long uid);
+
+    @Select("SELECT * FROM mpcTask WHERE uid = #{mpcTaskId}")
+    MpcTask selectById(@Param("mpcTaskId") Long mpcTaskId);
 }
