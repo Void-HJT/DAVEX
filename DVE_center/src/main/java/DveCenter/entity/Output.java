@@ -1,12 +1,13 @@
 package DveCenter.entity;
 
+import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import lombok.Data;
 
 @Data
 public class Output {
 
-    @TableId
+    @TableId(type = IdType.AUTO)
     private long uid;
     private String name;
     private String type;
@@ -17,6 +18,8 @@ public class Output {
     private String path;
     private java.sql.Timestamp expiredTime;
     private String hash;
+    private long fileId;
+    private long agentId;
 
 
     public long getUid() {
@@ -97,5 +100,21 @@ public class Output {
 
     public void setHash(String hash) {
         this.hash = hash;
+    }
+
+    public long getFileId() {
+        return fileId;
+    }
+
+    public void setFileId(long fileId) {
+        this.fileId = fileId;
+    }
+
+    public long getAgentId() {
+        return agentId;
+    }
+
+    public void setAgentId(long agentId) {
+        this.agentId = agentId;
     }
 }

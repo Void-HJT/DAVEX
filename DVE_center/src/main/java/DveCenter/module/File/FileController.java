@@ -46,6 +46,7 @@ public class FileController {
     @PostMapping("/upload")
     public Body<String> upload(@RequestParam MultipartFile file,
                                @RequestParam("fileId") Integer fileId,
+                               @RequestParam("agentId") Integer agentId,
                                @RequestParam(value = "expiredTime", required = false) java.sql.Timestamp expiredTime) {
 
         if (expiredTime == null) {
@@ -53,13 +54,14 @@ public class FileController {
             expiredTime = java.sql.Timestamp.from(Instant.now().plus(7, ChronoUnit.DAYS));
         }
 
-        return fileService.uploadFile(file, fileId, UPLOAD_BASE_DIR, expiredTime);
+        return fileService.uploadFile(file, fileId, agentId, UPLOAD_BASE_DIR, expiredTime);
     }
 
 
     @PostMapping("/uploads")
     public Body<List<String>> uploads(@RequestParam("files") List<MultipartFile> files,
                                      @RequestParam("fileIds") List<Integer> fileIds,
+                                      @RequestParam("agentIds") List<Integer> agentIds,
                                      @RequestParam(value = "expiredTimes", required = false) List<java.sql.Timestamp> expiredTimes) {
 
         // 如果没有提供失效时间，则设置默认值为当前时间的一周后
@@ -74,17 +76,17 @@ public class FileController {
             return Body.error("失效时间数量和文件数量不匹配");
         }
 
-        return fileService.uploadFiles(files, fileIds, UPLOAD_BASE_DIR, expiredTimes);
+        return fileService.uploadFiles(files, fileIds, agentIds, UPLOAD_BASE_DIR, expiredTimes);
     }
 
 
     // application文件下载接口
     @PostMapping("/download")
-    public Body<String> download(@RequestParam("fileId") Integer fileId,
+    public Body<String> download(@RequestParam("outputId") Integer outputId,
                                  @RequestParam("applicationId") Integer applicationId,
                                  HttpServletResponse response) {
 
-        return fileService.downloadFile(fileId, applicationId, response);
+        return fileService.downloadFile(outputId, applicationId, response);
     }
 
 
@@ -98,9 +100,9 @@ public class FileController {
 
     // application文件删除接口
     @PostMapping("/delete")
-    public Body<String> delete(@RequestParam("fileId") Integer fileId) {
+    public Body<String> delete(@RequestParam("outputId") Integer outputId) {
 
-        return fileService.deleteFile(fileId);
+        return fileService.deleteFile(outputId);
     }
 
 
@@ -120,7 +122,7 @@ public class FileController {
         CompletableFuture<Body<String>> future = new CompletableFuture<>();
 
         fileFlux.collectList().subscribe(bytesList -> {
-//            try (FileOutputStream fos = new FileOutputStream(new File("D:\\hwl.pdf"))) {
+//            try (FileOutputStream fos = new FileOutputStream(new File("D:\\1.pdf"))) {
 //                for (byte[] bytes : bytesList) {
 //                    fos.write(bytes);
 //                }
@@ -139,7 +141,7 @@ public class FileController {
                 CustomMultipartFile multipartFile = new CustomMultipartFile(fileBytes, "1.pdf");
 
                 // 调用 upload 方法
-                Body<String> result = upload(multipartFile, fileId, null);
+                Body<String> result = upload(multipartFile, fileId, agentId, null);
                 future.complete(result);
             } catch (IOException e) {
                 future.completeExceptionally(e);
@@ -159,7 +161,7 @@ public class FileController {
         CompletableFuture<Body<String>> future = new CompletableFuture<>();
 
         // 修改为从本地文件读取数据而不是从 WebClient 获取
-        File localFile = new File("D:\\hwl.pdf"); // 这里是你的本地文件路径
+        File localFile = new File("D:\\1.pdf"); // 这里是你的本地文件路径
         try (FileInputStream fis = new FileInputStream(localFile)) {
             // 将文件内容读取到字节数组中
             byte[] fileBytes = fis.readAllBytes();
@@ -181,7 +183,7 @@ public class FileController {
                     CustomMultipartFile multipartFile = new CustomMultipartFile(fileBytesArray, "1.pdf");
 
                     // 调用 upload 方法
-                    Body<String> result = upload(multipartFile, fileId, null);
+                    Body<String> result = upload(multipartFile, fileId, agentId, null);
                     future.complete(result);
                 } catch (IOException e) {
                     future.completeExceptionally(e);
