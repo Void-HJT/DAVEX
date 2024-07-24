@@ -5,7 +5,7 @@ my:
   ip: 10.176.34.171
   name: '171-agent'
   description: 'DVE Agent 171'
-
+  garnet_path: "/home/nhy/garnet"
 server:
   port: 8080
 

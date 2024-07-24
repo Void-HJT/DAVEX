@@ -35,6 +35,9 @@ public class My {
     @Value("${my.ip}")
     private String ip;
 
+    @Value("${my.garnet_path}")
+    private String garnet_path;
+
     @Value("${server.port}")
     private int port;
 
@@ -253,6 +256,14 @@ public class My {
 
     public void setKeyStoreType(String keyStoreType) {
         this.keyStoreType = keyStoreType;
+    }
+
+    public String getGarnet_path() {
+        return garnet_path;
+    }
+
+    public void setGarnet_path(String garnet_path) {
+        this.garnet_path = garnet_path;
     }
 
 }

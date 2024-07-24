@@ -15,7 +15,6 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
 
 import DveAgent.entity.Agent;
-
 import nl.altindag.ssl.SSLFactory;
 
 @Component
@@ -52,6 +51,9 @@ public class My {
 
     @Value("${ssl.key-store-type}")
     private String keyStoreType;
+
+    @Value("${my.garnet_path}")
+    private String garnet_path;
 
     private Agent agent;
 
@@ -253,6 +255,14 @@ public class My {
 
     public void setKeyStoreType(String keyStoreType) {
         this.keyStoreType = keyStoreType;
+    }
+
+    public String getGarnet_path() {
+        return garnet_path;
+    }
+
+    public void setGarnet_path(String garnet_path) {
+        this.garnet_path = garnet_path;
     }
 
 }

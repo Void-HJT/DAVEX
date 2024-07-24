@@ -5,7 +5,7 @@ my:
   ip: 10.176.34.171
   name: '171-center'
   description: 'DVE Center 171'
-
+  garnet_path: "/home/nhy/garnet"
 server:
   port: 10999
 
