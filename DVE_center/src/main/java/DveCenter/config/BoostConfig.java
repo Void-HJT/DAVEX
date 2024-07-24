@@ -36,8 +36,6 @@ public class BoostConfig {
     @Autowired
     DveCenter.module.auth.service.SSLContextService sslContextService;
 
-    @Autowired
-    DveCenter.module.auth.service.AuthService authService;
 
     @PostConstruct
     void boost() throws Exception {
