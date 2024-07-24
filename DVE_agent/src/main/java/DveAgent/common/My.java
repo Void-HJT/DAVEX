@@ -1,22 +1,23 @@
 package DveAgent.common;
 
-import java.io.InputStream;
-import java.security.Key;
 import java.security.KeyStore;
 import java.security.PrivateKey;
 import java.security.Signature;
 import java.security.cert.Certificate;
+import java.time.LocalDateTime;
 import java.util.Base64;
 
 import javax.annotation.PostConstruct;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.io.ClassPathResource;
-import org.springframework.core.io.ResourceLoader;
 import org.springframework.stereotype.Component;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+
 import DveAgent.entity.Agent;
+import DveAgent.mapper.AgentMapper;
 import nl.altindag.ssl.SSLFactory;
 
 @Component
@@ -24,29 +25,14 @@ public class My {
     @Value("${version}")
     private String version;
 
+    @Value("${my.id}")
+    private long id;
+
     @Value("${my.name}")
     private String name;
 
-    private Agent agent;
-
-    public Agent getAgent() {
-        return agent;
-    }
-
-    public void setAgent(Agent agent) {
-        this.agent = agent;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    @Value("${my.id}")
-    private int id;
+    @Value("${my.description}")
+    private String description;
 
     @Value("${my.ip}")
     private String ip;
@@ -69,6 +55,11 @@ public class My {
     @Value("${ssl.key-store-type}")
     private String keyStoreType;
 
+    @Value("${my.garnet_path}")
+    private String garnet_path;
+
+    private Agent agent;
+
     private KeyStore keyStore;
 
     private KeyStore trustStore;
@@ -79,61 +70,25 @@ public class My {
 
     private SSLFactory baseSslFactory;
 
-    public SSLFactory getBaseSslFactory() {
-        return baseSslFactory;
-    }
-
-    public void setBaseSslFactory(SSLFactory baseSslFactory) {
-        this.baseSslFactory = baseSslFactory;
-    }
-
-    public Certificate getCertificate() {
-        return certificate;
-    }
-
-    public void setCertificate(Certificate certificate) {
-        this.certificate = certificate;
-    }
-
-    // @Autowired
-    // ResourceLoader resourceLoader;
+    @Autowired
+    private AgentMapper agentMapper;
 
     @PostConstruct
     public void init() throws Exception {
-
-        try (InputStream inputStream = new ClassPathResource(keyStorePath).getInputStream()) {
-            keyStore = KeyStore.getInstance(keyStoreType);
-            keyStore.load(inputStream, keyStorePassword.toCharArray());
-            Key key = keyStore.getKey(name, keyStorePassword.toCharArray());
-            if (key instanceof PrivateKey) {
-                privateKey = (PrivateKey) key;
-                certificate = keyStore.getCertificate(name);
-            }
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to load keys from keystore", e);
-        }
-
-        trustStore = KeyStore.getInstance(KeyStore.getDefaultType());
-        trustStore.load(null, null);
-
-        try (InputStream inputStream = new ClassPathResource(trustStorePath).getInputStream()) {
-            trustStore = KeyStore.getInstance(keyStoreType);
-            trustStore.load(inputStream,
-                    trustStorePassword.toCharArray());
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to load trustStore", e);
-        }
-        baseSslFactory = SSLFactory.builder()
-                .withIdentityMaterial(keyStore, keyStorePassword.toCharArray())
-                .withSwappableIdentityMaterial().withSwappableTrustMaterial()
-                .withTrustMaterial(trustStore)
-                .build();
+        LambdaQueryWrapper<Agent> queryWrapper = Wrappers.<Agent>lambdaQuery().eq(Agent::getUid, id);
+        Agent old_agent = agentMapper.selectOne(queryWrapper);
         agent = new Agent();
         agent.setUid(id);
         agent.setName(name);
         agent.setIp(ip);
         agent.setPort(port);
-        agent.setCrt(Utlis.certificateToBytes(certificate));
+        agent.setDescription(description);
+        agent.setLastUpdated(LocalDateTime.now());
+        if (old_agent == null || !old_agent.equals(agent)) {
+            agentMapper.insert(agent);
+        } else {
+            agent = old_agent;
+        }
     }
 
     /**
@@ -151,11 +106,51 @@ public class My {
         return Base64.getEncoder().encodeToString(signedData);
     }
 
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public Agent getAgent() {
+        return agent;
+    }
+
+    public void setAgent(Agent agent) {
+        this.agent = agent;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public SSLFactory getBaseSslFactory() {
+        return baseSslFactory;
+    }
+
+    public void setBaseSslFactory(SSLFactory baseSslFactory) {
+        this.baseSslFactory = baseSslFactory;
+    }
+
+    public Certificate getCertificate() {
+        return certificate;
+    }
+
+    public void setCertificate(Certificate certificate) {
+        this.certificate = certificate;
+    }
+
     public String getVersion() {
         return version;
     }
 
-    public int getId() {
+    public long getId() {
         return id;
     }
 
@@ -245,6 +240,14 @@ public class My {
 
     public void setKeyStoreType(String keyStoreType) {
         this.keyStoreType = keyStoreType;
+    }
+
+    public String getGarnet_path() {
+        return garnet_path;
+    }
+
+    public void setGarnet_path(String garnet_path) {
+        this.garnet_path = garnet_path;
     }
 
 }

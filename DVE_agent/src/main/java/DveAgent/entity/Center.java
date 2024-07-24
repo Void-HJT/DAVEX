@@ -1,5 +1,8 @@
 package DveAgent.entity;
 
+import java.time.LocalDateTime;
+import java.util.Arrays;
+
 import com.baomidou.mybatisplus.annotation.TableId;
 import lombok.Data;
 
@@ -7,76 +10,58 @@ import lombok.Data;
 public class Center {
 
   @TableId
-  private long uid;
+  private Long uid;
 
   private String name;
   private String ip;
   private long port;
   private byte[] crt;
-  private java.sql.Timestamp lastUpdated;
+  private LocalDateTime lastUpdated;
   private String description;
 
-
-  public long getUid() {
-    return uid;
+  @Override
+  public int hashCode() {
+    final int prime = 31;
+    int result = 1;
+    result = prime * result + (int) (uid ^ (uid >>> 32));
+    result = prime * result + ((name == null) ? 0 : name.hashCode());
+    result = prime * result + ((ip == null) ? 0 : ip.hashCode());
+    result = prime * result + (int) (port ^ (port >>> 32));
+    result = prime * result + Arrays.hashCode(crt);
+    result = prime * result + ((description == null) ? 0 : description.hashCode());
+    return result;
   }
 
-  public void setUid(long uid) {
-    this.uid = uid;
-  }
-
-
-  public String getName() {
-    return name;
-  }
-
-  public void setName(String name) {
-    this.name = name;
-  }
-
-
-  public String getIp() {
-    return ip;
-  }
-
-  public void setIp(String ip) {
-    this.ip = ip;
-  }
-
-
-  public long getPort() {
-    return port;
-  }
-
-  public void setPort(long port) {
-    this.port = port;
-  }
-
-
-  public byte[] getCrt() {
-    return crt;
-  }
-
-  public void setCrt(byte[] crt) {
-    this.crt = crt;
-  }
-
-
-  public java.sql.Timestamp getLastUpdated() {
-    return lastUpdated;
-  }
-
-  public void setLastUpdated(java.sql.Timestamp lastUpdated) {
-    this.lastUpdated = lastUpdated;
-  }
-
-
-  public String getDescription() {
-    return description;
-  }
-
-  public void setDescription(String description) {
-    this.description = description;
-  }
-
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj)
+      return true;
+    if (obj == null)
+      return false;
+    if (getClass() != obj.getClass())
+      return false;
+    Center other = (Center) obj;
+    if (uid != other.uid)
+      return false;
+    if (name == null) {
+      if (other.name != null)
+        return false;
+    } else if (!name.equals(other.name))
+      return false;
+    if (ip == null) {
+      if (other.ip != null)
+        return false;
+    } else if (!ip.equals(other.ip))
+      return false;
+    if (port != other.port)
+      return false;
+    if (!Arrays.equals(crt, other.crt))
+      return false;
+    if (description == null) {
+      if (other.description != null)
+        return false;
+    } else if (!description.equals(other.description))
+      return false;
+    return true;
+  };
 }

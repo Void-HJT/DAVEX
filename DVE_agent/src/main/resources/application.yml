@@ -2,9 +2,10 @@ version: '1.0'
 
 my:
   id: 1
-  ip: 10.162.167.156
-  name: 'drt'
-
+  ip: 10.176.34.171
+  name: '171-agent'
+  description: 'DVE Agent 171'
+  garnet_path: "/home/nhy/garnet"
 server:
   port: 8080
 
@@ -26,9 +27,9 @@ spring:
   datasource:
     druid:
       driver-class-name: com.mysql.cj.jdbc.Driver
-      url: jdbc:mysql://localhost:3306/test
-      username: root
-      password: Drt1951725
+      url: jdbc:mysql://10.176.34.171:3306/test
+      username: nhy
+      password: makeMPLgreat*2
 
   mvc:
     pathmatch:

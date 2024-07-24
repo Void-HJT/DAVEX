@@ -1,9 +1,11 @@
 package DveAgent.common;
 
+import java.io.Serializable;
+
 import lombok.Data;
 
 @Data
-public class Body<T> {
+public class Body<T> implements Serializable{
     private String method;
     private int code;
     private String message;
