@@ -7,7 +7,7 @@ my:
   description: 'DVE Center 173'
   garnet_path: "/home/nhy/garnet"
 server:
-  port: 8082
+  port: 19999
 
 ssl:
   client-auth: true
@@ -27,9 +27,9 @@ spring:
   datasource:
     druid:
       driver-class-name: com.mysql.cj.jdbc.Driver
-      url: jdbc:mysql://10.176.34.173:3306/center
-      username: zw
-      password: newpass
+      url: jdbc:mysql://10.176.34.171:3306/center_nhy
+      username: nhy
+      password: makeMPLgreat*2
 
   mvc:
     pathmatch:
