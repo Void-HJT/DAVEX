@@ -1,10 +1,10 @@
 version: '1.0'
 
 my:
-  id: 8
-  ip: 10.176.34.173
-  name: '173'
-  description: 'DVE Center 173'
+  id: 1
+  ip: 10.176.34.171
+  name: '171'
+  description: 'DVE Center 171!!!'
   garnet_path: "/home/nhy/garnet"
 server:
   port: 19999
