@@ -9,17 +9,10 @@ import java.util.Base64;
 
 import javax.annotation.PostConstruct;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.toolkit.Wrappers;
-
-import DveAgent.entity.Agent;
 import DveAgent.entity.Center;
-import DveAgent.mapper.AgentMapper;
-import DveAgent.mapper.CenterMapper;
 import nl.altindag.ssl.SSLFactory;
 
 @Component
@@ -72,13 +65,8 @@ public class My {
 
     private SSLFactory baseSslFactory;
 
-    @Autowired
-    private CenterMapper centerMapper;
-
     @PostConstruct
     public void init() throws Exception {
-        LambdaQueryWrapper<Center> queryWrapper = Wrappers.<Center>lambdaQuery().eq(Center::getUid, id);
-        Center old_center = centerMapper.selectOne(queryWrapper);
         center = new Center();
         center.setUid(id);
         center.setName(name);
@@ -86,12 +74,6 @@ public class My {
         center.setPort(port);
         center.setDescription(description);
         center.setLastUpdated(LocalDateTime.now());
-        if (old_center == null || !center.equals(old_center)) {
-            centerMapper.insert(center);
-        } else {
-            center = old_center;
-        }
-
     }
 
     /**

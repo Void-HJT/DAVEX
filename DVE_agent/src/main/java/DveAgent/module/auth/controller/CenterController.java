@@ -14,34 +14,35 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 
 import DveAgent.common.R;
-import DveAgent.entity.Agent;
-import DveAgent.mapper.AgentMapper;
+import DveAgent.entity.Center;
+import DveAgent.mapper.CenterMapper;
 
 @RestController
-@RequestMapping("/agents")
-public class AgentController {
+@RequestMapping("/centers")
+public class CenterController {
+
     @Autowired
-    AgentMapper agentMapper;
+    private CenterMapper centerMapper;
 
     @GetMapping("/list")
-    public R<List<Agent>> list() {
-        LambdaQueryWrapper<Agent> queryWrapper = Wrappers.<Agent>lambdaQuery();
-        return R.success(agentMapper.selectList(queryWrapper), "查询成功");
+    public R<List<Center>> list() {
+        LambdaQueryWrapper<Center> queryWrapper = Wrappers.<Center>lambdaQuery();
+        return R.success(centerMapper.selectList(queryWrapper), "查询成功");
     }
 
     @PostMapping("/update")
-    public R<?> update(@RequestBody Agent agent) {
-        LambdaQueryWrapper<Agent> queryWrapper = Wrappers.<Agent>lambdaQuery().eq(Agent::getUid, agent.getUid());
-        if (agentMapper.selectOne(queryWrapper) != null) {
+    public R<?> update(@RequestBody Center center) {
+        LambdaQueryWrapper<Center> queryWrapper = Wrappers.<Center>lambdaQuery().eq(Center::getUid, center.getUid());
+        if (centerMapper.selectOne(queryWrapper) != null) {
             try {
-                agentMapper.updateById(agent);
+                centerMapper.updateById(center);
                 return R.success("更新成功");
             } catch (Exception ex) {
                 return R.error(ex.getMessage());
             }
         } else {
             try {
-                agentMapper.insert(agent);
+                centerMapper.insert(center);
                 return R.success("更新成功");
             } catch (Exception ex) {
                 return R.error(ex.getMessage());
@@ -51,9 +52,9 @@ public class AgentController {
     }
 
     @PostMapping("/insert")
-    public R<?> insert(@RequestBody Agent agent) {
+    public R<?> insert(@RequestBody Center center) {
         try {
-            agentMapper.insert(agent);
+            centerMapper.insert(center);
             return R.success("插入成功");
         } catch (Exception ex) {
             return R.error(ex.getMessage());
@@ -62,13 +63,14 @@ public class AgentController {
     }
 
     @DeleteMapping("/delete")
-    public R<?> deletet(@RequestBody Agent agent) {
+    public R<?> deletet(@RequestBody Center center) {
         try {
-            agentMapper.deleteById(agent.getUid());
+            centerMapper.deleteById(center.getUid());
             return R.success("插入成功");
         } catch (Exception ex) {
             return R.error(ex.getMessage());
         }
 
     }
+
 }

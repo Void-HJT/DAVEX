@@ -1,6 +1,8 @@
 package DveAgent.entity;
 
-import com.baomidou.mybatisplus.annotation.IdType;
+
+import java.util.UUID;
+
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
@@ -12,8 +14,9 @@ import lombok.Data;
 @TableName("mpcTask")
 public class MpcTask {
 
-  @TableId(value = "uid", type = IdType.AUTO)
-  private long uid;
+  @TableId
+  private Long uid;
+  private UUID uuid;
   private long applicationId;
   private long centerId;
   private long mpcId;
