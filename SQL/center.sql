@@ -14,8 +14,9 @@
  Date: 14/07/2024 14:37:44
 */
 
-CREATE DATABASE IF NOT EXISTS `agent`;
-USE `agent`;
+
+CREATE DATABASE IF NOT EXISTS `center`;
+USE `center`;
 
 SET NAMES utf8mb4;
 SET FOREIGN_KEY_CHECKS = 0;
@@ -208,6 +209,17 @@ CREATE TABLE `rule` (
   `group_id` int DEFAULT NULL,
   `allowed_method` enum('psi','pir','direct','mpc') DEFAULT NULL,
   PRIMARY KEY (`uid`,`agent_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- ----------------------------
+-- Table structure for input
+-- ----------------------------
+DROP TABLE IF EXISTS `input`;
+CREATE TABLE `input` (
+   `uid` int NOT NULL AUTO_INCREMENT,
+   `application_id` int NOT NULL,
+   `path` int NOT NULL,
+  PRIMARY KEY (`uid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 SET FOREIGN_KEY_CHECKS = 1;

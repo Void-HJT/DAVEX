@@ -9,15 +9,11 @@ import java.util.Base64;
 
 import javax.annotation.PostConstruct;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 
 import DveAgent.entity.Agent;
-import DveAgent.mapper.AgentMapper;
 import nl.altindag.ssl.SSLFactory;
 
 @Component
@@ -70,13 +66,9 @@ public class My {
 
     private SSLFactory baseSslFactory;
 
-    @Autowired
-    private AgentMapper agentMapper;
 
     @PostConstruct
     public void init() throws Exception {
-        LambdaQueryWrapper<Agent> queryWrapper = Wrappers.<Agent>lambdaQuery().eq(Agent::getUid, id);
-        Agent old_agent = agentMapper.selectOne(queryWrapper);
         agent = new Agent();
         agent.setUid(id);
         agent.setName(name);
@@ -84,11 +76,6 @@ public class My {
         agent.setPort(port);
         agent.setDescription(description);
         agent.setLastUpdated(LocalDateTime.now());
-        if (old_agent == null || !old_agent.equals(agent)) {
-            agentMapper.insert(agent);
-        } else {
-            agent = old_agent;
-        }
     }
 
     /**

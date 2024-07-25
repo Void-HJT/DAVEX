@@ -1,20 +1,17 @@
+package DveCenter.module.task;
 
-package DveAgent.module.task.service;
 
-import com.baomidou.mybatisplus.extension.service.IService;
+import DveAgent.entity.Agent;
 import DveAgent.entity.MpcTask;
 import DveAgent.entity.MpcTaskAgent;
+import DveCenter.entity.Input;
 import DveAgent.mapper.MpcTaskAgentMapper;
 import DveAgent.mapper.MpcTaskMapper;
-import DveAgent.entity.Agent;
-import java.util.Optional;
+import DveCenter.mapper.InputMapper;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import org.springframework.stereotype.Service;
 import org.springframework.beans.factory.annotation.Autowired;
 import java.util.List;
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.toolkit.Wrappers;
-
-
 @Service
 public class MpcTaskService {
 
@@ -24,37 +21,50 @@ public class MpcTaskService {
     @Autowired
     private MpcTaskAgentMapper mpcTaskAgentMapper;
 
+    @Autowired
+    private InputMapper inputMapper;
+
     public MpcTask createMpcTask(MpcTask mpcTask) {
         mpcTaskMapper.insert(mpcTask);
         return mpcTask;
     }
 
-    public void addAgentToMPCTask(Long mpcTaskId, List<MpcTaskAgent> agents) {
+    public Input createInput (Input input) {
+        inputMapper.insert(input);
+        return input;
+    }
+
+    public void addAgentToMPCTask(Long mpcTaskId, Long centerId,List<MpcTaskAgent> agents) {
         //检查List的大小 是否与mpcTaskId对应的MpcTask的相等
         // int size = agents.size();
         // if(size != mpcTaskMapper.getMpcTaskById(mpcTaskId).get().getPn()){
         //     throw new RuntimeException("The number of agents is not equal to the number of agents required by the task");
         // }
 
-        //将agents插入到MpcTaskAgent表中
-        //晚点补几个插入的逻辑
-        //检测id
-        //检测size
-        //检测重复
+        //将agents插入到MpcTaskAgent表
+        //检测重复 对重复的处理逻辑：直接按照mpcTaskId 和 centerId 把表项全部删掉 然后重新插入
+        LambdaQueryWrapper<MpcTaskAgent> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(MpcTaskAgent::getMpcTaskId, mpcTaskId)
+                .eq(MpcTaskAgent::getCenterId, centerId);
+        // 执行删除操作
+        mpcTaskAgentMapper.delete(queryWrapper);
         for(MpcTaskAgent agent : agents){
             mpcTaskAgentMapper.insert(agent);
         }
 
     }
 
-    public MpcTaskAgent getPartByMpcTaskIdAndAgentId(Long mpcTaskId,Long agentId){
-        // 创建LambdaQueryWrapper实例
-        LambdaQueryWrapper<MpcTaskAgent> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.eq(MpcTaskAgent::getMpcTaskId, mpcTaskId)
-                .eq(MpcTaskAgent::getAgentId, agentId);
-        return mpcTaskAgentMapper.selectOne(queryWrapper);
+
+    public MpcTask getMpcTaskById(Long mpcTaskId) {
+        return mpcTaskMapper.selectById(mpcTaskId);
     }
 
+    public List<MpcTaskAgent> getAgentsByMpcTaskIdAndCenterId(Long mpcTaskId, Long centerId){
+        LambdaQueryWrapper<MpcTaskAgent> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(MpcTaskAgent::getMpcTaskId, mpcTaskId)
+                .eq(MpcTaskAgent::getCenterId, centerId);
+        return mpcTaskAgentMapper.selectList(queryWrapper);
+    }
 
     public MpcTask getTaskByMpcTaskIdAndCenterId(Long mpcTaskId,Long centerId){
         // 创建LambdaQueryWrapper实例
