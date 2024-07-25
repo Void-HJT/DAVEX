@@ -39,12 +39,10 @@ public class MpcTaskController {
         //如果存成功了 就把这几个表发送给对应的agent 还得发mpcTask表 然后agent接到以后去填自己本地的表项（这一步要怎么做？）
     }
 
-    @PostMapping("{taskId}/execute")
-    public void runTask(@PathVariable Long taskId){
-        //根据taskId查task agent表 确认需要发的agent有哪几个
-        //给每个agent发check信息
-        //check无误后执行本地任务
-        //并给agent发消息也执行任务
+    @PostMapping("{mpcTaskId}/execute")
+    public void runTask(@PathVariable Long mpcTaskId , @RequestBody Long centerId){
+        //根据mpcTaskId 和 centerId 找到对应的mpcTask，并且执行
+        MpcTask mpcTask = mpcTaskService.getTaskByMpcTaskIdAndCenterId(mpcTaskId,centerId);
     }
 
     @PostMapping("{mpcTaskId}/receiveAgentTable")

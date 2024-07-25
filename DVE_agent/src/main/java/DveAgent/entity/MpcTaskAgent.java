@@ -16,6 +16,7 @@ public class MpcTaskAgent {
   // 去数据库里修改表名
   @TableField("mpcTask_id")
   private long mpcTaskId;
+  private long centerId;
   private long agentId;
   private long part;
   private long fileId;
