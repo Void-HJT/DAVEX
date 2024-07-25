@@ -8,7 +8,7 @@
         SELECT * FROM folder WHERE parent_id = #{parentId}
     </select>
 
-    <select id="select" parameterType="Integer" resultType="DveAgent.entity.Folder">
+    <select id="select" parameterType="Long" resultType="DveAgent.entity.Folder">
         SELECT * FROM folder WHERE uid = #{id}
     </select>
 </mapper>

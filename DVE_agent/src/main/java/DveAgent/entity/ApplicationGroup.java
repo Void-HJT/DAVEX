@@ -1,16 +1,17 @@
 package DveAgent.entity;
 
+import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import lombok.Data;
 
 @Data
 public class ApplicationGroup {
 
-  @TableId
+  @TableId(type = IdType.AUTO)
   private Long uid;
-  private long agentId;
-  private long centerId;
-  private long applicationId;
-  private long groupId;
+  private Long agentId;
+  private Long centerId;
+  private Long applicationId;
+  private Long groupId;
 
 }

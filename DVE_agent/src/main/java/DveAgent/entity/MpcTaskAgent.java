@@ -11,12 +11,12 @@ import lombok.Data;
 @TableName("mpcTask_agent")
 public class MpcTaskAgent {
 
-  @TableId(value = "uid", type = IdType.AUTO)
-  private long uid;
+  @TableId(type = IdType.AUTO)
+  private Long uid;
   // 去数据库里修改表名
   @TableField("mpcTask_id")
-  private long mpcTaskId;
-  private long agentId;
-  private long part;
+  private Long mpcTaskId;
+  private Long agentId;
+  private Long part;
 
 }

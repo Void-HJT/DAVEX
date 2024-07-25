@@ -26,7 +26,7 @@ public class My {
     private String version;
 
     @Value("${my.id}")
-    private long id;
+    private Long id;
 
     @Value("${my.name}")
     private String name;
@@ -81,7 +81,7 @@ public class My {
         agent.setUid(id);
         agent.setName(name);
         agent.setIp(ip);
-        agent.setPort(port);
+        agent.setPort((long) port);
         agent.setDescription(description);
         agent.setLastUpdated(LocalDateTime.now());
         if (old_agent == null || !old_agent.equals(agent)) {
@@ -166,7 +166,7 @@ public class My {
         this.version = version;
     }
 
-    public void setId(int id) {
+    public void setId(Long id) {
         this.id = id;
     }
 

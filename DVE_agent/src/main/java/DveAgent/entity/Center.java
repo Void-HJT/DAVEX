@@ -3,18 +3,19 @@ package DveAgent.entity;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 
+import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import lombok.Data;
 
 @Data
 public class Center {
 
-  @TableId
+  @TableId(type = IdType.AUTO)
   private Long uid;
 
   private String name;
   private String ip;
-  private long port;
+  private Long port;
   private byte[] crt;
   private LocalDateTime lastUpdated;
   private String description;
@@ -32,36 +33,4 @@ public class Center {
     return result;
   }
 
-  @Override
-  public boolean equals(Object obj) {
-    if (this == obj)
-      return true;
-    if (obj == null)
-      return false;
-    if (getClass() != obj.getClass())
-      return false;
-    Center other = (Center) obj;
-    if (uid != other.uid)
-      return false;
-    if (name == null) {
-      if (other.name != null)
-        return false;
-    } else if (!name.equals(other.name))
-      return false;
-    if (ip == null) {
-      if (other.ip != null)
-        return false;
-    } else if (!ip.equals(other.ip))
-      return false;
-    if (port != other.port)
-      return false;
-    if (!Arrays.equals(crt, other.crt))
-      return false;
-    if (description == null) {
-      if (other.description != null)
-        return false;
-    } else if (!description.equals(other.description))
-      return false;
-    return true;
-  };
 }
