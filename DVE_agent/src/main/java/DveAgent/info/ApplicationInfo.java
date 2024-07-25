@@ -8,7 +8,7 @@ import java.util.List;
 
 @Data
 public class ApplicationInfo extends Application {
-    private long agentId;
-    private long groupId;
+    private Long agentId;
+    private Long groupId;
     private String groupName;
 }

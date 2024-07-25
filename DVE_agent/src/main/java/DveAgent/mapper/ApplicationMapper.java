@@ -11,5 +11,5 @@ import java.util.List;
 
 @Mapper
 public interface ApplicationMapper extends BaseMapper<Application> {
-    List<ApplicationInfo> getApplicationInfo(@Param("agentId") long agentId,@Param("centerId") long centerId);
+    List<ApplicationInfo> getApplicationInfo(@Param("agentId") Long agentId,@Param("centerId") Long centerId);
 }

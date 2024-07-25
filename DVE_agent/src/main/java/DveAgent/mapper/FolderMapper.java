@@ -9,7 +9,7 @@ import java.util.List;
 
 @Mapper
 public interface FolderMapper extends BaseMapper<Folder> {
-    List<Folder> selectByParentId(@Param("parentId")long uid);
+    List<Folder> selectByParentId(@Param("parentId")Long uid);
 
-    Folder select(@Param("id") Integer rootFolderId);
+    Folder select(@Param("id") Long rootFolderId);
 }
