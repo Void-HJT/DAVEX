@@ -54,6 +54,12 @@ public class DirectoryService {
     @Autowired
     private FolderVisibilityMapper folderVisibilityMapper;
 
+    public Body<List<Application>> getApplication() {
+        LambdaQueryWrapper<Application> queryWrapper = Wrappers.<Application>lambdaQuery();
+        List<Application> applications = applicationMapper.selectList(queryWrapper);
+        return Body.success(applications,"返回用户列表");
+    }
+
     public Body<String> createFolder(String name, String path,Integer agent_id, Integer parent_id){
         //1.查询数据库相同父文件夹下是否有同名文件夹
         LambdaQueryWrapper<Folder> queryWrapper = Wrappers.<Folder>lambdaQuery()
@@ -407,6 +413,10 @@ public class DirectoryService {
         }
         fullPathBuilder.append(java.io.File.separator).append(file.getOriginalFilename());
         String folderPath = fullPathBuilder.toString();
+//        Path destPath = Paths.get("/disk2/DVE/result/result", "1907.08015.pdf");
+//        System.out.println("Dest Path: " + destPath.toString()); // 调试输出路径
+
+        //java.io.File destFile = destPath.toFile();
         //将文件存储到实际目录中
         java.io.File destFile = new java.io.File(folderPath);
         try {
@@ -644,4 +654,5 @@ public class DirectoryService {
         directory.setChildren(allowedChildren);
         return directory;
     }
+
 }

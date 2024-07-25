@@ -1,11 +1,13 @@
 package DveAgent.module.directory;
 
 import DveAgent.common.Body;
+import DveAgent.entity.Application;
 import DveAgent.entity.File;
 import DveAgent.entity.Group;
 import DveAgent.info.ApplicationInfo;
 import DveAgent.info.DirectoryInfo;
 import DveAgent.info.FileInfo;
+import org.apache.ibatis.annotations.Param;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
@@ -33,7 +35,14 @@ public class DirectoryController {
 
     @Autowired
     private DirectoryService directoryService;
-    private static final String BASE_DIRECTORY = "/Users/dengruotao/Desktop/result";
+//    private static final String BASE_DIRECTORY = "/Users/dengruotao/Desktop/result";
+    private static final String BASE_DIRECTORY = "/disk2/DVE/result";
+
+    @PostMapping("/getApplication")
+    public Body<List<Application>> getApplication(){
+        return directoryService.getApplication();
+
+    }
 
     @PostMapping("/getGroup")
     public Body<List<Group>> getGroup(@RequestParam("agentId") Integer agentId,
