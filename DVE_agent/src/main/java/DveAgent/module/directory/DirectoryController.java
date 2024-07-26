@@ -45,45 +45,45 @@ public class DirectoryController {
     }
 
     @PostMapping("/getGroup")
-    public Body<List<Group>> getGroup(@RequestParam("agentId") Integer agentId,
-                                 @RequestParam("centerId") Integer centerId){
+    public Body<List<Group>> getGroup(@RequestParam("agentId") Long agentId,
+                                 @RequestParam("centerId") Long centerId){
         return directoryService.getGroup(agentId,centerId);
     }
 
     @PostMapping("/addGroup")
-    public Body<String> addGroup(@RequestParam("agentId") Integer agentId,
-                            @RequestParam("centerId") Integer centerId,
+    public Body<String> addGroup(@RequestParam("agentId") Long agentId,
+                            @RequestParam("centerId") Long centerId,
                             @RequestParam("name") String name){
         return directoryService.addGroup(agentId,centerId,name);
     }
 
     @PostMapping("/getGroupByApplicationId")
-    public Body<List<Group>> getGroupByApplicationId(@RequestParam("agentId") Integer agentId,
-                                                     @RequestParam("centerId") Integer centerId,
-                                                     @RequestParam("applicationId") Integer applicationId){
+    public Body<List<Group>> getGroupByApplicationId(@RequestParam("agentId") Long agentId,
+                                                     @RequestParam("centerId") Long centerId,
+                                                     @RequestParam("applicationId") Long applicationId){
         return directoryService.getGroupByApplicationId(agentId,centerId,applicationId);
 
     }
 
     @PostMapping("/getApplicationAndGroup")
-    public Body<List<ApplicationInfo>> getApplicationAndGroup(@RequestParam("agentId") Integer agentId,
-                                                                        @RequestParam("centerId") Integer centerId){
+    public Body<List<ApplicationInfo>> getApplicationAndGroup(@RequestParam("agentId") Long agentId,
+                                                              @RequestParam("centerId") Long centerId){
         return directoryService.getApplicationAndGroup(agentId,centerId);
 
     }
 
     @PostMapping("/addApplicationGroup")
-    public Body<String> addApplicationGroup(@RequestParam("agentId") Integer agentId,
-                                            @RequestParam("centerId") Integer centerId,
-                                            @RequestParam("applicationId") Integer applicationId,
-                                            @RequestParam("groupId") Integer groupId){
+    public Body<String> addApplicationGroup(@RequestParam("agentId") Long agentId,
+                                            @RequestParam("centerId") Long centerId,
+                                            @RequestParam("applicationId") Long applicationId,
+                                            @RequestParam("groupId") Long groupId){
         return directoryService.addApplicationGroup(agentId,centerId,applicationId,groupId);
 
     }
 
     @PostMapping("/addRule")
-    public Body<String> addRule(@RequestParam("agentId") Integer agentId,
-                                @RequestParam("groupId") Integer groupId,
+    public Body<String> addRule(@RequestParam("agentId") Long agentId,
+                                @RequestParam("groupId") Long groupId,
                                 @RequestParam("allowMethod")String allowMethod){
         return directoryService.addRule(agentId,groupId,allowMethod);
 
@@ -93,60 +93,60 @@ public class DirectoryController {
 
     @PostMapping("/createFolder")
     public Body<String> createFolder(@RequestParam("name") String name,
-            @RequestParam("path") String path,
-            @RequestParam("agentId") Integer agentId,
-            @RequestParam("parentId") Integer parentId) {
+                @RequestParam("path") String path,
+                @RequestParam("agentId") Long agentId,
+                @RequestParam("parentId") Long parentId) {
         path = BASE_DIRECTORY + path;
         return directoryService.createFolder(name, path, agentId, parentId);
     }
 
     @PostMapping("/setFolderVisible")
-    public Body<String> setFolderVisible(@RequestParam("agentId") Integer agentId,
-                                            @RequestParam("groupId") Integer groupId,
-                                            @RequestParam("folderId") Integer folderId){
+    public Body<String> setFolderVisible(@RequestParam("agentId") Long agentId,
+                                            @RequestParam("groupId") Long groupId,
+                                            @RequestParam("folderId") Long folderId){
         return directoryService.setFolderVisible(agentId,groupId,folderId);
     }
 
     @PostMapping("/setFolderInvisible")
-    public Body<String> setFolderInvisible(@RequestParam("agentId") Integer agentId,
-                                            @RequestParam("groupId") Integer groupId,
-                                            @RequestParam("folderId") Integer folderId){
+    public Body<String> setFolderInvisible(@RequestParam("agentId") Long agentId,
+                                            @RequestParam("groupId") Long groupId,
+                                            @RequestParam("folderId") Long folderId){
         return directoryService.setFolderInvisible(agentId,groupId,folderId);
     }
 
     @PostMapping("/setFolderName")
-    public Body<String> setFolderName(@RequestParam("agentId") Integer agentId,
-                                      @RequestParam("folderId") Integer folderId,
+    public Body<String> setFolderName(@RequestParam("agentId") Long agentId,
+                                      @RequestParam("folderId") Long folderId,
                                       @RequestParam("name") String name){
 
         return directoryService.setFolderName(agentId,folderId,name,BASE_DIRECTORY);
     }
 
     @PostMapping("/deleteFolder")
-    public Body<String> deleteFolder(@RequestParam("agentId") Integer agentId,
-                                     @RequestParam("folderId") Integer folderId){
+    public Body<String> deleteFolder(@RequestParam("agentId") Long agentId,
+                                     @RequestParam("folderId") Long folderId){
         return directoryService.deleteFolder(agentId,folderId,BASE_DIRECTORY);
     }
 
     @PostMapping("/getFolderPath")
-    public Body<String> getFolderPath(@RequestParam("agentId") Integer agentId,
-                                      @RequestParam("folderId") Integer folderId){
+    public Body<String> getFolderPath(@RequestParam("agentId") Long agentId,
+                                      @RequestParam("folderId") Long folderId){
         return directoryService.getFolderPath(agentId,folderId,BASE_DIRECTORY);
     }
 
 
     @PostMapping("/showFile")
-    public  Body<File> showFile(@RequestParam("uid") Integer uid,
-                                @RequestParam("agentId") Integer agentId,
-                                @RequestParam("folderId") Integer folderId) {
+    public  Body<File> showFile(@RequestParam("uid") Long uid,
+                                @RequestParam("agentId") Long agentId,
+                                @RequestParam("folderId") Long folderId) {
 
         return directoryService.showFile(uid,agentId,folderId);
     }
 
 
     @PostMapping("/uploadFile")
-    public  Body<String> uploadFile(@RequestParam("agentId") Integer agentId,
-                                    @RequestParam("folderId") Integer folderId,
+    public  Body<String> uploadFile(@RequestParam("agentId") Long agentId,
+                                    @RequestParam("folderId") Long folderId,
                                     @RequestPart("file") MultipartFile file) {
         if (file.isEmpty()) {
             return Body.error("上传文件为空");
@@ -161,31 +161,31 @@ public class DirectoryController {
     }
 
     @PostMapping("/getFileInfo")
-    public Body<FileInfo> getFileInfo(@RequestParam("uid") Integer uid,
-                                      @RequestParam("agentId") Integer agentId,
-                                      @RequestParam("folderId") Integer folderId){
+    public Body<FileInfo> getFileInfo(@RequestParam("uid") Long uid,
+                                      @RequestParam("agentId") Long agentId,
+                                      @RequestParam("folderId") Long folderId){
         return directoryService.getFileInfo(uid,agentId,folderId);
     }
 
     @PostMapping("/setFileRule")
-    public Body<String> setFileRule(@RequestParam("fileId") Integer fileId,
-                                    @RequestParam("agentId") Integer agentId,
-                                    @RequestParam("folderId") Integer folderId,
-                                    @RequestParam("ruleId") Integer ruleId){
+    public Body<String> setFileRule(@RequestParam("fileId") Long fileId,
+                                    @RequestParam("agentId") Long agentId,
+                                    @RequestParam("folderId") Long folderId,
+                                    @RequestParam("ruleId") Long ruleId){
         return directoryService.setFileRule(fileId,agentId,folderId,ruleId);
     }
 
     @PostMapping("/deleteFile")
-    public Body<String> deleteFile(@RequestParam("fileId") Integer fileId,
-                                   @RequestParam("agentId") Integer agentId,
-                                   @RequestParam("folderId") Integer folderId){
+    public Body<String> deleteFile(@RequestParam("fileId") Long fileId,
+                                   @RequestParam("agentId") Long agentId,
+                                   @RequestParam("folderId") Long folderId){
         return directoryService.deleteFile(fileId,agentId,folderId,BASE_DIRECTORY);
     }
 
     @PostMapping("/sendFile")
-    public ResponseEntity<Resource> sendFile(@RequestParam("fileId") Integer fileId,
-                                             @RequestParam("agentId") Integer agentId,
-                                             @RequestParam("folderId") Integer folderId){
+    public ResponseEntity<Resource> sendFile(@RequestParam("fileId") Long fileId,
+                                             @RequestParam("agentId") Long agentId,
+                                             @RequestParam("folderId") Long folderId){
         String filePath = directoryService.getFilePath(fileId,agentId,folderId,BASE_DIRECTORY);
         // 读取文件路径
         Path path = Paths.get(filePath);
@@ -219,15 +219,15 @@ public class DirectoryController {
 
 
     @PostMapping("/getDirectory")
-    public Body<DirectoryInfo> getDirectory(@RequestParam("rootId") Integer rootFolderId) {
+    public Body<DirectoryInfo> getDirectory(@RequestParam("rootId") Long rootFolderId) {
         DirectoryInfo directory = directoryService.getDirectoryStructure(rootFolderId);
         return Body.success(directory,"1");
     }
 
     @PostMapping("/getDirectoryByGroup")
-    public Body<DirectoryInfo> getDirectory(@RequestParam("rootId") Integer rootFolderId,
-                                            @RequestParam("agentId") Integer agentId,
-                                            @RequestParam("groupId") Integer groupId) {
+    public Body<DirectoryInfo> getDirectory(@RequestParam("rootId") Long rootFolderId,
+                                            @RequestParam("agentId") Long agentId,
+                                            @RequestParam("groupId") Long groupId) {
         DirectoryInfo directory = directoryService.getDirectoryStructure(rootFolderId);
         directory = directoryService.filterFoldersByVisibility(groupId,agentId,directory);
         directory = directoryService.filterFilesByRule(groupId,agentId,directory);

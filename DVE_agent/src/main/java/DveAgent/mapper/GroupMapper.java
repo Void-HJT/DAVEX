@@ -12,7 +12,7 @@ import java.util.List;
 @Mapper
 public interface GroupMapper extends BaseMapper<Group> {
 
-    List<Group> getList(@Param("agentId") long agentId,
-                        @Param("centerId") long centerId,
-                        @Param("applicationId") long applicationId);
+    List<Group> getList(@Param("agentId") Long agentId,
+                        @Param("centerId") Long centerId,
+                        @Param("applicationId") Long applicationId);
 }

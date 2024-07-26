@@ -60,7 +60,7 @@ public class DirectoryService {
         return Body.success(applications,"返回用户列表");
     }
 
-    public Body<String> createFolder(String name, String path,Integer agent_id, Integer parent_id){
+    public Body<String> createFolder(String name, String path,Long agent_id, Long parent_id){
         //1.查询数据库相同父文件夹下是否有同名文件夹
         LambdaQueryWrapper<Folder> queryWrapper = Wrappers.<Folder>lambdaQuery()
                 .eq(Folder::getParentId, parent_id)
@@ -86,7 +86,7 @@ public class DirectoryService {
         return Body.success("插入新文件夹成功");
     }
 
-    public Body<String> addGroup(Integer agentId, Integer centerId, String name) {
+    public Body<String> addGroup(Long agentId, Long centerId, String name) {
         //1.查询数据库是否有同名组
         LambdaQueryWrapper<Group> queryWrapper = Wrappers.<Group>lambdaQuery()
                 .eq(Group::getAgentId,agentId)
@@ -102,18 +102,18 @@ public class DirectoryService {
         return Body.success("新增组成功");
     }
 
-    public Body<List<Group>> getGroupByApplicationId(Integer agentId, Integer centerId, Integer applicationId) {
+    public Body<List<Group>> getGroupByApplicationId(Long agentId, Long centerId, Long applicationId) {
         List<Group> groups = groupMapper.getList(agentId,centerId,applicationId);
         return Body.success(groups,"成功");
     }
 
-    public Body<List<ApplicationInfo>> getApplicationAndGroup(Integer agentId,Integer centerId) {
+    public Body<List<ApplicationInfo>> getApplicationAndGroup(Long agentId,Long centerId) {
         List<ApplicationInfo> applicationInfos = applicationMapper.getApplicationInfo(agentId,centerId);
 
         return Body.success(applicationInfos,"成功");
     }
 
-    public Body<List<Group>> getGroup(Integer agentId, Integer centerId) {
+    public Body<List<Group>> getGroup(Long agentId, Long centerId) {
         LambdaQueryWrapper<Group> queryWrapper = Wrappers.<Group>lambdaQuery()
                 .eq(Group::getCenterId,centerId)
                 .eq(Group::getAgentId,agentId);
@@ -122,7 +122,7 @@ public class DirectoryService {
         return Body.success(groupList,"成功");
     }
 
-    public Body<String> addApplicationGroup(Integer agentId, Integer centerId, Integer applicationId, Integer groupId) {
+    public Body<String> addApplicationGroup(Long agentId, Long centerId, Long applicationId, Long groupId) {
         //1.判断是否有分组重复
         LambdaQueryWrapper<ApplicationGroup> queryWrapper = Wrappers.<ApplicationGroup>lambdaQuery()
                 .eq(ApplicationGroup::getCenterId,centerId)
@@ -139,7 +139,7 @@ public class DirectoryService {
         return Body.success("分组成功");
     }
 
-    public Body<String> addRule(Integer agentId, Integer groupId, String allowMethod) {
+    public Body<String> addRule(Long agentId, Long groupId, String allowMethod) {
         Rule rule = new Rule();
         //1.判断输入的权限是否是指定的
         if(!ALLOWED_METHODS.contains(allowMethod)){return Body.error("规则种类错误");}
@@ -157,7 +157,7 @@ public class DirectoryService {
 
     }
 
-    public Body<String> setFolderVisible(Integer agentId, Integer groupId, Integer folderId) {
+    public Body<String> setFolderVisible(Long agentId, Long groupId, Long folderId) {
         //1.判断用户组 文件夹是否存在
         LambdaQueryWrapper<Group> queryGroupWrapper = Wrappers.<Group>lambdaQuery()
                 .eq(Group::getUid,groupId)
@@ -168,11 +168,11 @@ public class DirectoryService {
                 .eq(Folder::getAgentId,agentId);
         if(folderMapper.selectList(queryFolderWrapper).isEmpty()){return Body.error("该文件夹不存在");}
         //2.寻找其所有父文件夹，如果有一个父文件夹对该用户不可见，那么返回错误（当父文件不可见，子文件夹可见不合理）
-        List<Integer> parentFolderIds = new ArrayList<>();
+        List<Long> parentFolderIds = new ArrayList<>();
         List<String> path = new ArrayList<>();
         findAllParentFolders(folderId, agentId, parentFolderIds,path);
 
-        for (Integer parentId : parentFolderIds) {
+        for (Long parentId : parentFolderIds) {
             LambdaQueryWrapper<FolderVisibility> queryVisibilityWrapper = Wrappers.<FolderVisibility>lambdaQuery()
                     .eq(FolderVisibility::getFolderId, parentId)
                     .eq(FolderVisibility::getGroupId, groupId)
@@ -192,7 +192,7 @@ public class DirectoryService {
     }
 
 
-    public Body<String> setFolderInvisible(Integer agentId, Integer groupId, Integer folderId) {
+    public Body<String> setFolderInvisible(Long agentId, Long groupId, Long folderId) {
         // 1. 查表判断用户组与文件夹可见性是否存在
         LambdaQueryWrapper<FolderVisibility> queryVisibilityWrapper = Wrappers.<FolderVisibility>lambdaQuery()
                 .eq(FolderVisibility::getFolderId, folderId)
@@ -203,10 +203,10 @@ public class DirectoryService {
         }
 
         // 2. 寻找其所有子文件夹，如果子文件夹对该用户组可见，将其设为不可见
-        List<Integer> childFolderIds = new ArrayList<>();
+        List<Long> childFolderIds = new ArrayList<>();
         findAllChildFolders(folderId, agentId, childFolderIds);
 
-        for (Integer childId : childFolderIds) {
+        for (Long childId : childFolderIds) {
             LambdaQueryWrapper<FolderVisibility> queryChildVisibilityWrapper = Wrappers.<FolderVisibility>lambdaQuery()
                     .eq(FolderVisibility::getFolderId, childId)
                     .eq(FolderVisibility::getGroupId, groupId)
@@ -226,7 +226,7 @@ public class DirectoryService {
         return Body.success("设置成功");
     }
 
-    public Body<String> setFolderName(Integer agentId, Integer folderId, String name ,String baseDirectory) {
+    public Body<String> setFolderName(Long agentId, Long folderId, String name ,String baseDirectory) {
         // 1. 首先查找该文件夹是否存在
         LambdaQueryWrapper<Folder> queryFolderWrapper = Wrappers.<Folder>lambdaQuery()
                 .eq(Folder::getUid, folderId)
@@ -237,7 +237,7 @@ public class DirectoryService {
         }
 
         // 2. 得到父文件夹的 ID 列表，并构建本地绝对路径
-        List<Integer> parentFolderIds = new ArrayList<>();
+        List<Long> parentFolderIds = new ArrayList<>();
         List<String> path = new ArrayList<>();
         findAllParentFolders(folderId, agentId, parentFolderIds, path);
 
@@ -277,7 +277,7 @@ public class DirectoryService {
 
     }
 
-    public Body<String> deleteFolder(Integer agentId, Integer folderId,String baseDirectory) {
+    public Body<String> deleteFolder(Long agentId, Long folderId,String baseDirectory) {
         //1.查找是否存在或者有子文件夹与文件，如果有则无法删除
         LambdaQueryWrapper<Folder> queryFolderWrapper = Wrappers.<Folder>lambdaQuery()
                 .eq(Folder::getUid, folderId)
@@ -287,7 +287,7 @@ public class DirectoryService {
             return Body.error("该文件夹不存在");
         }
         // 检查是否有子文件夹
-        List<Integer> subFolderIds = new ArrayList<>();
+        List<Long> subFolderIds = new ArrayList<>();
         findAllChildFolders(folderId, agentId, subFolderIds);
         if (!subFolderIds.isEmpty()) {
             return Body.error("该文件夹包含子文件夹，无法删除");
@@ -302,7 +302,7 @@ public class DirectoryService {
         }
 
         //2.先得到文件夹路径，再从数据库中删除folder
-        List<Integer> parentFolderIds = new ArrayList<>();
+        List<Long> parentFolderIds = new ArrayList<>();
         List<String> path = new ArrayList<>();
         findAllParentFolders(folderId, agentId, parentFolderIds, path);
         // 构建文件夹路径
@@ -329,7 +329,7 @@ public class DirectoryService {
 
 
 
-    private void findAllParentFolders(Integer folderId, Integer agentId, List<Integer> parentFolderIds, List<String> path) {
+    private void findAllParentFolders(Long folderId, Long agentId, List<Long> parentFolderIds, List<String> path) {
         LambdaQueryWrapper<Folder> queryWrapper = Wrappers.<Folder>lambdaQuery()
                 .eq(Folder::getUid, folderId)
                 .eq(Folder::getAgentId, agentId);
@@ -337,24 +337,24 @@ public class DirectoryService {
         if (folder != null ) {
             path.add (folder.getName());
             if(folder.getParentId()!=-1){
-                parentFolderIds.add((int)folder.getParentId());
-                findAllParentFolders((int) folder.getParentId(), agentId, parentFolderIds,path);
+                parentFolderIds.add(folder.getParentId());
+                findAllParentFolders(folder.getParentId(), agentId, parentFolderIds,path);
             }
         }
     }
 
-    private void findAllChildFolders(Integer folderId, Integer agentId, List<Integer> childFolderIds) {
+    private void findAllChildFolders(Long folderId, Long agentId, List<Long> childFolderIds) {
         LambdaQueryWrapper<Folder> queryWrapper = Wrappers.<Folder>lambdaQuery()
                 .eq(Folder::getParentId, folderId)
                 .eq(Folder::getAgentId, agentId);
         List<Folder> childFolders = folderMapper.selectList(queryWrapper);
         for (Folder folder : childFolders) {
-            childFolderIds.add((int)folder.getUid());
-            findAllChildFolders((int)folder.getUid(), agentId, childFolderIds);
+            childFolderIds.add(folder.getUid());
+            findAllChildFolders(folder.getUid(), agentId, childFolderIds);
         }
     }
 
-    public Body<String> getFolderPath(Integer agentId, Integer folderId, String baseDirectory) {
+    public Body<String> getFolderPath(Long agentId, Long folderId, String baseDirectory) {
         //1.查找是否存在
         LambdaQueryWrapper<Folder> queryFolderWrapper = Wrappers.<Folder>lambdaQuery()
                 .eq(Folder::getUid, folderId)
@@ -363,7 +363,7 @@ public class DirectoryService {
         if (folder == null) {
             return Body.error("该文件夹不存在");
         }
-        List<Integer> parentFolderIds = new ArrayList<>();
+        List<Long> parentFolderIds = new ArrayList<>();
         List<String> path = new ArrayList<>();
         findAllParentFolders(folderId, agentId, parentFolderIds, path);
         // 构建文件夹路径
@@ -376,7 +376,7 @@ public class DirectoryService {
         return Body.success(oldFolderPath,"成功");
     }
 
-    public Body<File> showFile(Integer uid,Integer agentId, Integer folderId) {
+    public Body<File> showFile(Long uid,Long agentId, Long folderId) {
         LambdaQueryWrapper<File> queryFileWrapper = Wrappers.<File>lambdaQuery()
                 .eq(File::getUid,uid)
                 .eq(File::getAgentId,agentId)
@@ -387,7 +387,7 @@ public class DirectoryService {
         return Body.success(new_file,"查询成功");
     }
 
-    public Body<String> uploadFile(Integer agentId, Integer folderId, MultipartFile file,String baseDirectory) {
+    public Body<String> uploadFile(Long agentId, Long folderId, MultipartFile file,String baseDirectory) {
         //查找是否存在该文件夹
         LambdaQueryWrapper<Folder> queryFolderWrapper = Wrappers.<Folder>lambdaQuery()
                 .eq(Folder::getUid, folderId)
@@ -403,7 +403,7 @@ public class DirectoryService {
                 .eq(File::getFolderId,folderId);
         if(fileMapper.selectOne(queryFileWrapper)!=null){return Body.error("有重名文件");}
         // 构建文件夹路径
-        List<Integer> parentFolderIds = new ArrayList<>();
+        List<Long> parentFolderIds = new ArrayList<>();
         List<String> path = new ArrayList<>();
         findAllParentFolders(folderId, agentId, parentFolderIds, path);
         Collections.reverse(path);  // 反转路径列表，确保路径顺序正确
@@ -413,14 +413,10 @@ public class DirectoryService {
         }
         fullPathBuilder.append(java.io.File.separator).append(file.getOriginalFilename());
         String folderPath = fullPathBuilder.toString();
-//        Path destPath = Paths.get("/disk2/DVE/result/result", "1907.08015.pdf");
-//        System.out.println("Dest Path: " + destPath.toString()); // 调试输出路径
-
-        //java.io.File destFile = destPath.toFile();
         //将文件存储到实际目录中
         java.io.File destFile = new java.io.File(folderPath);
         try {
-            file.transferTo(destFile);
+            org.apache.commons.io.FileUtils.writeByteArrayToFile(destFile, file.getBytes());
         } catch (IOException e) {
             return Body.error("文件上传失败: " + e.getMessage());
         }
@@ -462,12 +458,12 @@ public class DirectoryService {
         return Body.success("更新成功");
     }
 
-    public Body<FileInfo> getFileInfo(Integer uid, Integer agentId, Integer folderId) {
+    public Body<FileInfo> getFileInfo(Long uid, Long agentId, Long folderId) {
 
         return Body.success(fileMapper.getFileInfo(uid, agentId, folderId),"成功");
     }
 
-    public Body<String> setFileRule(Integer fileId, Integer agentId, Integer folderId, Integer ruleId) {
+    public Body<String> setFileRule(Long fileId, Long agentId, Long folderId, Long ruleId) {
         LambdaQueryWrapper<File> queryFileWrapper = Wrappers.<File>lambdaQuery()
                 .eq(File::getUid,fileId)
                 .eq(File::getAgentId,agentId)
@@ -488,7 +484,7 @@ public class DirectoryService {
         return Body.success("成功插入");
     }
 
-    public Body<String> deleteFile(Integer fileId, Integer agentId, Integer folderId,String baseDirectory) {
+    public Body<String> deleteFile(Long fileId, Long agentId, Long folderId,String baseDirectory) {
         LambdaQueryWrapper<File> queryFileWrapper = Wrappers.<File>lambdaQuery()
                 .eq(File::getUid,fileId)
                 .eq(File::getAgentId,agentId)
@@ -496,7 +492,7 @@ public class DirectoryService {
         File file = fileMapper.selectOne(queryFileWrapper);
         if(file==null){return Body.error("该文件不存在");}
         // 构建文件夹路径
-        List<Integer> parentFolderIds = new ArrayList<>();
+        List<Long> parentFolderIds = new ArrayList<>();
         List<String> path = new ArrayList<>();
         findAllParentFolders(folderId, agentId, parentFolderIds, path);
         Collections.reverse(path);  // 反转路径列表，确保路径顺序正确
@@ -522,13 +518,13 @@ public class DirectoryService {
 
     }
 
-    public String getFilePath(Integer fileId, Integer agentId, Integer folderId, String baseDirectory) {
+    public String getFilePath(Long fileId, Long agentId, Long folderId, String baseDirectory) {
         LambdaQueryWrapper<File> queryFileWrapper = Wrappers.<File>lambdaQuery()
                 .eq(File::getUid, fileId)
                 .eq(File::getAgentId, agentId)
                 .eq(File::getFolderId,folderId);
         File file = fileMapper.selectOne(queryFileWrapper);
-        List<Integer> parentFolderIds = new ArrayList<>();
+        List<Long> parentFolderIds = new ArrayList<>();
         List<String> path = new ArrayList<>();
         findAllParentFolders(folderId, agentId, parentFolderIds, path);
         Collections.reverse(path);  // 反转路径列表，确保路径顺序正确
@@ -541,7 +537,7 @@ public class DirectoryService {
         return filePath;
     }
 
-    public DirectoryInfo getDirectoryStructure(Integer rootFolderId) {
+    public DirectoryInfo getDirectoryStructure(Long rootFolderId) {
         Folder rootFolder = folderMapper.select(rootFolderId);
         DirectoryInfo root = new DirectoryInfo();
         mapFolderToDirectoryNode(rootFolder, root);
@@ -593,7 +589,7 @@ public class DirectoryService {
         node.setExpiredTime(file.getExpiredTime());
     }
 
-    public DirectoryInfo filterFoldersByVisibility(Integer groupId, Integer agentId, DirectoryInfo directoryAll) {
+    public DirectoryInfo filterFoldersByVisibility(Long groupId, Long agentId, DirectoryInfo directoryAll) {
         return filterFoldersRecursive(groupId, agentId, directoryAll);
     }
 
@@ -601,7 +597,7 @@ public class DirectoryService {
         return filterFilesRecursive(groupId, agentId, directoryFiltered);
     }
 
-    private DirectoryInfo filterFoldersRecursive(Integer groupId, Integer agentId, DirectoryInfo directory) {
+    private DirectoryInfo filterFoldersRecursive(Long groupId, Long agentId, DirectoryInfo directory) {
         List<DirectoryInfo> visibleChildren = new ArrayList<>();
         for (DirectoryInfo child : directory.getChildren()) {
             if ("folder".equals(child.getType())) {

@@ -1,20 +1,22 @@
 package DveAgent.entity;
 
+import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import lombok.Data;
 
 @Data
 public class File {
 
-  @TableId
+  @TableId(type = IdType.AUTO)
   private Long uid;
-  private long agentId;
-  private long folderId;
+  private Long agentId;
+  private Long folderId;
+
   private String name;
   private java.sql.Timestamp createDate;
   private java.sql.Timestamp lastUpdate;
   private String tag;
-  private long size;
+  private Long size;
   private String path;
   private String description;
   private java.sql.Timestamp expiredTime;

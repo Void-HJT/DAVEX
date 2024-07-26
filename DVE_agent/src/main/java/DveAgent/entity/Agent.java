@@ -3,16 +3,18 @@ package DveAgent.entity;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 
+import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import lombok.Data;
 
 @Data
 public class Agent {
-  @TableId
+
+  @TableId(type = IdType.NONE)
   private Long uid;
   private String name;
   private String ip;
-  private long port;
+  private Long port;
   private byte[] crt;
   private LocalDateTime lastUpdated;
   private String description;

@@ -15,14 +15,14 @@ public class MpcTask {
 
   @TableId(type = IdType.ASSIGN_UUID)
   private String uid;
-  private long applicationId;
-  private long centerId;
-  private long mpcId;
+  private Long applicationId;
+  private Long centerId;
+  private Long mpcId;
   private String parameter;
-  private long pn;
+  private Long pn;
   private String host;
-  private long port;
-  private long data;
+  private Long port;
+  private Long data;
   private String protocol;
   private String status;
 
