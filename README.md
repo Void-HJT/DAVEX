@@ -11,5 +11,5 @@ git update-index --assume-unchanged DVE_agent/src/main/resources/application.yml
 
 ```shell
 git update-index --no-assume-unchanged DVE_center/src/main/resources/application.yml
-git update-index --np-assume-unchanged DVE_agent/src/main/resources/application.yml
+git update-index --no-assume-unchanged DVE_agent/src/main/resources/application.yml
 ```
