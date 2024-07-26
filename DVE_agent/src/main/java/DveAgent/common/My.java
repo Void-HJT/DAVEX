@@ -73,7 +73,7 @@ public class My {
         agent.setUid(id);
         agent.setName(name);
         agent.setIp(ip);
-        agent.setPort((long) port);
+        agent.setPort(port);
         agent.setDescription(description);
         agent.setLastUpdated(LocalDateTime.now());
     }

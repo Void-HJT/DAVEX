@@ -116,7 +116,7 @@ public class MpcTaskService {
         }
 
         UploadCenterTaskInfo transInfo = mpctTaskInfo;
-        transInfo.setData(0);
+        transInfo.setData(null);
         List<Mono<R<?>>> monos = new ArrayList<Mono<R<?>>>();
         for (Map.Entry<Long, Pair<Long, Long>> entry : mpctTaskInfo.getAgentID2fileID().entrySet()) {
             MpcTaskAgent mpcTaskAgent = new MpcTaskAgent();

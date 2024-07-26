@@ -14,7 +14,7 @@ public class Agent {
   private Long uid;
   private String name;
   private String ip;
-  private Long port;
+  private int port;
   private byte[] crt;
   private LocalDateTime lastUpdated;
   private String description;
