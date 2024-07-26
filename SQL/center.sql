@@ -171,7 +171,7 @@ CREATE TABLE `mpc` (
 -- ----------------------------
 DROP TABLE IF EXISTS `mpcTask`;
 CREATE TABLE `mpcTask` (
-  `uid` int NOT NULL AUTO_INCREMENT,
+  `uid` VARCHAR(32) NOT NULL,
   `application_id` int DEFAULT NULL,
   `center_id` int DEFAULT NULL,
   `mpc_id` int DEFAULT NULL,
@@ -180,7 +180,7 @@ CREATE TABLE `mpcTask` (
   `host` varchar(255) DEFAULT NULL,
   `port` int DEFAULT NULL,
   `data` int DEFAULT NULL,
-  `protocol` enum('mpl','psi') DEFAULT NULL,
+  `protocol` varchar(255) DEFAULT NULL,
   `status` varchar(255) DEFAULT NULL,
   PRIMARY KEY (`uid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;

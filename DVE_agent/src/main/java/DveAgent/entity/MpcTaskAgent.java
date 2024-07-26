@@ -13,7 +13,7 @@ public class MpcTaskAgent {
   @TableId()
   private Long uid;
   @TableField("mpcTask_id")
-  private long mpcTaskId;
+  private String mpcTaskId;
   private long centerId;
   private long agentId;
   private long part;

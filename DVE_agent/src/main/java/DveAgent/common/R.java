@@ -38,8 +38,15 @@ public class R<T> implements Serializable {
         return r;
     }
 
-    public static R<String> error(String msg) {
-        R<String> r = new R<String>();
+    // public static R<String> error(String msg) {
+    // R<String> r = new R<String>();
+    // r.body.setMessage(msg);
+    // r.body.setCode(0);
+    // return r;
+    // }
+
+    public static <T> R<T> error(String msg) {
+        R<T> r = new R<T>();
         r.body.setMessage(msg);
         r.body.setCode(0);
         return r;
