@@ -39,6 +39,9 @@ public class FileController {
     // 结果文件存储位置，比如 D:\\, 我这里使用的是本项目的路径
     private static final String UPLOAD_BASE_DIR = "C:\\FDU\\IdeaProject\\DVE\\DVE_center\\Files\\";
 
+    // application文件保存位置
+    private static final String DOWNLOAD_BASE_DIR = "C:\\FDU\\IdeaProject\\ApplicationFiles\\";
+
     @Autowired
     private CenterWebClientService centerWebClientService;
 
@@ -87,6 +90,16 @@ public class FileController {
                                  HttpServletResponse response) {
 
         return fileService.downloadFile(outputId, applicationId, response);
+    }
+
+
+    // application通过路径直接访问文件并下载
+    @PostMapping("/downloadbypath")
+    public Body<String> downloadbypath(@RequestParam("outputId") Integer outputId,
+                                       @RequestParam("applicationId") Integer applicationId,
+                                       String downloadPath) {
+
+        return fileService.downloadFileByPath(outputId, applicationId, downloadPath);
     }
 
 

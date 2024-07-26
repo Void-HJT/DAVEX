@@ -17,10 +17,7 @@ import org.apache.commons.io.FileUtils;
 
 //import java.io.File; 命名冲突，使用全限定名
 import javax.servlet.http.HttpServletResponse;
-import java.io.BufferedInputStream;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.OutputStream;
+import java.io.*;
 import java.net.URLEncoder;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
@@ -202,6 +199,49 @@ public class FileService {
             os.write(bytes);
             // 刷新输出流
             os.flush();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return Body.error(String.format("下载失败: 结果id %d，文件名: %s，错误信息: %s", outputId, fileName, e.getMessage()));
+        }
+        return Body.success(String.format("下载成功，结果id: %d，文件名: %s", outputId, fileName));
+    }
+
+
+    public Body<String> downloadFileByPath(Integer outputId, Integer applicationId, String downloadPath) {
+
+        // 根据结果id查找结果表
+        LambdaQueryWrapper<Output> queryWrapper = Wrappers.<Output>lambdaQuery()
+                .eq(Output::getUid, outputId);
+        Output queryOutput = outputMapper.selectOne(queryWrapper);
+        if(queryOutput == null){return Body.error(String.format("找不到该文件，结果id: %d", outputId));}
+        // 判断文件是否过期
+        Timestamp expiredTime = queryOutput.getExpiredTime();
+        if (expiredTime != null && LocalDateTime.now().isAfter(expiredTime.toLocalDateTime())) {
+            return Body.error(String.format("该文件已过期，结果id: %d，文件名: %s，失效时间: %s", outputId, queryOutput.getName(),
+                    queryOutput.getExpiredTime()));
+        }
+
+        // 添加下载任务记录到任务表
+        Task newTask = new Task();
+        newTask.setFileId(queryOutput.getFileId());newTask.setAgentId(queryOutput.getAgentId());newTask.setApplicationId(applicationId);
+        newTask.setOutputId(queryOutput.getUid());newTask.setDownloadTime(Timestamp.valueOf(LocalDateTime.now()));
+        taskMapper.insert(newTask);
+
+        //直接通过路径访问文件
+        String filePath = queryOutput.getPath();
+        String fileName = queryOutput.getName();
+        var source = new java.io.File(filePath);
+        var dest = new java.io.File(downloadPath + fileName);
+        try (var fis = new FileInputStream(source);
+             var fos = new FileOutputStream(dest)) {
+
+            byte[] buffer = new byte[1024];
+            int length;
+
+            while ((length = fis.read(buffer)) > 0) {
+
+                fos.write(buffer, 0, length);
+            }
         } catch (Exception e) {
             e.printStackTrace();
             return Body.error(String.format("下载失败: 结果id %d，文件名: %s，错误信息: %s", outputId, fileName, e.getMessage()));
