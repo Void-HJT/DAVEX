@@ -13,7 +13,6 @@
         <result column="last_update" property="lastUpdate"/>
         <result column="tag" property="tag"/>
         <result column="size" property="size"/>
-        <result column="path" property="path"/>
         <result column="description" property="description"/>
         <result column="expired_time" property="expiredTime"/>
         <result column="hash" property="hash"/>
@@ -37,7 +36,6 @@
             f.last_update,
             f.tag,
             f.size,
-            f.path,
             f.description,
             f.expired_time,
             f.hash,

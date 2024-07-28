@@ -4,9 +4,11 @@ import DveAgent.common.Body;
 import DveAgent.entity.Application;
 import DveAgent.entity.File;
 import DveAgent.entity.Group;
+import DveAgent.entity.Rule;
 import DveAgent.info.ApplicationInfo;
 import DveAgent.info.DirectoryInfo;
 import DveAgent.info.FileInfo;
+import DveAgent.info.GroupInfo;
 import org.apache.ibatis.annotations.Param;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
@@ -35,8 +37,8 @@ public class DirectoryController {
 
     @Autowired
     private DirectoryService directoryService;
-//    private static final String BASE_DIRECTORY = "/Users/dengruotao/Desktop/result";
-    private static final String BASE_DIRECTORY = "/disk2/DVE/result";
+    private static final String BASE_DIRECTORY = "/Users/dengruotao/Desktop/result";
+//    private static final String BASE_DIRECTORY = "/disk2/DVE/result";
 
     @PostMapping("/getApplication")
     public Body<List<Application>> getApplication(){
@@ -87,6 +89,12 @@ public class DirectoryController {
                                 @RequestParam("allowMethod")String allowMethod){
         return directoryService.addRule(agentId,groupId,allowMethod);
 
+    }
+
+    @PostMapping("/getRuleByGroup")
+    public Body<List<Rule>> getRuleByGroup(@RequestParam("agentId") Long agentId,
+                                                 @RequestParam("groupId") Long groupId){
+        return directoryService.getRuleByGroup(agentId,groupId);
     }
 
 
@@ -186,35 +194,8 @@ public class DirectoryController {
     public ResponseEntity<Resource> sendFile(@RequestParam("fileId") Long fileId,
                                              @RequestParam("agentId") Long agentId,
                                              @RequestParam("folderId") Long folderId){
-        String filePath = directoryService.getFilePath(fileId,agentId,folderId,BASE_DIRECTORY);
-        // 读取文件路径
-        Path path = Paths.get(filePath);
-        // 文件名从filePath末尾截断获得
-        String fileName = path.getFileName().toString();
 
-        // 对文件名进行UTF-8编码以处理中文
-        String encodedFileName;
-        try {
-            encodedFileName = URLEncoder.encode(fileName, "UTF-8").replaceAll("\\+", "%20");
-        } catch (UnsupportedEncodingException e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
-        }
-
-        Resource resource;
-        try {
-            resource = new UrlResource(path.toUri());
-            if (!resource.exists() || !resource.isReadable()) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
-            }
-        } catch (MalformedURLException e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
-        }
-
-        // 发送文件
-        return ResponseEntity.ok()
-                .contentType(MediaType.APPLICATION_OCTET_STREAM)
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" +encodedFileName+"\"")
-                .body(resource);
+        return directoryService.getFilePath(fileId,agentId,folderId,BASE_DIRECTORY);
     }
 
 

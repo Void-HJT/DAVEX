@@ -19,7 +19,6 @@ public class DirectoryInfo {
     // File specific fields
     private String tag;
     private Long size;
-    private String path;
     private String description;
     private String hash;
     private String example;

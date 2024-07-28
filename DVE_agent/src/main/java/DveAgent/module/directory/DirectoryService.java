@@ -5,6 +5,7 @@ import DveAgent.entity.*;
 import DveAgent.info.ApplicationInfo;
 import DveAgent.info.DirectoryInfo;
 import DveAgent.info.FileInfo;
+import DveAgent.info.GroupInfo;
 import DveAgent.mapper.*;
 import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
@@ -13,13 +14,24 @@ import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.math.BigInteger;
+import java.net.MalformedURLException;
+import java.net.URLEncoder;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.security.MessageDigest;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -328,32 +340,6 @@ public class DirectoryService {
     }
 
 
-
-    private void findAllParentFolders(Long folderId, Long agentId, List<Long> parentFolderIds, List<String> path) {
-        LambdaQueryWrapper<Folder> queryWrapper = Wrappers.<Folder>lambdaQuery()
-                .eq(Folder::getUid, folderId)
-                .eq(Folder::getAgentId, agentId);
-        Folder folder = folderMapper.selectOne(queryWrapper);
-        if (folder != null ) {
-            path.add (folder.getName());
-            if(folder.getParentId()!=-1){
-                parentFolderIds.add(folder.getParentId());
-                findAllParentFolders(folder.getParentId(), agentId, parentFolderIds,path);
-            }
-        }
-    }
-
-    private void findAllChildFolders(Long folderId, Long agentId, List<Long> childFolderIds) {
-        LambdaQueryWrapper<Folder> queryWrapper = Wrappers.<Folder>lambdaQuery()
-                .eq(Folder::getParentId, folderId)
-                .eq(Folder::getAgentId, agentId);
-        List<Folder> childFolders = folderMapper.selectList(queryWrapper);
-        for (Folder folder : childFolders) {
-            childFolderIds.add(folder.getUid());
-            findAllChildFolders(folder.getUid(), agentId, childFolderIds);
-        }
-    }
-
     public Body<String> getFolderPath(Long agentId, Long folderId, String baseDirectory) {
         //1.查找是否存在
         LambdaQueryWrapper<Folder> queryFolderWrapper = Wrappers.<Folder>lambdaQuery()
@@ -363,17 +349,8 @@ public class DirectoryService {
         if (folder == null) {
             return Body.error("该文件夹不存在");
         }
-        List<Long> parentFolderIds = new ArrayList<>();
-        List<String> path = new ArrayList<>();
-        findAllParentFolders(folderId, agentId, parentFolderIds, path);
-        // 构建文件夹路径
-        Collections.reverse(path);  // 反转路径列表，确保路径顺序正确
-        StringBuilder fullPathBuilder = new StringBuilder(baseDirectory);
-        for (String folderName : path) {
-            fullPathBuilder.append(java.io.File.separator).append(folderName);
-        }
-        String oldFolderPath = fullPathBuilder.toString();
-        return Body.success(oldFolderPath,"成功");
+        String path = getFolderPath(folder,baseDirectory);
+        return Body.success(path,"成功");
     }
 
     public Body<File> showFile(Long uid,Long agentId, Long folderId) {
@@ -422,6 +399,18 @@ public class DirectoryService {
         }
         //将文件元数据添加到数据库中
         File fileRecord = new File();
+        try {
+            //获取文件的byte信息
+            byte[] uploadBytes = file.getBytes();
+            // 拿到一个MD5转换器
+            MessageDigest md5 = MessageDigest.getInstance("MD5");
+            byte[] digest = md5.digest(uploadBytes);
+            //转换为16进制
+            fileRecord.setHash(new BigInteger(1, digest).toString(16));
+        } catch (Exception e) {
+            return Body.error("文件计算hash失败" + e.getMessage());
+        }
+        
         String fileName = file.getOriginalFilename();
         fileRecord.setAgentId(agentId);
         fileRecord.setFolderId(folderId);
@@ -518,22 +507,54 @@ public class DirectoryService {
 
     }
 
-    public String getFilePath(Long fileId, Long agentId, Long folderId, String baseDirectory) {
-        LambdaQueryWrapper<File> queryFileWrapper = Wrappers.<File>lambdaQuery()
-                .eq(File::getUid, fileId)
-                .eq(File::getAgentId, agentId)
-                .eq(File::getFolderId,folderId);
-        File file = fileMapper.selectOne(queryFileWrapper);
+    private void findAllParentFolders(Long folderId, Long agentId, List<Long> parentFolderIds, List<String> path) {
+        LambdaQueryWrapper<Folder> queryWrapper = Wrappers.<Folder>lambdaQuery()
+                .eq(Folder::getUid, folderId)
+                .eq(Folder::getAgentId, agentId);
+        Folder folder = folderMapper.selectOne(queryWrapper);
+        if (folder != null ) {
+            path.add (folder.getName());
+            if(folder.getParentId()!=-1){
+                parentFolderIds.add(folder.getParentId());
+                findAllParentFolders(folder.getParentId(), agentId, parentFolderIds,path);
+            }
+        }
+    }
+
+    private void findAllChildFolders(Long folderId, Long agentId, List<Long> childFolderIds) {
+        LambdaQueryWrapper<Folder> queryWrapper = Wrappers.<Folder>lambdaQuery()
+                .eq(Folder::getParentId, folderId)
+                .eq(Folder::getAgentId, agentId);
+        List<Folder> childFolders = folderMapper.selectList(queryWrapper);
+        for (Folder folder : childFolders) {
+            childFolderIds.add(folder.getUid());
+            findAllChildFolders(folder.getUid(), agentId, childFolderIds);
+        }
+    }
+
+    public String getFolderPath(Folder folder,String baseDirectory){
         List<Long> parentFolderIds = new ArrayList<>();
         List<String> path = new ArrayList<>();
-        findAllParentFolders(folderId, agentId, parentFolderIds, path);
+        findAllParentFolders(folder.getUid(), folder.getParentId(), parentFolderIds, path);
+        // 构建文件夹路径
         Collections.reverse(path);  // 反转路径列表，确保路径顺序正确
         StringBuilder fullPathBuilder = new StringBuilder(baseDirectory);
         for (String folderName : path) {
             fullPathBuilder.append(java.io.File.separator).append(folderName);
         }
-        fullPathBuilder.append(java.io.File.separator).append(file.getName());
-        String filePath = fullPathBuilder.toString();
+        String oldFolderPath = fullPathBuilder.toString();
+        return oldFolderPath;
+    }
+
+
+    public String getFilePath(File file,String baseDirectory) {
+
+        LambdaQueryWrapper<Folder> queryFolderWrapper = Wrappers.<Folder>lambdaQuery()
+                .eq(Folder::getUid, file.getFolderId())
+                .eq(Folder::getAgentId, file.getAgentId());
+        Folder folder = folderMapper.selectOne(queryFolderWrapper);
+        String folderPath = getFolderPath(folder,baseDirectory);
+        String filePath = folderPath+"/"+file.getName();
         return filePath;
     }
 
@@ -582,7 +603,6 @@ public class DirectoryService {
         node.setLastUpdate(file.getLastUpdate());
         node.setTag(file.getTag());
         node.setSize(file.getSize());
-        node.setPath(file.getPath());
         node.setDescription(file.getDescription());
         node.setHash(file.getHash());
         node.setExample(file.getExample());
@@ -651,4 +671,53 @@ public class DirectoryService {
         return directory;
     }
 
+    public ResponseEntity<Resource> getFilePath(Long fileId, Long agentId, Long folderId, String baseDirectory) {
+
+
+        LambdaQueryWrapper<File> queryFolderWrapper = Wrappers.<File>lambdaQuery()
+                .eq(File::getUid,fileId)
+                .eq(File::getAgentId,agentId)
+                .eq(File::getFolderId,folderId);
+        File file = fileMapper.selectOne(queryFolderWrapper);
+        String filePath = getFilePath(file,baseDirectory);
+
+        // 读取文件路径
+        Path path = Paths.get(filePath);
+        // 文件名从filePath末尾截断获得
+        String fileName = path.getFileName().toString();
+
+        // 对文件名进行UTF-8编码以处理中文
+        String encodedFileName;
+        try {
+            encodedFileName = URLEncoder.encode(fileName, "UTF-8").replaceAll("\\+", "%20");
+        } catch (UnsupportedEncodingException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+        }
+
+        Resource resource;
+        try {
+            resource = new UrlResource(path.toUri());
+            if (!resource.exists() || !resource.isReadable()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+            }
+        } catch (MalformedURLException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+        }
+
+        // 发送文件
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" +encodedFileName+"\"")
+                .body(resource);
+
+    }
+
+
+    public Body<List<Rule>> getRuleByGroup(Long agentId, Long groupId) {
+        LambdaQueryWrapper<Rule> queryRuleWrapper = Wrappers.<Rule>lambdaQuery()
+                .eq(Rule::getGroupId, groupId)
+                .eq(Rule::getAgentId, agentId);
+        List<Rule> rules = ruleMapper.selectList(queryRuleWrapper);
+        return Body.success(rules,"成功");
+    }
 }
