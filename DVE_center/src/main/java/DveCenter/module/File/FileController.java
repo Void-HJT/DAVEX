@@ -45,9 +45,9 @@ public class FileController {
     @Autowired
     private CenterWebClientService centerWebClientService;
 
-    // agent文件上传接口
-    @PostMapping("/upload")
-    public Body<String> upload(@RequestParam MultipartFile file,
+    // center结果管理区保存agent文件接口
+    @PostMapping("/save")
+    public Body<String> save(@RequestParam MultipartFile file,
                                @RequestParam("fileId") Integer fileId,
                                @RequestParam("agentId") Integer agentId,
                                @RequestParam(value = "expiredTime", required = false) java.sql.Timestamp expiredTime) {
@@ -57,12 +57,13 @@ public class FileController {
             expiredTime = java.sql.Timestamp.from(Instant.now().plus(7, ChronoUnit.DAYS));
         }
 
-        return fileService.uploadFile(file, fileId, agentId, UPLOAD_BASE_DIR, expiredTime);
+        return fileService.saveFile(file, fileId, agentId, UPLOAD_BASE_DIR, expiredTime);
     }
 
 
-    @PostMapping("/uploads")
-    public Body<List<String>> uploads(@RequestParam("files") List<MultipartFile> files,
+    // 多文件保存
+    @PostMapping("/saves")
+    public Body<List<String>> saves(@RequestParam("files") List<MultipartFile> files,
                                      @RequestParam("fileIds") List<Integer> fileIds,
                                       @RequestParam("agentIds") List<Integer> agentIds,
                                      @RequestParam(value = "expiredTimes", required = false) List<java.sql.Timestamp> expiredTimes) {
@@ -79,31 +80,31 @@ public class FileController {
             return Body.error("失效时间数量和文件数量不匹配");
         }
 
-        return fileService.uploadFiles(files, fileIds, agentIds, UPLOAD_BASE_DIR, expiredTimes);
+        return fileService.saveFiles(files, fileIds, agentIds, UPLOAD_BASE_DIR, expiredTimes);
     }
 
 
-    // application文件下载接口
-    @PostMapping("/download")
-    public Body<String> download(@RequestParam("outputId") Integer outputId,
+    // application从center结果管理区获取文件的接口
+    @PostMapping("/fetch")
+    public Body<String> fetch(@RequestParam("outputId") Integer outputId,
                                  @RequestParam("applicationId") Integer applicationId,
                                  HttpServletResponse response) {
 
-        return fileService.downloadFile(outputId, applicationId, response);
+        return fileService.fetchFile(outputId, applicationId, response);
     }
 
 
-    // application通过路径直接访问文件并下载
-    @PostMapping("/downloadbypath")
-    public Body<String> downloadbypath(@RequestParam("outputId") Integer outputId,
+    // application通过路径直接获取center结果管理区文件的接口
+    @PostMapping("/fetchbypath")
+    public Body<String> fetchbypath(@RequestParam("outputId") Integer outputId,
                                        @RequestParam("applicationId") Integer applicationId,
                                        String downloadPath) {
 
-        return fileService.downloadFileByPath(outputId, applicationId, downloadPath);
+        return fileService.fetchFileByPath(outputId, applicationId, downloadPath);
     }
 
 
-    // application文件查询接口
+    // application查询center结果管理区所有文件的接口
     @GetMapping("/query")
     public Body<List<Output>> query() {
 
@@ -111,7 +112,15 @@ public class FileController {
     }
 
 
-    // application文件删除接口
+    // application查询center结果管理区某些文件的接口
+    @GetMapping("/querybyids")
+    public Body<List<Output>> querybyids(@RequestParam("outputIds") List<Integer> outputIds) {
+
+        return fileService.queryFileByIds(outputIds);
+    }
+
+
+    // application删除center结果管理区文件的接口
     @PostMapping("/delete")
     public Body<String> delete(@RequestParam("outputId") Integer outputId) {
 
@@ -119,7 +128,7 @@ public class FileController {
     }
 
 
-    // 向agent发送文件传输请求并调用upload接口
+    // center向agent发送文件传输请求并调用save接口接收文件到结果管理区
     @PostMapping("/quest")
     public CompletableFuture<Body<String>> quest(@RequestParam("fileId") Integer fileId,
                                       @RequestParam("agentId") Integer agentId,
@@ -153,8 +162,8 @@ public class FileController {
                 // 创建 CustomMultipartFile
                 CustomMultipartFile multipartFile = new CustomMultipartFile(fileBytes, "1.pdf");
 
-                // 调用 upload 方法
-                Body<String> result = upload(multipartFile, fileId, agentId, null);
+                // 调用 save 方法
+                Body<String> result = save(multipartFile, fileId, agentId, null);
                 future.complete(result);
             } catch (IOException e) {
                 future.completeExceptionally(e);
@@ -166,6 +175,7 @@ public class FileController {
     }
 
 
+    // 测试quest接口
     @PostMapping("/tquest")
     public CompletableFuture<Body<String>> tquest(@RequestParam("fileId") Integer fileId,
                                                  @RequestParam("agentId") Integer agentId,
@@ -195,8 +205,8 @@ public class FileController {
                     // 创建 CustomMultipartFile
                     CustomMultipartFile multipartFile = new CustomMultipartFile(fileBytesArray, "1.pdf");
 
-                    // 调用 upload 方法
-                    Body<String> result = upload(multipartFile, fileId, agentId, null);
+                    // 调用 save 方法
+                    Body<String> result = save(multipartFile, fileId, agentId, null);
                     future.complete(result);
                 } catch (IOException e) {
                     future.completeExceptionally(e);

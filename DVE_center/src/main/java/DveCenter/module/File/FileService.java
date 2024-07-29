@@ -17,8 +17,13 @@ import org.apache.commons.io.FileUtils;
 
 //import java.io.File; 命名冲突，使用全限定名
 import javax.servlet.http.HttpServletResponse;
+import javax.xml.bind.DatatypeConverter;
 import java.io.*;
 import java.net.URLEncoder;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -36,7 +41,7 @@ public class FileService {
     @Autowired
     private JdbcTemplate jdbcTemplate;
 
-    public Body<String> uploadFile(MultipartFile file, Integer fileId, Integer agentId, String base, java.sql.Timestamp expiredTime) {
+    public Body<String> saveFile(MultipartFile file, Integer fileId, Integer agentId, String base, java.sql.Timestamp expiredTime) {
 
         // 根据文件id查找文件表
         LambdaQueryWrapper<File> queryWrapper = Wrappers.<File>lambdaQuery()
@@ -45,6 +50,10 @@ public class FileService {
         File queryFile = fileMapper.selectOne(queryWrapper);
         if(queryFile == null){return Body.error(String.format("找不到该文件，文件id: %d，代理id: %d", fileId, agentId));}
 
+        // 校验sha256
+        String fileHash = getSha256(file);
+        if (!fileHash.equals(queryFile.getHash())) {return Body.error(String.format("哈希校验失败，文件id: %d，代理id: %d", fileId, agentId));}
+
         // 文件信息加入结果表
         // 若已存在，则进行覆盖
         LambdaQueryWrapper<Output> queryWrapper1 = Wrappers.<Output>lambdaQuery()
@@ -52,16 +61,18 @@ public class FileService {
                 .eq(Output::getAgentId, agentId);
         Output queryOutput = outputMapper.selectOne(queryWrapper1);
         if(queryOutput != null){
-            jdbcTemplate.execute("SET FOREIGN_KEY_CHECKS = 0");
-            outputMapper.deleteById(queryOutput.getUid());
-            jdbcTemplate.execute("SET FOREIGN_KEY_CHECKS = 1");
+            if (fileHash.equals(queryOutput.getHash())) {
+                jdbcTemplate.execute("SET FOREIGN_KEY_CHECKS = 0");
+                outputMapper.deleteById(queryOutput.getUid());
+                jdbcTemplate.execute("SET FOREIGN_KEY_CHECKS = 1");
+            }
         }
         Output newOutput = new Output();
         String fileName = queryFile.getName();
         newOutput.setName(queryFile.getName());newOutput.setType(queryFile.getType());
         newOutput.setUploadDate(Timestamp.valueOf(LocalDateTime.now()));newOutput.setTag(queryFile.getTag());
         newOutput.setSize(queryFile.getSize());newOutput.setDescription(queryFile.getDescription());
-        newOutput.setPath(base + fileName);newOutput.setExpiredTime(expiredTime);newOutput.setHash(queryFile.getHash());
+        newOutput.setPath(base + fileHash);newOutput.setExpiredTime(expiredTime);newOutput.setHash(fileHash);
         newOutput.setFileId(fileId);newOutput.setAgentId(agentId);
         outputMapper.insert(newOutput);
 
@@ -79,13 +90,13 @@ public class FileService {
 
         } catch (IOException e) {
             e.printStackTrace();
-            return Body.error(String.format("上传失败: 文件id %d，代理id: %d，文件名: %s，错误信息: %s", fileId, agentId, fileName, e.getMessage()));
+            return Body.error(String.format("保存失败: 文件id %d，代理id: %d，文件名: %s，错误信息: %s", fileId, agentId, fileName, e.getMessage()));
         }
-        return Body.success(String.format("上传成功，文件id: %d，代理id: %d，文件名: %s", fileId, agentId, fileName));
+        return Body.success(String.format("保存成功，文件id: %d，代理id: %d，文件名: %s", fileId, agentId, fileName));
     }
 
 
-    public Body<List<String>> uploadFiles(List<MultipartFile> files, List<Integer> fileIds, List<Integer> agentIds, String base, List<java.sql.Timestamp> expiredTimes) {
+    public Body<List<String>> saveFiles(List<MultipartFile> files, List<Integer> fileIds, List<Integer> agentIds, String base, List<java.sql.Timestamp> expiredTimes) {
         List<String> results = new ArrayList<>();
 
         if (files.size() != fileIds.size() || files.size() != agentIds.size() || files.size() != expiredTimes.size()) {
@@ -110,6 +121,10 @@ public class FileService {
                 continue;
             }
 
+            // 校验md5
+            String fileHash = getSha256(file);
+            if (!fileHash.equals(queryFile.getHash())) {return Body.error(String.format("哈希校验失败，文件id: %d，代理id: %d", fileId, agentId));}
+
             // 文件信息加入结果表
             // 若已存在，则进行覆盖
             LambdaQueryWrapper<Output> queryWrapper1 = Wrappers.<Output>lambdaQuery()
@@ -117,9 +132,11 @@ public class FileService {
                     .eq(Output::getAgentId, agentId);
             Output queryOutput = outputMapper.selectOne(queryWrapper1);
             if (queryOutput != null) {
-                jdbcTemplate.execute("SET FOREIGN_KEY_CHECKS = 0");
-                outputMapper.deleteById(queryOutput.getUid());
-                jdbcTemplate.execute("SET FOREIGN_KEY_CHECKS = 1");
+                if (fileHash.equals(queryOutput.getHash())) {
+                    jdbcTemplate.execute("SET FOREIGN_KEY_CHECKS = 0");
+                    outputMapper.deleteById(queryOutput.getUid());
+                    jdbcTemplate.execute("SET FOREIGN_KEY_CHECKS = 1");
+                }
             }
             Output newOutput = new Output();
             String fileName = queryFile.getName();
@@ -129,9 +146,9 @@ public class FileService {
             newOutput.setTag(queryFile.getTag());
             newOutput.setSize(queryFile.getSize());
             newOutput.setDescription(queryFile.getDescription());
-            newOutput.setPath(base + fileName);
+            newOutput.setPath(base + fileHash);
             newOutput.setExpiredTime(expiredTime);
-            newOutput.setHash(queryFile.getHash());
+            newOutput.setHash(fileHash);
             newOutput.setFileId(fileId);
             newOutput.setAgentId(agentId);
             outputMapper.insert(newOutput);
@@ -147,20 +164,20 @@ public class FileService {
                 // 存储文件到电脑磁盘
 //                file.transferTo(uploadFile);
                 FileUtils.copyInputStreamToFile(file.getInputStream(), uploadFile);
-                results.add(String.format("上传成功，文件id: %d，代理id: %d，文件名: %s", fileId, agentId, fileName));
+                results.add(String.format("保存成功，文件id: %d，代理id: %d，文件名: %s", fileId, agentId, fileName));
             } catch (IOException e) {
                 e.printStackTrace();
-                results.add(String.format("上传失败: 文件id %d，代理id: %d，文件名: %s，错误信息: %s", fileId, agentId, fileName, e.getMessage()));
+                results.add(String.format("保存失败: 文件id %d，代理id: %d，文件名: %s，错误信息: %s", fileId, agentId, fileName, e.getMessage()));
                 flag = false;
             }
         }
 
-        if (flag == false) return Body.error(results, "部分文件上传失败");
-        return Body.success(results, "文件上传处理完成");
+        if (flag == false) return Body.error(results, "部分文件保存失败");
+        return Body.success(results, "文件保存处理完成");
     }
 
 
-    public Body<String> downloadFile(Integer outputId, Integer applicationId, HttpServletResponse response) {
+    public Body<String> fetchFile(Integer outputId, Integer applicationId, HttpServletResponse response) {
 
         // 根据结果id查找结果表
         LambdaQueryWrapper<Output> queryWrapper = Wrappers.<Output>lambdaQuery()
@@ -201,13 +218,13 @@ public class FileService {
             os.flush();
         } catch (Exception e) {
             e.printStackTrace();
-            return Body.error(String.format("下载失败: 结果id %d，文件名: %s，错误信息: %s", outputId, fileName, e.getMessage()));
+            return Body.error(String.format("获取失败: 结果id %d，文件名: %s，错误信息: %s", outputId, fileName, e.getMessage()));
         }
-        return Body.success(String.format("下载成功，结果id: %d，文件名: %s", outputId, fileName));
+        return Body.success(String.format("获取成功，结果id: %d，文件名: %s", outputId, fileName));
     }
 
 
-    public Body<String> downloadFileByPath(Integer outputId, Integer applicationId, String downloadPath) {
+    public Body<String> fetchFileByPath(Integer outputId, Integer applicationId, String downloadPath) {
 
         // 根据结果id查找结果表
         LambdaQueryWrapper<Output> queryWrapper = Wrappers.<Output>lambdaQuery()
@@ -244,15 +261,26 @@ public class FileService {
             }
         } catch (Exception e) {
             e.printStackTrace();
-            return Body.error(String.format("下载失败: 结果id %d，文件名: %s，错误信息: %s", outputId, fileName, e.getMessage()));
+            return Body.error(String.format("获取失败: 结果id %d，文件名: %s，错误信息: %s", outputId, fileName, e.getMessage()));
         }
-        return Body.success(String.format("下载成功，结果id: %d，文件名: %s", outputId, fileName));
+        return Body.success(String.format("获取成功，结果id: %d，文件名: %s", outputId, fileName));
     }
 
 
     public Body<List<Output>> queryFile() {
 
         List<Output> outputs = outputMapper.selectList(null);
+        Integer fileNum = outputs.size();
+        return Body.success(outputs, String.format("查询成功，共查询到%d个文件", fileNum));
+    }
+
+
+    public Body<List<Output>> queryFileByIds(List<Integer> outputIds) {
+
+        LambdaQueryWrapper<Output> queryWrapper = Wrappers.<Output>lambdaQuery()
+                .in(Output::getUid, outputIds);
+
+        List<Output> outputs = outputMapper.selectList(queryWrapper);
         Integer fileNum = outputs.size();
         return Body.success(outputs, String.format("查询成功，共查询到%d个文件", fileNum));
     }
@@ -289,5 +317,22 @@ public class FileService {
         }
 
         return Body.success(String.format("删除成功，结果id: %d，文件名: %s", outputId, fileName));
+    }
+
+
+    public String getSha256(MultipartFile file) {
+
+        try {
+            MessageDigest md = MessageDigest.getInstance("SHA-256");
+            md.update(file.getBytes());
+            byte[] digest = md.digest();
+            String mySha256 = DatatypeConverter
+                    .printHexBinary(digest).toLowerCase();
+
+            return mySha256;
+        } catch (NoSuchAlgorithmException | IOException e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 }
