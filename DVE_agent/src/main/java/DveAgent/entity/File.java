@@ -9,6 +9,7 @@ public class File {
 
   @TableId(type = IdType.AUTO)
   private Long uid;
+
   private Long agentId;
   private Long folderId;
 
@@ -17,7 +18,6 @@ public class File {
   private java.sql.Timestamp lastUpdate;
   private String tag;
   private Long size;
-  private String path;
   private String description;
   private java.sql.Timestamp expiredTime;
   private String hash;
