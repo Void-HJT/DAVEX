@@ -1,10 +1,7 @@
 package DveAgent.module.directory;
 
 import DveAgent.common.Body;
-import DveAgent.entity.Application;
-import DveAgent.entity.File;
-import DveAgent.entity.Group;
-import DveAgent.entity.Rule;
+import DveAgent.entity.*;
 import DveAgent.info.ApplicationInfo;
 import DveAgent.info.DirectoryInfo;
 import DveAgent.info.FileInfo;
@@ -18,6 +15,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
@@ -36,7 +34,11 @@ import java.util.List;
 public class DirectoryController {
 
     @Autowired
+    private RestTemplate restTemplate;
+
+    @Autowired
     private DirectoryService directoryService;
+
     private static final String BASE_DIRECTORY = "/Users/dengruotao/Desktop/result";
 //    private static final String BASE_DIRECTORY = "/disk2/DVE/result";
 
@@ -45,20 +47,17 @@ public class DirectoryController {
         return directoryService.getApplication();
 
     }
-
     @PostMapping("/getGroup")
     public Body<List<Group>> getGroup(@RequestParam("agentId") Long agentId,
                                  @RequestParam("centerId") Long centerId){
         return directoryService.getGroup(agentId,centerId);
     }
-
     @PostMapping("/addGroup")
     public Body<String> addGroup(@RequestParam("agentId") Long agentId,
                             @RequestParam("centerId") Long centerId,
                             @RequestParam("name") String name){
         return directoryService.addGroup(agentId,centerId,name);
     }
-
     @PostMapping("/getGroupByApplicationId")
     public Body<List<Group>> getGroupByApplicationId(@RequestParam("agentId") Long agentId,
                                                      @RequestParam("centerId") Long centerId,
@@ -67,12 +66,13 @@ public class DirectoryController {
 
     }
 
-    @PostMapping("/getApplicationAndGroup")
-    public Body<List<ApplicationInfo>> getApplicationAndGroup(@RequestParam("agentId") Long agentId,
-                                                              @RequestParam("centerId") Long centerId){
-        return directoryService.getApplicationAndGroup(agentId,centerId);
+//    @PostMapping("/getApplicationAndGroup")
+//    public Body<List<ApplicationInfo>> getApplicationAndGroup(@RequestParam("agentId") Long agentId,
+//                                                              @RequestParam("centerId") Long centerId){
+//        return directoryService.getApplicationAndGroup(agentId,centerId);
+//
+//    }
 
-    }
 
     @PostMapping("/addApplicationGroup")
     public Body<String> addApplicationGroup(@RequestParam("agentId") Long agentId,
@@ -143,13 +143,13 @@ public class DirectoryController {
     }
 
 
-    @PostMapping("/showFile")
-    public  Body<File> showFile(@RequestParam("uid") Long uid,
-                                @RequestParam("agentId") Long agentId,
-                                @RequestParam("folderId") Long folderId) {
-
-        return directoryService.showFile(uid,agentId,folderId);
-    }
+//    @PostMapping("/showFile")
+//    public  Body<File> showFile(@RequestParam("uid") Long uid,
+//                                @RequestParam("agentId") Long agentId,
+//                                @RequestParam("folderId") Long folderId) {
+//
+//        return directoryService.showFile(uid,agentId,folderId);
+//    }
 
 
     @PostMapping("/uploadFile")
@@ -213,6 +213,32 @@ public class DirectoryController {
         directory = directoryService.filterFoldersByVisibility(groupId,agentId,directory);
         directory = directoryService.filterFilesByRule(groupId,agentId,directory);
         return Body.success(directory,"1");
+    }
+
+    @PostMapping("/newAgent")
+    public ResponseEntity<String> newAgent(@RequestParam("agentId") Long agentId,
+                                          @RequestParam("name") String name) {
+
+
+        Agent agent = new Agent();
+        agent.setName(name);agent.setUid(agentId);
+        directoryService.addAgent(agent);
+        // 发送到Center进行同步
+        String centerUrl = "http://10.176.37.50:8080/directory/sync";
+        try {
+            restTemplate.postForObject(centerUrl, agent, String.class);
+        } catch (Exception e) {
+            // 处理发送失败的情况，如重试、记录日志等
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to sync file with center");
+        }
+        return ResponseEntity.ok("File saved and sent to center");
+    }
+
+    @PostMapping("/sync")
+    public ResponseEntity<String> syncFile(@RequestBody Agent agent) {
+        // 处理文件数据并保存到数据库
+        directoryService.addAgent(agent);
+        return ResponseEntity.ok("File synchronized successfully");
     }
 
 
