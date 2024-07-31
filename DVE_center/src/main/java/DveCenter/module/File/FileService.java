@@ -1,21 +1,5 @@
 package DveCenter.module.File;
 
-import DveAgent.common.Body;
-import DveAgent.entity.File;
-import DveAgent.mapper.FileMapper;
-import DveCenter.entity.Output;
-import DveCenter.entity.Task;
-import DveCenter.mapper.OutputMapper;
-import DveCenter.mapper.TaskMapper;
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.toolkit.Wrappers;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
-
-//import java.io.File; 命名冲突，使用全限定名
-import javax.servlet.http.HttpServletResponse;
 import java.io.BufferedInputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -25,6 +9,25 @@ import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+
+//import java.io.File; 命名冲突，使用全限定名
+import javax.servlet.http.HttpServletResponse;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
+
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+
+import DveAgent.common.Body;
+import DveAgent.entity.File;
+import DveAgent.mapper.FileMapper;
+import DveCenter.entity.Output;
+import DveCenter.entity.Task;
+import DveCenter.mapper.OutputMapper;
+import DveCenter.mapper.TaskMapper;
 
 @Service
 public class FileService {
@@ -38,30 +41,38 @@ public class FileService {
     @Autowired
     private JdbcTemplate jdbcTemplate;
 
-    public Body<String> uploadFile(MultipartFile file, Integer fileId, String base, java.sql.Timestamp expiredTime) {
+    public Body<String> uploadFile(MultipartFile file, Long fileId, String base, java.sql.Timestamp expiredTime) {
 
         // 根据文件id查找文件表
         LambdaQueryWrapper<File> queryWrapper = Wrappers.<File>lambdaQuery()
                 .eq(File::getUid, fileId);
         File queryFile = fileMapper.selectOne(queryWrapper);
-        if(queryFile == null){return Body.error(String.format("找不到该文件，文件id: %d", fileId));}
+        if (queryFile == null) {
+            return Body.error(String.format("找不到该文件，文件id: %d", fileId));
+        }
 
         // 文件信息加入结果表
         // 若已存在，则进行覆盖
         LambdaQueryWrapper<Output> queryWrapper1 = Wrappers.<Output>lambdaQuery()
                 .eq(Output::getUid, fileId);
         Output queryOutput = outputMapper.selectOne(queryWrapper1);
-        if(queryOutput != null){
+        if (queryOutput != null) {
             jdbcTemplate.execute("SET FOREIGN_KEY_CHECKS = 0");
             outputMapper.deleteById(fileId);
             jdbcTemplate.execute("SET FOREIGN_KEY_CHECKS = 1");
         }
         Output newOutput = new Output();
         String fileName = queryFile.getName();
-        newOutput.setUid(fileId);newOutput.setName(queryFile.getName());newOutput.setType(queryFile.getType());
-        newOutput.setUploadDate(Timestamp.valueOf(LocalDateTime.now()));newOutput.setTag(queryFile.getTag());
-        newOutput.setSize(queryFile.getSize());newOutput.setDescription(queryFile.getDescription());
-        newOutput.setPath(base + fileName);newOutput.setExpiredTime(expiredTime);newOutput.setHash(queryFile.getHash());
+        newOutput.setUid(fileId);
+        newOutput.setName(queryFile.getName());
+        newOutput.setType(queryFile.getType());
+        newOutput.setUploadDate(Timestamp.valueOf(LocalDateTime.now()));
+        newOutput.setTag(queryFile.getTag());
+        newOutput.setSize(queryFile.getSize());
+        newOutput.setDescription(queryFile.getDescription());
+        newOutput.setPath(base + fileName);
+        newOutput.setExpiredTime(expiredTime);
+        newOutput.setHash(queryFile.getHash());
         outputMapper.insert(newOutput);
 
         // 存储文件到结果管理区
@@ -82,8 +93,8 @@ public class FileService {
         return Body.success(String.format("上传成功，文件id: %d，文件名: %s", fileId, fileName));
     }
 
-
-    public Body<List<String>> uploadFiles(List<MultipartFile> files, List<Integer> fileIds, String base, List<java.sql.Timestamp> expiredTimes) {
+    public Body<List<String>> uploadFiles(List<MultipartFile> files, List<Long> fileIds, String base,
+            List<java.sql.Timestamp> expiredTimes) {
         List<String> results = new ArrayList<>();
 
         if (files.size() != fileIds.size() || files.size() != expiredTimes.size()) {
@@ -93,7 +104,7 @@ public class FileService {
         boolean flag = true;
         for (int i = 0; i < files.size(); i++) {
             MultipartFile file = files.get(i);
-            Integer fileId = fileIds.get(i);
+            Long fileId = fileIds.get(i);
             java.sql.Timestamp expiredTime = expiredTimes.get(i);
 
             // 根据文件id查找文件表
@@ -148,18 +159,20 @@ public class FileService {
             }
         }
 
-        if (flag == false) return Body.error(results, "部分文件上传失败");
+        if (flag == false)
+            return Body.error(results, "部分文件上传失败");
         return Body.success(results, "文件上传处理完成");
     }
 
-
-    public Body<String> downloadFile(Integer fileId, Integer applicationId, HttpServletResponse response) {
+    public Body<String> downloadFile(Long fileId, Long applicationId, HttpServletResponse response) {
 
         // 根据文件id查找结果表
         LambdaQueryWrapper<Output> queryWrapper = Wrappers.<Output>lambdaQuery()
                 .eq(Output::getUid, fileId);
         Output queryOutput = outputMapper.selectOne(queryWrapper);
-        if(queryOutput == null){return Body.error(String.format("找不到该文件，文件id: %d", fileId));}
+        if (queryOutput == null) {
+            return Body.error(String.format("找不到该文件，文件id: %d", fileId));
+        }
         // 判断文件是否过期
         Timestamp expiredTime = queryOutput.getExpiredTime();
         if (expiredTime != null && LocalDateTime.now().isAfter(expiredTime.toLocalDateTime())) {
@@ -172,16 +185,19 @@ public class FileService {
                 .eq(File::getUid, fileId);
         File queryFile = fileMapper.selectOne(queryWrapper1);
         Task newTask = new Task();
-        newTask.setFileId(fileId);newTask.setAgentId(queryFile.getAgentId());newTask.setApplicationId(applicationId);
-        newTask.setOutputId(fileId);newTask.setDownloadTime(Timestamp.valueOf(LocalDateTime.now()));
+        newTask.setFileId(fileId);
+        newTask.setAgentId(queryFile.getAgentId());
+        newTask.setApplicationId(applicationId);
+        newTask.setOutputId(fileId);
+        newTask.setDownloadTime(Timestamp.valueOf(LocalDateTime.now()));
         taskMapper.insert(newTask);
 
         // 新建文件流，从磁盘读取文件流
         String filePath = queryOutput.getPath();
         String fileName = queryOutput.getName();
         try (FileInputStream fis = new FileInputStream(filePath);
-             BufferedInputStream bis = new BufferedInputStream(fis);
-             OutputStream os = response.getOutputStream()) {    //  OutputStream 是文件写出流，将文件下载到浏览器客户端
+                BufferedInputStream bis = new BufferedInputStream(fis);
+                OutputStream os = response.getOutputStream()) { // OutputStream 是文件写出流，将文件下载到浏览器客户端
             // 新建字节数组，长度是文件的大小，比如文件 6kb, bis.available() = 1024 * 6
             byte[] bytes = new byte[bis.available()];
             // 从文件流读取字节到字节数组中
@@ -190,7 +206,7 @@ public class FileService {
             response.reset();
             // 设置 response 的下载响应头
             response.setContentType("application/octet-stream");
-            response.setHeader("Content-disposition", "attachment;filename=" + URLEncoder.encode(fileName, "UTF-8"));  // 注意，这里要设置文件名的编码，否则中文的文件名下载后不显示
+            response.setHeader("Content-disposition", "attachment;filename=" + URLEncoder.encode(fileName, "UTF-8")); // 注意，这里要设置文件名的编码，否则中文的文件名下载后不显示
             // 写出字节数组到输出流
             os.write(bytes);
             // 刷新输出流
@@ -202,7 +218,6 @@ public class FileService {
         return Body.success(String.format("下载成功，文件id: %d，文件名: %s", fileId, fileName));
     }
 
-
     public Body<List<Output>> queryFile() {
 
         List<Output> outputs = outputMapper.selectList(null);
@@ -210,14 +225,15 @@ public class FileService {
         return Body.success(outputs, String.format("查询成功，共查询到%d个文件", fileNum));
     }
 
-
     public Body<String> deleteFile(Integer fileId) {
 
         // 根据文件id查找结果表
         LambdaQueryWrapper<Output> queryWrapper = Wrappers.<Output>lambdaQuery()
                 .eq(Output::getUid, fileId);
         Output queryOutput = outputMapper.selectOne(queryWrapper);
-        if(queryOutput == null){return Body.error(String.format("找不到该文件，文件id: %d", fileId));}
+        if (queryOutput == null) {
+            return Body.error(String.format("找不到该文件，文件id: %d", fileId));
+        }
         String filePath = queryOutput.getPath();
         String fileName = queryOutput.getName();
 
@@ -228,8 +244,8 @@ public class FileService {
         try {
             outputMapper.deleteById(fileId);
             java.io.File file = new java.io.File(filePath);
-            //路径是个文件且不为空时删除文件
-            if(file.isFile() && file.exists()) {
+            // 路径是个文件且不为空时删除文件
+            if (file.isFile() && file.exists()) {
                 file.delete();
             }
             // 启用外键检查

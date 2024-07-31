@@ -1,21 +1,22 @@
 package DveCenter.module.File;
 
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.List;
+import java.util.stream.Collectors;
 
-import DveAgent.common.Body;
-import DveCenter.entity.Output;
+import javax.servlet.http.HttpServletResponse;
+
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
-import javax.servlet.http.HttpServletResponse;
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
-import java.util.List;
-import java.util.stream.Collectors;
+import DveAgent.common.Body;
+import DveCenter.entity.Output;
 
 // 定义接口路径
 @RestController
@@ -31,8 +32,8 @@ public class FileController {
     // agent文件上传接口
     @PostMapping("/upload")
     public Body<String> upload(@RequestParam MultipartFile file,
-                               @RequestParam("fileId") Integer fileId,
-                               @RequestParam(value = "expiredTime", required = false) java.sql.Timestamp expiredTime) {
+            @RequestParam("fileId") Long fileId,
+            @RequestParam(value = "expiredTime", required = false) java.sql.Timestamp expiredTime) {
 
         if (expiredTime == null) {
             // 设置默认值为当前时间的一周后
@@ -42,11 +43,10 @@ public class FileController {
         return fileService.uploadFile(file, fileId, UPLOAD_BASE_DIR, expiredTime);
     }
 
-
     @PostMapping("/uploads")
     public Body<List<String>> uploads(@RequestParam("files") List<MultipartFile> files,
-                                     @RequestParam("fileIds") List<Integer> fileIds,
-                                     @RequestParam(value = "expiredTimes", required = false) List<java.sql.Timestamp> expiredTimes) {
+            @RequestParam("fileIds") List<Long> fileIds,
+            @RequestParam(value = "expiredTimes", required = false) List<java.sql.Timestamp> expiredTimes) {
 
         // 如果没有提供失效时间，则设置默认值为当前时间的一周后
         if (expiredTimes == null) {
@@ -63,16 +63,14 @@ public class FileController {
         return fileService.uploadFiles(files, fileIds, UPLOAD_BASE_DIR, expiredTimes);
     }
 
-
     // application文件下载接口
     @PostMapping("/download")
-    public Body<String> download(@RequestParam("fileId") Integer fileId,
-                                 @RequestParam("applicationId") Integer applicationId,
-                                 HttpServletResponse response) {
+    public Body<String> download(@RequestParam("fileId") Long fileId,
+            @RequestParam("applicationId") Long applicationId,
+            HttpServletResponse response) {
 
         return fileService.downloadFile(fileId, applicationId, response);
     }
-
 
     // application文件查询接口
     @GetMapping("/query")
@@ -80,7 +78,6 @@ public class FileController {
 
         return fileService.queryFile();
     }
-
 
     // application文件删除接口
     @PostMapping("/delete")

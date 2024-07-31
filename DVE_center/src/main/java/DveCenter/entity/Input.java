@@ -2,38 +2,14 @@ package DveCenter.entity;
 
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
+
 import lombok.Data;
 
 @Data
 public class Input {
 
-    @TableId(value = "uid", type = IdType.AUTO)
-    private long uid;
-    private long applicationId;
+    @TableId(type = IdType.AUTO)
+    private Long uid;
+    private Long applicationId;
     private String path;
-
-
-    public long getUid() {
-        return uid;
-    }
-
-    public void setUid(long uid) {
-        this.uid = uid;
-    }
-
-    public long getApplicationId() {
-        return applicationId;
-    }
-
-    public void setApplicationId(long applicationId) {
-        this.applicationId = applicationId;
-    }
-
-    public String getPath() {
-        return path;
-    }
-
-    public void setPath(String path) {
-        this.path = path;
-    }
 }
