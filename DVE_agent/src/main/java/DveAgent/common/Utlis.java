@@ -1,10 +1,15 @@
 package DveAgent.common;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.security.cert.Certificate;
 import java.security.Signature;
 import java.security.cert.CertificateFactory;
 import java.util.Base64;
+import java.util.Map;
+import java.nio.file.*;
 
 public class Utlis {
 
@@ -53,5 +58,24 @@ public class Utlis {
         signature.update(data);
         byte[] signedBytes = Base64.getDecoder().decode(signedData);
         return signature.verify(signedBytes);
+    }
+
+    public static void replaceStringsInFile(String inputFilePath, String outputFilePath,
+            Map<String, String> replacementMap) throws IOException {
+        Path inputPath = Paths.get(inputFilePath);
+        Path outputPath = Paths.get(outputFilePath);
+
+        try (BufferedReader reader = Files.newBufferedReader(inputPath);
+                BufferedWriter writer = Files.newBufferedWriter(outputPath)) {
+
+            String line;
+            while ((line = reader.readLine()) != null) {
+                for (Map.Entry<String, String> entry : replacementMap.entrySet()) {
+                    line = line.replace(entry.getKey(), entry.getValue());
+                }
+                writer.write(line);
+                writer.newLine();
+            }
+        }
     }
 }

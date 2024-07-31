@@ -2,11 +2,15 @@ package DveCenter.module.auth.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
+import org.springframework.http.codec.ClientCodecConfigurer;
+import org.springframework.http.codec.json.Jackson2JsonEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.reactive.function.client.ExchangeStrategies;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import DveCenter.common.My;
 import DveAgent.entity.Agent;
@@ -19,13 +23,23 @@ public class CenterWebClientService {
         private AgentMapper agentMapper;
 
         @Autowired
+        private ObjectMapper objectMapper;
+
+        @Autowired
         My my;
 
         public WebClient center2AgentWebClient(long agent_id) throws Exception {
+                ExchangeStrategies strategies = ExchangeStrategies.builder()
+                                .codecs(configurer -> {
+                                        ClientCodecConfigurer.ClientDefaultCodecs codecs = configurer.defaultCodecs();
+                                        codecs.jackson2JsonEncoder(new Jackson2JsonEncoder(objectMapper));
+                                })
+                                .build();
                 LambdaQueryWrapper<Agent> queryWrapper = Wrappers.<Agent>lambdaQuery().eq(Agent::getUid, agent_id);
                 Agent agent = agentMapper.selectOne(queryWrapper);
                 HttpClient httpClient = HttpClient.create();
                 return WebClient.builder().clientConnector(new ReactorClientHttpConnector(httpClient))
-                                .baseUrl("http://" + agent.getIp() + ":" + agent.getPort()).build();
+                                .baseUrl("http://" + agent.getIp() + ":" + agent.getPort())
+                                .exchangeStrategies(strategies).build();
         }
 }

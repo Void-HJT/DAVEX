@@ -5,11 +5,13 @@ import java.util.Map;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import DveAgent.common.My;
 import DveAgent.entity.MpcTaskAgent;
 import DveAgent.info.UploadAgentTaskInfo;
+import DveAgent.mapper.FileMapper;
 import DveAgent.mapper.MpcTaskAgentMapper;
 import DveAgent.mapper.MpcTaskMapper;
 
@@ -25,29 +27,44 @@ public class MpcTaskService {
     @Autowired
     private My my;
 
+    @Autowired
+    GarnetService garnetService;
+
+    @Autowired
+    FileMapper fileMapper;
+
     // TODO 检查File权限
     public void createMpcTask(UploadAgentTaskInfo mpctTaskInfo) throws Exception {
-        if (mpcTaskMapper.selectById(mpctTaskInfo.getUid()) != null) {
+        if (mpctTaskInfo.getUid() != null && mpcTaskMapper.selectById(mpctTaskInfo.getUid()) != null) {
             throw new Exception("任务已存在");
         }
         Map<Long, Pair<Long, Long>> map = mpctTaskInfo.getAgentID2fileID();
         if (!map.containsKey(my.getId())) {
             throw new Exception("发送错误");
         }
-        mpctTaskInfo.setData(map.get(my.getId()).getRight());
+        mpctTaskInfo.setDataId(map.get(my.getId()).getRight());
+        // TODO 取消强制类型转换
+        mpctTaskInfo.setPart(Math.toIntExact(map.get(my.getId()).getLeft()));
         for (Map.Entry<Long, Pair<Long, Long>> entry : map.entrySet()) {
             MpcTaskAgent mpcTaskAgent = new MpcTaskAgent();
             mpcTaskAgent.setAgentId(entry.getKey());
-            mpcTaskAgent.setFileId(entry.getValue().getRight());
             mpcTaskAgent.setPart(entry.getValue().getLeft());
             mpcTaskAgent.setMpcTaskId(mpctTaskInfo.getUid());
             mpcTaskAgent.setCenterId(mpctTaskInfo.getCenterId());
             mpcTaskAgentMapper.insert(mpcTaskAgent);
         }
         mpcTaskMapper.insert(mpctTaskInfo);
+        preprocess(mpctTaskInfo);
     }
 
-    public Boolean ready(Long mpcTaskId) throws Exception {
+    @Async("customExecutor")
+    private void preprocess(UploadAgentTaskInfo mpcTask) throws Exception {
+        garnetService.compile(mpcTask);
+        garnetService.link(fileMapper.selectById(mpcTask.getDataId()).getPath(), mpcTask.getUid(),
+                Long.valueOf(mpcTask.getPart().toString()));
+    }
+
+    public Boolean ready(String mpcTaskId) throws Exception {
         return mpcTaskMapper.selectById(mpcTaskId).getReady();
     }
 }

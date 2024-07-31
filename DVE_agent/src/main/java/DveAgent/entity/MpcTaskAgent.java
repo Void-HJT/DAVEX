@@ -19,6 +19,5 @@ public class MpcTaskAgent {
   private Long centerId;
   private Long agentId;
   private Long part;
-  private Long fileId;
 
 }

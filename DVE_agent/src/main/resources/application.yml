@@ -4,8 +4,8 @@ my:
   id: 100
   ip: 10.176.34.171
   name: '171!!'
-  description: 'DVE Agent 171!'
-  garnet_path: "/home/nhy/garnet"
+  description: 'DVE Agent 171'
+  garnet_path: "/home/nhy/Garnet"
 
 server:
   port: 8080
@@ -31,7 +31,9 @@ spring:
       url: jdbc:mysql://10.176.34.171:3306/agent
       username: nhy
       password: makeMPLgreat*2
-
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
   mvc:
     pathmatch:
       matching-strategy: ANT_PATH_MATCHER
@@ -43,3 +45,17 @@ mybatis-plus:
   global-config:
     db-config:
       id-type: ASSIGN_ID
+
+threadpool:
+  # 核心线程池大小
+  corePoolSize: 5   
+  # 最大线程数
+  maxPoolSize: 10
+  # 队列容量
+  queueCapacity: 100
+  # 活跃时间：非核心线程空闲时间超过这个时间就会被回收
+  keepAliveSeconds: 60
+  # 主线程等待子线程执行时间
+  awaitTerminationSeconds: 6000
+  # 线程名字前缀
+  threadNamePrefix: 'DVE-Agent-'

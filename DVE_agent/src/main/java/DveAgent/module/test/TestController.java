@@ -1,8 +1,14 @@
 package DveAgent.module.test;
 
 import DveAgent.common.R;
+import DveAgent.entity.Mpc;
+import DveAgent.entity.MpcTask;
+import DveAgent.mapper.MpcMapper;
+import DveAgent.mapper.MpcTaskMapper;
 import DveAgent.module.auth.service.AgentWebClientService;
+import DveAgent.module.task.service.GarnetService;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -16,8 +22,18 @@ public class TestController {
 
     private AgentWebClientService webClientService;
 
-    public TestController(AgentWebClientService webClientService) {
+    private MpcTaskMapper mpcTaskMapper;
+
+    private GarnetService garnetService;
+
+    @Autowired
+    private MpcMapper mpcMapper;
+
+    public TestController(AgentWebClientService webClientService, MpcTaskMapper mpcTaskMapper,
+            GarnetService garnetService) {
         this.webClientService = webClientService;
+        this.mpcTaskMapper = mpcTaskMapper;
+        this.garnetService = garnetService;
     }
 
     @RequestMapping("/hello")
@@ -39,6 +55,13 @@ public class TestController {
             e.printStackTrace();
             return e.getMessage();
         }
+    }
+
+    @PostMapping("/json")
+    public Mpc postMethodName(@RequestBody Mpc entity) throws Exception {
+
+        mpcMapper.insert(entity);
+        return entity;
     }
 
 }
