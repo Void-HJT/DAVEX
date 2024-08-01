@@ -5,11 +5,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
-import DveAgent.info.CompileParameter;
+import DveAgent.info.Parameter;
 import DveAgent.serializer.PairDeserializer;
 import DveAgent.serializer.PairSerializer;
-import DveAgent.serializer.CompileParameterDeserializer;
-import DveAgent.serializer.CompileParameterSerializer;
+import DveAgent.serializer.ParameterDeserializer;
+import DveAgent.serializer.ParameterSerializer;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.context.annotation.Bean;
@@ -29,8 +29,8 @@ public class JacksonConfig {
     @Bean
     public Module parameterModule() {
         SimpleModule module = new SimpleModule();
-        module.addSerializer(new CompileParameterSerializer());
-        module.addDeserializer(CompileParameter.class, new CompileParameterDeserializer());
+        module.addSerializer(new ParameterSerializer());
+        module.addDeserializer(Parameter.class, new ParameterDeserializer());
         return module;
     }
 

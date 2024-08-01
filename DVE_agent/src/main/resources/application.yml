@@ -10,6 +10,9 @@ my:
 server:
   port: 8080
 
+BasePath:
+  content: ""
+
 ssl:
   client-auth: false
   key-store-password: 'agopkljsfoi'

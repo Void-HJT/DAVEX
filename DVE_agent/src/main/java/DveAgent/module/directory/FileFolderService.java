@@ -492,7 +492,7 @@ public class FileFolderService {
     public String getFolderPath(Folder folder,String baseDirectory){
         List<Long> parentFolderIds = new ArrayList<>();
         List<String> path = new ArrayList<>();
-        findAllParentFolders(folder.getUid(), folder.getParentId(), parentFolderIds, path);
+        findAllParentFolders(folder.getUid(), folder.getAgentId(), parentFolderIds, path);
         // 构建文件夹路径
         Collections.reverse(path);  // 反转路径列表，确保路径顺序正确
         StringBuilder fullPathBuilder = new StringBuilder(baseDirectory);

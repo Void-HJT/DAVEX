@@ -9,11 +9,13 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import DveAgent.common.My;
+import DveAgent.entity.File;
 import DveAgent.entity.MpcTaskAgent;
 import DveAgent.info.UploadAgentTaskInfo;
 import DveAgent.mapper.FileMapper;
 import DveAgent.mapper.MpcTaskAgentMapper;
 import DveAgent.mapper.MpcTaskMapper;
+import DveAgent.module.directory.FileFolderService;
 
 @Service
 public class MpcTaskService {
@@ -32,6 +34,9 @@ public class MpcTaskService {
 
     @Autowired
     FileMapper fileMapper;
+
+    @Autowired
+    FileFolderService fileFolderService;
 
     // TODO 检查File权限
     public void createMpcTask(UploadAgentTaskInfo mpctTaskInfo) throws Exception {
@@ -60,7 +65,9 @@ public class MpcTaskService {
     @Async("customExecutor")
     private void preprocess(UploadAgentTaskInfo mpcTask) throws Exception {
         garnetService.compile(mpcTask);
-        garnetService.link(fileMapper.selectById(mpcTask.getDataId()).getPath(), mpcTask.getUid(),
+        File file=fileMapper.selectById(mpcTask.getDataId());
+        garnetService.link(fileFolderService.getFilePath(fileMapper.selectById(mpcTask.getDataId()), "/home/nhy"),
+                mpcTask.getUid(),
                 Long.valueOf(mpcTask.getPart().toString()));
     }
 

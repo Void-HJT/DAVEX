@@ -22,7 +22,7 @@ import com.alibaba.fastjson.JSONObject;
 
 import DveAgent.entity.Mpc;
 import DveAgent.entity.MpcTask;
-import DveAgent.info.CompileParameter;
+import DveAgent.info.Parameter;
 import DveAgent.mapper.MpcMapper;
 import DveAgent.mapper.MpcTaskMapper;
 import DveCenter.common.My;
@@ -63,6 +63,14 @@ public class GarnetService {
         }
     }
 
+    public void preprocess(MpcTask mpcTask) throws Exception {
+
+    }
+
+    public void psi(MpcTask mpcTask) throws Exception {
+
+    }
+
     public void link(String path, String prefix, Integer part) throws Exception {
         List<String> command = new ArrayList<>(Arrays.asList("ln", "-s", path,
                 garnet_directory.getAbsolutePath() + "/Input/" + prefix + "-P" + part + "-0"));
@@ -93,13 +101,13 @@ public class GarnetService {
     public void compile(MpcTask mpcTask) throws Exception {
         JSONObject parameter = mpcTask.getCompileParameters();
         Mpc mpc = mpcMapper.selectById(mpcTask.getMpcId());
-        List<CompileParameter> parameters = mpc.getParameters();
+        List<Parameter> parameters = mpc.getCompileParameters();
         Map<Integer, String> args = new HashMap<>();
         List<String> flags = new ArrayList<>();
-        for (CompileParameter p : parameters) {
+        for (Parameter p : parameters) {
             switch (p.getParameterType()) {
-                case ARG:
-                    args.put((Integer) p.getValue(), parameter.getString(p.getName()));
+                case POS:
+                    args.put((Integer) p.getLimit(), parameter.getString(p.getName()));
                     break;
                 case FLAG:
                     flags.add(parameter.getString(p.getName()));
@@ -158,7 +166,7 @@ public class GarnetService {
         String outputPrefix = garnet_directory.getAbsolutePath() + "/Output/" + mpcTask.getUid();
         String protocol = mpcTask.getRuntimeParameters().getString("protocol");
         String mpc_name = mpcTask.getMpcName();
-        Integer part=mpcTask.getPart();
+        Integer part = mpcTask.getPart();
         List<String> command = new ArrayList<>(Arrays.asList(
                 "./" + protocol + ".x",
                 "-IF", inputPrefix,

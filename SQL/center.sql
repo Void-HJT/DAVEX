@@ -84,7 +84,6 @@ CREATE TABLE `file` (
     `last_update` timestamp NULL DEFAULT NULL,
     `tag` varchar(255) DEFAULT NULL,
     `size` BIGINT DEFAULT NULL,
-    `path` varchar(255) DEFAULT NULL,
     `description` varchar(255) DEFAULT NULL,
     `expired_time` timestamp NULL DEFAULT NULL,
     `hash` varchar(255) DEFAULT NULL,
@@ -156,7 +155,8 @@ DROP TABLE IF EXISTS `mpc`;
 CREATE TABLE `mpc` (
     `uid` BIGINT NOT NULL AUTO_INCREMENT,
     `name` varchar(255) DEFAULT NULL,
-    `parameters` JSON NULL,
+    `compile_parameters` JSON DEFAULT NULL,
+    `runtime_parameters` JSON DEFAULT NULL,
     `center_id` BIGINT DEFAULT NULL,
     `path` varchar(255) DEFAULT NULL,
     PRIMARY KEY (`uid`)

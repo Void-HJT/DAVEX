@@ -23,7 +23,7 @@ import com.alibaba.fastjson.JSONObject;
 import DveAgent.common.My;
 import DveAgent.entity.Mpc;
 import DveAgent.entity.MpcTask;
-import DveAgent.info.CompileParameter;
+import DveAgent.info.Parameter;
 import DveAgent.mapper.MpcMapper;
 import DveAgent.mapper.MpcTaskMapper;
 
@@ -51,7 +51,10 @@ public class GarnetService {
     @EventListener(ApplicationReadyEvent.class)
     @Async("customExecutor")
     public void init() {
-        String[] command = { "make", ";", "pip", "install", "-r", "requirements.txt" };
+        String[] command = { "make", ";",
+                "pip", "install", "-r", "requirements.txt;",
+                "mkdir", "Input;",
+                "mkdir", "Output" };
         ProcessBuilder processBuilder = new ProcessBuilder(command);
         processBuilder.directory(garnet_directory);
         try {
@@ -99,13 +102,13 @@ public class GarnetService {
     public void compile(MpcTask mpcTask) throws Exception {
         JSONObject parameter = mpcTask.getCompileParameters();
         Mpc mpc = mpcMapper.selectById(mpcTask.getMpcId());
-        List<CompileParameter> parameters = mpc.getParameters();
+        List<Parameter> parameters = mpc.getCompileParameters();
         Map<Integer, String> args = new HashMap<>();
         List<String> flags = new ArrayList<>();
-        for (CompileParameter p : parameters) {
+        for (Parameter p : parameters) {
             switch (p.getParameterType()) {
-                case ARG:
-                    args.put((Integer) p.getValue(), parameter.getString(p.getName()));
+                case POS:
+                    args.put((Integer) p.getLimit(), parameter.getString(p.getName()));
                     break;
                 case FLAG:
                     flags.add(parameter.getString(p.getName()));
