@@ -10,6 +10,9 @@ my:
 server:
   port: 9999
 
+BasePath:
+  content: ""
+
 ssl:
   client-auth: true
   key-store-password: 'agopkljsfoi'

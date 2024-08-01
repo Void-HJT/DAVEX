@@ -5,15 +5,20 @@ import DveAgent.common.Body;
 import DveAgent.entity.Application;
 import DveAgent.entity.Group;
 import DveAgent.entity.Rule;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController // @RestController的作用等同于@Controller + @ResponseBody。
 // 相当于@Controller+@ResponseBody两个注解的结合，返回json数据不需要在方法前面加@ResponseBody注解了，但使用@RestController这个注解，就不能返回jsp,html页面，视图解析器无法解析jsp,html页面
 @RequestMapping("/directory/group")
 public class GroupController {
+
+    private static final Logger customLogger = LoggerFactory.getLogger("CustomLogger");
 
     @Autowired
     GroupService  groupService;
@@ -27,7 +32,19 @@ public class GroupController {
     @PostMapping("/getGroup")
     public Body<List<Group>> getGroup(@RequestParam("agentId") Long agentId,
                                       @RequestParam("centerId") Long centerId){
-        return groupService.getGroup(agentId,centerId);
+        // 记录输入参数、调用方法、请求方、接收方和时间
+        String requestTime = LocalDateTime.now().toString();
+        customLogger.info("Custom Log - Input: agentId={}, centerId={}, Method: getGroup, Requester: {}, Responder: {}, Time: {}",
+                agentId, centerId, "RequesterInfo", "ResponderInfo", requestTime);
+
+        Body<List<Group>> response = groupService.getGroup(agentId, centerId);
+
+        // 记录输出结果、请求方、接收方和时间
+        String responseTime = LocalDateTime.now().toString();
+        customLogger.info("Custom Log - Output: {}, Requester: {}, Responder: {}, Time: {}",
+                response, "RequesterInfo", "ResponderInfo", responseTime);
+
+        return response;
     }
     @PostMapping("/addGroup")
     public Body<String> addGroup(@RequestParam("agentId") Long agentId,
@@ -61,8 +78,9 @@ public class GroupController {
     @PostMapping("/deleteApplicationGroup")
     public Body<String> deleteApplicationGroup(@RequestParam("agentId") Long agentId,
                                             @RequestParam("centerId") Long centerId,
-                                            @RequestParam("applicationGroupId") Long applicationGroupId){
-        return groupService.deleteApplicationGroup(agentId,centerId,applicationGroupId);
+                                               @RequestParam("applicationId") Long applicationId,
+                                               @RequestParam("groupId") Long groupId){
+        return groupService.deleteApplicationGroup(agentId,centerId,applicationId,groupId);
 
     }
 
@@ -80,8 +98,9 @@ public class GroupController {
     }
     @PostMapping("/deleteRule")
     public Body<String> deleteRule(@RequestParam("agentId") Long agentId,
-                                @RequestParam("ruleId") Long ruleId){
-        return groupService.deleteRule(agentId,ruleId);
+                                   @RequestParam("groupId") Long groupId,
+                                   @RequestParam("allowMethod")String allowMethod){
+        return groupService.deleteRule(agentId,groupId,allowMethod);
     }
     
 }

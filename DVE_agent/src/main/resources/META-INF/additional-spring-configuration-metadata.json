@@ -88,5 +88,10 @@
     "name": "threadpool.awaitTerminationSeconds",
     "type": "java.lang.String",
     "description": "A description for 'threadpool.awaitTerminationSeconds'"
+  },
+  {
+    "name": "BasePath.content",
+    "type": "java.lang.String",
+    "description": "A description for 'BasePath.content'"
   }
 ]}

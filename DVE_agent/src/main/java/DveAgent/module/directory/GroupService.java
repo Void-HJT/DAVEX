@@ -103,9 +103,10 @@ public class GroupService {
         return Body.success("分组成功");
     }
     //删除用户划分组
-    public Body<String> deleteApplicationGroup(Long agentId, Long centerId, Long applicationGroupId) {
+    public Body<String> deleteApplicationGroup(Long agentId, Long centerId, Long applicationId,Long groupId) {
         LambdaQueryWrapper<ApplicationGroup> queryWrapper = Wrappers.<ApplicationGroup>lambdaQuery()
-                .eq(ApplicationGroup::getUid,applicationGroupId)
+                .eq(ApplicationGroup::getApplicationId,applicationId)
+                .eq(ApplicationGroup::getGroupId,groupId)
                 .eq(ApplicationGroup::getCenterId,centerId)
                 .eq(ApplicationGroup::getAgentId,agentId);
         ApplicationGroup applicationGroup = applicationGroupMapper.selectOne(queryWrapper);
@@ -141,9 +142,10 @@ public class GroupService {
         return Body.success(rules,"成功");
     }
 
-    public Body<String> deleteRule(Long agentId, Long ruleId) {
+    public Body<String> deleteRule(Long agentId, Long groupId,String allowMethod) {
         LambdaQueryWrapper<Rule> queryWrapper = Wrappers.<Rule>lambdaQuery()
-                .eq(Rule::getUid,ruleId)
+                .eq(Rule::getGroupId,groupId)
+                .eq(Rule::getAllowedMethod,allowMethod)
                 .eq(Rule::getAgentId,agentId);
         Rule rule = ruleMapper.selectOne(queryWrapper);
         if(rule==null){return Body.error("该规则不存在");}
