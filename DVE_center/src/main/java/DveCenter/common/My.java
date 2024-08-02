@@ -53,6 +53,9 @@ public class My {
     @Value("${ssl.key-store-type}")
     private String keyStoreType;
 
+    @Value("${my.base_path}")
+    private String base_path;
+
     private Center center;
 
     private KeyStore keyStore;
@@ -233,6 +236,14 @@ public class My {
 
     public void setGarnet_path(String garnet_path) {
         this.garnet_path = garnet_path;
+    }
+
+    public String getBase_path() {
+        return base_path;
+    }
+
+    public void setBase_path(String base_path) {
+        this.base_path = base_path;
     }
 
 }

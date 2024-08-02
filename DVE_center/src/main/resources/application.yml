@@ -6,12 +6,10 @@ my:
   name: '171'
   description: 'DVE Center 171'
   garnet_path: "/home/nhy/Garnet"
+  base_path: "/home/nhy/DVE"
 
 server:
   port: 9999
-
-BasePath:
-  content: ""
 
 ssl:
   client-auth: true
