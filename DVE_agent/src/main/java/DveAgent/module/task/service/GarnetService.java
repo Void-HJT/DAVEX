@@ -1,13 +1,19 @@
 package DveAgent.module.task.service;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStreamReader;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,7 +33,7 @@ import DveAgent.info.Parameter;
 import DveAgent.mapper.MpcMapper;
 import DveAgent.mapper.MpcTaskMapper;
 
-@Async("customExecutor")
+// @Async("customExecutor")
 @Service
 public class GarnetService {
 
@@ -96,7 +102,6 @@ public class GarnetService {
         } catch (Exception e) {
             throw e;
         }
-
     }
 
     public void compile(MpcTask mpcTask) throws Exception {
@@ -108,10 +113,10 @@ public class GarnetService {
         for (Parameter p : parameters) {
             switch (p.getParameterType()) {
                 case POS:
-                    args.put((Integer) p.getLimit(), parameter.getString(p.getName()));
+                    args.put((Integer) p.getPosORflag(), parameter.getString(p.getName()));
                     break;
                 case FLAG:
-                    flags.add(parameter.getString(p.getName()));
+                    flags.add((String) p.getPosORflag() + " " + parameter.getString(p.getName()));
                     break;
             }
         }
@@ -162,7 +167,7 @@ public class GarnetService {
         }
     }
 
-    private void run(MpcTask mpcTask) throws Exception {
+    public void run(MpcTask mpcTask) throws Exception {
         String inputPrefix = garnet_directory.getAbsolutePath() + "/Input/" + mpcTask.getUid();
         String outputPrefix = garnet_directory.getAbsolutePath() + "/Output/" + mpcTask.getUid();
         String protocol = mpcTask.getRuntimeParameters().getString("protocol");
@@ -212,5 +217,105 @@ public class GarnetService {
             e.printStackTrace();
         }
 
+    }
+
+    public void csvExtract(String inputCsvPath, String fieldName, String prefix) {
+        String outputFilePath = garnet_directory.getAbsolutePath() + "/Input/" + prefix + "-P1-0";
+        try (BufferedReader reader = Files.newBufferedReader(Paths.get(inputCsvPath));
+                BufferedWriter writer = Files.newBufferedWriter(Paths.get(outputFilePath))) {
+            String headerLine = reader.readLine();
+            if (headerLine == null) {
+                throw new IllegalArgumentException("CSV文件为空");
+            }
+            String[] headers = headerLine.split(",");
+            int fieldIndex = -1;
+            for (int i = 0; i < headers.length; i++) {
+                if (headers[i].trim().equals(fieldName)) {
+                    fieldIndex = i;
+                    break;
+                }
+            }
+            if (fieldIndex == -1) {
+                throw new IllegalArgumentException("字段名未找到: " + fieldName);
+            }
+            String line;
+            while ((line = reader.readLine()) != null) {
+                String[] fields = line.split(",");
+                if (fields.length > fieldIndex) {
+                    String fieldValue = fields[fieldIndex];
+                    int intValue;
+                    try {
+                        intValue = Integer.parseInt(fieldValue);
+                    } catch (NumberFormatException e) {
+                        intValue = fieldValue.hashCode();
+                    }
+                    writer.write(String.valueOf(intValue));
+                    writer.newLine();
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void csvQuery(String inputCsvPath, String prefix, String fieldName, String outputCsvPath) {
+        String fieldFilePath = garnet_directory.getAbsolutePath() + "/Output/" + prefix + "-P1-0";
+        try (BufferedReader csvReader = Files.newBufferedReader(Paths.get(inputCsvPath));
+                BufferedReader fieldReader = Files.newBufferedReader(Paths.get(fieldFilePath));
+                BufferedWriter csvWriter = Files.newBufferedWriter(Paths.get(outputCsvPath))) {
+
+            // 读取字段文件并存储在集合中
+            Set<Integer> fieldValues = new HashSet<>();
+            String fieldLine;
+            while ((fieldLine = fieldReader.readLine()) != null) {
+                try {
+                    fieldValues.add(Integer.parseInt(fieldLine));
+                } catch (NumberFormatException e) {
+                    fieldValues.add(fieldLine.hashCode());
+                }
+            }
+
+            // 读取CSV文件头部
+            String headerLine = csvReader.readLine();
+            if (headerLine == null) {
+                throw new IllegalArgumentException("CSV文件为空");
+            }
+            csvWriter.write(headerLine);
+            csvWriter.newLine();
+
+            String[] headers = headerLine.split(",");
+            int fieldIndex = -1;
+            for (int i = 0; i < headers.length; i++) {
+                if (headers[i].trim().equals(fieldName)) {
+                    fieldIndex = i;
+                    break;
+                }
+            }
+            if (fieldIndex == -1) {
+                throw new IllegalArgumentException("字段名未找到: " + fieldName);
+            }
+
+            // 逐行读取CSV文件并匹配字段值
+            String line;
+            while ((line = csvReader.readLine()) != null) {
+                String[] fields = line.split(",");
+                if (fields.length > fieldIndex) {
+                    String fieldValue = fields[fieldIndex];
+                    int intValue;
+                    try {
+                        intValue = Integer.parseInt(fieldValue);
+                    } catch (NumberFormatException e) {
+                        intValue = fieldValue.hashCode();
+                    }
+                    if (fieldValues.contains(intValue)) {
+                        csvWriter.write(line);
+                        csvWriter.newLine();
+                    }
+                }
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }

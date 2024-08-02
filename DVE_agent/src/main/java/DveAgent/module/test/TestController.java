@@ -3,9 +3,11 @@ package DveAgent.module.test;
 import DveAgent.common.R;
 import DveAgent.entity.Mpc;
 import DveAgent.entity.MpcTask;
+import DveAgent.mapper.FileMapper;
 import DveAgent.mapper.MpcMapper;
 import DveAgent.mapper.MpcTaskMapper;
 import DveAgent.module.auth.service.AgentWebClientService;
+import DveAgent.module.directory.FileFolderService;
 import DveAgent.module.task.service.GarnetService;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,6 +16,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
 @RestController // @RestController的作用等同于@Controller + @ResponseBody。
 // 相当于@Controller+@ResponseBody两个注解的结合，返回json数据不需要在方法前面加@ResponseBody注解了，但使用@RestController这个注解，就不能返回jsp,html页面，视图解析器无法解析jsp,html页面
@@ -25,6 +29,12 @@ public class TestController {
     private MpcTaskMapper mpcTaskMapper;
 
     private GarnetService garnetService;
+
+    @Autowired
+    FileMapper fileMapper;
+
+    @Autowired
+    FileFolderService fileFolderService;
 
     @Autowired
     private MpcMapper mpcMapper;

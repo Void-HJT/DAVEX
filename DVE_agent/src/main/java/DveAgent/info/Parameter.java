@@ -176,15 +176,17 @@ public class Parameter {
                 if (posORflag instanceof Integer) {
                     this.posORflag = posORflag;
                 } else {
-                    throw new IllegalArgumentException("posORflag must be Integer");
+                    throw new IllegalArgumentException("posORflag must be Integer:"+posORflag.toString());
                 }
+                break;
             case FLAG:
             default:
                 if (posORflag instanceof String) {
                     this.posORflag = posORflag;
                 } else {
-                    throw new IllegalArgumentException("posORflag must be String");
+                    throw new IllegalArgumentException("posORflag must be String:"+posORflag.toString());
                 }
+                break;
         }
     }
 

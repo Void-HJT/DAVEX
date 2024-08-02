@@ -28,21 +28,21 @@ public class Mpc {
   private String path;
 
   public void setCompileParameters(List<Parameter> parameters) throws Exception {
-    Set<Integer> s = new HashSet<>();
-    for (Parameter parameter : parameters) {
-      if (parameter.getParameterType() != Parameter.ArgumentsType.POS) {
-        continue;
-      }
-      if (s.contains((Integer) parameter.getLimit())) {
-        throw new Exception("参数重复");
-      }
-      s.add((Integer) parameter.getLimit());
-    }
-    for (int i = 0; i < s.size(); i++) {
-      if (!s.contains(i)) {
-        throw new Exception("参数缺失");
-      }
-    }
+    // Set<Integer> s = new HashSet<>();
+    // for (Parameter parameter : parameters) {
+    // if (parameter.getParameterType() != Parameter.ArgumentsType.POS) {
+    // continue;
+    // }
+    // if (s.contains((Integer) parameter.getLimit())) {
+    // throw new Exception("参数重复");
+    // }
+    // s.add((Integer) parameter.getLimit());
+    // }
+    // for (int i = 0; i < s.size(); i++) {
+    // if (!s.contains(i)) {
+    // throw new Exception("参数缺失");
+    // }
+    // }
     this.compileParameters = parameters;
   }
 

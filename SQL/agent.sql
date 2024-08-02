@@ -88,7 +88,7 @@ CREATE TABLE `file` (
     `expired_time` timestamp NULL DEFAULT NULL,
     `hash` varchar(255) DEFAULT NULL,
     `example` varchar(255) DEFAULT NULL,
-    `type` enum('文件流', '数据库') DEFAULT NULL,
+    `type` varchar(255) DEFAULT NULL,
     PRIMARY KEY (`uid`, `agent_id`)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci;
 

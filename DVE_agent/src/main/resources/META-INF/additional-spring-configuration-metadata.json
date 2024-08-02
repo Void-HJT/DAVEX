@@ -90,8 +90,8 @@
     "description": "A description for 'threadpool.awaitTerminationSeconds'"
   },
   {
-    "name": "BasePath.content",
+    "name": "my.base_path",
     "type": "java.lang.String",
-    "description": "A description for 'BasePath.content'"
+    "description": "A description for 'my.base_path'"
   }
 ]}

@@ -12,7 +12,6 @@ import javax.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-
 import DveAgent.entity.Agent;
 import nl.altindag.ssl.SSLFactory;
 
@@ -54,6 +53,9 @@ public class My {
     @Value("${my.garnet_path}")
     private String garnet_path;
 
+    @Value("${my.base_path}")
+    private String base_path;
+
     private Agent agent;
 
     private KeyStore keyStore;
@@ -65,7 +67,6 @@ public class My {
     private Certificate certificate;
 
     private SSLFactory baseSslFactory;
-
 
     @PostConstruct
     public void init() throws Exception {
@@ -235,6 +236,14 @@ public class My {
 
     public void setGarnet_path(String garnet_path) {
         this.garnet_path = garnet_path;
+    }
+
+    public String getBase_path() {
+        return base_path;
+    }
+
+    public void setBase_path(String base_path) {
+        this.base_path = base_path;
     }
 
 }

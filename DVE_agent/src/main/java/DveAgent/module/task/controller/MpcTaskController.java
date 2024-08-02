@@ -61,7 +61,16 @@ public class MpcTaskController {
             return R.success(false, "任务正在运行");
         }
         try {
-            garnetService.psi_base(mpcTask);
+            switch (mpcTask.getTaskType()) {
+                case GARNET_PSI:
+                    mpcTaskService.psiRun(mpcTask);
+                    break;
+                case GARNET_MPC:
+                default:
+                    mpcTaskService.run(mpcTask);
+                    break;
+            }
+
         } catch (Exception e) {
             return R.error(e.getMessage());
         }

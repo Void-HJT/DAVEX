@@ -27,7 +27,7 @@ import DveAgent.mapper.MpcMapper;
 import DveAgent.mapper.MpcTaskMapper;
 import DveCenter.common.My;
 
-@Async("customExecutor")
+// @Async("customExecutor")
 @Service
 public class GarnetService {
 
