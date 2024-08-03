@@ -20,6 +20,7 @@ public class Output {
     private String hash;
     private long fileId;
     private long agentId;
+    private long applicationId;
 
 
     public long getUid() {
@@ -116,5 +117,13 @@ public class Output {
 
     public void setAgentId(long agentId) {
         this.agentId = agentId;
+    }
+
+    public long getApplicationId() {
+        return applicationId;
+    }
+
+    public void setApplicationId(long applicationId) {
+        this.applicationId = applicationId;
     }
 }

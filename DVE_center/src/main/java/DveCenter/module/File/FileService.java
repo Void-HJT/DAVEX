@@ -41,7 +41,8 @@ public class FileService {
     @Autowired
     private JdbcTemplate jdbcTemplate;
 
-    public Body<String> saveFile(MultipartFile file, Integer fileId, Integer agentId, String base, java.sql.Timestamp expiredTime) {
+    public Body<String> saveFile(MultipartFile file, Integer fileId, Integer agentId, Integer applicationId,
+                                 String base, java.sql.Timestamp expiredTime) {
 
         // 根据文件id查找文件表
         LambdaQueryWrapper<File> queryWrapper = Wrappers.<File>lambdaQuery()
@@ -58,7 +59,8 @@ public class FileService {
         // 若已存在，则进行覆盖
         LambdaQueryWrapper<Output> queryWrapper1 = Wrappers.<Output>lambdaQuery()
                 .eq(Output::getFileId, fileId)
-                .eq(Output::getAgentId, agentId);
+                .eq(Output::getAgentId, agentId)
+                .eq(Output::getApplicationId, applicationId);
         Output queryOutput = outputMapper.selectOne(queryWrapper1);
         if(queryOutput != null){
             if (fileHash.equals(queryOutput.getHash())) {
@@ -72,8 +74,8 @@ public class FileService {
         newOutput.setName(queryFile.getName());newOutput.setType(queryFile.getType());
         newOutput.setUploadDate(Timestamp.valueOf(LocalDateTime.now()));newOutput.setTag(queryFile.getTag());
         newOutput.setSize(queryFile.getSize());newOutput.setDescription(queryFile.getDescription());
-        newOutput.setPath(base + fileHash);newOutput.setExpiredTime(expiredTime);newOutput.setHash(fileHash);
-        newOutput.setFileId(fileId);newOutput.setAgentId(agentId);
+        newOutput.setPath(base + fileHash + "_appid_" + applicationId);newOutput.setExpiredTime(expiredTime);newOutput.setHash(fileHash);
+        newOutput.setFileId(fileId);newOutput.setAgentId(agentId);newOutput.setApplicationId(applicationId);
         outputMapper.insert(newOutput);
 
         // 存储文件到结果管理区
@@ -96,7 +98,8 @@ public class FileService {
     }
 
 
-    public Body<List<String>> saveFiles(List<MultipartFile> files, List<Integer> fileIds, List<Integer> agentIds, String base, List<java.sql.Timestamp> expiredTimes) {
+    public Body<List<String>> saveFiles(List<MultipartFile> files, List<Integer> fileIds, List<Integer> agentIds,
+                                        Integer applicationId, String base, List<java.sql.Timestamp> expiredTimes) {
         List<String> results = new ArrayList<>();
 
         if (files.size() != fileIds.size() || files.size() != agentIds.size() || files.size() != expiredTimes.size()) {
@@ -129,7 +132,8 @@ public class FileService {
             // 若已存在，则进行覆盖
             LambdaQueryWrapper<Output> queryWrapper1 = Wrappers.<Output>lambdaQuery()
                     .eq(Output::getFileId, fileId)
-                    .eq(Output::getAgentId, agentId);
+                    .eq(Output::getAgentId, agentId)
+                    .eq(Output::getApplicationId, applicationId);
             Output queryOutput = outputMapper.selectOne(queryWrapper1);
             if (queryOutput != null) {
                 if (fileHash.equals(queryOutput.getHash())) {
@@ -146,11 +150,12 @@ public class FileService {
             newOutput.setTag(queryFile.getTag());
             newOutput.setSize(queryFile.getSize());
             newOutput.setDescription(queryFile.getDescription());
-            newOutput.setPath(base + fileHash);
+            newOutput.setPath(base + fileHash + "_appid_" + applicationId);
             newOutput.setExpiredTime(expiredTime);
             newOutput.setHash(fileHash);
             newOutput.setFileId(fileId);
             newOutput.setAgentId(agentId);
+            newOutput.setApplicationId(applicationId);
             outputMapper.insert(newOutput);
 
             // 存储文件到结果管理区
@@ -181,7 +186,8 @@ public class FileService {
 
         // 根据结果id查找结果表
         LambdaQueryWrapper<Output> queryWrapper = Wrappers.<Output>lambdaQuery()
-                .eq(Output::getUid, outputId);
+                .eq(Output::getUid, outputId)
+                .eq(Output::getApplicationId, applicationId);
         Output queryOutput = outputMapper.selectOne(queryWrapper);
         if(queryOutput == null){return Body.error(String.format("找不到该文件，结果id: %d", outputId));}
         // 判断文件是否过期
@@ -228,7 +234,8 @@ public class FileService {
 
         // 根据结果id查找结果表
         LambdaQueryWrapper<Output> queryWrapper = Wrappers.<Output>lambdaQuery()
-                .eq(Output::getUid, outputId);
+                .eq(Output::getUid, outputId)
+                .eq(Output::getApplicationId, applicationId);
         Output queryOutput = outputMapper.selectOne(queryWrapper);
         if(queryOutput == null){return Body.error(String.format("找不到该文件，结果id: %d", outputId));}
         // 判断文件是否过期
@@ -267,17 +274,20 @@ public class FileService {
     }
 
 
-    public Body<List<Output>> queryFile() {
+    public Body<List<Output>> queryFile(Integer applicationId) {
 
-        List<Output> outputs = outputMapper.selectList(null);
+        LambdaQueryWrapper<Output> queryWrapper = Wrappers.<Output>lambdaQuery()
+                .eq(Output::getApplicationId, applicationId);
+        List<Output> outputs = outputMapper.selectList(queryWrapper);
         Integer fileNum = outputs.size();
         return Body.success(outputs, String.format("查询成功，共查询到%d个文件", fileNum));
     }
 
 
-    public Body<List<Output>> queryFileByIds(List<Integer> outputIds) {
+    public Body<List<Output>> queryFileByIds(Integer applicationId, List<Integer> outputIds) {
 
         LambdaQueryWrapper<Output> queryWrapper = Wrappers.<Output>lambdaQuery()
+                .eq(Output::getApplicationId, applicationId)
                 .in(Output::getUid, outputIds);
 
         List<Output> outputs = outputMapper.selectList(queryWrapper);
@@ -286,10 +296,11 @@ public class FileService {
     }
 
 
-    public Body<String> deleteFile(Integer outputId) {
+    public Body<String> deleteFile(Integer applicationId, Integer outputId) {
 
         // 根据文件id查找结果表
         LambdaQueryWrapper<Output> queryWrapper = Wrappers.<Output>lambdaQuery()
+                .eq(Output::getApplicationId, applicationId)
                 .eq(Output::getUid, outputId);
         Output queryOutput = outputMapper.selectOne(queryWrapper);
         if(queryOutput == null){return Body.error(String.format("找不到该文件，结果id: %d", outputId));}
