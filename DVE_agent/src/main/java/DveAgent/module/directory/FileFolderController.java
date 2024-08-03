@@ -47,10 +47,9 @@ public class FileFolderController {
 
     @PostMapping("/createFolder")
     public Body<String> createFolder(@RequestParam("name") String name,
-            @RequestParam("path") String path,
-            @RequestParam("agentId") Long agentId,
-            @RequestParam("parentId") Long parentId) {
-        path = my.getBase_path() + path;
+                                     @RequestParam("agentId") Long agentId,
+                                     @RequestParam("parentId") Long parentId) {
+        String path = my.getBase_path();
         return fileFolderService.createFolder(name, path, agentId, parentId);
     }
 

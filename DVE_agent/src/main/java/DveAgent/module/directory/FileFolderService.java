@@ -109,15 +109,21 @@ public class FileFolderService {
 
     //创建文件夹
     public Body<String> createFolder(String name, String path,Long agent_id, Long parent_id){
-        //1.查询数据库相同父文件夹下是否有同名文件夹
+        //1.检查是否父文件夹存在
         LambdaQueryWrapper<Folder> queryWrapper = Wrappers.<Folder>lambdaQuery()
-                .eq(Folder::getParentId, parent_id)
-                .eq(Folder::getName, name);
+                .eq(Folder::getUid, parent_id)
+                .eq(Folder::getAgentId,agent_id);
+        Folder fatherFolder = folderMapper.selectOne(queryWrapper);
+        if(fatherFolder ==null){return Body.error("父文件夹不存在");}
+        queryWrapper.clear();
+
+        //2.查询数据库相同父文件夹下是否有同名文件夹
+        queryWrapper.eq(Folder::getAgentId,agent_id).eq(Folder::getParentId,parent_id).eq(Folder::getName,name);
         List<Folder> folderList = folderMapper.selectList(queryWrapper);
         if(!folderList.isEmpty()){return Body.error("重名文件夹");}
 
-        //2.本地创建新文件夹
-        Path create_path = Paths.get(path,name);
+        //3.本地创建新文件夹
+        Path create_path = Path.of(getFolderPath(fatherFolder, path)+"/"+name);
         try {
             Files.createDirectories(create_path);
         } catch (IOException e) {
