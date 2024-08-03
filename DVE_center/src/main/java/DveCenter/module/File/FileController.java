@@ -89,7 +89,7 @@ public class FileController {
     // application从center结果管理区获取文件的接口
     @PostMapping("/fetch")
     public Body<String> fetch(@RequestParam("outputId") Integer outputId,
-                                 @RequestParam("applicationId") Integer applicationId,
+                                 @RequestParam("applicationId") Long applicationId,
                                  HttpServletResponse response) {
 
         return fileService.fetchFile(outputId, applicationId, response);
@@ -99,7 +99,7 @@ public class FileController {
     // application通过路径直接获取center结果管理区文件的接口
     @PostMapping("/fetchbypath")
     public Body<String> fetchbypath(@RequestParam("outputId") Integer outputId,
-                                       @RequestParam("applicationId") Integer applicationId,
+                                       @RequestParam("applicationId") Long applicationId,
                                        String downloadPath) {
 
         return fileService.fetchFileByPath(outputId, applicationId, downloadPath);
