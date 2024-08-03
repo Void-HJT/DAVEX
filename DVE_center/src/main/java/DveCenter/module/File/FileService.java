@@ -182,7 +182,7 @@ public class FileService {
     }
 
 
-    public Body<String> fetchFile(Integer outputId, Integer applicationId, HttpServletResponse response) {
+    public Body<String> fetchFile(Integer outputId, Long applicationId, HttpServletResponse response) {
 
         // 根据结果id查找结果表
         LambdaQueryWrapper<Output> queryWrapper = Wrappers.<Output>lambdaQuery()
@@ -230,7 +230,7 @@ public class FileService {
     }
 
 
-    public Body<String> fetchFileByPath(Integer outputId, Integer applicationId, String downloadPath) {
+    public Body<String> fetchFileByPath(Integer outputId, Long applicationId, String downloadPath) {
 
         // 根据结果id查找结果表
         LambdaQueryWrapper<Output> queryWrapper = Wrappers.<Output>lambdaQuery()
