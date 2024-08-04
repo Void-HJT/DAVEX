@@ -1,6 +1,6 @@
 package DveCommon.common;
 
-import DveAgent.entity.Agent;
+import DveCommon.entity.Agent;
 import nl.altindag.ssl.SSLFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
