@@ -81,3 +81,52 @@ git update-index --no-assume-unchanged DVE_agent/src/main/resources/application.
   "uid": null
 }
 ```
+
+
+
+```json
+[
+    {
+        "name": "P0_Data",
+        "limit": {
+            "max": 999,
+            "min": 999,
+            "defaultValue": 1
+        },
+        "required": true,
+        "limitType": "NUM",
+        "posORflag": 0,
+        "description": "第0方数据",
+        "parameterType": "POS"
+    },
+    {
+        "name": "P1_Data",
+        "limit": {
+            "max": 999,
+            "min": 999,
+            "defaultValue": 1
+        },
+        "required": true,
+        "limitType": "NUM",
+        "posORflag": 1,
+        "description": "第1方数据",
+        "parameterType": "POS"
+    }
+]
+
+
+
+[
+    {
+        "name": "protocol",
+        "limit": {
+            "defaultValue": "semi2k-party"
+        },
+        "required": true,
+        "limitType": "STRING",
+        "posORflag": "abc",
+        "description": "运行虚拟机",
+        "parameterType": "FLAG"
+    }
+]
+```

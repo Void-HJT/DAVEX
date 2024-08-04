@@ -28,7 +28,7 @@ public class MpcTask {
   private String uid;
   private Long applicationId;
   private Long centerId;
-  private Long mpcId;
+  private String mpcId;
   @TableField(typeHandler = FastjsonTypeHandler.class)
   private JSONObject compileParameters;
   @TableField(typeHandler = FastjsonTypeHandler.class)

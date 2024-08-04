@@ -13,6 +13,7 @@ import DveAgent.entity.MpcTask;
 import DveAgent.entity.MpcTaskAgent;
 import DveAgent.info.UploadAgentTaskInfo;
 import DveAgent.mapper.FileMapper;
+import DveAgent.mapper.MpcMapper;
 import DveAgent.mapper.MpcTaskAgentMapper;
 import DveAgent.mapper.MpcTaskMapper;
 import DveAgent.module.directory.FileFolderService;
@@ -31,6 +32,12 @@ public class MpcTaskService {
 
     @Autowired
     GarnetService garnetService;
+
+    @Autowired
+    MpcMapper mpcMapper;
+
+    @Autowired
+    MpcService mpcService;
 
     @Autowired
     FileMapper fileMapper;
@@ -58,7 +65,11 @@ public class MpcTaskService {
             mpcTaskAgent.setCenterId(mpctTaskInfo.getCenterId());
             mpcTaskAgentMapper.insert(mpcTaskAgent);
         }
+        if (mpcMapper.selectById(mpctTaskInfo.getMpcId()) == null) {
+            mpcService.downloadFile(mpctTaskInfo.getCenterId(), mpctTaskInfo.getMpcId());
+        }
         mpcTaskMapper.insert(mpctTaskInfo);
+
         switch (mpctTaskInfo.getTaskType()) {
             case GARNET_MPC:
             default:
@@ -73,7 +84,7 @@ public class MpcTaskService {
     @Async("customExecutor")
     private void preprocess(UploadAgentTaskInfo mpcTask) throws Exception {
         garnetService.compile(mpcTask);
-        garnetService.link(fileFolderService.getFilePath(fileMapper.selectById(mpcTask.getDataId()), "/home/nhy"),
+        garnetService.link(fileFolderService.getFilePath(fileMapper.selectById(mpcTask.getDataId()), my.getBase_path()),
                 mpcTask.getUid(),
                 Long.valueOf(mpcTask.getPart().toString()));
     }
@@ -81,7 +92,8 @@ public class MpcTaskService {
     @Async("customExecutor")
     private void psiPreprocess(UploadAgentTaskInfo mpcTask) throws Exception {
         garnetService.compile(mpcTask);
-        garnetService.csvExtract(fileFolderService.getFilePath(fileMapper.selectById(mpcTask.getDataId()), "/home/nhy"),
+        garnetService.csvExtract(
+                fileFolderService.getFilePath(fileMapper.selectById(mpcTask.getDataId()), my.getBase_path()),
                 mpcTask.getRuntimeParameters().getString("PK"), mpcTask.getUid());
     }
 
@@ -93,7 +105,8 @@ public class MpcTaskService {
     @Async("customExecutor")
     public void psiRun(MpcTask mpcTask) throws Exception {
         garnetService.run(mpcTask);
-        garnetService.csvQuery(fileFolderService.getFilePath(fileMapper.selectById(mpcTask.getDataId()), "/home/nhy"),
+        garnetService.csvQuery(
+                fileFolderService.getFilePath(fileMapper.selectById(mpcTask.getDataId()), my.getBase_path()),
                 mpcTask.getUid(), mpcTask.getRuntimeParameters().getString("PK"), "/home/nhy/DVE/output.csv");
     }
 

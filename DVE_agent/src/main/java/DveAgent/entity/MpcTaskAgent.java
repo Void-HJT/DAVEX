@@ -13,7 +13,6 @@ public class MpcTaskAgent {
 
   @TableId(type = IdType.AUTO)
   private Long uid;
-  // 去数据库里修改表名
   @TableField("mpcTask_id")
   private String mpcTaskId;
   private Long centerId;

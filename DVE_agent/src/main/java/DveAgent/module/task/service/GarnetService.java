@@ -6,6 +6,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -22,11 +23,11 @@ import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
-import org.springframework.util.ResourceUtils;
 
 import com.alibaba.fastjson.JSONObject;
 
 import DveAgent.common.My;
+import DveAgent.common.Utlis;
 import DveAgent.entity.Mpc;
 import DveAgent.entity.MpcTask;
 import DveAgent.info.Parameter;
@@ -120,10 +121,9 @@ public class GarnetService {
                     break;
             }
         }
-        File mpc_file = ResourceUtils.getFile("classpath:" + mpc.getPath());
-        String mpc_path = mpc_file.getAbsolutePath();
-        String mpc_name = mpc_file.getName().split("\\.")[0];
-        List<String> command = new ArrayList<>(Arrays.asList("python", "compile.py", mpc_path));
+        Path mpc_path= Paths.get(my.getBase_path()).resolve(mpc.getPath());
+        String mpc_name = mpc_path.getFileName().toString().split("\\.")[0];
+        List<String> command = new ArrayList<>(Arrays.asList("python3", "compile.py", mpc_path.toString()));
 
         for (int i = 0; i < args.size(); i++) {
             command.add(args.get(i));
@@ -247,7 +247,7 @@ public class GarnetService {
                     try {
                         intValue = Integer.parseInt(fieldValue);
                     } catch (NumberFormatException e) {
-                        intValue = fieldValue.hashCode();
+                        intValue = Utlis.hashStringToInt(fieldValue);
                     }
                     writer.write(String.valueOf(intValue));
                     writer.newLine();
@@ -271,7 +271,7 @@ public class GarnetService {
                 try {
                     fieldValues.add(Integer.parseInt(fieldLine));
                 } catch (NumberFormatException e) {
-                    fieldValues.add(fieldLine.hashCode());
+                    fieldValues.add(Utlis.hashStringToInt(fieldLine));
                 }
             }
 

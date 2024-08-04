@@ -153,7 +153,7 @@ CREATE TABLE `group` (
 DROP TABLE IF EXISTS `mpc`;
 
 CREATE TABLE `mpc` (
-    `uid` BIGINT NOT NULL AUTO_INCREMENT,
+    `uid` VARCHAR(32) NOT NULL,
     `name` varchar(255) DEFAULT NULL,
     `compile_parameters` JSON DEFAULT NULL,
     `runtime_parameters` JSON DEFAULT NULL,

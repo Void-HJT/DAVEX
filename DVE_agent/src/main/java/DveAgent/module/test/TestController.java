@@ -9,6 +9,7 @@ import DveAgent.mapper.MpcTaskMapper;
 import DveAgent.module.auth.service.AgentWebClientService;
 import DveAgent.module.directory.FileFolderService;
 import DveAgent.module.task.service.GarnetService;
+import DveAgent.module.task.service.MpcService;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -38,6 +39,9 @@ public class TestController {
 
     @Autowired
     private MpcMapper mpcMapper;
+
+    @Autowired
+    MpcService mpcService;
 
     public TestController(AgentWebClientService webClientService, MpcTaskMapper mpcTaskMapper,
             GarnetService garnetService) {
@@ -72,6 +76,17 @@ public class TestController {
 
         mpcMapper.insert(entity);
         return entity;
+    }
+
+    @GetMapping("/download")
+    public R<Mpc> getMethodName(@RequestParam String param) {
+        try {
+            mpcService.downloadFile((long) 1, param);
+        } catch (Exception e) {
+            return R.error(e.getMessage());
+        }
+        return R.success(mpcMapper.selectById(param), "下载成功");
+
     }
 
 }

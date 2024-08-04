@@ -34,7 +34,7 @@ public class JacksonConfig {
         return module;
     }
 
-    @Bean
+    @Bean(name = "customObjectMapper")
     public ObjectMapper objectMapper() {
         ObjectMapper mapper = new ObjectMapper();
         mapper.registerModule(new JavaTimeModule());
