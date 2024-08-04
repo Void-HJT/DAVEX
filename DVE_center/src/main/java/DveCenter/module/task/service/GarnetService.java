@@ -133,10 +133,10 @@ public class GarnetService {
         for (Parameter p : parameters) {
             switch (p.getParameterType()) {
                 case POS:
-                    args.put((Integer) p.getLimit(), parameter.getString(p.getName()));
+                    args.put((Integer) p.getPosORflag(), parameter.getString(p.getName()));
                     break;
                 case FLAG:
-                    flags.add(parameter.getString(p.getName()));
+                    flags.add((String) p.getPosORflag() + " " + parameter.getString(p.getName()));
                     break;
             }
         }
