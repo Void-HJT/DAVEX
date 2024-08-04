@@ -119,7 +119,9 @@ public class MpcTaskService {
     @Async("customExecutor")
     private void preprocess(UploadCenterTaskInfo mpcTask) throws Exception {
         garnetService.compile(mpcTask);
-        garnetService.link(inputMapper.selectById(mpcTask.getDataId()).getPath(), mpcTask.getUid(), mpcTask.getPart());
+        garnetService.idExtract(inputMapper.selectById(mpcTask.getDataId()).getPath(), mpcTask.getUid());
+        // garnetService.link(inputMapper.selectById(mpcTask.getDataId()).getPath(),
+        // mpcTask.getUid(), mpcTask.getPart());
         while (ready(mpcTask.getUid()) == false) {
             Thread.sleep(1000);
         }
