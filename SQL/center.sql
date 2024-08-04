@@ -224,4 +224,16 @@ CREATE TABLE `input` (
     PRIMARY KEY (`uid`)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci;
 
+
+DROP TABLE IF EXISTS `mpcTaskOutput`;
+
+CREATE TABLE `mpcTaskOutput` (
+    `uid` BIGINT NOT NULL AUTO_INCREMENT,
+    `task_id` VARCHAR(255) NOT NULL,
+    `hash` VARCHAR(255) NOT NULL,
+    `path` VARCHAR(255) NULL,
+    `upload_date` timestamp NULL DEFAULT NULL,
+    PRIMARY KEY (`uid`)
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci;
+
 SET FOREIGN_KEY_CHECKS = 1;
