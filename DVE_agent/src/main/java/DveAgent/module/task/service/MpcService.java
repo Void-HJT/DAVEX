@@ -43,7 +43,7 @@ public class MpcService {
                     filePath = Utlis.resolveFileNameConflict(filePath);
                     try {
                         Files.copy(resource.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
-                        mpc.setPath(Paths.get("/programs").resolve(filePath).toString());
+                        mpc.setPath(Paths.get("programs").resolve(filePath.getFileName()).toString());
                         mpcMapper.insert(mpc);
                     } catch (IOException e) {
                         e.printStackTrace();

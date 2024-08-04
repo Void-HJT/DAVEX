@@ -6,6 +6,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -119,10 +120,9 @@ public class GarnetService {
                     break;
             }
         }
-        File mpc_file = new File(my.getBase_path() + mpc.getPath());
-        String mpc_path = mpc_file.getAbsolutePath();
-        String mpc_name = mpc_file.getName().split("\\.")[0];
-        List<String> command = new ArrayList<>(Arrays.asList("python", "compile.py", mpc_path));
+        Path mpc_path= Paths.get(my.getBase_path()).resolve(mpc.getPath());
+        String mpc_name = mpc_path.getFileName().toString().split("\\.")[0];
+        List<String> command = new ArrayList<>(Arrays.asList("python3", "compile.py", mpc_path.toString()));
 
         for (int i = 0; i < args.size(); i++) {
             command.add(args.get(i));
