@@ -58,14 +58,16 @@ public class GarnetService {
     @EventListener(ApplicationReadyEvent.class)
     @Async("customExecutor")
     public void init() {
-        String[] command = { "make", ";",
-                "pip", "install", "-r", "requirements.txt;",
-                "mkdir", "Input;",
-                "mkdir", "Output" };
-        ProcessBuilder processBuilder = new ProcessBuilder(command);
-        processBuilder.directory(garnet_directory);
+        ProcessBuilder makeBuilder = new ProcessBuilder("make").directory(garnet_directory);
+        ProcessBuilder pipBuilder = new ProcessBuilder("pip", "install", "-r", "requirements.txt")
+                .directory(garnet_directory);
+        ProcessBuilder mkdirInputBuilder = new ProcessBuilder("mkdir", "Input").directory(garnet_directory);
+        ProcessBuilder mkdirOutputBuilder = new ProcessBuilder("mkdir", "Output").directory(garnet_directory);
         try {
-            processBuilder.start();
+            makeBuilder.start();
+            pipBuilder.start();
+            mkdirInputBuilder.start();
+            mkdirOutputBuilder.start();
             logger.info("Garnet初始化成功");
         } catch (Exception e) {
             e.printStackTrace();
@@ -82,8 +84,7 @@ public class GarnetService {
     public void link(String path, String prefix, Long part) throws Exception {
         List<String> command = new ArrayList<>(Arrays.asList("ln", "-s", path,
                 garnet_directory.getAbsolutePath() + "/Input/" + prefix + "-P" + part + "-0"));
-        ProcessBuilder processBuilder = new ProcessBuilder(command);
-        processBuilder.directory(garnet_directory);
+        ProcessBuilder processBuilder = new ProcessBuilder(command).directory(garnet_directory);
         try {
             Process process = processBuilder.start();
             Integer exitcode = process.waitFor();
@@ -121,7 +122,7 @@ public class GarnetService {
                     break;
             }
         }
-        Path mpc_path= Paths.get(my.getBase_path()).resolve(mpc.getPath());
+        Path mpc_path = Paths.get(my.getBase_path()).resolve(mpc.getPath());
         String mpc_name = mpc_path.getFileName().toString().split("\\.")[0];
         List<String> command = new ArrayList<>(Arrays.asList("python3", "compile.py", mpc_path.toString()));
 
@@ -130,8 +131,7 @@ public class GarnetService {
             mpc_name += "-" + args.get(i);
         }
         command.addAll(flags);
-        ProcessBuilder processBuilder = new ProcessBuilder(command);
-        processBuilder.directory(garnet_directory);
+        ProcessBuilder processBuilder = new ProcessBuilder(command).directory(garnet_directory);
         try {
             mpcTask.setStatus(MpcTask.Status.COMPILING);
             logger.info(mpcTask.getUid() + ":开始编译");
@@ -182,8 +182,7 @@ public class GarnetService {
                 "-pn", mpcTask.getPort().toString(),
                 "-p", part.toString(),
                 mpc_name));
-        ProcessBuilder processBuilder = new ProcessBuilder(command);
-        processBuilder.directory(garnet_directory);
+        ProcessBuilder processBuilder = new ProcessBuilder(command).directory(garnet_directory);
 
         try {
             mpcTask.setStatus(MpcTask.Status.RUNNING);
@@ -219,8 +218,8 @@ public class GarnetService {
 
     }
 
-    public void csvExtract(String inputCsvPath, String fieldName, String prefix) {
-        String outputFilePath = garnet_directory.getAbsolutePath() + "/Input/" + prefix + "-P1-0";
+    public void csvExtract(String inputCsvPath, String fieldName, String prefix, Integer part) {
+        String outputFilePath = garnet_directory.getAbsolutePath() + "/Input/" + prefix + "-P" + part + "-0";
         try (BufferedReader reader = Files.newBufferedReader(Paths.get(inputCsvPath));
                 BufferedWriter writer = Files.newBufferedWriter(Paths.get(outputFilePath))) {
             String headerLine = reader.readLine();
@@ -258,8 +257,8 @@ public class GarnetService {
         }
     }
 
-    public void csvQuery(String inputCsvPath, String prefix, String fieldName, String outputCsvPath) {
-        String fieldFilePath = garnet_directory.getAbsolutePath() + "/Output/" + prefix + "-P1-0";
+    public void csvQuery(String inputCsvPath, String prefix, String fieldName, Integer part, String outputCsvPath) {
+        String fieldFilePath = garnet_directory.getAbsolutePath() + "/Output/" + prefix + "-P" + part + "-0";
         try (BufferedReader csvReader = Files.newBufferedReader(Paths.get(inputCsvPath));
                 BufferedReader fieldReader = Files.newBufferedReader(Paths.get(fieldFilePath));
                 BufferedWriter csvWriter = Files.newBufferedWriter(Paths.get(outputCsvPath))) {
@@ -305,7 +304,7 @@ public class GarnetService {
                     try {
                         intValue = Integer.parseInt(fieldValue);
                     } catch (NumberFormatException e) {
-                        intValue = fieldValue.hashCode();
+                        intValue = Utlis.hashStringToInt(fieldValue);
                     }
                     if (fieldValues.contains(intValue)) {
                         csvWriter.write(line);

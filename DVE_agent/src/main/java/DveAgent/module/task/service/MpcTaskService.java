@@ -94,7 +94,7 @@ public class MpcTaskService {
         garnetService.compile(mpcTask);
         garnetService.csvExtract(
                 fileFolderService.getFilePath(fileMapper.selectById(mpcTask.getDataId()), my.getBase_path()),
-                mpcTask.getRuntimeParameters().getString("PK"), mpcTask.getUid());
+                mpcTask.getRuntimeParameters().getString("PK"), mpcTask.getUid(), mpcTask.getPart());
     }
 
     @Async("customExecutor")
@@ -107,10 +107,11 @@ public class MpcTaskService {
         garnetService.run(mpcTask);
         garnetService.csvQuery(
                 fileFolderService.getFilePath(fileMapper.selectById(mpcTask.getDataId()), my.getBase_path()),
-                mpcTask.getUid(), mpcTask.getRuntimeParameters().getString("PK"), "/home/nhy/DVE/output.csv");
+                mpcTask.getUid(), mpcTask.getRuntimeParameters().getString("PK"), mpcTask.getPart(),
+                "/home/nhy/DVE/output.csv");
     }
 
     public Boolean ready(String mpcTaskId) throws Exception {
-        return mpcTaskMapper.selectById(mpcTaskId).getReady();
+        return mpcTaskMapper.selectById(mpcTaskId).getStatus() == MpcTask.Status.READY;
     }
 }

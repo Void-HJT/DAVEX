@@ -41,9 +41,4 @@ public class MpcTask {
   private String mpcName;
   private TaskType taskType;
   private Status status;
-
-  public Boolean getReady() {
-    return status == Status.READY;
-  }
-
 }

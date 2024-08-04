@@ -56,14 +56,16 @@ public class GarnetService {
     @EventListener(ApplicationReadyEvent.class)
     @Async("customExecutor")
     public void init() {
-        String[] command = { "make", ";",
-                "pip", "install", "-r", "requirements.txt;",
-                "mkdir", "Input;",
-                "mkdir", "Output" };
-        ProcessBuilder processBuilder = new ProcessBuilder(command);
-        processBuilder.directory(garnet_directory);
+        ProcessBuilder makeBuilder = new ProcessBuilder("make").directory(garnet_directory);
+        ProcessBuilder pipBuilder = new ProcessBuilder("pip", "install", "-r", "requirements.txt")
+                .directory(garnet_directory);
+        ProcessBuilder mkdirInputBuilder = new ProcessBuilder("mkdir", "Input").directory(garnet_directory);
+        ProcessBuilder mkdirOutputBuilder = new ProcessBuilder("mkdir", "Output").directory(garnet_directory);
         try {
-            processBuilder.start();
+            makeBuilder.start();
+            pipBuilder.start();
+            mkdirInputBuilder.start();
+            mkdirOutputBuilder.start();
             logger.info("Garnet初始化成功");
         } catch (Exception e) {
             e.printStackTrace();
@@ -75,12 +77,8 @@ public class GarnetService {
 
     }
 
-    public void psi(MpcTask mpcTask) throws Exception {
-
-    }
-
-    public void idExtract(String inputPath, String prefix) throws Exception {
-        String outputFilePath = garnet_directory.getAbsolutePath() + "/Input/" + prefix + "-P0-0";
+    public void idExtract(String inputPath, String prefix, Integer part) throws Exception {
+        String outputFilePath = garnet_directory.getAbsolutePath() + "/Input/" + prefix + "-P" + part + "-0";
         try (BufferedReader reader = Files.newBufferedReader(Paths.get(inputPath));
                 BufferedWriter writer = Files.newBufferedWriter(Paths.get(outputFilePath))) {
             String line;
@@ -203,8 +201,7 @@ public class GarnetService {
                 "-pn", mpcTask.getPort().toString(),
                 "-p", part.toString(),
                 mpc_name));
-        ProcessBuilder processBuilder = new ProcessBuilder(command);
-        processBuilder.directory(garnet_directory);
+        ProcessBuilder processBuilder = new ProcessBuilder(command).directory(garnet_directory);
 
         try {
             mpcTask.setStatus(MpcTask.Status.RUNNING);

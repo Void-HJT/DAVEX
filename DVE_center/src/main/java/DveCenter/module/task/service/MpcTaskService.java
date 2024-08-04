@@ -89,7 +89,6 @@ public class MpcTaskService {
             if (agentMapper.selectById(entry.getKey()) == null) {
                 throw new Exception("Agent不存在");
             }
-            // TODO 查询File需要修改，使用AgentID
             // TODO 检查app有权访问File
             // if (fileMapper.selectById(entry.getValue().getRight()) == null) {
             // throw new Exception("文件不存在");
@@ -113,22 +112,43 @@ public class MpcTaskService {
                     }));
         }
         Mono.when(monos).block();
-        preprocess(mpctTaskInfo);
+        switch (mpctTaskInfo.getTaskType()) {
+            case GARNET_MPC:
+            default:
+                preprocess(mpctTaskInfo);
+                break;
+
+            case GARNET_PSI:
+                psiPreprocess(mpctTaskInfo);
+                break;
+        }
     }
 
     @Async("customExecutor")
     private void preprocess(UploadCenterTaskInfo mpcTask) throws Exception {
         garnetService.compile(mpcTask);
-        garnetService.idExtract(inputMapper.selectById(mpcTask.getDataId()).getPath(), mpcTask.getUid());
-        // garnetService.link(inputMapper.selectById(mpcTask.getDataId()).getPath(),
-        // mpcTask.getUid(), mpcTask.getPart());
+        garnetService.link(inputMapper.selectById(mpcTask.getDataId()).getPath(),
+                mpcTask.getUid(), mpcTask.getPart());
         while (ready(mpcTask.getUid()) == false) {
             Thread.sleep(1000);
         }
         if (run(mpcTask.getUid()) == false) {
             throw new Exception("任务未就绪");
         }
-        // TODO 分发任务
+        garnetService.run(mpcTask);
+    }
+
+    @Async("customExecutor")
+    private void psiPreprocess(UploadCenterTaskInfo mpcTask) throws Exception {
+        garnetService.compile(mpcTask);
+        garnetService.idExtract(inputMapper.selectById(mpcTask.getDataId()).getPath(), mpcTask.getUid(),
+                mpcTask.getPart());
+        while (ready(mpcTask.getUid()) == false) {
+            Thread.sleep(1000);
+        }
+        if (run(mpcTask.getUid()) == false) {
+            throw new Exception("任务未就绪");
+        }
         garnetService.run(mpcTask);
     }
 
@@ -137,8 +157,19 @@ public class MpcTaskService {
         if (mpcTask == null) {
             throw new Exception("任务不存在");
         }
-        if (!mpcTask.getReady()) {
-            return false;
+        switch (mpcTask.getStatus()) {
+            case READY:
+                break;
+            case COMPILING:
+                return false;
+            case RUNNING:
+                throw new Exception("任务已在运行中");
+            case FAILED:
+                throw new Exception("任务失败");
+            case FINISHED:
+                throw new Exception("任务已完成");
+            default:
+                throw new Exception("错误");
         }
         LambdaQueryWrapper<MpcTaskAgent> queryWrapper = Wrappers.<MpcTaskAgent>lambdaQuery()
                 .eq(MpcTaskAgent::getMpcTaskId, mpcTaskId);

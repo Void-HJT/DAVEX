@@ -57,8 +57,20 @@ public class MpcTaskController {
         if (mpcTask == null) {
             return R.error("任务不存在");
         }
-        if (mpcTask.getReady() == false) {
-            return R.success(false, "任务正在运行");
+        switch (mpcTask.getStatus()) {
+            case READY:
+                break;
+                
+            case COMPILING:
+                return R.success(false, "任务正在编译");
+            case RUNNING:
+                return R.error("任务已在运行中");
+            case FAILED:
+                return R.error("任务失败");
+            case FINISHED:
+                return R.error("任务已完成");
+            default:
+                return R.error("错误");
         }
         try {
             switch (mpcTask.getTaskType()) {
