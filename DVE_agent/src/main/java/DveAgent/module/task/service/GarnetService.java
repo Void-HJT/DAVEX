@@ -22,7 +22,6 @@ import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
-import org.springframework.util.ResourceUtils;
 
 import com.alibaba.fastjson.JSONObject;
 
@@ -120,7 +119,7 @@ public class GarnetService {
                     break;
             }
         }
-        File mpc_file = ResourceUtils.getFile("classpath:" + mpc.getPath());
+        File mpc_file = new File(my.getBase_path() + mpc.getPath());
         String mpc_path = mpc_file.getAbsolutePath();
         String mpc_name = mpc_file.getName().split("\\.")[0];
         List<String> command = new ArrayList<>(Arrays.asList("python", "compile.py", mpc_path));

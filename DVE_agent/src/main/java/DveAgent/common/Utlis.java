@@ -78,4 +78,25 @@ public class Utlis {
             }
         }
     }
+
+    public static Path resolveFileNameConflict(Path filePath) {
+        int counter = 1;
+        String fileName = filePath.getFileName().toString();
+        String fileNameWithoutExt = fileName;
+        String extension = "";
+
+        int dotIndex = fileName.lastIndexOf(".");
+        if (dotIndex > 0) {
+            fileNameWithoutExt = fileName.substring(0, dotIndex);
+            extension = fileName.substring(dotIndex);
+        }
+
+        while (Files.exists(filePath)) {
+            String newFileName = fileNameWithoutExt + "_" + counter + extension;
+            filePath = filePath.getParent().resolve(newFileName);
+            counter++;
+        }
+
+        return filePath;
+    }
 }

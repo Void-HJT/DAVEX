@@ -1,14 +1,17 @@
 package DveAgent.module.auth.service;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
+import org.springframework.http.codec.json.Jackson2JsonDecoder;
+import org.springframework.http.codec.json.Jackson2JsonEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.reactive.function.client.ExchangeStrategies;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
-import DveAgent.common.My;
 import DveAgent.entity.Agent;
 import DveAgent.entity.Center;
 import DveAgent.mapper.AgentMapper;
@@ -17,22 +20,42 @@ import reactor.netty.http.client.HttpClient;
 
 @Service
 public class AgentWebClientService {
-        @Autowired
+
         private CenterMapper centerMapper;
-        @Autowired
+
         private AgentMapper agentMapper;
         // @Autowired
         // private SslContextBuilder sslBuilder;
 
-        @Autowired
-        My my;
+        // @Autowired
+        // private My my;
+
+        private ExchangeStrategies strategies;
+
+        public AgentWebClientService(ObjectMapper objectMapper, AgentMapper agentMapper, CenterMapper centerMapper) {
+                this.centerMapper = centerMapper;
+                this.agentMapper = agentMapper;
+                strategies = ExchangeStrategies
+                                .builder()
+                                .codecs(clientDefaultCodecsConfigurer -> {
+                                        clientDefaultCodecsConfigurer.defaultCodecs()
+                                                        .jackson2JsonEncoder(new Jackson2JsonEncoder(objectMapper,
+                                                                        MediaType.APPLICATION_JSON));
+                                        clientDefaultCodecsConfigurer.defaultCodecs()
+                                                        .jackson2JsonDecoder(new Jackson2JsonDecoder(objectMapper,
+                                                                        MediaType.APPLICATION_JSON));
+
+                                }).build();
+        }
 
         public WebClient agent2CenterWebClient(long center_id) throws Exception {
                 LambdaQueryWrapper<Center> queryWrapper = Wrappers.<Center>lambdaQuery().eq(Center::getUid, center_id);
                 Center center = centerMapper.selectOne(queryWrapper);
                 HttpClient httpClient = HttpClient.create();
                 return WebClient.builder().clientConnector(new ReactorClientHttpConnector(httpClient))
-                                .baseUrl("http://" + center.getIp() + ":" + center.getPort()).build();
+                                .baseUrl("http://" + center.getIp() + ":" + center.getPort())
+                                .exchangeStrategies(strategies)
+                                .build();
         }
 
         public WebClient agent2AgentWebClient(long agent_id) throws Exception {
@@ -41,7 +64,7 @@ public class AgentWebClientService {
                 HttpClient httpClient = HttpClient.create();
                 return WebClient.builder().clientConnector(new ReactorClientHttpConnector(httpClient))
                                 .baseUrl("http://" + agent.getIp() + ":" + agent.getPort())
-                                // .filter(signRequest())
+                                .exchangeStrategies(strategies)
                                 .build();
         }
 }

@@ -1,8 +1,12 @@
 package DveCenter.module.task.service;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStreamReader;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -16,7 +20,6 @@ import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
-import org.springframework.util.ResourceUtils;
 
 import com.alibaba.fastjson.JSONObject;
 
@@ -51,7 +54,10 @@ public class GarnetService {
     @EventListener(ApplicationReadyEvent.class)
     @Async("customExecutor")
     public void init() {
-        String[] command = { "make", ";", "pip", "install", "-r", "requirements.txt" };
+        String[] command = { "make", ";",
+                "pip", "install", "-r", "requirements.txt;",
+                "mkdir", "Input;",
+                "mkdir", "Output" };
         ProcessBuilder processBuilder = new ProcessBuilder(command);
         processBuilder.directory(garnet_directory);
         try {
@@ -69,6 +75,26 @@ public class GarnetService {
 
     public void psi(MpcTask mpcTask) throws Exception {
 
+    }
+
+    public void idExtract(String inputPath, String prefix) throws Exception {
+        String outputFilePath = garnet_directory.getAbsolutePath() + "/Input/" + prefix + "-P0-0";
+        try (BufferedReader reader = Files.newBufferedReader(Paths.get(inputPath));
+                BufferedWriter writer = Files.newBufferedWriter(Paths.get(outputFilePath))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                int intValue;
+                try {
+                    intValue = Integer.parseInt(line);
+                } catch (NumberFormatException e) {
+                    intValue = line.hashCode();
+                }
+                writer.write(String.valueOf(intValue));
+                writer.newLine();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     public void link(String path, String prefix, Integer part) throws Exception {
@@ -114,7 +140,7 @@ public class GarnetService {
                     break;
             }
         }
-        File mpc_file = ResourceUtils.getFile("classpath:" + mpc.getPath());
+        File mpc_file = new File(my.getBase_path() + mpc.getPath());
         String mpc_path = mpc_file.getAbsolutePath();
         String mpc_name = mpc_file.getName().split("\\.")[0];
         List<String> command = new ArrayList<>(Arrays.asList("python", "compile.py", mpc_path));

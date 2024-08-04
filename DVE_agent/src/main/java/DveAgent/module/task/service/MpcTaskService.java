@@ -13,6 +13,7 @@ import DveAgent.entity.MpcTask;
 import DveAgent.entity.MpcTaskAgent;
 import DveAgent.info.UploadAgentTaskInfo;
 import DveAgent.mapper.FileMapper;
+import DveAgent.mapper.MpcMapper;
 import DveAgent.mapper.MpcTaskAgentMapper;
 import DveAgent.mapper.MpcTaskMapper;
 import DveAgent.module.directory.FileFolderService;
@@ -31,6 +32,12 @@ public class MpcTaskService {
 
     @Autowired
     GarnetService garnetService;
+
+    @Autowired
+    MpcMapper mpcMapper;
+
+    @Autowired
+    MpcService mpcService;
 
     @Autowired
     FileMapper fileMapper;
@@ -58,7 +65,11 @@ public class MpcTaskService {
             mpcTaskAgent.setCenterId(mpctTaskInfo.getCenterId());
             mpcTaskAgentMapper.insert(mpcTaskAgent);
         }
+        if (mpcMapper.selectById(mpctTaskInfo.getMpcId()) == null) {
+            mpcService.downloadFile(mpctTaskInfo.getCenterId(), mpctTaskInfo.getMpcId());
+        }
         mpcTaskMapper.insert(mpctTaskInfo);
+
         switch (mpctTaskInfo.getTaskType()) {
             case GARNET_MPC:
             default:
