@@ -84,7 +84,7 @@ public class MpcTaskService {
     @Async("customExecutor")
     private void preprocess(UploadAgentTaskInfo mpcTask) throws Exception {
         garnetService.compile(mpcTask);
-        garnetService.link(fileFolderService.getFilePath(fileMapper.selectById(mpcTask.getDataId()), "/home/nhy"),
+        garnetService.link(fileFolderService.getFilePath(fileMapper.selectById(mpcTask.getDataId()), my.getBase_path()),
                 mpcTask.getUid(),
                 Long.valueOf(mpcTask.getPart().toString()));
     }
@@ -92,7 +92,8 @@ public class MpcTaskService {
     @Async("customExecutor")
     private void psiPreprocess(UploadAgentTaskInfo mpcTask) throws Exception {
         garnetService.compile(mpcTask);
-        garnetService.csvExtract(fileFolderService.getFilePath(fileMapper.selectById(mpcTask.getDataId()), "/home/nhy"),
+        garnetService.csvExtract(
+                fileFolderService.getFilePath(fileMapper.selectById(mpcTask.getDataId()), my.getBase_path()),
                 mpcTask.getRuntimeParameters().getString("PK"), mpcTask.getUid());
     }
 
@@ -104,7 +105,8 @@ public class MpcTaskService {
     @Async("customExecutor")
     public void psiRun(MpcTask mpcTask) throws Exception {
         garnetService.run(mpcTask);
-        garnetService.csvQuery(fileFolderService.getFilePath(fileMapper.selectById(mpcTask.getDataId()), "/home/nhy"),
+        garnetService.csvQuery(
+                fileFolderService.getFilePath(fileMapper.selectById(mpcTask.getDataId()), my.getBase_path()),
                 mpcTask.getUid(), mpcTask.getRuntimeParameters().getString("PK"), "/home/nhy/DVE/output.csv");
     }
 

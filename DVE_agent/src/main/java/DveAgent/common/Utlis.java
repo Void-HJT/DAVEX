@@ -5,10 +5,13 @@ import java.io.BufferedWriter;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.security.cert.Certificate;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.security.Signature;
 import java.security.cert.CertificateFactory;
 import java.util.Base64;
 import java.util.Map;
+import java.nio.ByteBuffer;
 import java.nio.file.*;
 
 public class Utlis {
@@ -98,5 +101,18 @@ public class Utlis {
         }
 
         return filePath;
+    }
+
+    public static int hashStringToInt(String input) {
+        try {
+            // 使用SHA-256算法来生成散列值
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            byte[] hash = digest.digest(input.getBytes());
+
+            // 取散列值的前4个字节，并转换为一个整数
+            return ByteBuffer.wrap(hash).getInt();
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException("No such hashing algorithm", e);
+        }
     }
 }

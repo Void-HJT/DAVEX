@@ -27,6 +27,7 @@ import org.springframework.stereotype.Service;
 import com.alibaba.fastjson.JSONObject;
 
 import DveAgent.common.My;
+import DveAgent.common.Utlis;
 import DveAgent.entity.Mpc;
 import DveAgent.entity.MpcTask;
 import DveAgent.info.Parameter;
@@ -246,7 +247,7 @@ public class GarnetService {
                     try {
                         intValue = Integer.parseInt(fieldValue);
                     } catch (NumberFormatException e) {
-                        intValue = fieldValue.hashCode();
+                        intValue = Utlis.hashStringToInt(fieldValue);
                     }
                     writer.write(String.valueOf(intValue));
                     writer.newLine();
@@ -270,7 +271,7 @@ public class GarnetService {
                 try {
                     fieldValues.add(Integer.parseInt(fieldLine));
                 } catch (NumberFormatException e) {
-                    fieldValues.add(fieldLine.hashCode());
+                    fieldValues.add(Utlis.hashStringToInt(fieldLine));
                 }
             }
 
