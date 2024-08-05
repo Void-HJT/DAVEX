@@ -8,16 +8,16 @@ import org.springframework.context.annotation.Configuration;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 
-import DveAgent.entity.Center;
-import DveAgent.mapper.CenterMapper;
-import DveCenter.common.My;
+import DveBase.entity.Center;
+import DveBase.mapper.CenterMapper;
+import DveCenter.common.MyCenter;
 import DveCenter.module.auth.service.AuthService;
 
 @Configuration
 public class BoostConfig {
 
     @Autowired
-    private My my;
+    private MyCenter my;
 
     @Autowired
     private CenterMapper centerMapper;

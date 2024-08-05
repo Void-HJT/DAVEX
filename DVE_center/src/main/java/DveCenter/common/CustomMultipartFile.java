@@ -4,6 +4,7 @@ import org.springframework.http.MediaType;
 import org.springframework.web.multipart.MultipartFile;
 import java.io.*;
 
+@SuppressWarnings("null")
 public class CustomMultipartFile implements MultipartFile {
 
     private byte[] fileContent;

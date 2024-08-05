@@ -24,19 +24,19 @@ import org.springframework.stereotype.Service;
 
 import com.alibaba.fastjson.JSONObject;
 
-import DveAgent.common.Utlis;
-import DveAgent.entity.Mpc;
-import DveAgent.entity.MpcTask;
-import DveAgent.info.Parameter;
-import DveAgent.mapper.MpcMapper;
-import DveAgent.mapper.MpcTaskMapper;
-import DveCenter.common.My;
+import DveBase.common.Utils;
+import DveBase.entity.Mpc;
+import DveBase.entity.MpcTask;
+import DveBase.info.Parameter;
+import DveBase.mapper.MpcMapper;
+import DveBase.mapper.MpcTaskMapper;
+import DveCenter.common.MyCenter;
 
 // @Async("customExecutor")
 @Service
 public class GarnetService {
 
-    private My my;
+    private MyCenter my;
 
     private final File garnet_directory;
 
@@ -48,7 +48,7 @@ public class GarnetService {
     @Autowired
     private MpcTaskMapper mpcTaskMapper;
 
-    public GarnetService(My my) {
+    public GarnetService(MyCenter my) {
         this.my = my;
         garnet_directory = new File(this.my.getGarnet_path());
     }
@@ -87,7 +87,7 @@ public class GarnetService {
                 try {
                     intValue = Integer.parseInt(line);
                 } catch (NumberFormatException e) {
-                    intValue = Utlis.hashStringToInt(line);
+                    intValue = Utils.hashStringToInt(line);
                 }
                 writer.write(String.valueOf(intValue));
                 writer.newLine();

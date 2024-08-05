@@ -24,17 +24,17 @@ import org.springframework.web.multipart.MultipartFile;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 
-import DveAgent.common.R;
-import DveAgent.common.Utlis;
-import DveAgent.entity.Mpc;
-import DveAgent.mapper.MpcMapper;
-import DveCenter.common.My;
+import DveBase.common.R;
+import DveBase.common.Utils;
+import DveBase.entity.Mpc;
+import DveBase.mapper.MpcMapper;
+import DveCenter.common.MyCenter;
 
 @RestController
 @RequestMapping("/Mpc")
 public class MpcController {
     @Autowired
-    My my;
+    MyCenter my;
 
     @Autowired
     MpcMapper mpcMapper;
@@ -67,9 +67,9 @@ public class MpcController {
     }
 
     @PostMapping("/create")
-    public R<Mpc> create(@RequestPart("file") MultipartFile file, @RequestBody Mpc mpc) {
+    public R<Mpc> create(@RequestPart("file") MultipartFile file, @RequestPart Mpc mpc) {
         String fileName = file.getOriginalFilename();
-        Path path = Utlis.resolveFileNameConflict(Paths.get(my.getBase_path()).resolve("programs").resolve(fileName));
+        Path path = Utils.resolveFileNameConflict(Paths.get(my.getBase_path()).resolve("programs").resolve(fileName));
         mpc.setPath(Paths.get("programs").resolve(path.getFileName()).toString());
         try {
             mpcMapper.insert(mpc);

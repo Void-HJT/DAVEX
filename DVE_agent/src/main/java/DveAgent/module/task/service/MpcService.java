@@ -12,12 +12,12 @@ import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 
-import DveAgent.common.My;
-import DveAgent.common.R;
-import DveAgent.common.Utlis;
-import DveAgent.entity.Mpc;
-import DveAgent.mapper.MpcMapper;
+import DveAgent.common.MyAgent;
 import DveAgent.module.auth.service.AgentWebClientService;
+import DveBase.common.R;
+import DveBase.common.Utils;
+import DveBase.entity.Mpc;
+import DveBase.mapper.MpcMapper;
 
 @Service
 public class MpcService {
@@ -25,7 +25,7 @@ public class MpcService {
     private AgentWebClientService agentWebClientService;
 
     @Autowired
-    private My my;
+    private MyAgent my;
 
     @Autowired
     private MpcMapper mpcMapper;
@@ -40,7 +40,7 @@ public class MpcService {
                 .uri(UriBuilder -> UriBuilder.path("/Mpc/download").queryParam("MpcID", MpcID).build()).retrieve()
                 .bodyToMono(Resource.class).subscribe(resource -> {
                     Path filePath = Paths.get(my.getBase_path()).resolve("programs").resolve(resource.getFilename());
-                    filePath = Utlis.resolveFileNameConflict(filePath);
+                    filePath = Utils.resolveFileNameConflict(filePath);
                     try {
                         Files.copy(resource.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
                         mpc.setPath(Paths.get("programs").resolve(filePath.getFileName()).toString());
@@ -50,6 +50,5 @@ public class MpcService {
                     }
                 });
     }
-
 
 }

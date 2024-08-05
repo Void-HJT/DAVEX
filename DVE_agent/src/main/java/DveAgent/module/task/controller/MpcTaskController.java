@@ -8,13 +8,13 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import DveAgent.common.My;
-import DveAgent.common.R;
-import DveAgent.entity.MpcTask;
-import DveAgent.info.UploadAgentTaskInfo;
-import DveAgent.mapper.MpcTaskMapper;
+import DveAgent.common.MyAgent;
 import DveAgent.module.task.service.GarnetService;
 import DveAgent.module.task.service.MpcTaskService;
+import DveBase.common.R;
+import DveBase.entity.MpcTask;
+import DveBase.info.UploadAgentTaskInfo;
+import DveBase.mapper.MpcTaskMapper;
 
 @RestController
 @RequestMapping("/MpcTasks")
@@ -24,7 +24,7 @@ public class MpcTaskController {
     private MpcTaskService mpcTaskService;
 
     @Autowired
-    My my;
+    MyAgent my;
 
     @Autowired
     GarnetService garnetService;
@@ -60,7 +60,7 @@ public class MpcTaskController {
         switch (mpcTask.getStatus()) {
             case READY:
                 break;
-                
+
             case COMPILING:
                 return R.success(false, "任务正在编译");
             case RUNNING:

@@ -15,12 +15,12 @@ import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
-import DveAgent.common.R;
-import DveAgent.entity.MpcTask;
-import DveAgent.entity.MpcTaskOutput;
-import DveAgent.info.UploadAgentTaskInfo;
-import DveAgent.mapper.MpcTaskOutputMapper;
-import DveCenter.common.My;
+import DveBase.common.R;
+import DveBase.entity.MpcTask;
+import DveBase.entity.MpcTaskOutput;
+import DveBase.info.UploadAgentTaskInfo;
+import DveBase.mapper.MpcTaskOutputMapper;
+import DveCenter.common.MyCenter;
 import DveCenter.module.auth.service.CenterWebClientService;
 import DveCenter.module.task.service.MpcTaskService;
 
@@ -35,7 +35,7 @@ public class MpcTaskController {
     CenterWebClientService centerWebClientService;
 
     @Autowired
-    My my;
+    MyCenter my;
 
     @Autowired
     MpcTaskOutputMapper mpcTaskOutputMapper;
