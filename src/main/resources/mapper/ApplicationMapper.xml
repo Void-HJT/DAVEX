@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="DveAgent.mapper.ApplicationMapper">
+
+    <resultMap id="ApplicationInfoMap" type="DveAgent.info.ApplicationInfo">
+        <id column="uid" property="uid"/>
+        <result column="center_id" property="centerId"/>
+        <result column="name" property="name"/>
+        <result column="crt" property="crt"/>
+        <result column="last_updated" property="lastUpdated"/>
+        <result column="description" property="description"/>
+        <result column="agent_id" property="agentId"/>
+        <result column="group_id" property="groupId"/>
+        <result column="group_name" property="groupName"/>
+    </resultMap>
+
+    <select id="getApplicationInfo" resultMap="ApplicationInfoMap">
+        SELECT
+            a.uid, a.center_id, a.name, a.crt, a.last_updated, a.description,
+            COALESCE(ag.agent_id, 0) AS agent_id, COALESCE(g.uid, 0) AS group_id, g.name as group_name
+        FROM application a
+                 LEFT JOIN application_group ag ON a.uid = ag.application_id and a.center_id = ag.center_id
+                 LEFT JOIN `group` g ON ag.group_id = g.uid and ag.agent_id = g.agent_id
+        WHERE a.center_id = #{centerId} and (ag.agent_id = #{agentId} OR ag.agent_id IS NULL)
+    </select>
+</mapper>
