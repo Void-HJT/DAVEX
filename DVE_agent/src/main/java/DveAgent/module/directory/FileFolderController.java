@@ -2,16 +2,15 @@ package DveAgent.module.directory;
 
 import java.util.List;
 
+import DveAgent.common.R;
+import DveAgent.entity.Mpc;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RequestPart;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -133,6 +132,12 @@ public class FileFolderController {
             @RequestParam("folderId") Long folderId) {
 
         return fileFolderService.sendFile(fileId, agentId, folderId, my.getBase_path());
+    }
+
+    @PostMapping ("/getFile")
+    public R<File> getFile(@RequestParam("fileId") Long fileId,
+                          @RequestParam("agentId") Long agentId) {
+        return fileFolderService.getFile(fileId,agentId);
     }
 
     @PostMapping("/getDirectory")

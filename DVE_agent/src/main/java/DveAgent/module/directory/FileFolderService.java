@@ -1,6 +1,7 @@
 package DveAgent.module.directory;
 
 import DveAgent.common.Body;
+import DveAgent.common.R;
 import DveAgent.entity.*;
 import DveAgent.info.DirectoryInfo;
 import DveAgent.info.FileInfo;
@@ -19,6 +20,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.xml.bind.DatatypeConverter;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
@@ -28,6 +30,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -359,21 +362,11 @@ public class FileFolderService {
         } catch (IOException e) {
             return Body.error("文件上传失败: " + e.getMessage());
         }
-        //将文件元数据添加到数据库中
-        File fileRecord = new File();
-        try {
-            //获取文件的byte信息
-            byte[] uploadBytes = file.getBytes();
-            // 拿到一个MD5转换器
-            MessageDigest md5 = MessageDigest.getInstance("MD5");
-            byte[] digest = md5.digest(uploadBytes);
-            //转换为16进制
-            fileRecord.setHash(new BigInteger(1, digest).toString(16));
-        } catch (Exception e) {
-            return Body.error("文件计算hash失败" + e.getMessage());
-        }
 
+        File fileRecord = new File();
+        String hash = getSha256(file);
         String fileName = file.getOriginalFilename();
+        fileRecord.setHash(hash);
         fileRecord.setAgentId(agentId);
         fileRecord.setFolderId(folderId);
         fileRecord.setName(fileName);
@@ -746,7 +739,28 @@ public class FileFolderService {
                 .contentType(MediaType.APPLICATION_OCTET_STREAM)
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" +encodedFileName+"\"")
                 .body(resource);
-
     }
 
+    public R<File> getFile(Long fileId, Long agentId) {
+
+        LambdaQueryWrapper<File> queryWrapper = Wrappers.<File>lambdaQuery().eq(File::getUid,fileId).eq(File::getAgentId,agentId);
+        File file = fileMapper.selectOne(queryWrapper);
+        return R.success(file,"查询成功");
+    }
+
+    public String getSha256(MultipartFile file) {
+
+        try {
+            MessageDigest md = MessageDigest.getInstance("SHA-256");
+            md.update(file.getBytes());
+            byte[] digest = md.digest();
+            String mySha256 = DatatypeConverter
+                    .printHexBinary(digest).toLowerCase();
+
+            return mySha256;
+        } catch (NoSuchAlgorithmException | IOException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
 }
