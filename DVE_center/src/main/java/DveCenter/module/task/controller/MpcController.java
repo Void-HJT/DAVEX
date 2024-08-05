@@ -1,6 +1,7 @@
 package DveCenter.module.task.controller;
 
 import java.io.FileNotFoundException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
@@ -16,12 +17,15 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 
 import DveAgent.common.R;
+import DveAgent.common.Utlis;
 import DveAgent.entity.Mpc;
 import DveAgent.mapper.MpcMapper;
 import DveCenter.common.My;
@@ -63,9 +67,13 @@ public class MpcController {
     }
 
     @PostMapping("/create")
-    public R<Mpc> create(@RequestBody Mpc mpc) {
+    public R<Mpc> create(@RequestPart("file") MultipartFile file, @RequestBody Mpc mpc) {
+        String fileName = file.getOriginalFilename();
+        Path path = Utlis.resolveFileNameConflict(Paths.get(my.getBase_path()).resolve("programs").resolve(fileName));
+        mpc.setPath(Paths.get("programs").resolve(path.getFileName()).toString());
         try {
             mpcMapper.insert(mpc);
+            Files.write(path, file.getBytes());
         } catch (Exception e) {
             return R.error(e.getMessage());
         }
