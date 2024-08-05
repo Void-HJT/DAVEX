@@ -3,14 +3,20 @@ package DveAgent.common;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.ByteArrayInputStream;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.security.cert.Certificate;
+import java.security.DigestInputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.Signature;
 import java.security.cert.CertificateFactory;
 import java.util.Base64;
 import java.util.Map;
+
+import org.springframework.core.io.FileSystemResource;
+
 import java.nio.ByteBuffer;
 import java.nio.file.*;
 
@@ -113,6 +119,34 @@ public class Utlis {
             return ByteBuffer.wrap(hash).getInt();
         } catch (NoSuchAlgorithmException e) {
             throw new RuntimeException("No such hashing algorithm", e);
+        }
+    }
+
+    public static String getFileHash(FileSystemResource fileResource, String algorithm)
+            throws IOException, NoSuchAlgorithmException {
+        MessageDigest digest = MessageDigest.getInstance(algorithm);
+
+        try (InputStream is = new FileInputStream(fileResource.getFile());
+                DigestInputStream dis = new DigestInputStream(is, digest)) {
+            while (dis.read() != -1)
+                ;// 空读
+        }
+
+        byte[] hashBytes = digest.digest();
+        StringBuilder sb = new StringBuilder();
+        for (byte b : hashBytes) {
+            sb.append(String.format("%02x", b));
+        }
+        return sb.toString();
+    }
+
+    public static boolean verifyFileHash(FileSystemResource fileResource, String expectedHash, String algorithm) {
+        try {
+            String fileHash = getFileHash(fileResource, algorithm);
+            return fileHash.equalsIgnoreCase(expectedHash);
+        } catch (IOException | NoSuchAlgorithmException e) {
+            e.printStackTrace();
+            return false;
         }
     }
 }

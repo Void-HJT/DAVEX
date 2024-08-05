@@ -18,9 +18,9 @@ import org.springframework.web.multipart.MultipartFile;
 import DveAgent.common.R;
 import DveAgent.entity.MpcTask;
 import DveAgent.entity.MpcTaskOutput;
+import DveAgent.info.UploadAgentTaskInfo;
 import DveAgent.mapper.MpcTaskOutputMapper;
 import DveCenter.common.My;
-import DveCenter.info.UploadCenterTaskInfo;
 import DveCenter.module.auth.service.CenterWebClientService;
 import DveCenter.module.task.service.MpcTaskService;
 
@@ -42,7 +42,7 @@ public class MpcTaskController {
 
     // TODO 直接将Input一并指定
     @PostMapping("/create")
-    public R<MpcTask> createMpcTask(@RequestBody UploadCenterTaskInfo mpcTask) {
+    public R<MpcTask> createMpcTask(@RequestBody UploadAgentTaskInfo mpcTask) {
         try {
             mpcTaskService.create(mpcTask);
         } catch (Exception e) {
@@ -51,7 +51,7 @@ public class MpcTaskController {
         return R.success(mpcTask, "成功创建");
     }
 
-    @GetMapping("/ready/{mpcTaskId}")
+    @GetMapping("/ready")
     public R<?> checkTaskStatus(@PathVariable String mpcTaskId) {
         try {
             if (mpcTaskService.ready(mpcTaskId)) {

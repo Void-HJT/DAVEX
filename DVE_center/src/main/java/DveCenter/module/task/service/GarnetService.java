@@ -125,18 +125,35 @@ public class GarnetService {
     }
 
     public void compile(MpcTask mpcTask) throws Exception {
-        JSONObject parameter = mpcTask.getCompileParameters();
+        JSONObject task_parameter = mpcTask.getCompileParameters();
         Mpc mpc = mpcMapper.selectById(mpcTask.getMpcId());
-        List<Parameter> parameters = mpc.getCompileParameters();
+        List<Parameter> mpc_parameters = mpc.getCompileParameters();
         Map<Integer, String> args = new HashMap<>();
         List<String> flags = new ArrayList<>();
-        for (Parameter p : parameters) {
+        for (Parameter p : mpc_parameters) {
             switch (p.getParameterType()) {
                 case POS:
-                    args.put((Integer) p.getPosORflag(), parameter.getString(p.getName()));
+                    if (p.getAuto()) {
+                        args.put((Integer) p.getPosORflag(), p.getDefaultValue());
+                    } else {
+                        String value = task_parameter.getString(p.getName());
+                        if (value == null && p.getRequired()) {
+                            throw new IllegalArgumentException("缺少参数: " + p.getName());
+                        }
+                        args.put((Integer) p.getPosORflag(), value);
+                    }
                     break;
                 case FLAG:
-                    flags.add((String) p.getPosORflag() + " " + parameter.getString(p.getName()));
+                    if (p.getAuto()) {
+                        flags.add((String) p.getPosORflag() + " " + p.getDefaultValue());
+                    } else {
+                        String value = task_parameter.getString(p.getName());
+                        if (value == null && p.getRequired()) {
+                            throw new IllegalArgumentException("缺少参数: " + p.getName());
+                        }
+                        flags.add((String) p.getPosORflag() + " " + value);
+                    }
+
                     break;
             }
         }

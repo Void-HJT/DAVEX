@@ -59,7 +59,7 @@ public class ParameterDeserializer extends StdDeserializer<Parameter> {
         }
 
         Boolean required = node.get("required").asBoolean();
-
-        return new Parameter(name, parameterType, limitType, posORflag, limit, description, required);
+        Boolean auto = node.get("auto").asBoolean();
+        return new Parameter(name, parameterType, limitType, posORflag, limit, description, required, auto);
     }
 }

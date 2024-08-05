@@ -8,6 +8,7 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import DveAgent.info.Parameter;
 import DveAgent.serializer.ParameterListTypeHandler;
@@ -25,6 +26,7 @@ public class Mpc {
   @TableField(typeHandler = ParameterListTypeHandler.class)
   private List<Parameter> runtimeParameters;
   private Long centerId;
+  @JsonIgnore
   private String path;
 
   public void setCompileParameters(List<Parameter> parameters) throws Exception {

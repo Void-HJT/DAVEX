@@ -22,7 +22,6 @@ import DveAgent.mapper.MpcTaskAgentMapper;
 import DveAgent.mapper.MpcTaskMapper;
 import DveCenter.common.My;
 import DveCenter.entity.Input;
-import DveCenter.info.UploadCenterTaskInfo;
 import DveCenter.mapper.InputMapper;
 import DveCenter.module.auth.service.CenterWebClientService;
 import reactor.core.publisher.Flux;
@@ -76,7 +75,7 @@ public class MpcTaskService {
         return mpcTaskMapper.selectOne(queryWrapper);
     }
 
-    public void create(UploadCenterTaskInfo mpctTaskInfo) throws Exception {
+    public void create(UploadAgentTaskInfo mpctTaskInfo) throws Exception {
         if (mpctTaskInfo.getCenterId() != my.getId()) {
             throw new Exception("发送错误");
         }
@@ -125,7 +124,7 @@ public class MpcTaskService {
     }
 
     @Async("customExecutor")
-    private void preprocess(UploadCenterTaskInfo mpcTask) throws Exception {
+    private void preprocess(UploadAgentTaskInfo mpcTask) throws Exception {
         garnetService.compile(mpcTask);
         garnetService.link(inputMapper.selectById(mpcTask.getDataId()).getPath(),
                 mpcTask.getUid(), mpcTask.getPart());
@@ -139,7 +138,7 @@ public class MpcTaskService {
     }
 
     @Async("customExecutor")
-    private void psiPreprocess(UploadCenterTaskInfo mpcTask) throws Exception {
+    private void psiPreprocess(UploadAgentTaskInfo mpcTask) throws Exception {
         garnetService.compile(mpcTask);
         garnetService.idExtract(inputMapper.selectById(mpcTask.getDataId()).getPath(), mpcTask.getUid(),
                 mpcTask.getPart());

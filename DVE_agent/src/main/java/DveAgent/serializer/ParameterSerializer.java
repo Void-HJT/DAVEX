@@ -50,6 +50,7 @@ public class ParameterSerializer extends StdSerializer<Parameter> {
                 break;
         }
         gen.writeBooleanField("required", parameter.getRequired());
+        gen.writeBooleanField("auto", parameter.getAuto());
         gen.writeStringField("description", parameter.getDescription());
         gen.writeEndObject();
     }

@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.BodyInserters;
 
 import DveAgent.common.My;
+import DveAgent.common.Utlis;
 import DveAgent.entity.MpcTask;
 import DveAgent.entity.MpcTaskAgent;
 import DveAgent.entity.MpcTaskOutput;
@@ -21,7 +22,6 @@ import DveAgent.mapper.FileMapper;
 import DveAgent.mapper.MpcMapper;
 import DveAgent.mapper.MpcTaskAgentMapper;
 import DveAgent.mapper.MpcTaskMapper;
-import DveAgent.mapper.MpcTaskOutputMapper;
 import DveAgent.module.auth.service.AgentWebClientService;
 import DveAgent.module.directory.FileFolderService;
 
@@ -123,8 +123,7 @@ public class MpcTaskService {
         FileSystemResource fileResource = new FileSystemResource(filePath);
         MpcTaskOutput mpcTaskOutput = new MpcTaskOutput();
         mpcTaskOutput.setTaskId(mpcTask.getUid());
-        // TODO 计算哈希
-        // mpcTaskOutput.setHash(filePath);
+        mpcTaskOutput.setHash(Utlis.getFileHash(fileResource, "SHA-256"));
         agentWebClientService.agent2CenterWebClient(mpcTask.getCenterId()).post().uri("/MpcTasks/save")
                 .contentType(MediaType.MULTIPART_FORM_DATA).body(BodyInserters.fromMultipartData("file", fileResource)
                         .with("metadata", mpcTaskOutput))
