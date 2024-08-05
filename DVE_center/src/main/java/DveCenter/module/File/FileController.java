@@ -1,7 +1,9 @@
 package DveCenter.module.File;
 
 
+import DveAgent.entity.File;
 import DveAgent.common.Body;
+import DveAgent.common.R;
 import DveAgent.module.auth.service.AgentWebClientService;
 import DveCenter.common.CustomMultipartFile;
 import DveCenter.entity.Output;
@@ -21,6 +23,7 @@ import reactor.core.publisher.Flux;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.*;
+import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
@@ -36,11 +39,13 @@ public class FileController {
     @Autowired
     private FileService fileService;
 
-    // 结果文件存储位置，比如 D:\\, 我这里使用的是本项目的路径
-    private static final String UPLOAD_BASE_DIR = "C:\\FDU\\IdeaProject\\DVE\\DVE_center\\Files\\";
+    // 结果文件存储位置，比如 D:\\
+//    private static final String UPLOAD_BASE_DIR = "C:\\FDU\\IdeaProject\\DVE\\DVE_center\\Files\\";
+    private static final String UPLOAD_BASE_DIR = "/home/zkx/DAVE/Files/";
 
     // application文件保存位置
     private static final String DOWNLOAD_BASE_DIR = "C:\\FDU\\IdeaProject\\ApplicationFiles\\";
+//    private static final String DOWLLOAD_BASE_DIR = "/home/zkx/DAVE/ApplicationFiles/";
 
     @Autowired
     private CenterWebClientService centerWebClientService;
@@ -51,6 +56,7 @@ public class FileController {
                                @RequestParam("fileId") Integer fileId,
                                @RequestParam("agentId") Integer agentId,
                              @RequestParam("applicationId") Integer applicationId,
+                               @RequestParam File fileInfo,
                                @RequestParam(value = "expiredTime", required = false) java.sql.Timestamp expiredTime) {
 
         if (expiredTime == null) {
@@ -58,7 +64,7 @@ public class FileController {
             expiredTime = java.sql.Timestamp.from(Instant.now().plus(7, ChronoUnit.DAYS));
         }
 
-        return fileService.saveFile(file, fileId, agentId, applicationId, UPLOAD_BASE_DIR, expiredTime);
+        return fileService.saveFile(file, fileId, agentId, applicationId, fileInfo, UPLOAD_BASE_DIR, expiredTime);
     }
 
 
@@ -68,6 +74,7 @@ public class FileController {
                                      @RequestParam("fileIds") List<Integer> fileIds,
                                       @RequestParam("agentIds") List<Integer> agentIds,
                                     @RequestParam("applicationId") Integer applicationId,
+                                     @RequestParam List<File> fileInfos,
                                      @RequestParam(value = "expiredTimes", required = false) List<java.sql.Timestamp> expiredTimes) {
 
         // 如果没有提供失效时间，则设置默认值为当前时间的一周后
@@ -82,7 +89,7 @@ public class FileController {
             return Body.error("失效时间数量和文件数量不匹配");
         }
 
-        return fileService.saveFiles(files, fileIds, agentIds, applicationId, UPLOAD_BASE_DIR, expiredTimes);
+        return fileService.saveFiles(files, fileIds, agentIds, applicationId, fileInfos, UPLOAD_BASE_DIR, expiredTimes);
     }
 
 
@@ -139,7 +146,15 @@ public class FileController {
                                       @RequestParam("folderId") Integer folderId,
                                                  @RequestParam("applicationId") Integer applicationId)throws Exception {
         WebClient webclient=centerWebClientService.center2AgentWebClient(agentId);
-        Flux<byte[]> fileFlux=webclient.post().uri(uriBuilder -> uriBuilder.path("/directory/sendFile")
+        File fileInfo = webclient.post()
+                .uri(uriBuilder -> uriBuilder.path("/directory/fileFolder/getFile")
+                        .queryParam("fileId", fileId)
+                        .queryParam("agentId", agentId).build())
+                .retrieve()
+                .bodyToMono(new ParameterizedTypeReference<R<File>>() {
+                }).block().getBody().getData();
+
+        Flux<byte[]> fileFlux=webclient.post().uri(uriBuilder -> uriBuilder.path("/directory/fileFolder/sendFile")
                 .queryParam("fileId",fileId)
                 .queryParam("agentId",agentId)
                 .queryParam("folderId",folderId).build()).accept(MediaType.APPLICATION_OCTET_STREAM).retrieve()
@@ -168,7 +183,7 @@ public class FileController {
                 CustomMultipartFile multipartFile = new CustomMultipartFile(fileBytes, "1.pdf");
 
                 // 调用 save 方法
-                Body<String> result = save(multipartFile, fileId, agentId, applicationId, null);
+                Body<String> result = save(multipartFile, fileId, agentId, applicationId, fileInfo, null);
                 future.complete(result);
             } catch (IOException e) {
                 future.completeExceptionally(e);
@@ -190,7 +205,13 @@ public class FileController {
         CompletableFuture<Body<String>> future = new CompletableFuture<>();
 
         // 修改为从本地文件读取数据而不是从 WebClient 获取
-        File localFile = new File("D:\\1.pdf"); // 这里是你的本地文件路径
+        File fileInfo = new File();
+        fileInfo.setUid(5L);fileInfo.setAgentId(5L);fileInfo.setFolderId(10L);
+        fileInfo.setName("安全多方学习_从安全计算到安全学习_韩伟力.pdf");fileInfo.setType("pdf");
+        fileInfo.setCreateDate(Timestamp.valueOf("2024-07-21 09:39:09"));
+        fileInfo.setLastUpdate(Timestamp.valueOf("2024-07-21 09:39:09"));fileInfo.setSize(3087316L);
+        fileInfo.setHash("759771dabfb5ceddc7339a3d2d72ad208e963ec029e2819bf8d1f099b6d17971");
+        java.io.File localFile = new java.io.File("D:\\1.pdf"); // 这里是你的本地文件路径
         try (FileInputStream fis = new FileInputStream(localFile)) {
             // 将文件内容读取到字节数组中
             byte[] fileBytes = fis.readAllBytes();
@@ -212,7 +233,7 @@ public class FileController {
                     CustomMultipartFile multipartFile = new CustomMultipartFile(fileBytesArray, "1.pdf");
 
                     // 调用 save 方法
-                    Body<String> result = save(multipartFile, fileId, agentId, applicationId, null);
+                    Body<String> result = save(multipartFile, fileId, agentId, applicationId, fileInfo, null);
                     future.complete(result);
                 } catch (IOException e) {
                     future.completeExceptionally(e);
