@@ -42,18 +42,18 @@ public class FileService {
     private JdbcTemplate jdbcTemplate;
 
     public Body<String> saveFile(MultipartFile file, Integer fileId, Integer agentId, Integer applicationId,
-                                 String base, java.sql.Timestamp expiredTime) {
+                                 File fileInfo, String base, java.sql.Timestamp expiredTime) {
 
         // 根据文件id查找文件表
-        LambdaQueryWrapper<File> queryWrapper = Wrappers.<File>lambdaQuery()
-                .eq(File::getUid, fileId)
-                .eq(File::getAgentId, agentId);
-        File queryFile = fileMapper.selectOne(queryWrapper);
-        if(queryFile == null){return Body.error(String.format("找不到该文件，文件id: %d，代理id: %d", fileId, agentId));}
+//        LambdaQueryWrapper<File> queryWrapper = Wrappers.<File>lambdaQuery()
+//                .eq(File::getUid, fileId)
+//                .eq(File::getAgentId, agentId);
+//        File queryFile = fileMapper.selectOne(queryWrapper);
+//        if(queryFile == null){return Body.error(String.format("找不到该文件，文件id: %d，代理id: %d", fileId, agentId));}
 
         // 校验sha256
         String fileHash = getSha256(file);
-        if (!fileHash.equals(queryFile.getHash())) {return Body.error(String.format("哈希校验失败，文件id: %d，代理id: %d", fileId, agentId));}
+        if (!fileHash.equals(fileInfo.getHash())) {return Body.error(String.format("哈希校验失败，文件id: %d，代理id: %d", fileId, agentId));}
 
         // 文件信息加入结果表
         // 若已存在，则进行覆盖
@@ -70,10 +70,10 @@ public class FileService {
             }
         }
         Output newOutput = new Output();
-        String fileName = queryFile.getName();
-        newOutput.setName(queryFile.getName());newOutput.setType(queryFile.getType());
-        newOutput.setUploadDate(Timestamp.valueOf(LocalDateTime.now()));newOutput.setTag(queryFile.getTag());
-        newOutput.setSize(queryFile.getSize());newOutput.setDescription(queryFile.getDescription());
+        String fileName = fileInfo.getName();
+        newOutput.setName(fileName);newOutput.setType(fileInfo.getType());
+        newOutput.setUploadDate(Timestamp.valueOf(LocalDateTime.now()));newOutput.setTag(fileInfo.getTag());
+        newOutput.setSize(fileInfo.getSize());newOutput.setDescription(fileInfo.getDescription());
         newOutput.setPath(base + fileHash + "_appid_" + applicationId);newOutput.setExpiredTime(expiredTime);newOutput.setHash(fileHash);
         newOutput.setFileId(fileId);newOutput.setAgentId(agentId);newOutput.setApplicationId(applicationId);
         outputMapper.insert(newOutput);
@@ -99,10 +99,12 @@ public class FileService {
 
 
     public Body<List<String>> saveFiles(List<MultipartFile> files, List<Integer> fileIds, List<Integer> agentIds,
-                                        Integer applicationId, String base, List<java.sql.Timestamp> expiredTimes) {
+                                        Integer applicationId, List<File> fileInfos,
+                                        String base, List<java.sql.Timestamp> expiredTimes) {
         List<String> results = new ArrayList<>();
 
-        if (files.size() != fileIds.size() || files.size() != agentIds.size() || files.size() != expiredTimes.size()) {
+        if (files.size() != fileIds.size() || files.size() != agentIds.size() || files.size() != expiredTimes.size()
+                || files.size() != fileInfos.size()) {
             return Body.error("文件数量、文件ID数量、代理ID数量和失效时间数量不匹配");
         }
 
@@ -111,22 +113,27 @@ public class FileService {
             MultipartFile file = files.get(i);
             Integer fileId = fileIds.get(i);
             Integer agentId = agentIds.get(i);
+            File fileInfo = fileInfos.get(i);
             java.sql.Timestamp expiredTime = expiredTimes.get(i);
 
             // 根据文件id查找文件表
-            LambdaQueryWrapper<File> queryWrapper = Wrappers.<File>lambdaQuery()
-                    .eq(File::getUid, fileId)
-                    .eq(File::getAgentId, agentId);
-            File queryFile = fileMapper.selectOne(queryWrapper);
-            if (queryFile == null) {
-                results.add(String.format("找不到该文件，文件id: %d，代理id: %d", fileId, agentId));
-                flag = false;
-                continue;
-            }
+//            LambdaQueryWrapper<File> queryWrapper = Wrappers.<File>lambdaQuery()
+//                    .eq(File::getUid, fileId)
+//                    .eq(File::getAgentId, agentId);
+//            File queryFile = fileMapper.selectOne(queryWrapper);
+//            if (queryFile == null) {
+//                results.add(String.format("找不到该文件，文件id: %d，代理id: %d", fileId, agentId));
+//                flag = false;
+//                continue;
+//            }
 
             // 校验md5
             String fileHash = getSha256(file);
-            if (!fileHash.equals(queryFile.getHash())) {return Body.error(String.format("哈希校验失败，文件id: %d，代理id: %d", fileId, agentId));}
+            if (!fileHash.equals(fileInfo.getHash())) {
+                results.add(String.format("哈希校验失败，文件id: %d，代理id: %d", fileId, agentId));
+                flag = false;
+                continue;
+            }
 
             // 文件信息加入结果表
             // 若已存在，则进行覆盖
@@ -143,13 +150,13 @@ public class FileService {
                 }
             }
             Output newOutput = new Output();
-            String fileName = queryFile.getName();
-            newOutput.setName(queryFile.getName());
-            newOutput.setType(queryFile.getType());
+            String fileName = fileInfo.getName();
+            newOutput.setName(fileInfo.getName());
+            newOutput.setType(fileInfo.getType());
             newOutput.setUploadDate(Timestamp.valueOf(LocalDateTime.now()));
-            newOutput.setTag(queryFile.getTag());
-            newOutput.setSize(queryFile.getSize());
-            newOutput.setDescription(queryFile.getDescription());
+            newOutput.setTag(fileInfo.getTag());
+            newOutput.setSize(fileInfo.getSize());
+            newOutput.setDescription(fileInfo.getDescription());
             newOutput.setPath(base + fileHash + "_appid_" + applicationId);
             newOutput.setExpiredTime(expiredTime);
             newOutput.setHash(fileHash);
