@@ -171,7 +171,7 @@ CREATE TABLE `mpcTask` (
     `uid` VARCHAR(32) NOT NULL,
     `application_id` BIGINT DEFAULT NULL,
     `center_id` BIGINT DEFAULT NULL,
-    `mpc_id` BIGINT DEFAULT NULL,
+    `mpc_id` VARCHAR(32) DEFAULT NULL,
     `compile_parameters` JSON DEFAULT NULL,
     `runtime_parameters` JSON DEFAULT NULL,
     `N` int DEFAULT NULL,

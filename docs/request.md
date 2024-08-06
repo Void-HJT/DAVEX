@@ -183,3 +183,33 @@
   ]
 }
 ```
+
+```json
+{
+  "agentID2fileID": {
+    "100":[1,2]
+  },
+  "applicationId": 0,
+  "centerId": 1,
+  "compileParameters": {
+    "party_number": 2,
+    "feature_number": 5,
+    "ents.tree_h": 4,
+    "ents.n_threads": 4,
+    "sample_number_from_party_0":50,
+    "sample_number_from_party_1":49
+  },
+  "host": "10.176.37.50",
+  "mpcId": 2,
+  "mpcName": "string",
+  "n": 2,
+  "part": 0,
+  "port": 6000,
+  "runtimeParameters": {
+    "protocol": "semi2k-with-conversion"
+  },
+  "status": "INIT",
+  "taskType": "GARNET_MPC",
+  "uid": null
+}
+```
