@@ -1,16 +1,5 @@
-package DveAgent.module.directory;
+package DveBase.service.directory;
 
-
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 
 import DveBase.common.Body;
 import DveBase.entity.Application;
@@ -21,6 +10,15 @@ import DveBase.mapper.ApplicationGroupMapper;
 import DveBase.mapper.ApplicationMapper;
 import DveBase.mapper.GroupMapper;
 import DveBase.mapper.RuleMapper;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 @Service
 public class GroupService {
