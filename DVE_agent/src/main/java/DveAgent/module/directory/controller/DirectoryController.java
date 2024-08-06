@@ -1,7 +1,8 @@
-package DveAgent.module.directory;
+package DveAgent.module.directory.controller;
 
 import java.util.List;
 
+import DveAgent.module.directory.service.DirectoryService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;

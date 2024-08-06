@@ -1,4 +1,4 @@
-package DveAgent.module.directory;
+package DveAgent.module.directory.service;
 
 
 import java.util.Arrays;

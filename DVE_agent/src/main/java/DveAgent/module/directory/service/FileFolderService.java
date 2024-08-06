@@ -1,4 +1,4 @@
-package DveAgent.module.directory;
+package DveAgent.module.directory.service;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -17,6 +17,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import DveBase.common.R;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
@@ -792,6 +793,13 @@ public class FileFolderService {
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + encodedFileName + "\"")
                 .body(resource);
 
+    }
+
+    public R<File> getFile(Long fileId, Long agentId) {
+
+        LambdaQueryWrapper<File> queryWrapper = Wrappers.<File>lambdaQuery().eq(File::getUid,fileId).eq(File::getAgentId,agentId);
+        File file = fileMapper.selectOne(queryWrapper);
+        return R.success(file,"查询成功");
     }
 
 }

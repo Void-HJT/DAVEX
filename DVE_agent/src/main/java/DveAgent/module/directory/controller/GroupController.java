@@ -1,9 +1,10 @@
-package DveAgent.module.directory;
+package DveAgent.module.directory.controller;
 
 
 import java.time.LocalDateTime;
 import java.util.List;
 
+import DveAgent.module.directory.service.GroupService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,7 +26,7 @@ public class GroupController {
     private static final Logger customLogger = LoggerFactory.getLogger("CustomLogger");
 
     @Autowired
-    GroupService  groupService;
+    GroupService groupService;
 
 
     @PostMapping("/getApplication")
