@@ -1,4 +1,24 @@
-package DveAgent.module.directory;
+package DveBase.service.directory;
+
+import DveBase.common.Body;
+import DveBase.common.R;
+import DveBase.entity.*;
+import DveBase.info.DirectoryInfo;
+import DveBase.info.FileInfo;
+import DveBase.mapper.*;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -12,62 +32,18 @@ import java.security.MessageDigest;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
-import java.util.Set;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.Resource;
-import org.springframework.core.io.UrlResource;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
-
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
-import com.baomidou.mybatisplus.core.toolkit.Wrappers;
-
-import DveBase.common.Body;
-import DveBase.entity.Agent;
-import DveBase.entity.Application;
-import DveBase.entity.ApplicationGroup;
-import DveBase.entity.File;
-import DveBase.entity.FileRule;
-import DveBase.entity.Folder;
-import DveBase.entity.FolderVisibility;
-import DveBase.entity.Group;
-import DveBase.entity.Rule;
-import DveBase.info.DirectoryInfo;
-import DveBase.info.FileInfo;
-import DveBase.mapper.AgentMapper;
-import DveBase.mapper.ApplicationGroupMapper;
-import DveBase.mapper.ApplicationMapper;
-import DveBase.mapper.FileMapper;
-import DveBase.mapper.FileRuleMapper;
-import DveBase.mapper.FolderMapper;
-import DveBase.mapper.FolderVisibilityMapper;
-import DveBase.mapper.GroupMapper;
-import DveBase.mapper.RuleMapper;
+import java.util.stream.Collectors;
 
 @Service
-public class DirectoryService {
-
-    private static final Set<String> ALLOWED_METHODS = new HashSet<>(Arrays.asList("direct", "psi", "pir", "mpc"));
-
-    @Autowired
-    private FolderMapper folderMapper;
+public class FileFolderService {
 
     @Autowired
     private GroupMapper groupMapper;
-
     @Autowired
-    private ApplicationMapper applicationMapper;
+    private FolderMapper folderMapper;
 
     @Autowired
     private ApplicationGroupMapper applicationGroupMapper;
@@ -87,112 +63,64 @@ public class DirectoryService {
     @Autowired
     private FolderVisibilityMapper folderVisibilityMapper;
 
-    // agent查看用户
-    public Body<List<Application>> getApplication() {
-        LambdaQueryWrapper<Application> queryWrapper = Wrappers.<Application>lambdaQuery();
-        List<Application> applications = applicationMapper.selectList(queryWrapper);
-        return Body.success(applications, "返回用户列表");
-    }
+    public Body<?> getFileByRuleOrNot(Long agentId, Long applicationId, Long fileId, String method) {
 
-    // agent根据用户id得到分组
-    public Body<List<Group>> getGroupByApplicationId(Long agentId, Long centerId, Long applicationId) {
-        List<Group> groups = groupMapper.getList(agentId, centerId, applicationId);
-        return Body.success(groups, "成功");
-    }
+        boolean isAllowed = false;
 
-    // 显示用户分组
-    public Body<List<Group>> getGroup(Long agentId, Long centerId) {
-        LambdaQueryWrapper<Group> queryWrapper = Wrappers.<Group>lambdaQuery()
-                .eq(Group::getCenterId, centerId)
-                .eq(Group::getAgentId, agentId);
-        List<Group> groupList = groupMapper.selectList(queryWrapper);
-        if (groupList.isEmpty()) {
-            return Body.error("没有组");
+        List<ApplicationGroup> applicationGroups = applicationGroupMapper.selectList(
+                new QueryWrapper<ApplicationGroup>()
+                        .eq("agent_id", agentId)
+                        .eq("application_id", applicationId));
+
+        List<FileRule> fileRules = fileRuleMapper.selectList(
+                new QueryWrapper<FileRule>()
+                        .eq("agent_id", agentId)
+                        .eq("file_id", fileId));
+        List<Long> ruleIds = new LinkedList<>();
+
+        for (FileRule fileRule : fileRules) {
+            if (!ruleIds.contains(fileRule.getRuleId())) {
+                ruleIds.add(fileRule.getRuleId());
+            }
         }
-        return Body.success(groupList, "成功");
-    }
 
-    // 添加用户分组
-    public Body<String> addGroup(Long agentId, Long centerId, String name) {
-        // 1.查询数据库是否有同名组
-        LambdaQueryWrapper<Group> queryWrapper = Wrappers.<Group>lambdaQuery()
-                .eq(Group::getAgentId, agentId)
-                .eq(Group::getCenterId, centerId)
-                .eq(Group::getName, name);
-        List<Group> groupList = groupMapper.selectList(queryWrapper);
-        if (!groupList.isEmpty()) {
-            return Body.error("重名组");
+        List<Rule> rules = ruleMapper.selectBatchIds(ruleIds);
+
+        for (Rule rule : rules) {
+
+            boolean groupMatch = applicationGroups.stream()
+                    .anyMatch(group -> group.getGroupId().equals(rule.getGroupId()));
+
+            if (groupMatch && method.equals(rule.getAllowedMethod())) {
+                isAllowed = true;
+                break;
+            }
         }
-        // 2.新组加入
-        Group new_group = new Group();
-        new_group.setAgentId(agentId);
-        new_group.setCenterId(centerId);
-        new_group.setName(name);
-        groupMapper.insert(new_group);
 
-        return Body.success("新增组成功");
-    }
-
-    // 用户划分组
-    public Body<String> addApplicationGroup(Long agentId, Long centerId, Long applicationId, Long groupId) {
-        // 1.判断是否有分组重复
-        LambdaQueryWrapper<ApplicationGroup> queryWrapper = Wrappers.<ApplicationGroup>lambdaQuery()
-                .eq(ApplicationGroup::getCenterId, centerId)
-                .eq(ApplicationGroup::getAgentId, agentId)
-                .eq(ApplicationGroup::getGroupId, groupId)
-                .eq(ApplicationGroup::getApplicationId, applicationId);
-        List<ApplicationGroup> applicationGroupList = applicationGroupMapper.selectList(queryWrapper);
-        if (!applicationGroupList.isEmpty()) {
-            return Body.error("分组重复");
-        }
-        // 2.插入新分组
-        ApplicationGroup applicationGroup = new ApplicationGroup();
-        applicationGroup.setApplicationId(applicationId);
-        applicationGroup.setGroupId(groupId);
-        applicationGroup.setAgentId(agentId);
-        applicationGroup.setCenterId(centerId);
-        applicationGroupMapper.insert(applicationGroup);
-        return Body.success("分组成功");
-    }
-
-    // 设定用户组的访问权限
-    public Body<String> addRule(Long agentId, Long groupId, String allowMethod) {
-        Rule rule = new Rule();
-        // 1.判断输入的权限是否是指定的
-        if (!ALLOWED_METHODS.contains(allowMethod)) {
-            return Body.error("规则种类错误");
-        }
-        rule.setAllowedMethod(allowMethod);
-        rule.setAgentId(agentId);
-        rule.setGroupId(groupId);
-
-        // 2.判断是否重复
-        LambdaQueryWrapper<Rule> queryWrapper = Wrappers.<Rule>lambdaQuery()
-                .eq(Rule::getAgentId, agentId)
-                .eq(Rule::getGroupId, groupId)
-                .eq(Rule::getAllowedMethod, allowMethod);
-        if (!ruleMapper.selectList(queryWrapper).isEmpty()) {
-            return Body.error("规则重复");
-        }
-        // 3.插入
-        ruleMapper.insert(rule);
-        return Body.success("添加规则成功");
-
+        return Body.success(isAllowed, "");
     }
 
     // 创建文件夹
     public Body<String> createFolder(String name, String path, Long agent_id, Long parent_id) {
-        // 1.查询数据库相同父文件夹下是否有同名文件夹
+        // 1.检查是否父文件夹存在
         LambdaQueryWrapper<Folder> queryWrapper = Wrappers.<Folder>lambdaQuery()
-                .eq(Folder::getParentId, parent_id)
-                .eq(Folder::getName, name);
+                .eq(Folder::getUid, parent_id)
+                .eq(Folder::getAgentId, agent_id);
+        Folder fatherFolder = folderMapper.selectOne(queryWrapper);
+        if (fatherFolder == null) {
+            return Body.error("父文件夹不存在");
+        }
+        queryWrapper.clear();
+
+        // 2.查询数据库相同父文件夹下是否有同名文件夹
+        queryWrapper.eq(Folder::getAgentId, agent_id).eq(Folder::getParentId, parent_id).eq(Folder::getName, name);
         List<Folder> folderList = folderMapper.selectList(queryWrapper);
         if (!folderList.isEmpty()) {
             return Body.error("重名文件夹");
         }
 
-        // 2.本地创建新文件夹
-        Path create_path = Paths.get(path, name);
+        // 3.本地创建新文件夹
+        Path create_path = Path.of(getFolderPath(fatherFolder, path) + "/" + name);
         try {
             Files.createDirectories(create_path);
         } catch (IOException e) {
@@ -406,24 +334,6 @@ public class DirectoryService {
         return Body.success(fileMapper.getFileInfo(uid, agentId, folderId), "成功");
     }
 
-    // public Body<List<ApplicationInfo>> getApplicationAndGroup(Long agentId,Long
-    // centerId) {
-    // List<ApplicationInfo> applicationInfos =
-    // applicationMapper.getApplicationInfo(agentId,centerId);
-    // return Body.success(applicationInfos,"成功");
-    // }
-
-    // public Body<File> showFile(Long uid,Long agentId, Long folderId) {
-    // LambdaQueryWrapper<File> queryFileWrapper = Wrappers.<File>lambdaQuery()
-    // .eq(File::getUid,uid)
-    // .eq(File::getAgentId,agentId)
-    // .eq(File::getFolderId,folderId);
-    // File new_file = fileMapper.selectOne(queryFileWrapper);
-    // if(new_file==null){return Body.error("该文件不存在");}
-    // new_file.setName(new_file.getName().substring(0,new_file.getName().lastIndexOf(".")));
-    // return Body.success(new_file,"查询成功");
-    // }
-
     // 上传文件
     public Body<String> uploadFile(Long agentId, Long folderId, MultipartFile file, String baseDirectory) {
         // 查找是否存在该文件夹
@@ -482,10 +392,11 @@ public class DirectoryService {
         if (fileName != null) {
             fileRecord.setType(fileName.substring(fileName.lastIndexOf(".") + 1));
         } else {
+            // Handle the case when fileName is null
             fileRecord.setType("");
         }
-        fileRecord.setCreateDate(new java.sql.Timestamp(System.currentTimeMillis()));
-        fileRecord.setLastUpdate(new java.sql.Timestamp(System.currentTimeMillis()));
+        fileRecord.setCreateDate(new Timestamp(System.currentTimeMillis()));
+        fileRecord.setLastUpdate(new Timestamp(System.currentTimeMillis()));
         // 其他元数据设置
         fileMapper.insert(fileRecord);
 
@@ -508,7 +419,7 @@ public class DirectoryService {
         new_file.setDescription(file.getDescription());
         new_file.setExpiredTime(file.getExpiredTime());
         new_file.setExample(file.getExample());
-        new_file.setLastUpdate(new java.sql.Timestamp(System.currentTimeMillis()));
+        new_file.setLastUpdate(new Timestamp(System.currentTimeMillis()));
         UpdateWrapper<File> updateWrapper = new UpdateWrapper<>();
         updateWrapper.eq("agent_id", file.getAgentId())
                 .eq("folder_id", file.getFolderId())
@@ -584,6 +495,11 @@ public class DirectoryService {
 
     }
 
+    //
+    public void addAgent(Agent agent) {
+        agentMapper.insert(agent);
+    }
+
     private void findAllParentFolders(Long folderId, Long agentId, List<Long> parentFolderIds, List<String> path) {
         LambdaQueryWrapper<Folder> queryWrapper = Wrappers.<Folder>lambdaQuery()
                 .eq(Folder::getUid, folderId)
@@ -612,7 +528,7 @@ public class DirectoryService {
     public String getFolderPath(Folder folder, String baseDirectory) {
         List<Long> parentFolderIds = new ArrayList<>();
         List<String> path = new ArrayList<>();
-        findAllParentFolders(folder.getUid(), folder.getParentId(), parentFolderIds, path);
+        findAllParentFolders(folder.getUid(), folder.getAgentId(), parentFolderIds, path);
         // 构建文件夹路径
         Collections.reverse(path); // 反转路径列表，确保路径顺序正确
         StringBuilder fullPathBuilder = new StringBuilder(baseDirectory);
@@ -687,15 +603,25 @@ public class DirectoryService {
         node.setExample(file.getExample());
         node.setExpiredTime(file.getExpiredTime());
     }
-
     //
+
     public DirectoryInfo filterFoldersByVisibility(Long groupId, Long agentId, DirectoryInfo directoryAll) {
         return filterFoldersRecursive(groupId, agentId, directoryAll);
     }
 
     //
-    public DirectoryInfo filterFilesByRule(long groupId, long agentId, DirectoryInfo directoryFiltered) {
+    public DirectoryInfo filterFilesByRule(Long groupId, Long agentId, DirectoryInfo directoryFiltered) {
         return filterFilesRecursive(groupId, agentId, directoryFiltered);
+    }
+
+    //
+    public DirectoryInfo filterFolders(List<Long> groupIds, Long agentId, DirectoryInfo directory) {
+        return filterFoldersRecursive(groupIds, agentId, directory);
+    }
+
+    //
+    public DirectoryInfo filterFiles(List<Long> groupIds, Long agentId, DirectoryInfo directory) {
+        return filterFilesRecursive(groupIds, agentId, directory);
     }
 
     //
@@ -720,7 +646,28 @@ public class DirectoryService {
     }
 
     //
-    private DirectoryInfo filterFilesRecursive(long groupId, long agentId, DirectoryInfo directory) {
+    private DirectoryInfo filterFoldersRecursive(List<Long> groupIds, Long agentId, DirectoryInfo directory) {
+        List<DirectoryInfo> visibleChildren = new ArrayList<>();
+        for (DirectoryInfo child : directory.getChildren()) {
+            if ("folder".equals(child.getType())) {
+                boolean isVisible = groupIds.stream().anyMatch(groupId -> folderVisibilityMapper.selectCount(
+                        new QueryWrapper<FolderVisibility>()
+                                .eq("group_id", groupId)
+                                .eq("agent_id", agentId)
+                                .eq("folder_id", child.getUid())) > 0);
+                if (isVisible) {
+                    visibleChildren.add(filterFoldersRecursive(groupIds, agentId, child));
+                }
+            } else {
+                visibleChildren.add(child); // 将文件直接插入
+            }
+        }
+        directory.setChildren(visibleChildren);
+        return directory;
+    }
+
+    //
+    private DirectoryInfo filterFilesRecursive(Long groupId, Long agentId, DirectoryInfo directory) {
         List<DirectoryInfo> allowedChildren = new ArrayList<>();
         for (DirectoryInfo child : directory.getChildren()) {
             if ("folder".equals(child.getType())) {
@@ -752,7 +699,47 @@ public class DirectoryService {
     }
 
     //
-    public ResponseEntity<Resource> getFilePath(Long fileId, Long agentId, Long folderId, String baseDirectory) {
+    private DirectoryInfo filterFilesRecursive(List<Long> groupIds, Long agentId, DirectoryInfo directory) {
+        List<DirectoryInfo> allowedChildren = new ArrayList<>();
+        for (DirectoryInfo child : directory.getChildren()) {
+            if ("folder".equals(child.getType())) {
+                allowedChildren.add(filterFilesRecursive(groupIds, agentId, child));
+            } else {
+                // 检查文件与用户组的关系
+                List<FileRule> fileRules = fileRuleMapper.selectList(
+                        new QueryWrapper<FileRule>()
+                                .eq("agent_id", agentId)
+                                .eq("file_id", child.getUid()));
+                List<String> allowedMethods = new ArrayList<>();
+                for (FileRule fileRule : fileRules) {
+                    List<Rule> rules = ruleMapper.selectList(
+                            new QueryWrapper<Rule>()
+                                    .eq("uid", fileRule.getRuleId())
+                                    .in("group_id", groupIds));
+                    allowedMethods.addAll(rules.stream().map(Rule::getAllowedMethod).collect(Collectors.toList()));
+                }
+                if (!allowedMethods.isEmpty()) {
+                    allowedMethods = allowedMethods.stream().distinct().collect(Collectors.toList());
+                    child.setRuleList(allowedMethods);
+                    allowedChildren.add(child);
+                }
+            }
+        }
+        directory.setChildren(allowedChildren);
+        return directory;
+    }
+
+    //
+    public List<Long> getGroupIdsByApplication(Long applicationId, Long agentId) {
+        return applicationGroupMapper.selectList(
+                new QueryWrapper<ApplicationGroup>()
+                        .eq("application_id", applicationId)
+                        .eq("agent_id", agentId))
+                .stream().map(ApplicationGroup::getGroupId).collect(Collectors.toList());
+    }
+
+    //
+    public ResponseEntity<Resource> sendFile(Long fileId, Long agentId, Long folderId, String baseDirectory) {
 
         LambdaQueryWrapper<File> queryFolderWrapper = Wrappers.<File>lambdaQuery()
                 .eq(File::getUid, fileId)
@@ -792,16 +779,15 @@ public class DirectoryService {
 
     }
 
-    public Body<List<Rule>> getRuleByGroup(Long agentId, Long groupId) {
-        LambdaQueryWrapper<Rule> queryRuleWrapper = Wrappers.<Rule>lambdaQuery()
-                .eq(Rule::getGroupId, groupId)
-                .eq(Rule::getAgentId, agentId);
-        List<Rule> rules = ruleMapper.selectList(queryRuleWrapper);
-        return Body.success(rules, "成功");
+    public R<File> getFile(Long fileId, Long agentId) {
+
+        LambdaQueryWrapper<File> queryWrapper = Wrappers.<File>lambdaQuery().eq(File::getUid,fileId).eq(File::getAgentId,agentId);
+        File file = fileMapper.selectOne(queryWrapper);
+        return R.success(file,"查询成功");
     }
 
-    public void addAgent(Agent agent) {
-        agentMapper.insert(agent);
+    public String test(){
+        return "1";
     }
 
 }
