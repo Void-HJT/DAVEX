@@ -1,0 +1,372 @@
+2024-07-31 15:25:42 [restartedMain] INFO  DveAgent.DveAgentApplication - Starting DveAgentApplication using Java 17 on dengruotaodeMacBook-Air.local with PID 65244 (/Users/dengruotao/Documents/GitHub/DVE/DVE_agent/target/classes started by dengruotao in /Users/dengruotao/Documents/GitHub/DVE)
+2024-07-31 15:25:42 [restartedMain] INFO  DveAgent.DveAgentApplication - No active profile set, falling back to 1 default profile: "default"
+2024-07-31 15:25:43 [restartedMain] INFO  o.s.b.d.e.DevToolsPropertyDefaultsPostProcessor - Devtools property defaults active! Set 'spring.devtools.add-properties' to 'false' to disable
+2024-07-31 15:25:43 [restartedMain] INFO  o.s.b.d.e.DevToolsPropertyDefaultsPostProcessor - For additional web related logging consider setting the 'logging.level.web' property to 'DEBUG'
+2024-07-31 15:25:44 [restartedMain] WARN  o.m.s.mapper.ClassPathMapperScanner - No MyBatis mapper was found in '[DveCenter.mapper]' package. Please check your configuration.
+2024-07-31 15:25:44 [restartedMain] INFO  org.eclipse.jetty.util.log - Logging initialized @2698ms to org.eclipse.jetty.util.log.Slf4jLog
+2024-07-31 15:25:44 [restartedMain] INFO  o.s.b.w.e.j.JettyServletWebServerFactory - Server initialized with port: 8080
+2024-07-31 15:25:44 [restartedMain] INFO  org.eclipse.jetty.server.Server - jetty-9.4.53.v20231009; built: 2023-10-09T12:29:09.265Z; git: 27bde00a0b95a1d5bbee0eae7984f891d2d0f8c9; jvm 17+35-LTS-2724
+2024-07-31 15:25:44 [restartedMain] INFO  o.e.j.s.h.ContextHandler.application - Initializing Spring embedded WebApplicationContext
+2024-07-31 15:25:44 [restartedMain] INFO  o.s.b.w.s.c.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 1585 ms
+2024-07-31 15:25:44 [restartedMain] INFO  org.eclipse.jetty.server.session - DefaultSessionIdManager workerName=node0
+2024-07-31 15:25:44 [restartedMain] INFO  org.eclipse.jetty.server.session - No SessionScavenger set, using defaults
+2024-07-31 15:25:44 [restartedMain] INFO  org.eclipse.jetty.server.session - node0 Scavenging every 660000ms
+2024-07-31 15:25:44 [restartedMain] INFO  o.e.j.server.handler.ContextHandler - Started o.s.b.w.e.j.JettyEmbeddedWebAppContext@7d3285a1{application,/,[file:///private/var/folders/cw/35pz9xn91cxdws3x1rz0_2ph0000gn/T/jetty-docbase.8080.6601232805783882839/, jar:file:/Users/dengruotao/.m2/repository/io/springfox/springfox-swagger-ui/3.0.0/springfox-swagger-ui-3.0.0.jar!/META-INF/resources],AVAILABLE}
+2024-07-31 15:25:44 [restartedMain] INFO  org.eclipse.jetty.server.Server - Started @2949ms
+2024-07-31 15:25:44 [restartedMain] INFO  c.a.d.s.b.a.DruidDataSourceAutoConfigure - Init DruidDataSource
+2024-07-31 15:25:44 [restartedMain] INFO  c.alibaba.druid.pool.DruidDataSource - {dataSource-1} inited
+2024-07-31 15:25:46 [restartedMain] INFO  o.s.b.d.a.OptionalLiveReloadServer - LiveReload server is running on port 35729
+2024-07-31 15:25:46 [restartedMain] INFO  o.e.j.s.h.ContextHandler.application - Initializing Spring DispatcherServlet 'dispatcherServlet'
+2024-07-31 15:25:46 [restartedMain] INFO  o.s.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+2024-07-31 15:25:46 [restartedMain] INFO  o.s.web.servlet.DispatcherServlet - Completed initialization in 1 ms
+2024-07-31 15:25:46 [restartedMain] INFO  o.e.jetty.server.AbstractConnector - Started ServerConnector@1c0c451c{HTTP/1.1, (http/1.1)}{0.0.0.0:8080}
+2024-07-31 15:25:46 [restartedMain] INFO  o.s.b.w.e.jetty.JettyWebServer - Jetty started on port(s) 8080 (http/1.1) with context path '/'
+2024-07-31 15:25:48 [restartedMain] INFO  DveAgent.DveAgentApplication - Started DveAgentApplication in 5.882 seconds (JVM running for 6.697)
+2024-07-31 15:25:48 [restartedMain] INFO  DveAgent.DveAgentApplication - hello world
+2024-07-31 15:32:22 [qtp1378212849-29] ERROR c.a.d.pool.DruidAbstractDataSource - discard long time none received connection. , jdbcUrl : jdbc:mysql://localhost:3306/test, jdbcUrl : jdbc:mysql://localhost:3306/test, lastPacketReceivedIdleMillis : 397047
+2024-07-31 15:32:37 [SpringApplicationShutdownHook] INFO  o.e.jetty.server.AbstractConnector - Stopped ServerConnector@1c0c451c{HTTP/1.1, (http/1.1)}{0.0.0.0:8080}
+2024-07-31 15:32:37 [SpringApplicationShutdownHook] INFO  org.eclipse.jetty.server.session - node0 Stopped scavenging
+2024-07-31 15:32:37 [SpringApplicationShutdownHook] INFO  o.e.j.s.h.ContextHandler.application - Destroying Spring FrameworkServlet 'dispatcherServlet'
+2024-07-31 15:32:37 [SpringApplicationShutdownHook] INFO  o.e.j.server.handler.ContextHandler - Stopped o.s.b.w.e.j.JettyEmbeddedWebAppContext@7d3285a1{application,/,[file:///private/var/folders/cw/35pz9xn91cxdws3x1rz0_2ph0000gn/T/jetty-docbase.8080.6601232805783882839/, jar:file:/Users/dengruotao/.m2/repository/io/springfox/springfox-swagger-ui/3.0.0/springfox-swagger-ui-3.0.0.jar!/META-INF/resources],STOPPED}
+2024-07-31 15:32:37 [SpringApplicationShutdownHook] INFO  c.alibaba.druid.pool.DruidDataSource - {dataSource-1} closing ...
+2024-07-31 15:32:37 [SpringApplicationShutdownHook] INFO  c.alibaba.druid.pool.DruidDataSource - {dataSource-1} closed
+2024-07-31 15:41:09 [restartedMain] INFO  DveAgent.DveAgentApplication - Starting DveAgentApplication using Java 17 on dengruotaodeMacBook-Air.local with PID 65510 (/Users/dengruotao/Documents/GitHub/DVE/DVE_agent/target/classes started by dengruotao in /Users/dengruotao/Documents/GitHub/DVE)
+2024-07-31 15:41:09 [restartedMain] INFO  DveAgent.DveAgentApplication - No active profile set, falling back to 1 default profile: "default"
+2024-07-31 15:41:09 [restartedMain] INFO  o.s.b.d.e.DevToolsPropertyDefaultsPostProcessor - Devtools property defaults active! Set 'spring.devtools.add-properties' to 'false' to disable
+2024-07-31 15:41:09 [restartedMain] INFO  o.s.b.d.e.DevToolsPropertyDefaultsPostProcessor - For additional web related logging consider setting the 'logging.level.web' property to 'DEBUG'
+2024-07-31 15:41:10 [restartedMain] WARN  o.m.s.mapper.ClassPathMapperScanner - No MyBatis mapper was found in '[DveCenter.mapper]' package. Please check your configuration.
+2024-07-31 15:41:10 [restartedMain] INFO  org.eclipse.jetty.util.log - Logging initialized @3072ms to org.eclipse.jetty.util.log.Slf4jLog
+2024-07-31 15:41:10 [restartedMain] INFO  o.s.b.w.e.j.JettyServletWebServerFactory - Server initialized with port: 8080
+2024-07-31 15:41:10 [restartedMain] INFO  org.eclipse.jetty.server.Server - jetty-9.4.53.v20231009; built: 2023-10-09T12:29:09.265Z; git: 27bde00a0b95a1d5bbee0eae7984f891d2d0f8c9; jvm 17+35-LTS-2724
+2024-07-31 15:41:10 [restartedMain] INFO  o.e.j.s.h.ContextHandler.application - Initializing Spring embedded WebApplicationContext
+2024-07-31 15:41:10 [restartedMain] INFO  o.s.b.w.s.c.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 1626 ms
+2024-07-31 15:41:10 [restartedMain] INFO  org.eclipse.jetty.server.session - DefaultSessionIdManager workerName=node0
+2024-07-31 15:41:10 [restartedMain] INFO  org.eclipse.jetty.server.session - No SessionScavenger set, using defaults
+2024-07-31 15:41:10 [restartedMain] INFO  org.eclipse.jetty.server.session - node0 Scavenging every 660000ms
+2024-07-31 15:41:10 [restartedMain] INFO  o.e.j.server.handler.ContextHandler - Started o.s.b.w.e.j.JettyEmbeddedWebAppContext@78bc6576{application,/,[file:///private/var/folders/cw/35pz9xn91cxdws3x1rz0_2ph0000gn/T/jetty-docbase.8080.272730890600335573/, jar:file:/Users/dengruotao/.m2/repository/io/springfox/springfox-swagger-ui/3.0.0/springfox-swagger-ui-3.0.0.jar!/META-INF/resources],AVAILABLE}
+2024-07-31 15:41:10 [restartedMain] INFO  org.eclipse.jetty.server.Server - Started @3315ms
+2024-07-31 15:41:10 [restartedMain] INFO  c.a.d.s.b.a.DruidDataSourceAutoConfigure - Init DruidDataSource
+2024-07-31 15:41:11 [restartedMain] INFO  c.alibaba.druid.pool.DruidDataSource - {dataSource-1} inited
+2024-07-31 15:41:12 [restartedMain] INFO  o.s.b.d.a.OptionalLiveReloadServer - LiveReload server is running on port 35729
+2024-07-31 15:41:12 [restartedMain] INFO  o.e.j.s.h.ContextHandler.application - Initializing Spring DispatcherServlet 'dispatcherServlet'
+2024-07-31 15:41:12 [restartedMain] INFO  o.s.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+2024-07-31 15:41:12 [restartedMain] INFO  o.s.web.servlet.DispatcherServlet - Completed initialization in 1 ms
+2024-07-31 15:41:12 [restartedMain] INFO  o.e.jetty.server.AbstractConnector - Started ServerConnector@55cbd151{HTTP/1.1, (http/1.1)}{0.0.0.0:8080}
+2024-07-31 15:41:12 [restartedMain] INFO  o.s.b.w.e.jetty.JettyWebServer - Jetty started on port(s) 8080 (http/1.1) with context path '/'
+2024-07-31 15:41:14 [restartedMain] INFO  DveAgent.DveAgentApplication - Started DveAgentApplication in 5.852 seconds (JVM running for 7.001)
+2024-07-31 15:41:14 [restartedMain] INFO  DveAgent.DveAgentApplication - hello world
+2024-07-31 15:43:47 [SpringApplicationShutdownHook] INFO  o.e.jetty.server.AbstractConnector - Stopped ServerConnector@55cbd151{HTTP/1.1, (http/1.1)}{0.0.0.0:8080}
+2024-07-31 15:43:47 [SpringApplicationShutdownHook] INFO  org.eclipse.jetty.server.session - node0 Stopped scavenging
+2024-07-31 15:43:47 [SpringApplicationShutdownHook] INFO  o.e.j.s.h.ContextHandler.application - Destroying Spring FrameworkServlet 'dispatcherServlet'
+2024-07-31 15:43:47 [SpringApplicationShutdownHook] INFO  o.e.j.server.handler.ContextHandler - Stopped o.s.b.w.e.j.JettyEmbeddedWebAppContext@78bc6576{application,/,[file:///private/var/folders/cw/35pz9xn91cxdws3x1rz0_2ph0000gn/T/jetty-docbase.8080.272730890600335573/, jar:file:/Users/dengruotao/.m2/repository/io/springfox/springfox-swagger-ui/3.0.0/springfox-swagger-ui-3.0.0.jar!/META-INF/resources],STOPPED}
+2024-07-31 15:43:47 [SpringApplicationShutdownHook] INFO  c.alibaba.druid.pool.DruidDataSource - {dataSource-1} closing ...
+2024-07-31 15:43:47 [SpringApplicationShutdownHook] INFO  c.alibaba.druid.pool.DruidDataSource - {dataSource-1} closed
+2024-07-31 15:43:51 [restartedMain] INFO  DveAgent.DveAgentApplication - Starting DveAgentApplication using Java 17 on dengruotaodeMacBook-Air.local with PID 65547 (/Users/dengruotao/Documents/GitHub/DVE/DVE_agent/target/classes started by dengruotao in /Users/dengruotao/Documents/GitHub/DVE)
+2024-07-31 15:43:51 [restartedMain] INFO  DveAgent.DveAgentApplication - No active profile set, falling back to 1 default profile: "default"
+2024-07-31 15:43:51 [restartedMain] INFO  o.s.b.d.e.DevToolsPropertyDefaultsPostProcessor - Devtools property defaults active! Set 'spring.devtools.add-properties' to 'false' to disable
+2024-07-31 15:43:51 [restartedMain] INFO  o.s.b.d.e.DevToolsPropertyDefaultsPostProcessor - For additional web related logging consider setting the 'logging.level.web' property to 'DEBUG'
+2024-07-31 15:43:52 [restartedMain] WARN  o.m.s.mapper.ClassPathMapperScanner - No MyBatis mapper was found in '[DveCenter.mapper]' package. Please check your configuration.
+2024-07-31 15:43:53 [restartedMain] INFO  org.eclipse.jetty.util.log - Logging initialized @3072ms to org.eclipse.jetty.util.log.Slf4jLog
+2024-07-31 15:43:53 [restartedMain] INFO  o.s.b.w.e.j.JettyServletWebServerFactory - Server initialized with port: 8080
+2024-07-31 15:43:53 [restartedMain] INFO  org.eclipse.jetty.server.Server - jetty-9.4.53.v20231009; built: 2023-10-09T12:29:09.265Z; git: 27bde00a0b95a1d5bbee0eae7984f891d2d0f8c9; jvm 17+35-LTS-2724
+2024-07-31 15:43:53 [restartedMain] INFO  o.e.j.s.h.ContextHandler.application - Initializing Spring embedded WebApplicationContext
+2024-07-31 15:43:53 [restartedMain] INFO  o.s.b.w.s.c.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 1766 ms
+2024-07-31 15:43:53 [restartedMain] INFO  org.eclipse.jetty.server.session - DefaultSessionIdManager workerName=node0
+2024-07-31 15:43:53 [restartedMain] INFO  org.eclipse.jetty.server.session - No SessionScavenger set, using defaults
+2024-07-31 15:43:53 [restartedMain] INFO  org.eclipse.jetty.server.session - node0 Scavenging every 660000ms
+2024-07-31 15:43:53 [restartedMain] INFO  o.e.j.server.handler.ContextHandler - Started o.s.b.w.e.j.JettyEmbeddedWebAppContext@6fecb9eb{application,/,[file:///private/var/folders/cw/35pz9xn91cxdws3x1rz0_2ph0000gn/T/jetty-docbase.8080.1587454762976289422/, jar:file:/Users/dengruotao/.m2/repository/io/springfox/springfox-swagger-ui/3.0.0/springfox-swagger-ui-3.0.0.jar!/META-INF/resources],AVAILABLE}
+2024-07-31 15:43:53 [restartedMain] INFO  org.eclipse.jetty.server.Server - Started @3271ms
+2024-07-31 15:43:53 [restartedMain] INFO  c.a.d.s.b.a.DruidDataSourceAutoConfigure - Init DruidDataSource
+2024-07-31 15:43:53 [restartedMain] INFO  c.alibaba.druid.pool.DruidDataSource - {dataSource-1} inited
+2024-07-31 15:43:55 [restartedMain] INFO  o.s.b.d.a.OptionalLiveReloadServer - LiveReload server is running on port 35729
+2024-07-31 15:43:55 [restartedMain] INFO  o.e.j.s.h.ContextHandler.application - Initializing Spring DispatcherServlet 'dispatcherServlet'
+2024-07-31 15:43:55 [restartedMain] INFO  o.s.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+2024-07-31 15:43:55 [restartedMain] INFO  o.s.web.servlet.DispatcherServlet - Completed initialization in 1 ms
+2024-07-31 15:43:55 [restartedMain] INFO  o.e.jetty.server.AbstractConnector - Started ServerConnector@5cf1f01b{HTTP/1.1, (http/1.1)}{0.0.0.0:8080}
+2024-07-31 15:43:55 [restartedMain] INFO  o.s.b.w.e.jetty.JettyWebServer - Jetty started on port(s) 8080 (http/1.1) with context path '/'
+2024-07-31 15:43:57 [restartedMain] INFO  DveAgent.DveAgentApplication - Started DveAgentApplication in 6.19 seconds (JVM running for 7.072)
+2024-07-31 15:43:57 [restartedMain] INFO  DveAgent.DveAgentApplication - hello world
+2024-07-31 15:48:42 [SpringApplicationShutdownHook] INFO  o.e.jetty.server.AbstractConnector - Stopped ServerConnector@5cf1f01b{HTTP/1.1, (http/1.1)}{0.0.0.0:8080}
+2024-07-31 15:48:42 [SpringApplicationShutdownHook] INFO  org.eclipse.jetty.server.session - node0 Stopped scavenging
+2024-07-31 15:48:42 [SpringApplicationShutdownHook] INFO  o.e.j.s.h.ContextHandler.application - Destroying Spring FrameworkServlet 'dispatcherServlet'
+2024-07-31 15:48:42 [SpringApplicationShutdownHook] INFO  o.e.j.server.handler.ContextHandler - Stopped o.s.b.w.e.j.JettyEmbeddedWebAppContext@6fecb9eb{application,/,[file:///private/var/folders/cw/35pz9xn91cxdws3x1rz0_2ph0000gn/T/jetty-docbase.8080.1587454762976289422/, jar:file:/Users/dengruotao/.m2/repository/io/springfox/springfox-swagger-ui/3.0.0/springfox-swagger-ui-3.0.0.jar!/META-INF/resources],STOPPED}
+2024-07-31 15:48:42 [SpringApplicationShutdownHook] INFO  c.alibaba.druid.pool.DruidDataSource - {dataSource-1} closing ...
+2024-07-31 15:48:42 [SpringApplicationShutdownHook] INFO  c.alibaba.druid.pool.DruidDataSource - {dataSource-1} closed
+2024-07-31 15:48:51 [restartedMain] INFO  DveAgent.DveAgentApplication - Starting DveAgentApplication using Java 17 on dengruotaodeMacBook-Air.local with PID 65618 (/Users/dengruotao/Documents/GitHub/DVE/DVE_agent/target/classes started by dengruotao in /Users/dengruotao/Documents/GitHub/DVE)
+2024-07-31 15:48:51 [restartedMain] INFO  DveAgent.DveAgentApplication - No active profile set, falling back to 1 default profile: "default"
+2024-07-31 15:48:51 [restartedMain] INFO  o.s.b.d.e.DevToolsPropertyDefaultsPostProcessor - Devtools property defaults active! Set 'spring.devtools.add-properties' to 'false' to disable
+2024-07-31 15:48:51 [restartedMain] INFO  o.s.b.d.e.DevToolsPropertyDefaultsPostProcessor - For additional web related logging consider setting the 'logging.level.web' property to 'DEBUG'
+2024-07-31 15:48:52 [restartedMain] WARN  o.m.s.mapper.ClassPathMapperScanner - No MyBatis mapper was found in '[DveCenter.mapper]' package. Please check your configuration.
+2024-07-31 15:48:52 [restartedMain] INFO  org.eclipse.jetty.util.log - Logging initialized @2781ms to org.eclipse.jetty.util.log.Slf4jLog
+2024-07-31 15:48:52 [restartedMain] INFO  o.s.b.w.e.j.JettyServletWebServerFactory - Server initialized with port: 8080
+2024-07-31 15:48:52 [restartedMain] INFO  org.eclipse.jetty.server.Server - jetty-9.4.53.v20231009; built: 2023-10-09T12:29:09.265Z; git: 27bde00a0b95a1d5bbee0eae7984f891d2d0f8c9; jvm 17+35-LTS-2724
+2024-07-31 15:48:52 [restartedMain] INFO  o.e.j.s.h.ContextHandler.application - Initializing Spring embedded WebApplicationContext
+2024-07-31 15:48:52 [restartedMain] INFO  o.s.b.w.s.c.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 1730 ms
+2024-07-31 15:48:52 [restartedMain] INFO  org.eclipse.jetty.server.session - DefaultSessionIdManager workerName=node0
+2024-07-31 15:48:52 [restartedMain] INFO  org.eclipse.jetty.server.session - No SessionScavenger set, using defaults
+2024-07-31 15:48:52 [restartedMain] INFO  org.eclipse.jetty.server.session - node0 Scavenging every 660000ms
+2024-07-31 15:48:52 [restartedMain] INFO  o.e.j.server.handler.ContextHandler - Started o.s.b.w.e.j.JettyEmbeddedWebAppContext@1cf58470{application,/,[file:///private/var/folders/cw/35pz9xn91cxdws3x1rz0_2ph0000gn/T/jetty-docbase.8080.9351032157038315154/, jar:file:/Users/dengruotao/.m2/repository/io/springfox/springfox-swagger-ui/3.0.0/springfox-swagger-ui-3.0.0.jar!/META-INF/resources],AVAILABLE}
+2024-07-31 15:48:52 [restartedMain] INFO  org.eclipse.jetty.server.Server - Started @3058ms
+2024-07-31 15:48:53 [restartedMain] INFO  c.a.d.s.b.a.DruidDataSourceAutoConfigure - Init DruidDataSource
+2024-07-31 15:48:53 [restartedMain] INFO  c.alibaba.druid.pool.DruidDataSource - {dataSource-1} inited
+2024-07-31 15:48:54 [restartedMain] INFO  o.s.b.d.a.OptionalLiveReloadServer - LiveReload server is running on port 35729
+2024-07-31 15:48:54 [restartedMain] INFO  o.e.j.s.h.ContextHandler.application - Initializing Spring DispatcherServlet 'dispatcherServlet'
+2024-07-31 15:48:54 [restartedMain] INFO  o.s.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+2024-07-31 15:48:54 [restartedMain] INFO  o.s.web.servlet.DispatcherServlet - Completed initialization in 2 ms
+2024-07-31 15:48:54 [restartedMain] INFO  o.e.jetty.server.AbstractConnector - Started ServerConnector@3107d17a{HTTP/1.1, (http/1.1)}{0.0.0.0:8080}
+2024-07-31 15:48:54 [restartedMain] INFO  o.s.b.w.e.jetty.JettyWebServer - Jetty started on port(s) 8080 (http/1.1) with context path '/'
+2024-07-31 15:48:56 [restartedMain] INFO  DveAgent.DveAgentApplication - Started DveAgentApplication in 6.113 seconds (JVM running for 6.863)
+2024-07-31 15:48:56 [restartedMain] INFO  DveAgent.DveAgentApplication - hello world
+2024-07-31 15:49:48 [SpringApplicationShutdownHook] INFO  o.e.jetty.server.AbstractConnector - Stopped ServerConnector@3107d17a{HTTP/1.1, (http/1.1)}{0.0.0.0:8080}
+2024-07-31 15:49:48 [SpringApplicationShutdownHook] INFO  org.eclipse.jetty.server.session - node0 Stopped scavenging
+2024-07-31 15:49:48 [SpringApplicationShutdownHook] INFO  o.e.j.s.h.ContextHandler.application - Destroying Spring FrameworkServlet 'dispatcherServlet'
+2024-07-31 15:49:48 [SpringApplicationShutdownHook] INFO  o.e.j.server.handler.ContextHandler - Stopped o.s.b.w.e.j.JettyEmbeddedWebAppContext@1cf58470{application,/,[file:///private/var/folders/cw/35pz9xn91cxdws3x1rz0_2ph0000gn/T/jetty-docbase.8080.9351032157038315154/, jar:file:/Users/dengruotao/.m2/repository/io/springfox/springfox-swagger-ui/3.0.0/springfox-swagger-ui-3.0.0.jar!/META-INF/resources],STOPPED}
+2024-07-31 15:49:49 [SpringApplicationShutdownHook] INFO  c.alibaba.druid.pool.DruidDataSource - {dataSource-1} closing ...
+2024-07-31 15:49:49 [SpringApplicationShutdownHook] INFO  c.alibaba.druid.pool.DruidDataSource - {dataSource-1} closed
+2024-07-31 15:49:56 [restartedMain] INFO  DveAgent.DveAgentApplication - Starting DveAgentApplication using Java 17 on dengruotaodeMacBook-Air.local with PID 65635 (/Users/dengruotao/Documents/GitHub/DVE/DVE_agent/target/classes started by dengruotao in /Users/dengruotao/Documents/GitHub/DVE)
+2024-07-31 15:49:56 [restartedMain] INFO  DveAgent.DveAgentApplication - No active profile set, falling back to 1 default profile: "default"
+2024-07-31 15:49:56 [restartedMain] INFO  o.s.b.d.e.DevToolsPropertyDefaultsPostProcessor - Devtools property defaults active! Set 'spring.devtools.add-properties' to 'false' to disable
+2024-07-31 15:49:56 [restartedMain] INFO  o.s.b.d.e.DevToolsPropertyDefaultsPostProcessor - For additional web related logging consider setting the 'logging.level.web' property to 'DEBUG'
+2024-07-31 15:49:58 [restartedMain] WARN  o.m.s.mapper.ClassPathMapperScanner - No MyBatis mapper was found in '[DveCenter.mapper]' package. Please check your configuration.
+2024-07-31 15:49:58 [restartedMain] INFO  org.eclipse.jetty.util.log - Logging initialized @2691ms to org.eclipse.jetty.util.log.Slf4jLog
+2024-07-31 15:49:58 [restartedMain] INFO  o.s.b.w.e.j.JettyServletWebServerFactory - Server initialized with port: 8080
+2024-07-31 15:49:58 [restartedMain] INFO  org.eclipse.jetty.server.Server - jetty-9.4.53.v20231009; built: 2023-10-09T12:29:09.265Z; git: 27bde00a0b95a1d5bbee0eae7984f891d2d0f8c9; jvm 17+35-LTS-2724
+2024-07-31 15:49:58 [restartedMain] INFO  o.e.j.s.h.ContextHandler.application - Initializing Spring embedded WebApplicationContext
+2024-07-31 15:49:58 [restartedMain] INFO  o.s.b.w.s.c.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 1638 ms
+2024-07-31 15:49:58 [restartedMain] INFO  org.eclipse.jetty.server.session - DefaultSessionIdManager workerName=node0
+2024-07-31 15:49:58 [restartedMain] INFO  org.eclipse.jetty.server.session - No SessionScavenger set, using defaults
+2024-07-31 15:49:58 [restartedMain] INFO  org.eclipse.jetty.server.session - node0 Scavenging every 600000ms
+2024-07-31 15:49:58 [restartedMain] INFO  o.e.j.server.handler.ContextHandler - Started o.s.b.w.e.j.JettyEmbeddedWebAppContext@18fe41be{application,/,[file:///private/var/folders/cw/35pz9xn91cxdws3x1rz0_2ph0000gn/T/jetty-docbase.8080.10336593329301516758/, jar:file:/Users/dengruotao/.m2/repository/io/springfox/springfox-swagger-ui/3.0.0/springfox-swagger-ui-3.0.0.jar!/META-INF/resources],AVAILABLE}
+2024-07-31 15:49:58 [restartedMain] INFO  org.eclipse.jetty.server.Server - Started @2959ms
+2024-07-31 15:49:58 [restartedMain] INFO  c.a.d.s.b.a.DruidDataSourceAutoConfigure - Init DruidDataSource
+2024-07-31 15:49:58 [restartedMain] INFO  c.alibaba.druid.pool.DruidDataSource - {dataSource-1} inited
+2024-07-31 15:50:00 [restartedMain] INFO  o.s.b.d.a.OptionalLiveReloadServer - LiveReload server is running on port 35729
+2024-07-31 15:50:00 [restartedMain] INFO  o.e.j.s.h.ContextHandler.application - Initializing Spring DispatcherServlet 'dispatcherServlet'
+2024-07-31 15:50:00 [restartedMain] INFO  o.s.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+2024-07-31 15:50:00 [restartedMain] INFO  o.s.web.servlet.DispatcherServlet - Completed initialization in 1 ms
+2024-07-31 15:50:00 [restartedMain] INFO  o.e.jetty.server.AbstractConnector - Started ServerConnector@651d19c8{HTTP/1.1, (http/1.1)}{0.0.0.0:8080}
+2024-07-31 15:50:00 [restartedMain] INFO  o.s.b.w.e.jetty.JettyWebServer - Jetty started on port(s) 8080 (http/1.1) with context path '/'
+2024-07-31 15:50:02 [restartedMain] INFO  DveAgent.DveAgentApplication - Started DveAgentApplication in 5.869 seconds (JVM running for 6.592)
+2024-07-31 15:50:02 [restartedMain] INFO  DveAgent.DveAgentApplication - hello world
+2024-07-31 15:50:39 [SpringApplicationShutdownHook] INFO  o.e.jetty.server.AbstractConnector - Stopped ServerConnector@651d19c8{HTTP/1.1, (http/1.1)}{0.0.0.0:8080}
+2024-07-31 15:50:39 [SpringApplicationShutdownHook] INFO  org.eclipse.jetty.server.session - node0 Stopped scavenging
+2024-07-31 15:50:39 [SpringApplicationShutdownHook] INFO  o.e.j.s.h.ContextHandler.application - Destroying Spring FrameworkServlet 'dispatcherServlet'
+2024-07-31 15:50:39 [SpringApplicationShutdownHook] INFO  o.e.j.server.handler.ContextHandler - Stopped o.s.b.w.e.j.JettyEmbeddedWebAppContext@18fe41be{application,/,[file:///private/var/folders/cw/35pz9xn91cxdws3x1rz0_2ph0000gn/T/jetty-docbase.8080.10336593329301516758/, jar:file:/Users/dengruotao/.m2/repository/io/springfox/springfox-swagger-ui/3.0.0/springfox-swagger-ui-3.0.0.jar!/META-INF/resources],STOPPED}
+2024-07-31 15:50:39 [SpringApplicationShutdownHook] INFO  c.alibaba.druid.pool.DruidDataSource - {dataSource-1} closing ...
+2024-07-31 15:50:39 [SpringApplicationShutdownHook] INFO  c.alibaba.druid.pool.DruidDataSource - {dataSource-1} closed
+2024-08-03 15:26:08 [restartedMain] INFO  DveCenter.DveCenterApplication - Starting DveCenterApplication using Java 17.0.10 on LAPTOP-EQS4UMOQ with PID 14388 (C:\FDU\IdeaProject\DVE\DVE_center\target\classes started by Kevin in C:\FDU\IdeaProject\DVE)
+2024-08-03 15:26:08 [restartedMain] INFO  DveCenter.DveCenterApplication - No active profile set, falling back to 1 default profile: "default"
+2024-08-03 15:26:08 [restartedMain] INFO  o.s.b.d.e.DevToolsPropertyDefaultsPostProcessor - Devtools property defaults active! Set 'spring.devtools.add-properties' to 'false' to disable
+2024-08-03 15:26:08 [restartedMain] INFO  o.s.b.d.e.DevToolsPropertyDefaultsPostProcessor - For additional web related logging consider setting the 'logging.level.web' property to 'DEBUG'
+2024-08-03 15:26:09 [restartedMain] INFO  org.eclipse.jetty.util.log - Logging initialized @2215ms to org.eclipse.jetty.util.log.Slf4jLog
+2024-08-03 15:26:09 [restartedMain] INFO  o.s.b.w.e.j.JettyServletWebServerFactory - Server initialized with port: 9999
+2024-08-03 15:26:09 [restartedMain] INFO  org.eclipse.jetty.server.Server - jetty-9.4.53.v20231009; built: 2023-10-09T12:29:09.265Z; git: 27bde00a0b95a1d5bbee0eae7984f891d2d0f8c9; jvm 17.0.10+11-LTS-240
+2024-08-03 15:26:09 [restartedMain] INFO  o.e.j.s.h.ContextHandler.application - Initializing Spring embedded WebApplicationContext
+2024-08-03 15:26:09 [restartedMain] INFO  o.s.b.w.s.c.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 1141 ms
+2024-08-03 15:26:10 [restartedMain] INFO  org.eclipse.jetty.server.session - DefaultSessionIdManager workerName=node0
+2024-08-03 15:26:10 [restartedMain] INFO  org.eclipse.jetty.server.session - No SessionScavenger set, using defaults
+2024-08-03 15:26:10 [restartedMain] INFO  org.eclipse.jetty.server.session - node0 Scavenging every 600000ms
+2024-08-03 15:26:10 [restartedMain] INFO  o.e.j.server.handler.ContextHandler - Started o.s.b.w.e.j.JettyEmbeddedWebAppContext@783764e9{application,/,[file:///C:/Users/Kevin/AppData/Local/Temp/jetty-docbase.9999.9132487568832914035/, jar:file:/C:/Users/Kevin/.m2/repository/io/springfox/springfox-swagger-ui/3.0.0/springfox-swagger-ui-3.0.0.jar!/META-INF/resources],AVAILABLE}
+2024-08-03 15:26:10 [restartedMain] INFO  org.eclipse.jetty.server.Server - Started @2396ms
+2024-08-03 15:26:10 [restartedMain] INFO  c.a.d.s.b.a.DruidDataSourceAutoConfigure - Init DruidDataSource
+2024-08-03 15:26:10 [restartedMain] INFO  c.alibaba.druid.pool.DruidDataSource - {dataSource-1} inited
+2024-08-03 15:26:14 [restartedMain] INFO  o.s.b.d.a.OptionalLiveReloadServer - LiveReload server is running on port 35729
+2024-08-03 15:26:14 [restartedMain] INFO  o.e.j.s.h.ContextHandler.application - Initializing Spring DispatcherServlet 'dispatcherServlet'
+2024-08-03 15:26:14 [restartedMain] INFO  o.s.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+2024-08-03 15:26:14 [restartedMain] INFO  o.s.web.servlet.DispatcherServlet - Completed initialization in 1 ms
+2024-08-03 15:26:14 [restartedMain] INFO  o.e.jetty.server.AbstractConnector - Started ServerConnector@16ef9cb8{HTTP/1.1, (http/1.1)}{0.0.0.0:9999}
+2024-08-03 15:26:14 [restartedMain] INFO  o.s.b.w.e.jetty.JettyWebServer - Jetty started on port(s) 9999 (http/1.1) with context path '/'
+2024-08-03 15:26:14 [restartedMain] INFO  DveCenter.DveCenterApplication - Started DveCenterApplication in 6.234 seconds (JVM running for 6.988)
+2024-08-03 15:26:14 [restartedMain] INFO  DveCenter.DveCenterApplication - hello world
+2024-08-03 15:26:14 [DVE-Center-1] INFO  D.module.task.service.GarnetService - Garnet初始化失败:Cannot run program "make" (in directory "\home\nhy\Garnet"): CreateProcess error=2, 系统找不到指定的文件。
+2024-08-03 15:26:41 [SpringApplicationShutdownHook] INFO  o.e.jetty.server.AbstractConnector - Stopped ServerConnector@16ef9cb8{HTTP/1.1, (http/1.1)}{0.0.0.0:9999}
+2024-08-03 15:26:41 [SpringApplicationShutdownHook] INFO  org.eclipse.jetty.server.session - node0 Stopped scavenging
+2024-08-03 15:26:41 [SpringApplicationShutdownHook] INFO  o.e.j.s.h.ContextHandler.application - Destroying Spring FrameworkServlet 'dispatcherServlet'
+2024-08-03 15:26:41 [SpringApplicationShutdownHook] INFO  o.e.j.server.handler.ContextHandler - Stopped o.s.b.w.e.j.JettyEmbeddedWebAppContext@783764e9{application,/,[file:///C:/Users/Kevin/AppData/Local/Temp/jetty-docbase.9999.9132487568832914035/, jar:file:/C:/Users/Kevin/.m2/repository/io/springfox/springfox-swagger-ui/3.0.0/springfox-swagger-ui-3.0.0.jar!/META-INF/resources],STOPPED}
+2024-08-03 15:26:41 [SpringApplicationShutdownHook] INFO  c.alibaba.druid.pool.DruidDataSource - {dataSource-1} closing ...
+2024-08-03 15:26:41 [SpringApplicationShutdownHook] INFO  c.alibaba.druid.pool.DruidDataSource - {dataSource-1} closed
+2024-08-03 15:26:43 [restartedMain] INFO  DveCenter.DveCenterApplication - Starting DveCenterApplication using Java 17.0.10 on LAPTOP-EQS4UMOQ with PID 25968 (C:\FDU\IdeaProject\DVE\DVE_center\target\classes started by Kevin in C:\FDU\IdeaProject\DVE)
+2024-08-03 15:26:43 [restartedMain] INFO  DveCenter.DveCenterApplication - No active profile set, falling back to 1 default profile: "default"
+2024-08-03 15:26:43 [restartedMain] INFO  o.s.b.d.e.DevToolsPropertyDefaultsPostProcessor - Devtools property defaults active! Set 'spring.devtools.add-properties' to 'false' to disable
+2024-08-03 15:26:43 [restartedMain] INFO  o.s.b.d.e.DevToolsPropertyDefaultsPostProcessor - For additional web related logging consider setting the 'logging.level.web' property to 'DEBUG'
+2024-08-03 15:26:44 [restartedMain] INFO  org.eclipse.jetty.util.log - Logging initialized @2083ms to org.eclipse.jetty.util.log.Slf4jLog
+2024-08-03 15:26:44 [restartedMain] INFO  o.s.b.w.e.j.JettyServletWebServerFactory - Server initialized with port: 9999
+2024-08-03 15:26:44 [restartedMain] INFO  org.eclipse.jetty.server.Server - jetty-9.4.53.v20231009; built: 2023-10-09T12:29:09.265Z; git: 27bde00a0b95a1d5bbee0eae7984f891d2d0f8c9; jvm 17.0.10+11-LTS-240
+2024-08-03 15:26:44 [restartedMain] INFO  o.e.j.s.h.ContextHandler.application - Initializing Spring embedded WebApplicationContext
+2024-08-03 15:26:44 [restartedMain] INFO  o.s.b.w.s.c.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 1026 ms
+2024-08-03 15:26:44 [restartedMain] INFO  org.eclipse.jetty.server.session - DefaultSessionIdManager workerName=node0
+2024-08-03 15:26:44 [restartedMain] INFO  org.eclipse.jetty.server.session - No SessionScavenger set, using defaults
+2024-08-03 15:26:44 [restartedMain] INFO  org.eclipse.jetty.server.session - node0 Scavenging every 660000ms
+2024-08-03 15:26:44 [restartedMain] INFO  o.e.j.server.handler.ContextHandler - Started o.s.b.w.e.j.JettyEmbeddedWebAppContext@5e5f82f7{application,/,[file:///C:/Users/Kevin/AppData/Local/Temp/jetty-docbase.9999.16403032508229864195/, jar:file:/C:/Users/Kevin/.m2/repository/io/springfox/springfox-swagger-ui/3.0.0/springfox-swagger-ui-3.0.0.jar!/META-INF/resources],AVAILABLE}
+2024-08-03 15:26:44 [restartedMain] INFO  org.eclipse.jetty.server.Server - Started @2263ms
+2024-08-03 15:26:44 [restartedMain] INFO  c.a.d.s.b.a.DruidDataSourceAutoConfigure - Init DruidDataSource
+2024-08-03 15:26:44 [restartedMain] INFO  c.alibaba.druid.pool.DruidDataSource - {dataSource-1} inited
+2024-08-03 15:26:45 [restartedMain] INFO  o.s.b.d.a.OptionalLiveReloadServer - LiveReload server is running on port 35729
+2024-08-03 15:26:46 [restartedMain] INFO  o.e.j.s.h.ContextHandler.application - Initializing Spring DispatcherServlet 'dispatcherServlet'
+2024-08-03 15:26:46 [restartedMain] INFO  o.s.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+2024-08-03 15:26:46 [restartedMain] INFO  o.s.web.servlet.DispatcherServlet - Completed initialization in 0 ms
+2024-08-03 15:26:46 [restartedMain] INFO  o.e.jetty.server.AbstractConnector - Started ServerConnector@34a22186{HTTP/1.1, (http/1.1)}{0.0.0.0:9999}
+2024-08-03 15:26:46 [restartedMain] INFO  o.s.b.w.e.jetty.JettyWebServer - Jetty started on port(s) 9999 (http/1.1) with context path '/'
+2024-08-03 15:26:46 [restartedMain] INFO  DveCenter.DveCenterApplication - Started DveCenterApplication in 3.198 seconds (JVM running for 3.941)
+2024-08-03 15:26:46 [restartedMain] INFO  DveCenter.DveCenterApplication - hello world
+2024-08-03 15:26:46 [DVE-Center-1] INFO  D.module.task.service.GarnetService - Garnet初始化失败:Cannot run program "make" (in directory "\home\nhy\Garnet"): CreateProcess error=2, 系统找不到指定的文件。
+2024-08-03 15:30:15 [SpringApplicationShutdownHook] INFO  o.e.jetty.server.AbstractConnector - Stopped ServerConnector@34a22186{HTTP/1.1, (http/1.1)}{0.0.0.0:9999}
+2024-08-03 15:30:15 [SpringApplicationShutdownHook] INFO  org.eclipse.jetty.server.session - node0 Stopped scavenging
+2024-08-03 15:30:15 [SpringApplicationShutdownHook] INFO  o.e.j.s.h.ContextHandler.application - Destroying Spring FrameworkServlet 'dispatcherServlet'
+2024-08-03 15:30:15 [SpringApplicationShutdownHook] INFO  o.e.j.server.handler.ContextHandler - Stopped o.s.b.w.e.j.JettyEmbeddedWebAppContext@5e5f82f7{application,/,[file:///C:/Users/Kevin/AppData/Local/Temp/jetty-docbase.9999.16403032508229864195/, jar:file:/C:/Users/Kevin/.m2/repository/io/springfox/springfox-swagger-ui/3.0.0/springfox-swagger-ui-3.0.0.jar!/META-INF/resources],STOPPED}
+2024-08-03 15:30:15 [SpringApplicationShutdownHook] INFO  c.alibaba.druid.pool.DruidDataSource - {dataSource-1} closing ...
+2024-08-03 15:30:15 [SpringApplicationShutdownHook] INFO  c.alibaba.druid.pool.DruidDataSource - {dataSource-1} closed
+2024-08-03 15:30:17 [restartedMain] INFO  DveCenter.DveCenterApplication - Starting DveCenterApplication using Java 17.0.10 on LAPTOP-EQS4UMOQ with PID 15708 (C:\FDU\IdeaProject\DVE\DVE_center\target\classes started by Kevin in C:\FDU\IdeaProject\DVE)
+2024-08-03 15:30:17 [restartedMain] INFO  DveCenter.DveCenterApplication - No active profile set, falling back to 1 default profile: "default"
+2024-08-03 15:30:17 [restartedMain] INFO  o.s.b.d.e.DevToolsPropertyDefaultsPostProcessor - Devtools property defaults active! Set 'spring.devtools.add-properties' to 'false' to disable
+2024-08-03 15:30:17 [restartedMain] INFO  o.s.b.d.e.DevToolsPropertyDefaultsPostProcessor - For additional web related logging consider setting the 'logging.level.web' property to 'DEBUG'
+2024-08-03 15:30:18 [restartedMain] INFO  org.eclipse.jetty.util.log - Logging initialized @1862ms to org.eclipse.jetty.util.log.Slf4jLog
+2024-08-03 15:30:18 [restartedMain] INFO  o.s.b.w.e.j.JettyServletWebServerFactory - Server initialized with port: 9090
+2024-08-03 15:30:18 [restartedMain] INFO  org.eclipse.jetty.server.Server - jetty-9.4.53.v20231009; built: 2023-10-09T12:29:09.265Z; git: 27bde00a0b95a1d5bbee0eae7984f891d2d0f8c9; jvm 17.0.10+11-LTS-240
+2024-08-03 15:30:18 [restartedMain] INFO  o.e.j.s.h.ContextHandler.application - Initializing Spring embedded WebApplicationContext
+2024-08-03 15:30:18 [restartedMain] INFO  o.s.b.w.s.c.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 1033 ms
+2024-08-03 15:30:18 [restartedMain] INFO  org.eclipse.jetty.server.session - DefaultSessionIdManager workerName=node0
+2024-08-03 15:30:18 [restartedMain] INFO  org.eclipse.jetty.server.session - No SessionScavenger set, using defaults
+2024-08-03 15:30:18 [restartedMain] INFO  org.eclipse.jetty.server.session - node0 Scavenging every 660000ms
+2024-08-03 15:30:18 [restartedMain] INFO  o.e.j.server.handler.ContextHandler - Started o.s.b.w.e.j.JettyEmbeddedWebAppContext@65eda27c{application,/,[file:///C:/Users/Kevin/AppData/Local/Temp/jetty-docbase.9090.459561696613754632/, jar:file:/C:/Users/Kevin/.m2/repository/io/springfox/springfox-swagger-ui/3.0.0/springfox-swagger-ui-3.0.0.jar!/META-INF/resources],AVAILABLE}
+2024-08-03 15:30:18 [restartedMain] INFO  org.eclipse.jetty.server.Server - Started @2036ms
+2024-08-03 15:30:18 [restartedMain] INFO  c.a.d.s.b.a.DruidDataSourceAutoConfigure - Init DruidDataSource
+2024-08-03 15:30:18 [restartedMain] INFO  c.alibaba.druid.pool.DruidDataSource - {dataSource-1} inited
+2024-08-03 15:30:19 [restartedMain] INFO  o.s.b.d.a.OptionalLiveReloadServer - LiveReload server is running on port 35729
+2024-08-03 15:30:19 [restartedMain] INFO  o.e.j.s.h.ContextHandler.application - Initializing Spring DispatcherServlet 'dispatcherServlet'
+2024-08-03 15:30:19 [restartedMain] INFO  o.s.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+2024-08-03 15:30:19 [restartedMain] INFO  o.s.web.servlet.DispatcherServlet - Completed initialization in 1 ms
+2024-08-03 15:30:19 [restartedMain] INFO  o.e.jetty.server.AbstractConnector - Started ServerConnector@6b8a5794{HTTP/1.1, (http/1.1)}{0.0.0.0:9090}
+2024-08-03 15:30:19 [restartedMain] INFO  o.s.b.w.e.jetty.JettyWebServer - Jetty started on port(s) 9090 (http/1.1) with context path '/'
+2024-08-03 15:30:20 [restartedMain] INFO  DveCenter.DveCenterApplication - Started DveCenterApplication in 3.025 seconds (JVM running for 3.609)
+2024-08-03 15:30:20 [restartedMain] INFO  DveCenter.DveCenterApplication - hello world
+2024-08-03 15:30:20 [DVE-Center-1] INFO  D.module.task.service.GarnetService - Garnet初始化失败:Cannot run program "make" (in directory "\home\nhy\Garnet"): CreateProcess error=2, 系统找不到指定的文件。
+2024-08-03 15:33:25 [SpringApplicationShutdownHook] INFO  o.e.jetty.server.AbstractConnector - Stopped ServerConnector@6b8a5794{HTTP/1.1, (http/1.1)}{0.0.0.0:9090}
+2024-08-03 15:33:25 [SpringApplicationShutdownHook] INFO  org.eclipse.jetty.server.session - node0 Stopped scavenging
+2024-08-03 15:33:25 [SpringApplicationShutdownHook] INFO  o.e.j.s.h.ContextHandler.application - Destroying Spring FrameworkServlet 'dispatcherServlet'
+2024-08-03 15:33:25 [SpringApplicationShutdownHook] INFO  o.e.j.server.handler.ContextHandler - Stopped o.s.b.w.e.j.JettyEmbeddedWebAppContext@65eda27c{application,/,[file:///C:/Users/Kevin/AppData/Local/Temp/jetty-docbase.9090.459561696613754632/, jar:file:/C:/Users/Kevin/.m2/repository/io/springfox/springfox-swagger-ui/3.0.0/springfox-swagger-ui-3.0.0.jar!/META-INF/resources],STOPPED}
+2024-08-03 15:33:25 [SpringApplicationShutdownHook] INFO  c.alibaba.druid.pool.DruidDataSource - {dataSource-1} closing ...
+2024-08-03 15:33:25 [SpringApplicationShutdownHook] INFO  c.alibaba.druid.pool.DruidDataSource - {dataSource-1} closed
+2024-08-03 15:33:28 [restartedMain] INFO  DveCenter.DveCenterApplication - Starting DveCenterApplication using Java 17.0.10 on LAPTOP-EQS4UMOQ with PID 34316 (C:\FDU\IdeaProject\DVE\DVE_center\target\classes started by Kevin in C:\FDU\IdeaProject\DVE)
+2024-08-03 15:33:28 [restartedMain] INFO  DveCenter.DveCenterApplication - No active profile set, falling back to 1 default profile: "default"
+2024-08-03 15:33:28 [restartedMain] INFO  o.s.b.d.e.DevToolsPropertyDefaultsPostProcessor - Devtools property defaults active! Set 'spring.devtools.add-properties' to 'false' to disable
+2024-08-03 15:33:28 [restartedMain] INFO  o.s.b.d.e.DevToolsPropertyDefaultsPostProcessor - For additional web related logging consider setting the 'logging.level.web' property to 'DEBUG'
+2024-08-03 15:33:29 [restartedMain] INFO  org.eclipse.jetty.util.log - Logging initialized @1765ms to org.eclipse.jetty.util.log.Slf4jLog
+2024-08-03 15:33:29 [restartedMain] INFO  o.s.b.w.e.j.JettyServletWebServerFactory - Server initialized with port: 9090
+2024-08-03 15:33:29 [restartedMain] INFO  org.eclipse.jetty.server.Server - jetty-9.4.53.v20231009; built: 2023-10-09T12:29:09.265Z; git: 27bde00a0b95a1d5bbee0eae7984f891d2d0f8c9; jvm 17.0.10+11-LTS-240
+2024-08-03 15:33:29 [restartedMain] INFO  o.e.j.s.h.ContextHandler.application - Initializing Spring embedded WebApplicationContext
+2024-08-03 15:33:29 [restartedMain] INFO  o.s.b.w.s.c.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 951 ms
+2024-08-03 15:33:29 [restartedMain] INFO  org.eclipse.jetty.server.session - DefaultSessionIdManager workerName=node0
+2024-08-03 15:33:29 [restartedMain] INFO  org.eclipse.jetty.server.session - No SessionScavenger set, using defaults
+2024-08-03 15:33:29 [restartedMain] INFO  org.eclipse.jetty.server.session - node0 Scavenging every 600000ms
+2024-08-03 15:33:29 [restartedMain] INFO  o.e.j.server.handler.ContextHandler - Started o.s.b.w.e.j.JettyEmbeddedWebAppContext@16b4c99f{application,/,[file:///C:/Users/Kevin/AppData/Local/Temp/jetty-docbase.9090.9440075790038527349/, jar:file:/C:/Users/Kevin/.m2/repository/io/springfox/springfox-swagger-ui/3.0.0/springfox-swagger-ui-3.0.0.jar!/META-INF/resources],AVAILABLE}
+2024-08-03 15:33:29 [restartedMain] INFO  org.eclipse.jetty.server.Server - Started @1928ms
+2024-08-03 15:33:30 [restartedMain] INFO  c.a.d.s.b.a.DruidDataSourceAutoConfigure - Init DruidDataSource
+2024-08-03 15:33:30 [restartedMain] INFO  c.alibaba.druid.pool.DruidDataSource - {dataSource-1} inited
+2024-08-03 15:33:31 [restartedMain] INFO  o.s.b.d.a.OptionalLiveReloadServer - LiveReload server is running on port 35729
+2024-08-03 15:33:31 [restartedMain] INFO  o.e.j.s.h.ContextHandler.application - Initializing Spring DispatcherServlet 'dispatcherServlet'
+2024-08-03 15:33:31 [restartedMain] INFO  o.s.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+2024-08-03 15:33:31 [restartedMain] INFO  o.s.web.servlet.DispatcherServlet - Completed initialization in 0 ms
+2024-08-03 15:33:31 [restartedMain] INFO  o.e.jetty.server.AbstractConnector - Started ServerConnector@183eab3b{HTTP/1.1, (http/1.1)}{0.0.0.0:9090}
+2024-08-03 15:33:31 [restartedMain] INFO  o.s.b.w.e.jetty.JettyWebServer - Jetty started on port(s) 9090 (http/1.1) with context path '/'
+2024-08-03 15:33:31 [restartedMain] INFO  DveCenter.DveCenterApplication - Started DveCenterApplication in 2.954 seconds (JVM running for 3.527)
+2024-08-03 15:33:31 [restartedMain] INFO  DveCenter.DveCenterApplication - hello world
+2024-08-03 15:34:31 [qtp747104476-68] ERROR c.a.d.pool.DruidAbstractDataSource - discard long time none received connection. , jdbcUrl : jdbc:mysql://localhost:3306/center, jdbcUrl : jdbc:mysql://localhost:3306/center, lastPacketReceivedIdleMillis : 60629
+2024-08-03 15:34:55 [SpringApplicationShutdownHook] INFO  o.e.jetty.server.AbstractConnector - Stopped ServerConnector@183eab3b{HTTP/1.1, (http/1.1)}{0.0.0.0:9090}
+2024-08-03 15:34:55 [SpringApplicationShutdownHook] INFO  org.eclipse.jetty.server.session - node0 Stopped scavenging
+2024-08-03 15:34:55 [SpringApplicationShutdownHook] INFO  o.e.j.s.h.ContextHandler.application - Destroying Spring FrameworkServlet 'dispatcherServlet'
+2024-08-03 15:34:55 [SpringApplicationShutdownHook] INFO  o.e.j.server.handler.ContextHandler - Stopped o.s.b.w.e.j.JettyEmbeddedWebAppContext@16b4c99f{application,/,[file:///C:/Users/Kevin/AppData/Local/Temp/jetty-docbase.9090.9440075790038527349/, jar:file:/C:/Users/Kevin/.m2/repository/io/springfox/springfox-swagger-ui/3.0.0/springfox-swagger-ui-3.0.0.jar!/META-INF/resources],STOPPED}
+2024-08-03 15:34:55 [SpringApplicationShutdownHook] INFO  c.alibaba.druid.pool.DruidDataSource - {dataSource-1} closing ...
+2024-08-03 15:34:55 [SpringApplicationShutdownHook] INFO  c.alibaba.druid.pool.DruidDataSource - {dataSource-1} closed
+2024-08-03 15:39:39 [restartedMain] INFO  DveCenter.DveCenterApplication - Starting DveCenterApplication using Java 17.0.10 on LAPTOP-EQS4UMOQ with PID 116 (C:\FDU\IdeaProject\DVE\DVE_center\target\classes started by Kevin in C:\FDU\IdeaProject\DVE)
+2024-08-03 15:39:39 [restartedMain] INFO  DveCenter.DveCenterApplication - No active profile set, falling back to 1 default profile: "default"
+2024-08-03 15:39:39 [restartedMain] INFO  o.s.b.d.e.DevToolsPropertyDefaultsPostProcessor - Devtools property defaults active! Set 'spring.devtools.add-properties' to 'false' to disable
+2024-08-03 15:39:39 [restartedMain] INFO  o.s.b.d.e.DevToolsPropertyDefaultsPostProcessor - For additional web related logging consider setting the 'logging.level.web' property to 'DEBUG'
+2024-08-03 15:39:39 [restartedMain] INFO  org.eclipse.jetty.util.log - Logging initialized @1742ms to org.eclipse.jetty.util.log.Slf4jLog
+2024-08-03 15:39:40 [restartedMain] INFO  o.s.b.w.e.j.JettyServletWebServerFactory - Server initialized with port: 9090
+2024-08-03 15:39:40 [restartedMain] INFO  org.eclipse.jetty.server.Server - jetty-9.4.53.v20231009; built: 2023-10-09T12:29:09.265Z; git: 27bde00a0b95a1d5bbee0eae7984f891d2d0f8c9; jvm 17.0.10+11-LTS-240
+2024-08-03 15:39:40 [restartedMain] INFO  o.e.j.s.h.ContextHandler.application - Initializing Spring embedded WebApplicationContext
+2024-08-03 15:39:40 [restartedMain] INFO  o.s.b.w.s.c.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 947 ms
+2024-08-03 15:39:40 [restartedMain] INFO  org.eclipse.jetty.server.session - DefaultSessionIdManager workerName=node0
+2024-08-03 15:39:40 [restartedMain] INFO  org.eclipse.jetty.server.session - No SessionScavenger set, using defaults
+2024-08-03 15:39:40 [restartedMain] INFO  org.eclipse.jetty.server.session - node0 Scavenging every 660000ms
+2024-08-03 15:39:40 [restartedMain] INFO  o.e.j.server.handler.ContextHandler - Started o.s.b.w.e.j.JettyEmbeddedWebAppContext@6dfd35cc{application,/,[file:///C:/Users/Kevin/AppData/Local/Temp/jetty-docbase.9090.7025137719745271577/, jar:file:/C:/Users/Kevin/.m2/repository/io/springfox/springfox-swagger-ui/3.0.0/springfox-swagger-ui-3.0.0.jar!/META-INF/resources],AVAILABLE}
+2024-08-03 15:39:40 [restartedMain] INFO  org.eclipse.jetty.server.Server - Started @1919ms
+2024-08-03 15:39:40 [restartedMain] INFO  c.a.d.s.b.a.DruidDataSourceAutoConfigure - Init DruidDataSource
+2024-08-03 15:39:40 [restartedMain] INFO  c.alibaba.druid.pool.DruidDataSource - {dataSource-1} inited
+2024-08-03 15:39:41 [restartedMain] INFO  o.s.b.d.a.OptionalLiveReloadServer - LiveReload server is running on port 35729
+2024-08-03 15:39:41 [restartedMain] INFO  o.e.j.s.h.ContextHandler.application - Initializing Spring DispatcherServlet 'dispatcherServlet'
+2024-08-03 15:39:41 [restartedMain] INFO  o.s.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+2024-08-03 15:39:41 [restartedMain] INFO  o.s.web.servlet.DispatcherServlet - Completed initialization in 1 ms
+2024-08-03 15:39:41 [restartedMain] INFO  o.e.jetty.server.AbstractConnector - Started ServerConnector@29f7cfcc{HTTP/1.1, (http/1.1)}{0.0.0.0:9090}
+2024-08-03 15:39:41 [restartedMain] INFO  o.s.b.w.e.jetty.JettyWebServer - Jetty started on port(s) 9090 (http/1.1) with context path '/'
+2024-08-03 15:39:41 [restartedMain] INFO  DveCenter.DveCenterApplication - Started DveCenterApplication in 2.982 seconds (JVM running for 3.536)
+2024-08-03 15:39:41 [restartedMain] INFO  DveCenter.DveCenterApplication - hello world
+2024-08-03 15:39:44 [SpringApplicationShutdownHook] INFO  o.e.jetty.server.AbstractConnector - Stopped ServerConnector@29f7cfcc{HTTP/1.1, (http/1.1)}{0.0.0.0:9090}
+2024-08-03 15:39:44 [SpringApplicationShutdownHook] INFO  org.eclipse.jetty.server.session - node0 Stopped scavenging
+2024-08-03 15:39:44 [SpringApplicationShutdownHook] INFO  o.e.j.s.h.ContextHandler.application - Destroying Spring FrameworkServlet 'dispatcherServlet'
+2024-08-03 15:39:44 [SpringApplicationShutdownHook] INFO  o.e.j.server.handler.ContextHandler - Stopped o.s.b.w.e.j.JettyEmbeddedWebAppContext@6dfd35cc{application,/,[file:///C:/Users/Kevin/AppData/Local/Temp/jetty-docbase.9090.7025137719745271577/, jar:file:/C:/Users/Kevin/.m2/repository/io/springfox/springfox-swagger-ui/3.0.0/springfox-swagger-ui-3.0.0.jar!/META-INF/resources],STOPPED}
+2024-08-03 15:39:44 [SpringApplicationShutdownHook] INFO  c.alibaba.druid.pool.DruidDataSource - {dataSource-1} closing ...
+2024-08-03 15:39:44 [SpringApplicationShutdownHook] INFO  c.alibaba.druid.pool.DruidDataSource - {dataSource-1} closed
+2024-08-05 11:30:09 [restartedMain] INFO  DveCenter.DveCenterApplication - Starting DveCenterApplication using Java 17.0.10 on LAPTOP-EQS4UMOQ with PID 31312 (C:\FDU\IdeaProject\DVE\DVE_center\target\classes started by Kevin in C:\FDU\IdeaProject\DVE)
+2024-08-05 11:30:09 [restartedMain] INFO  DveCenter.DveCenterApplication - No active profile set, falling back to 1 default profile: "default"
+2024-08-05 11:30:09 [restartedMain] INFO  o.s.b.d.e.DevToolsPropertyDefaultsPostProcessor - Devtools property defaults active! Set 'spring.devtools.add-properties' to 'false' to disable
+2024-08-05 11:30:09 [restartedMain] INFO  o.s.b.d.e.DevToolsPropertyDefaultsPostProcessor - For additional web related logging consider setting the 'logging.level.web' property to 'DEBUG'
+2024-08-05 11:30:10 [restartedMain] INFO  org.eclipse.jetty.util.log - Logging initialized @1958ms to org.eclipse.jetty.util.log.Slf4jLog
+2024-08-05 11:30:10 [restartedMain] INFO  o.s.b.w.e.j.JettyServletWebServerFactory - Server initialized with port: 9999
+2024-08-05 11:30:10 [restartedMain] INFO  org.eclipse.jetty.server.Server - jetty-9.4.53.v20231009; built: 2023-10-09T12:29:09.265Z; git: 27bde00a0b95a1d5bbee0eae7984f891d2d0f8c9; jvm 17.0.10+11-LTS-240
+2024-08-05 11:30:10 [restartedMain] INFO  o.e.j.s.h.ContextHandler.application - Initializing Spring embedded WebApplicationContext
+2024-08-05 11:30:10 [restartedMain] INFO  o.s.b.w.s.c.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 1084 ms
+2024-08-05 11:30:10 [restartedMain] INFO  org.eclipse.jetty.server.session - DefaultSessionIdManager workerName=node0
+2024-08-05 11:30:10 [restartedMain] INFO  org.eclipse.jetty.server.session - No SessionScavenger set, using defaults
+2024-08-05 11:30:10 [restartedMain] INFO  org.eclipse.jetty.server.session - node0 Scavenging every 600000ms
+2024-08-05 11:30:10 [restartedMain] INFO  o.e.j.server.handler.ContextHandler - Started o.s.b.w.e.j.JettyEmbeddedWebAppContext@6b37b499{application,/,[file:///C:/Users/Kevin/AppData/Local/Temp/jetty-docbase.9999.14425319682256347850/, jar:file:/C:/Users/Kevin/.m2/repository/io/springfox/springfox-swagger-ui/3.0.0/springfox-swagger-ui-3.0.0.jar!/META-INF/resources],AVAILABLE}
+2024-08-05 11:30:10 [restartedMain] INFO  org.eclipse.jetty.server.Server - Started @2131ms
+2024-08-05 11:30:10 [restartedMain] INFO  c.a.d.s.b.a.DruidDataSourceAutoConfigure - Init DruidDataSource
+2024-08-05 11:30:10 [restartedMain] INFO  c.alibaba.druid.pool.DruidDataSource - {dataSource-1} inited
+2024-08-05 11:30:11 [restartedMain] INFO  o.s.b.d.a.OptionalLiveReloadServer - LiveReload server is running on port 35729
+2024-08-05 11:30:12 [restartedMain] INFO  o.e.j.s.h.ContextHandler.application - Initializing Spring DispatcherServlet 'dispatcherServlet'
+2024-08-05 11:30:12 [restartedMain] INFO  o.s.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+2024-08-05 11:30:12 [restartedMain] INFO  o.s.web.servlet.DispatcherServlet - Completed initialization in 1 ms
+2024-08-05 11:30:12 [restartedMain] INFO  o.e.jetty.server.AbstractConnector - Started ServerConnector@606e1354{HTTP/1.1, (http/1.1)}{0.0.0.0:9999}
+2024-08-05 11:30:12 [restartedMain] INFO  o.s.b.w.e.jetty.JettyWebServer - Jetty started on port(s) 9999 (http/1.1) with context path '/'
+2024-08-05 11:30:12 [restartedMain] INFO  DveCenter.DveCenterApplication - Started DveCenterApplication in 3.238 seconds (JVM running for 3.856)
+2024-08-05 11:30:12 [restartedMain] INFO  DveCenter.DveCenterApplication - hello world
+2024-08-05 11:30:12 [DVE-Center-1] INFO  D.module.task.service.GarnetService - Garnet初始化失败:Cannot run program "make" (in directory "\home\nhy\Garnet"): CreateProcess error=2, 系统找不到指定的文件。
+2024-08-05 11:32:54 [SpringApplicationShutdownHook] INFO  o.e.jetty.server.AbstractConnector - Stopped ServerConnector@606e1354{HTTP/1.1, (http/1.1)}{0.0.0.0:9999}
+2024-08-05 11:32:54 [SpringApplicationShutdownHook] INFO  org.eclipse.jetty.server.session - node0 Stopped scavenging
+2024-08-05 11:32:54 [SpringApplicationShutdownHook] INFO  o.e.j.s.h.ContextHandler.application - Destroying Spring FrameworkServlet 'dispatcherServlet'
+2024-08-05 11:32:54 [SpringApplicationShutdownHook] INFO  o.e.j.server.handler.ContextHandler - Stopped o.s.b.w.e.j.JettyEmbeddedWebAppContext@6b37b499{application,/,[file:///C:/Users/Kevin/AppData/Local/Temp/jetty-docbase.9999.14425319682256347850/, jar:file:/C:/Users/Kevin/.m2/repository/io/springfox/springfox-swagger-ui/3.0.0/springfox-swagger-ui-3.0.0.jar!/META-INF/resources],STOPPED}
+2024-08-05 11:32:54 [SpringApplicationShutdownHook] INFO  c.alibaba.druid.pool.DruidDataSource - {dataSource-1} closing ...
+2024-08-05 11:32:54 [SpringApplicationShutdownHook] INFO  c.alibaba.druid.pool.DruidDataSource - {dataSource-1} closed
+2024-08-05 11:32:58 [restartedMain] INFO  DveCenter.DveCenterApplication - Starting DveCenterApplication using Java 17.0.10 on LAPTOP-EQS4UMOQ with PID 39456 (C:\FDU\IdeaProject\DVE\DVE_center\target\classes started by Kevin in C:\FDU\IdeaProject\DVE)
+2024-08-05 11:32:58 [restartedMain] INFO  DveCenter.DveCenterApplication - No active profile set, falling back to 1 default profile: "default"
+2024-08-05 11:32:58 [restartedMain] INFO  o.s.b.d.e.DevToolsPropertyDefaultsPostProcessor - Devtools property defaults active! Set 'spring.devtools.add-properties' to 'false' to disable
+2024-08-05 11:32:58 [restartedMain] INFO  o.s.b.d.e.DevToolsPropertyDefaultsPostProcessor - For additional web related logging consider setting the 'logging.level.web' property to 'DEBUG'
+2024-08-05 11:32:59 [restartedMain] INFO  org.eclipse.jetty.util.log - Logging initialized @1776ms to org.eclipse.jetty.util.log.Slf4jLog
+2024-08-05 11:32:59 [restartedMain] INFO  o.s.b.w.e.j.JettyServletWebServerFactory - Server initialized with port: 9999
+2024-08-05 11:32:59 [restartedMain] INFO  org.eclipse.jetty.server.Server - jetty-9.4.53.v20231009; built: 2023-10-09T12:29:09.265Z; git: 27bde00a0b95a1d5bbee0eae7984f891d2d0f8c9; jvm 17.0.10+11-LTS-240
+2024-08-05 11:32:59 [restartedMain] INFO  o.e.j.s.h.ContextHandler.application - Initializing Spring embedded WebApplicationContext
+2024-08-05 11:32:59 [restartedMain] INFO  o.s.b.w.s.c.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 970 ms
+2024-08-05 11:32:59 [restartedMain] INFO  org.eclipse.jetty.server.session - DefaultSessionIdManager workerName=node0
+2024-08-05 11:32:59 [restartedMain] INFO  org.eclipse.jetty.server.session - No SessionScavenger set, using defaults
+2024-08-05 11:32:59 [restartedMain] INFO  org.eclipse.jetty.server.session - node0 Scavenging every 660000ms
+2024-08-05 11:32:59 [restartedMain] INFO  o.e.j.server.handler.ContextHandler - Started o.s.b.w.e.j.JettyEmbeddedWebAppContext@1433e7d8{application,/,[file:///C:/Users/Kevin/AppData/Local/Temp/jetty-docbase.9999.384654954131785632/, jar:file:/C:/Users/Kevin/.m2/repository/io/springfox/springfox-swagger-ui/3.0.0/springfox-swagger-ui-3.0.0.jar!/META-INF/resources],AVAILABLE}
+2024-08-05 11:32:59 [restartedMain] INFO  org.eclipse.jetty.server.Server - Started @1939ms
+2024-08-05 11:32:59 [restartedMain] INFO  c.a.d.s.b.a.DruidDataSourceAutoConfigure - Init DruidDataSource
+2024-08-05 11:32:59 [restartedMain] INFO  c.alibaba.druid.pool.DruidDataSource - {dataSource-1} inited
+2024-08-05 11:33:00 [restartedMain] INFO  o.s.b.d.a.OptionalLiveReloadServer - LiveReload server is running on port 35729
+2024-08-05 11:33:00 [restartedMain] INFO  o.e.j.s.h.ContextHandler.application - Initializing Spring DispatcherServlet 'dispatcherServlet'
+2024-08-05 11:33:00 [restartedMain] INFO  o.s.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+2024-08-05 11:33:00 [restartedMain] INFO  o.s.web.servlet.DispatcherServlet - Completed initialization in 1 ms
+2024-08-05 11:33:00 [restartedMain] INFO  o.e.jetty.server.AbstractConnector - Started ServerConnector@2ae112c1{HTTP/1.1, (http/1.1)}{0.0.0.0:9999}
+2024-08-05 11:33:00 [restartedMain] INFO  o.s.b.w.e.jetty.JettyWebServer - Jetty started on port(s) 9999 (http/1.1) with context path '/'
+2024-08-05 11:33:00 [restartedMain] INFO  DveCenter.DveCenterApplication - Started DveCenterApplication in 2.981 seconds (JVM running for 3.547)
+2024-08-05 11:33:00 [restartedMain] INFO  DveCenter.DveCenterApplication - hello world
+2024-08-05 11:33:00 [DVE-Center-1] INFO  D.module.task.service.GarnetService - Garnet初始化失败:Cannot run program "make" (in directory "\home\nhy\Garnet"): CreateProcess error=2, 系统找不到指定的文件。
+2024-08-05 11:34:07 [SpringApplicationShutdownHook] INFO  o.e.jetty.server.AbstractConnector - Stopped ServerConnector@2ae112c1{HTTP/1.1, (http/1.1)}{0.0.0.0:9999}
+2024-08-05 11:34:07 [SpringApplicationShutdownHook] INFO  org.eclipse.jetty.server.session - node0 Stopped scavenging
+2024-08-05 11:34:07 [SpringApplicationShutdownHook] INFO  o.e.j.s.h.ContextHandler.application - Destroying Spring FrameworkServlet 'dispatcherServlet'
+2024-08-05 11:34:07 [SpringApplicationShutdownHook] INFO  o.e.j.server.handler.ContextHandler - Stopped o.s.b.w.e.j.JettyEmbeddedWebAppContext@1433e7d8{application,/,[file:///C:/Users/Kevin/AppData/Local/Temp/jetty-docbase.9999.384654954131785632/, jar:file:/C:/Users/Kevin/.m2/repository/io/springfox/springfox-swagger-ui/3.0.0/springfox-swagger-ui-3.0.0.jar!/META-INF/resources],STOPPED}
+2024-08-05 11:34:07 [SpringApplicationShutdownHook] INFO  c.alibaba.druid.pool.DruidDataSource - {dataSource-1} closing ...
+2024-08-05 11:34:07 [SpringApplicationShutdownHook] INFO  c.alibaba.druid.pool.DruidDataSource - {dataSource-1} closed

@@ -1,15 +1,15 @@
 version: '1.0'
 
 my:
-  id: 1
+  id: 1007
   ip: 10.176.34.171
-  name: '171'
-  description: 'DVE Center 171'
-  garnet_path: "/home/nhy/Garnet"
-  base_path: "/home/nhy/DVE"
+  name: 'zkx'
+  description: 'DVE Center zkx'
+  garnet_path: "/home/zkx/Garnet"
+  base_path: "/home/zkx/DAVE/DVE"
 
 server:
-  port: 9999
+  port: 9090
 
 ssl:
   client-auth: true
@@ -29,8 +29,8 @@ spring:
   datasource:
     druid:
       driver-class-name: com.mysql.cj.jdbc.Driver
-      url: jdbc:mysql://10.176.34.171:3306/center
-      username: nhy
+      url: jdbc:mysql://10.176.34.171:3306/zkx_center
+      username: zkx
       password: makeMPLgreat*2
   jackson:
     serialization:
@@ -60,3 +60,7 @@ threadpool:
   awaitTerminationSeconds: 6000
   # 线程名字前缀
   threadNamePrefix: 'DVE-Center-'
+
+file:
+  upload-base-dir: "/home/zkx/DAVE/Files/"
+  download-base-dir: "/home/zkx/DAVE/ApplicationFiles/"
