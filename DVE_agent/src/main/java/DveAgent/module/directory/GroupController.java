@@ -1,10 +1,10 @@
-package DveAgent.module.directory.controller;
+package DveAgent.module.directory;
 
 
 import java.time.LocalDateTime;
 import java.util.List;
 
-import DveAgent.module.directory.service.GroupService;
+import DveBase.service.directory.GroupService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;

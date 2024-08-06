@@ -1,9 +1,9 @@
-package DveAgent.module.directory.controller;
+package DveAgent.module.directory;
 
 import java.util.List;
 
 
-import DveAgent.module.directory.service.FileFolderService;
+import DveBase.service.directory.FileFolderService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
@@ -191,6 +191,11 @@ public class FileFolderController {
         // 处理文件数据并保存到数据库
         fileFolderService.addAgent(agent);
         return ResponseEntity.ok("File synchronized successfully");
+    }
+
+    @GetMapping("/test")
+    public String test(){
+        return fileFolderService.test();
     }
 
 }

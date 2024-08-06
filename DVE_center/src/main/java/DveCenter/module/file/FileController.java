@@ -44,10 +44,10 @@ public class FileController {
 //    private static final String DOWNLOAD_BASE_DIR = "C:\\FDU\\IdeaProject\\ApplicationFiles\\";
 //    private static final String DOWLLOAD_BASE_DIR = "/home/zkx/DAVE/ApplicationFiles/";
 
-    @Value("${file.upload-base-dir}")
+//    @Value("${file.upload-base-dir}")
     private String uploadBaseDir;
 
-    @Value("${file.download-base-dir}")
+//    @Value("${file.download-base-dir}")
     private String downloadBaseDir;
 
     @Autowired
