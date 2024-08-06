@@ -21,6 +21,8 @@ import DveBase.entity.MpcTaskOutput;
 import DveBase.info.UploadAgentTaskInfo;
 import DveBase.mapper.MpcTaskOutputMapper;
 import DveCenter.common.MyCenter;
+import DveCenter.entity.Input;
+import DveCenter.mapper.InputMapper;
 import DveCenter.module.auth.service.CenterWebClientService;
 import DveCenter.module.task.service.MpcTaskService;
 
@@ -40,7 +42,9 @@ public class MpcTaskController {
     @Autowired
     MpcTaskOutputMapper mpcTaskOutputMapper;
 
-    // TODO 直接将Input一并指定
+    @Autowired
+    InputMapper inputMapper;
+
     @PostMapping("/create")
     public R<MpcTask> createMpcTask(@RequestBody UploadAgentTaskInfo mpcTask) {
         try {
@@ -49,6 +53,27 @@ public class MpcTaskController {
             return R.error(e.getMessage());
         }
         return R.success(mpcTask, "成功创建");
+    }
+
+    @PostMapping("/create_with_input")
+    public R<MpcTask> postMethodName(@RequestPart("file") MultipartFile file,
+            @RequestPart("mpcTask") UploadAgentTaskInfo mpcTask) {
+        String fileName = file.getOriginalFilename();
+        Path path = Paths.get(my.getBase_path()).resolve("Input").resolve(fileName);
+        Input input = new Input();
+        input.setApplicationId(mpcTask.getApplicationId());
+        input.setPath(Paths.get("Input").resolve(fileName).toString());
+        try {
+            Files.createDirectories(path.getParent());
+            Files.write(path, file.getBytes());
+            inputMapper.insert(input);
+            mpcTask.setDataId(input.getUid());
+            mpcTaskService.create(mpcTask);
+        } catch (Exception e) {
+            return R.error(e.getMessage());
+        }
+        return R.success(mpcTask, "成功创建");
+
     }
 
     @GetMapping("/ready")

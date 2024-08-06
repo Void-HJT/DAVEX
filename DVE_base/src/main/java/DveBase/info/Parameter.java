@@ -127,10 +127,9 @@ public class Parameter {
         setPosORflag(posORflag);
         this.limitType = limitType;
         setLimit(limit);
+        this.required = required;
         setAuto(auto);
         this.description = description;
-        this.required = required;
-
     }
 
     public Boolean getAuto() {
