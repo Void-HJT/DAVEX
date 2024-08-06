@@ -429,7 +429,7 @@ public class FileFolderService {
     }
 
     // 设置文件规则
-    public Body<String> setFileRule(Long fileId, Long agentId, Long folderId, Long ruleId) {
+    public Body<String> setFileRule(Long fileId, Long agentId, Long folderId, Long groupId,String allowMethod) {
         LambdaQueryWrapper<File> queryFileWrapper = Wrappers.<File>lambdaQuery()
                 .eq(File::getUid, fileId)
                 .eq(File::getAgentId, agentId)
@@ -437,25 +437,54 @@ public class FileFolderService {
         if (fileMapper.selectOne(queryFileWrapper) == null) {
             return Body.error("该文件不存在");
         }
+
         LambdaQueryWrapper<Rule> queryRuleWrapper = Wrappers.<Rule>lambdaQuery()
-                .eq(Rule::getUid, ruleId)
-                .eq(Rule::getAgentId, agentId);
-        if (ruleMapper.selectOne(queryRuleWrapper) == null) {
+                .eq(Rule::getGroupId, groupId)
+                .eq(Rule::getAgentId, agentId)
+                .eq(Rule::getAllowedMethod,allowMethod);
+        Rule rule = ruleMapper.selectOne(queryRuleWrapper);
+        if (rule == null) {
             return Body.error("该规则不存在");
         }
+
         LambdaQueryWrapper<FileRule> queryFileRuleWrapper = Wrappers.<FileRule>lambdaQuery()
                 .eq(FileRule::getAgentId, agentId)
                 .eq(FileRule::getFileId, fileId)
-                .eq(FileRule::getRuleId, ruleId);
+                .eq(FileRule::getRuleId, rule.getUid());
         if (fileRuleMapper.selectOne(queryFileRuleWrapper) != null) {
             return Body.error("该关系已存在");
         }
         FileRule fileRule = new FileRule();
         fileRule.setFileId(fileId);
-        fileRule.setRuleId(ruleId);
+        fileRule.setRuleId(rule.getUid());
         fileRule.setAgentId(agentId);
         fileRuleMapper.insert(fileRule);
         return Body.success("成功插入");
+    }
+    //删除文件规则
+    public Body<String> deleteFileRule(Long fileId, Long agentId, Long folderId, Long groupId,String allowMethod){
+
+        LambdaQueryWrapper<File> queryFileWrapper = Wrappers.<File>lambdaQuery()
+                .eq(File::getUid, fileId)
+                .eq(File::getAgentId, agentId)
+                .eq(File::getFolderId, folderId);
+        if (fileMapper.selectOne(queryFileWrapper) == null) {
+            return Body.error("该文件不存在");
+        }
+
+        LambdaQueryWrapper<Rule> queryRuleWrapper = Wrappers.<Rule>lambdaQuery()
+                .eq(Rule::getGroupId, groupId)
+                .eq(Rule::getAgentId, agentId)
+                .eq(Rule::getAllowedMethod,allowMethod);
+        Rule rule = ruleMapper.selectOne(queryRuleWrapper);
+
+        LambdaQueryWrapper<FileRule> queryFileRuleWrapper = Wrappers.<FileRule>lambdaQuery()
+                .eq(FileRule::getAgentId, agentId)
+                .eq(FileRule::getFileId, fileId)
+                .eq(FileRule::getRuleId, rule.getUid());
+
+        fileRuleMapper.delete(queryFileRuleWrapper);
+        return Body.success("删除成功");
     }
 
     // 删除文件

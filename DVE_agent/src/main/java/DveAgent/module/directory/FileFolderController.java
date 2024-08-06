@@ -112,10 +112,20 @@ public class FileFolderController {
 
     @PostMapping("/setFileRule")
     public Body<String> setFileRule(@RequestParam("fileId") Long fileId,
-            @RequestParam("agentId") Long agentId,
-            @RequestParam("folderId") Long folderId,
-            @RequestParam("ruleId") Long ruleId) {
-        return fileFolderService.setFileRule(fileId, agentId, folderId, ruleId);
+                                    @RequestParam("agentId") Long agentId,
+                                    @RequestParam("folderId") Long folderId,
+                                    @RequestParam("groupId") Long groupId,
+                                    @RequestParam("allowedMethod") String allowedMethod) {
+        return fileFolderService.setFileRule(fileId, agentId, folderId, groupId,allowedMethod);
+    }
+
+    @PostMapping("/deleteFileRule")
+    public Body<String> deleteFileRule(@RequestParam("fileId") Long fileId,
+                                    @RequestParam("agentId") Long agentId,
+                                    @RequestParam("folderId") Long folderId,
+                                    @RequestParam("groupId") Long groupId,
+                                    @RequestParam("allowedMethod") String allowedMethod) {
+        return fileFolderService.deleteFileRule(fileId, agentId, folderId, groupId,allowedMethod);
     }
 
     @PostMapping("/deleteFile")
