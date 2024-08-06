@@ -8,16 +8,16 @@ import org.springframework.context.annotation.Configuration;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 
-import DveAgent.common.My;
-import DveAgent.entity.Agent;
-import DveAgent.mapper.AgentMapper;
+import DveAgent.common.MyAgent;
 import DveAgent.module.auth.service.AuthService;
+import DveBase.entity.Agent;
+import DveBase.mapper.AgentMapper;
 
 @Configuration
 public class BoostConfig {
 
     @Autowired
-    private My my;
+    private MyAgent my;
 
     @Autowired
     private AgentMapper agentMapper;

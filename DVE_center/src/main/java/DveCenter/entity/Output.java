@@ -8,7 +8,7 @@ import lombok.Data;
 public class Output {
 
     @TableId(type = IdType.AUTO)
-    private long uid;
+    private Long uid;
     private String name;
     private String type;
     private java.sql.Timestamp uploadDate;
@@ -18,9 +18,9 @@ public class Output {
     private String path;
     private java.sql.Timestamp expiredTime;
     private String hash;
-    private long fileId;
-    private long agentId;
-    private long applicationId;
+    private Long fileId;
+    private Long agentId;
+    private Long applicationId;
 
 
     public long getUid() {

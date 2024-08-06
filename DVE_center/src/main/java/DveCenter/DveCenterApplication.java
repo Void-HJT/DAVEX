@@ -12,14 +12,12 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 @SpringBootApplication
 @ServletComponentScan
 @EnableTransactionManagement
-@MapperScan("DveAgent.mapper")
+@MapperScan("DveBase.mapper")
 @MapperScan("DveCenter.mapper")
 @EnableAsync
-public class DveCenterApplication
-{
-    public static void main(String[] args)
-    {
-        SpringApplication.run(DveCenterApplication.class,args);
+public class DveCenterApplication {
+    public static void main(String[] args) {
+        SpringApplication.run(DveCenterApplication.class, args);
         log.info("hello world");
     }
 }

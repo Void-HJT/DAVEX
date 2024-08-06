@@ -5,11 +5,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
-import DveAgent.info.Parameter;
-import DveAgent.serializer.PairDeserializer;
-import DveAgent.serializer.PairSerializer;
-import DveAgent.serializer.ParameterDeserializer;
-import DveAgent.serializer.ParameterSerializer;
+import DveBase.info.Parameter;
+import DveBase.serializer.PairDeserializer;
+import DveBase.serializer.PairSerializer;
+import DveBase.serializer.ParameterDeserializer;
+import DveBase.serializer.ParameterSerializer;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.context.annotation.Bean;

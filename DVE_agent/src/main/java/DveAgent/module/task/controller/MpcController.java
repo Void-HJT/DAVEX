@@ -13,16 +13,16 @@ import org.springframework.web.bind.annotation.RestController;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 
-import DveAgent.common.My;
-import DveAgent.common.R;
-import DveAgent.entity.Mpc;
-import DveAgent.mapper.MpcMapper;
+import DveAgent.common.MyAgent;
+import DveBase.common.R;
+import DveBase.entity.Mpc;
+import DveBase.mapper.MpcMapper;
 
 @RestController
 @RequestMapping("/Mpc")
 public class MpcController {
     @Autowired
-    My my;
+    MyAgent my;
 
     @Autowired
     MpcMapper mpcMapper;

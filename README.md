@@ -17,39 +17,66 @@ git update-index --no-assume-unchanged DVE_agent/src/main/resources/application.
 
 ```json
 {
-  "centerId": 1,
+  "uid": 2, 
+  "centerId": 1, 
+  "name": "PSI", 
+  "path": "programs/PSI_BASE.mpc", 
   "compileParameters": [
     {
-        "name": "P0_Data",
-        "limit": {
-            "max": 999,
-            "min": 999,
-            "defaultValue": 1
-        },
-        "required": true,
-        "limitType": "NUM",
-        "posORflag": 0,
-        "description": "第0方数据",
-        "parameterType": "POS"
-    },
+      "name": "P0_Data", 
+      "limit": {
+        "max": 999, 
+        "min": 999, 
+        "defaultValue": 1
+      }, 
+      "required": true, 
+      "auto": false, 
+      "limitType": "NUM", 
+      "posORflag": 0, 
+      "description": "第0方数据", 
+      "parameterType": "POS"
+    }, 
     {
-        "name": "P1_Data",
-        "limit": {
-            "max": 999,
-            "min": 999,
-            "defaultValue": 1
-        },
-        "required": true,
-        "limitType": "NUM",
-        "posORflag": 1,
-        "description": "第1方数据",
-        "parameterType": "POS"
+      "name": "P1_Data", 
+      "limit": {
+        "max": 999, 
+        "min": 999, 
+        "defaultValue": 1
+      }, 
+      "required": true, 
+      "auto": false, 
+      "limitType": "NUM", 
+      "posORflag": 1, 
+      "description": "第1方数据", 
+      "parameterType": "POS"
     }
-],
-  "name": "PSI",
-  "path": "string",
-  "runtimeParameters": [{"name": "protocol", "limit": {"defaultValue": "semi2k-party"}, "required": true, "limitType": "STRING", "posORflag": "abc", "description": "运行虚拟机", "parameterType": "FLAG"}],
-  "uid": 2
+  ], 
+  "runtimeParameters": [
+    {
+      "name": "protocol", 
+      "limit": {
+        "defaultValue": "semi2k-party"
+      }, 
+      "required": true, 
+      "auto": false, 
+      "limitType": "STRING", 
+      "posORflag": null, 
+      "description": "运行虚拟机", 
+      "parameterType": "FLAG"
+    }, 
+    {
+      "name": "PK", 
+      "limit": {
+        "defaultValue": "id"
+      }, 
+      "required": true, 
+      "auto": false, 
+      "limitType": "STRING", 
+      "posORflag": null, 
+      "description": "主键", 
+      "parameterType": "FLAG"
+    }
+  ]
 }
 ```
 
@@ -80,53 +107,4 @@ git update-index --no-assume-unchanged DVE_agent/src/main/resources/application.
   "taskType": "GARNET_PSI",
   "uid": null
 }
-```
-
-
-
-```json
-[
-    {
-        "name": "P0_Data",
-        "limit": {
-            "max": 999,
-            "min": 999,
-            "defaultValue": 1
-        },
-        "required": true,
-        "limitType": "NUM",
-        "posORflag": 0,
-        "description": "第0方数据",
-        "parameterType": "POS"
-    },
-    {
-        "name": "P1_Data",
-        "limit": {
-            "max": 999,
-            "min": 999,
-            "defaultValue": 1
-        },
-        "required": true,
-        "limitType": "NUM",
-        "posORflag": 1,
-        "description": "第1方数据",
-        "parameterType": "POS"
-    }
-]
-
-
-
-[
-    {
-        "name": "protocol",
-        "limit": {
-            "defaultValue": "semi2k-party"
-        },
-        "required": true,
-        "limitType": "STRING",
-        "posORflag": "abc",
-        "description": "运行虚拟机",
-        "parameterType": "FLAG"
-    }
-]
 ```

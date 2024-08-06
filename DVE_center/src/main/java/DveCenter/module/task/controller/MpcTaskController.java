@@ -15,12 +15,12 @@ import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
-import DveAgent.common.R;
-import DveAgent.entity.MpcTask;
-import DveAgent.entity.MpcTaskOutput;
-import DveAgent.mapper.MpcTaskOutputMapper;
-import DveCenter.common.My;
-import DveCenter.info.UploadCenterTaskInfo;
+import DveBase.common.R;
+import DveBase.entity.MpcTask;
+import DveBase.entity.MpcTaskOutput;
+import DveBase.info.UploadAgentTaskInfo;
+import DveBase.mapper.MpcTaskOutputMapper;
+import DveCenter.common.MyCenter;
 import DveCenter.module.auth.service.CenterWebClientService;
 import DveCenter.module.task.service.MpcTaskService;
 
@@ -35,14 +35,14 @@ public class MpcTaskController {
     CenterWebClientService centerWebClientService;
 
     @Autowired
-    My my;
+    MyCenter my;
 
     @Autowired
     MpcTaskOutputMapper mpcTaskOutputMapper;
 
     // TODO 直接将Input一并指定
     @PostMapping("/create")
-    public R<MpcTask> createMpcTask(@RequestBody UploadCenterTaskInfo mpcTask) {
+    public R<MpcTask> createMpcTask(@RequestBody UploadAgentTaskInfo mpcTask) {
         try {
             mpcTaskService.create(mpcTask);
         } catch (Exception e) {
@@ -51,7 +51,7 @@ public class MpcTaskController {
         return R.success(mpcTask, "成功创建");
     }
 
-    @GetMapping("/ready/{mpcTaskId}")
+    @GetMapping("/ready")
     public R<?> checkTaskStatus(@PathVariable String mpcTaskId) {
         try {
             if (mpcTaskService.ready(mpcTaskId)) {

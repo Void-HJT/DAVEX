@@ -1,2 +1,0 @@
-2024-07-31 15:32:22 [qtp1378212849-29] INFO  CustomLogger - Custom Log - Input: agentId=5, centerId=1, Method: getGroup, Requester: RequesterInfo, Responder: ResponderInfo, Time: 2024-07-31T15:32:22.789471
-2024-07-31 15:32:22 [qtp1378212849-29] INFO  CustomLogger - Custom Log - Output: Body(method=null, code=1, message=成功, data=[Group(uid=1, agentId=5, centerId=1, name=区级检察院), Group(uid=2, agentId=5, centerId=1, name=县级检察院), Group(uid=8, agentId=5, centerId=1, name=市级检察院)]), Requester: RequesterInfo, Responder: ResponderInfo, Time: 2024-07-31T15:32:22.926567

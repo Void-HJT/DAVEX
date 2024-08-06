@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="DveBase.mapper.FileMapper">
+
+    <resultMap id="FileInfoMap" type="DveBase.info.FileInfo">
+        <id column="uid" property="uid"/>
+        <result column="agent_id" property="agentId"/>
+        <result column="folder_id" property="folderId"/>
+        <result column="name" property="name"/>
+        <result column="create_date" property="createDate"/>
+        <result column="last_update" property="lastUpdate"/>
+        <result column="tag" property="tag"/>
+        <result column="size" property="size"/>
+        <result column="description" property="description"/>
+        <result column="expired_time" property="expiredTime"/>
+        <result column="hash" property="hash"/>
+        <result column="example" property="example"/>
+        <result column="type" property="type"/>
+        <collection property="ruleList" ofType="DveBase.entity.Rule" javaType="ArrayList">
+            <id column="ruleId" property="uid"/>
+            <result column="ruleAgentId" property="agentId"/>
+            <result column="group_id" property="groupId"/>
+            <result column="allowed_method" property="allowedMethod"/>
+        </collection>
+    </resultMap>
+
+    <select id="getFileInfo" resultMap="FileInfoMap">
+        SELECT
+            f.uid,
+            f.agent_id,
+            f.folder_id,
+            f.name,
+            f.create_date,
+            f.last_update,
+            f.tag,
+            f.size,
+            f.description,
+            f.expired_time,
+            f.hash,
+            f.example,
+            f.type,
+            r.uid as ruleId,
+            r.agent_id as ruleAgentId,
+            r.group_id,
+            r.allowed_method
+        FROM
+            file f
+                LEFT JOIN
+            file_rule fr ON f.uid = fr.file_id
+                LEFT JOIN
+            rule r ON fr.rule_id = r.uid
+        WHERE
+            f.uid = #{fileId}
+          AND f.agent_id = #{agentId}
+          AND f.folder_id = #{folderId}
+    </select>
+
+    <select id="selectByFolderId" parameterType="long" resultType="DveBase.entity.File">
+        SELECT * FROM file WHERE folder_id = #{folderId}
+    </select>
+
+</mapper>

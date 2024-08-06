@@ -12,18 +12,18 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.BodyInserters;
 
-import DveAgent.common.My;
-import DveAgent.entity.MpcTask;
-import DveAgent.entity.MpcTaskAgent;
-import DveAgent.entity.MpcTaskOutput;
-import DveAgent.info.UploadAgentTaskInfo;
-import DveAgent.mapper.FileMapper;
-import DveAgent.mapper.MpcMapper;
-import DveAgent.mapper.MpcTaskAgentMapper;
-import DveAgent.mapper.MpcTaskMapper;
-import DveAgent.mapper.MpcTaskOutputMapper;
+import DveAgent.common.MyAgent;
 import DveAgent.module.auth.service.AgentWebClientService;
 import DveAgent.module.directory.FileFolderService;
+import DveBase.common.Utils;
+import DveBase.entity.MpcTask;
+import DveBase.entity.MpcTaskAgent;
+import DveBase.entity.MpcTaskOutput;
+import DveBase.info.UploadAgentTaskInfo;
+import DveBase.mapper.FileMapper;
+import DveBase.mapper.MpcMapper;
+import DveBase.mapper.MpcTaskAgentMapper;
+import DveBase.mapper.MpcTaskMapper;
 
 @Service
 public class MpcTaskService {
@@ -35,7 +35,7 @@ public class MpcTaskService {
     private MpcTaskAgentMapper mpcTaskAgentMapper;
 
     @Autowired
-    private My my;
+    private MyAgent my;
 
     @Autowired
     GarnetService garnetService;
@@ -123,8 +123,7 @@ public class MpcTaskService {
         FileSystemResource fileResource = new FileSystemResource(filePath);
         MpcTaskOutput mpcTaskOutput = new MpcTaskOutput();
         mpcTaskOutput.setTaskId(mpcTask.getUid());
-        // TODO 计算哈希
-        // mpcTaskOutput.setHash(filePath);
+        mpcTaskOutput.setHash(Utils.getFileHash(fileResource, "SHA-256"));
         agentWebClientService.agent2CenterWebClient(mpcTask.getCenterId()).post().uri("/MpcTasks/save")
                 .contentType(MediaType.MULTIPART_FORM_DATA).body(BodyInserters.fromMultipartData("file", fileResource)
                         .with("metadata", mpcTaskOutput))

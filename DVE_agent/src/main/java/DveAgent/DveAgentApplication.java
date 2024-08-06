@@ -13,8 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 @SpringBootApplication
 @ServletComponentScan
 @EnableTransactionManagement
-@MapperScan("DveAgent.mapper")
-@MapperScan("DveCenter.mapper")
+@MapperScan("DveBase.mapper")
 @EnableAsync
 public class DveAgentApplication {
     public static void main(String[] args) {

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="DveBase.mapper.GroupMapper">
+    <select id="getList" resultType="DveBase.entity.Group">
+        SELECT g.*
+        FROM `group` g
+                 JOIN application_group ag ON g.uid = ag.group_id
+        WHERE ag.application_id = #{applicationId}
+          AND ag.center_id = #{centerId}
+          AND ag.agent_id = #{agentId}
+    </select>
+</mapper>

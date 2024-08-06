@@ -26,19 +26,19 @@ import org.springframework.stereotype.Service;
 
 import com.alibaba.fastjson.JSONObject;
 
-import DveAgent.common.My;
-import DveAgent.common.Utlis;
-import DveAgent.entity.Mpc;
-import DveAgent.entity.MpcTask;
-import DveAgent.info.Parameter;
-import DveAgent.mapper.MpcMapper;
-import DveAgent.mapper.MpcTaskMapper;
+import DveAgent.common.MyAgent;
+import DveBase.common.Utils;
+import DveBase.entity.Mpc;
+import DveBase.entity.MpcTask;
+import DveBase.info.Parameter;
+import DveBase.mapper.MpcMapper;
+import DveBase.mapper.MpcTaskMapper;
 
 // @Async("customExecutor")
 @Service
 public class GarnetService {
 
-    private My my;
+    private MyAgent my;
 
     private final File garnet_directory;
 
@@ -50,7 +50,7 @@ public class GarnetService {
     @Autowired
     private MpcTaskMapper mpcTaskMapper;
 
-    public GarnetService(My my) {
+    public GarnetService(MyAgent my) {
         this.my = my;
         garnet_directory = new File(this.my.getGarnet_path());
     }
@@ -107,18 +107,35 @@ public class GarnetService {
     }
 
     public void compile(MpcTask mpcTask) throws Exception {
-        JSONObject parameter = mpcTask.getCompileParameters();
+        JSONObject task_parameter = mpcTask.getCompileParameters();
         Mpc mpc = mpcMapper.selectById(mpcTask.getMpcId());
-        List<Parameter> parameters = mpc.getCompileParameters();
+        List<Parameter> mpc_parameters = mpc.getCompileParameters();
         Map<Integer, String> args = new HashMap<>();
         List<String> flags = new ArrayList<>();
-        for (Parameter p : parameters) {
+        for (Parameter p : mpc_parameters) {
             switch (p.getParameterType()) {
                 case POS:
-                    args.put((Integer) p.getPosORflag(), parameter.getString(p.getName()));
+                    if (p.getAuto()) {
+                        args.put((Integer) p.getPosORflag(), p.getDefaultValue());
+                    } else {
+                        String value = task_parameter.getString(p.getName());
+                        if (value == null && p.getRequired()) {
+                            throw new IllegalArgumentException("缺少参数: " + p.getName());
+                        }
+                        args.put((Integer) p.getPosORflag(), value);
+                    }
                     break;
                 case FLAG:
-                    flags.add((String) p.getPosORflag() + " " + parameter.getString(p.getName()));
+                    if (p.getAuto()) {
+                        flags.add((String) p.getPosORflag() + " " + p.getDefaultValue());
+                    } else {
+                        String value = task_parameter.getString(p.getName());
+                        if (value == null && p.getRequired()) {
+                            throw new IllegalArgumentException("缺少参数: " + p.getName());
+                        }
+                        flags.add((String) p.getPosORflag() + " " + value);
+                    }
+
                     break;
             }
         }
@@ -246,7 +263,7 @@ public class GarnetService {
                     try {
                         intValue = Integer.parseInt(fieldValue);
                     } catch (NumberFormatException e) {
-                        intValue = Utlis.hashStringToInt(fieldValue);
+                        intValue = Utils.hashStringToInt(fieldValue);
                     }
                     writer.write(String.valueOf(intValue));
                     writer.newLine();
@@ -270,7 +287,7 @@ public class GarnetService {
                 try {
                     fieldValues.add(Integer.parseInt(fieldLine));
                 } catch (NumberFormatException e) {
-                    fieldValues.add(Utlis.hashStringToInt(fieldLine));
+                    fieldValues.add(Utils.hashStringToInt(fieldLine));
                 }
             }
 
@@ -304,7 +321,7 @@ public class GarnetService {
                     try {
                         intValue = Integer.parseInt(fieldValue);
                     } catch (NumberFormatException e) {
-                        intValue = Utlis.hashStringToInt(fieldValue);
+                        intValue = Utils.hashStringToInt(fieldValue);
                     }
                     if (fieldValues.contains(intValue)) {
                         csvWriter.write(line);

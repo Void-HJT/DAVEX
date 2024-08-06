@@ -12,19 +12,14 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import DveAgent.entity.Agent;
-import DveAgent.mapper.AgentMapper;
+import DveBase.entity.Agent;
+import DveBase.mapper.AgentMapper;
 import reactor.netty.http.client.HttpClient;
 
 @Service
 public class CenterWebClientService {
 
         private AgentMapper agentMapper;
-        // @Autowired
-        // private SslContextBuilder sslBuilder;
-
-        // @Autowired
-        // private My my;
 
         private ExchangeStrategies strategies;
 
