@@ -6,6 +6,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.FileSystemResource;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -93,6 +94,9 @@ public class MpcTaskController {
     public R<?> save(@RequestPart("file") MultipartFile file, @RequestPart("metadata") MpcTaskOutput mpcTaskOutput) {
         if (mpcTaskOutputMapper.selectById(mpcTaskOutput.getUid()) != null) {
             return R.error("文件已保存");
+        }
+        if (!Utils.verifyFileHash((FileSystemResource) file, mpcTaskOutput.getHash(), "SHA-256")) {
+            return R.error("文件Hash不匹配");
         }
         String fileName = file.getOriginalFilename();
         Path path = Paths.get(my.getBase_path()).resolve("mpctask").resolve(fileName);

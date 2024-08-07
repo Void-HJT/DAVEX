@@ -1,5 +1,6 @@
 package DveCenter.module.task.service;
 
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -127,7 +128,10 @@ public class MpcTaskService {
     @Async("customExecutor")
     private void preprocess(UploadAgentTaskInfo mpcTask) throws Exception {
         garnetService.compile(mpcTask);
-        garnetService.link(inputMapper.selectById(mpcTask.getDataId()).getPath(),
+        garnetService.link(Paths.get(my.getBase_path())
+                .resolve(
+                        inputMapper.selectById(mpcTask.getDataId()).getPath())
+                .toString(),
                 mpcTask.getUid(), mpcTask.getPart());
         while (ready(mpcTask.getUid()) == false) {
             Thread.sleep(1000);
