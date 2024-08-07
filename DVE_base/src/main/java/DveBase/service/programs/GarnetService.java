@@ -216,7 +216,7 @@ public class GarnetService {
                 "-p", part.toString(),
                 mpc_name));
         ProcessBuilder processBuilder = new ProcessBuilder(command).directory(garnet_directory);
-        logger.info("运行命令：", command.toString());
+        logger.info("运行命令："+ command.toString());
         try {
             mpcTask.setStatus(MpcTask.Status.RUNNING);
             logger.info(mpcTask.getUid() + ":开始运行");

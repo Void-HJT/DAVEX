@@ -6,6 +6,7 @@ import java.util.Map;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.http.MediaType;
 import org.springframework.scheduling.annotation.Async;
@@ -14,6 +15,7 @@ import org.springframework.web.reactive.function.BodyInserters;
 
 import DveAgent.module.auth.service.AgentWebClientService;
 import DveBase.common.My;
+import DveBase.common.R;
 import DveBase.common.Utils;
 import DveBase.entity.MpcTask;
 import DveBase.entity.MpcTaskAgent;
@@ -112,6 +114,19 @@ public class MpcTaskService {
     @Async("customExecutor")
     public void run(MpcTask mpcTask) throws Exception {
         garnetService.run(mpcTask);
+        // * 通常来说，MPC任务结果不需要返回。
+        // String outputPath = my.getGarnet_path() + "/Output/" + mpcTask.getUid() +
+        // "-P" + mpcTask.getPart() + "-0";
+        // FileSystemResource fileResource = new FileSystemResource(outputPath);
+        // MpcTaskOutput mpcTaskOutput = new MpcTaskOutput();
+        // mpcTaskOutput.setTaskId(mpcTask.getUid());
+        // mpcTaskOutput.setHash(Utils.getFileHash(fileResource, "SHA-256"));
+        // agentWebClientService.agent2CenterWebClient(mpcTask.getCenterId()).post().uri("/MpcTasks/save")
+        // .contentType(MediaType.MULTIPART_FORM_DATA).body(BodyInserters.fromMultipartData("file",
+        // fileResource)
+        // .with("metadata", mpcTaskOutput))
+        // .retrieve().bodyToMono(new ParameterizedTypeReference<R<String>>() {
+        // }).block();
     }
 
     @Async("customExecutor")
@@ -126,10 +141,13 @@ public class MpcTaskService {
         MpcTaskOutput mpcTaskOutput = new MpcTaskOutput();
         mpcTaskOutput.setTaskId(mpcTask.getUid());
         mpcTaskOutput.setHash(Utils.getFileHash(fileResource, "SHA-256"));
-        agentWebClientService.agent2CenterWebClient(mpcTask.getCenterId()).post().uri("/MpcTasks/save")
+        agentWebClientService.agent2CenterWebClient(mpcTask.getCenterId()).post()
+                .uri("/MpcTasks/save")
                 .contentType(MediaType.MULTIPART_FORM_DATA).body(BodyInserters.fromMultipartData("file", fileResource)
                         .with("metadata", mpcTaskOutput))
-                .retrieve().bodyToMono(String.class).block();
+                .retrieve().bodyToMono(new ParameterizedTypeReference<R<String>>() {
+                }).block();
+
     }
 
     public Boolean ready(String mpcTaskId) throws Exception {
