@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import DveBase.common.R;
+import DveBase.common.Utils;
 import DveBase.entity.MpcTask;
 import DveBase.entity.MpcTaskOutput;
 import DveBase.info.UploadAgentTaskInfo;
@@ -58,11 +59,11 @@ public class MpcTaskController {
     @PostMapping("/create_with_input")
     public R<MpcTask> postMethodName(@RequestPart("file") MultipartFile file,
             @RequestPart("mpcTask") UploadAgentTaskInfo mpcTask) {
-        String fileName = file.getOriginalFilename();
-        Path path = Paths.get(my.getBase_path()).resolve("Input").resolve(fileName);
+        Path path = Utils.resolveFileNameConflict(
+                Paths.get(my.getBase_path()).resolve("Input").resolve(file.getOriginalFilename()));
         Input input = new Input();
         input.setApplicationId(mpcTask.getApplicationId());
-        input.setPath(Paths.get("Input").resolve(fileName).toString());
+        input.setPath(Paths.get("Input").resolve(path.getFileName()).toString());
         try {
             Files.createDirectories(path.getParent());
             Files.write(path, file.getBytes());

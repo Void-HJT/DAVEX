@@ -1,5 +1,7 @@
 package DveAgent.module.task.controller;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -23,6 +25,8 @@ public class MpcTaskController {
     @Autowired
     private MpcTaskService mpcTaskService;
 
+    private static final Logger logger = LoggerFactory.getLogger(MpcTaskController.class);
+
     @Autowired
     MyAgent my;
 
@@ -34,6 +38,7 @@ public class MpcTaskController {
 
     @PostMapping("create")
     public R<?> createMpcTask(@RequestBody UploadAgentTaskInfo mpcTask) {
+        logger.info("接收到任务：" + mpcTask.getUid() + "  来自：" + mpcTask.getCenterId());
         try {
             mpcTaskService.createMpcTask(mpcTask);
         } catch (Exception e) {

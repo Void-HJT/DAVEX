@@ -12,7 +12,7 @@ SET FOREIGN_KEY_CHECKS = 0;
 DROP TABLE IF EXISTS `agent`;
 
 CREATE TABLE `agent` (
-    `uid` BIGINT NOT NULL AUTO_INCREMENT,
+    `uid` BIGINT NOT NULL,
     `name` varchar(255) DEFAULT NULL,
     `ip` varchar(255) DEFAULT NULL,
     `port` int DEFAULT NULL,
@@ -59,7 +59,7 @@ CREATE TABLE `application_group` (
 DROP TABLE IF EXISTS `center`;
 
 CREATE TABLE `center` (
-    `uid` BIGINT NOT NULL AUTO_INCREMENT,
+    `uid` BIGINT NOT NULL,
     `name` varchar(255) DEFAULT NULL,
     `ip` varchar(255) DEFAULT NULL,
     `port` int DEFAULT NULL,

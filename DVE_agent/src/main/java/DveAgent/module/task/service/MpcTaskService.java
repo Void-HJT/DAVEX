@@ -57,6 +57,7 @@ public class MpcTaskService {
 
     // TODO 检查File权限
     public void createMpcTask(UploadAgentTaskInfo mpctTaskInfo) throws Exception {
+        
         if (mpctTaskInfo.getUid() != null && mpcTaskMapper.selectById(mpctTaskInfo.getUid()) != null) {
             throw new Exception("任务已存在");
         }
