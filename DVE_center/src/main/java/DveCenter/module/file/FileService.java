@@ -44,7 +44,7 @@ public class FileService {
     private JdbcTemplate jdbcTemplate;
 
     public Body<String> saveFile(MultipartFile file, File fileInfo, Integer applicationId,
-                                 String base, java.sql.Timestamp expiredTime) {
+            String base, java.sql.Timestamp expiredTime) {
 
         // 根据文件id查找文件表
         // LambdaQueryWrapper<File> queryWrapper = Wrappers.<File>lambdaQuery()
@@ -56,8 +56,10 @@ public class FileService {
 
         // 校验sha256
         String fileHash = getSha256(file);
-        if (!fileHash.equals(fileInfo.getHash())) {return Body.error(String.format("哈希校验失败，文件id: %d，代理id: %d",
-                fileInfo.getUid(), fileInfo.getAgentId()));}
+        if (!fileHash.equals(fileInfo.getHash())) {
+            return Body.error(String.format("哈希校验失败，文件id: %d，代理id: %d",
+                    fileInfo.getUid(), fileInfo.getAgentId()));
+        }
 
         // 文件信息加入结果表
         // 若已存在，则进行覆盖
@@ -86,7 +88,7 @@ public class FileService {
         newOutput.setHash(fileHash);
         newOutput.setFileId(fileInfo.getUid());
         newOutput.setAgentId(fileInfo.getAgentId());
-        newOutput.setApplicationId(applicationId);
+        newOutput.setApplicationId(applicationId.longValue());
         outputMapper.insert(newOutput);
 
         // 存储文件到结果管理区
@@ -110,9 +112,8 @@ public class FileService {
                 fileInfo.getUid(), fileInfo.getAgentId(), fileName));
     }
 
-
     public Body<List<String>> saveFiles(List<MultipartFile> files, List<File> fileInfos, Integer applicationId,
-                                        String base, List<java.sql.Timestamp> expiredTimes) {
+            String base, List<java.sql.Timestamp> expiredTimes) {
         List<String> results = new ArrayList<>();
 
         if (files.size() != fileInfos.size() || files.size() != expiredTimes.size()) {
@@ -126,15 +127,15 @@ public class FileService {
             java.sql.Timestamp expiredTime = expiredTimes.get(i);
 
             // 根据文件id查找文件表
-//            LambdaQueryWrapper<File> queryWrapper = Wrappers.<File>lambdaQuery()
-//                    .eq(File::getUid, fileId)
-//                    .eq(File::getAgentId, agentId);
-//            File queryFile = fileMapper.selectOne(queryWrapper);
-//            if (queryFile == null) {
-//                results.add(String.format("找不到该文件，文件id: %d，代理id: %d", fileId, agentId));
-//                flag = false;
-//                continue;
-//            }
+            // LambdaQueryWrapper<File> queryWrapper = Wrappers.<File>lambdaQuery()
+            // .eq(File::getUid, fileId)
+            // .eq(File::getAgentId, agentId);
+            // File queryFile = fileMapper.selectOne(queryWrapper);
+            // if (queryFile == null) {
+            // results.add(String.format("找不到该文件，文件id: %d，代理id: %d", fileId, agentId));
+            // flag = false;
+            // continue;
+            // }
 
             // 校验md5
             String fileHash = getSha256(file);
@@ -171,7 +172,7 @@ public class FileService {
             newOutput.setHash(fileHash);
             newOutput.setFileId(fileInfo.getUid());
             newOutput.setAgentId(fileInfo.getAgentId());
-            newOutput.setApplicationId(applicationId);
+            newOutput.setApplicationId(applicationId.longValue());
             outputMapper.insert(newOutput);
 
             // 存储文件到结果管理区
@@ -230,8 +231,8 @@ public class FileService {
         String filePath = queryOutput.getPath();
         String fileName = queryOutput.getName();
         try (FileInputStream fis = new FileInputStream(filePath);
-             BufferedInputStream bis = new BufferedInputStream(fis);
-             OutputStream os = response.getOutputStream()) {    //  OutputStream 是文件写出流，将文件下载到浏览器客户端
+                BufferedInputStream bis = new BufferedInputStream(fis);
+                OutputStream os = response.getOutputStream()) { // OutputStream 是文件写出流，将文件下载到浏览器客户端
             // 新建字节数组，长度是文件的大小，比如文件 6kb, bis.available() = 1024 * 6
             byte[] bytes = new byte[bis.available()];
             // 从文件流读取字节到字节数组中
@@ -240,7 +241,7 @@ public class FileService {
             response.reset();
             // 设置 response 的下载响应头
             response.setContentType("application/octet-stream");
-            response.setHeader("Content-disposition", "attachment;filename=" + URLEncoder.encode(fileName, "UTF-8"));  // 这里要设置文件名的编码，否则中文的文件名下载后不显示
+            response.setHeader("Content-disposition", "attachment;filename=" + URLEncoder.encode(fileName, "UTF-8")); // 这里要设置文件名的编码，否则中文的文件名下载后不显示
             // 写出字节数组到输出流
             os.write(bytes);
             // 刷新输出流
@@ -284,7 +285,7 @@ public class FileService {
         var source = new java.io.File(filePath);
         var dest = new java.io.File(downloadPath + fileName);
         try (var fis = new FileInputStream(source);
-             var fos = new FileOutputStream(dest)) {
+                var fos = new FileOutputStream(dest)) {
 
             byte[] buffer = new byte[1024];
             int length;

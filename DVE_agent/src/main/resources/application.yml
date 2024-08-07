@@ -6,7 +6,8 @@ my:
   name: '171!'
   description: 'DVE Agent 171'
   garnet_path: "/home/nhy/Garnet"
-  base_path: "/home/nhy/DVE"
+  base_path: "/home/nhy/DVE/"
+  dve_type: "DVE_AGENT"
 
 server:
   port: 8080
@@ -53,7 +54,7 @@ spring:
 
 mybatis-plus:
   configuration:
-    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+    # log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
     map-underscore-to-camel-case: true
   global-config:
     db-config:

@@ -12,8 +12,8 @@ import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 
-import DveAgent.common.MyAgent;
 import DveAgent.module.auth.service.AgentWebClientService;
+import DveBase.common.My;
 import DveBase.common.R;
 import DveBase.common.Utils;
 import DveBase.entity.Mpc;
@@ -25,7 +25,7 @@ public class MpcService {
     private AgentWebClientService agentWebClientService;
 
     @Autowired
-    private MyAgent my;
+    private My my;
 
     @Autowired
     private MpcMapper mpcMapper;

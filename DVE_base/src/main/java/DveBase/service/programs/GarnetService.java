@@ -1,4 +1,4 @@
-package DveCenter.module.task.service;
+package DveBase.service.programs;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -11,8 +11,10 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,19 +26,18 @@ import org.springframework.stereotype.Service;
 
 import com.alibaba.fastjson.JSONObject;
 
+import DveBase.common.My;
 import DveBase.common.Utils;
 import DveBase.entity.Mpc;
 import DveBase.entity.MpcTask;
 import DveBase.info.Parameter;
 import DveBase.mapper.MpcMapper;
 import DveBase.mapper.MpcTaskMapper;
-import DveCenter.common.MyCenter;
 
-// @Async("customExecutor")
 @Service
 public class GarnetService {
 
-    private MyCenter my;
+    private My my;
 
     private final File garnet_directory;
 
@@ -48,7 +49,7 @@ public class GarnetService {
     @Autowired
     private MpcTaskMapper mpcTaskMapper;
 
-    public GarnetService(MyCenter my) {
+    public GarnetService(My my) {
         this.my = my;
         garnet_directory = new File(this.my.getGarnet_path());
     }
@@ -71,10 +72,6 @@ public class GarnetService {
             e.printStackTrace();
             logger.info("Garnet初始化失败:" + e.getMessage());
         }
-    }
-
-    public void preprocess(MpcTask mpcTask) throws Exception {
-
     }
 
     public void idExtract(String inputPath, String prefix, Integer part) throws Exception {
@@ -100,8 +97,7 @@ public class GarnetService {
     public void link(String path, String prefix, Integer part) throws Exception {
         List<String> command = new ArrayList<>(Arrays.asList("ln", "-s", path,
                 garnet_directory.getAbsolutePath() + "/Input/" + prefix + "-P" + part + "-0"));
-        ProcessBuilder processBuilder = new ProcessBuilder(command);
-        processBuilder.directory(garnet_directory);
+        ProcessBuilder processBuilder = new ProcessBuilder(command).directory(garnet_directory);
         try {
             Process process = processBuilder.start();
             Integer exitcode = process.waitFor();
@@ -139,8 +135,9 @@ public class GarnetService {
                         String value = task_parameter.getString(p.getName());
                         if (value == null && p.getRequired()) {
                             throw new IllegalArgumentException("缺少参数: " + p.getName());
+                        } else if (value != null) {
+                            args.put((Integer) p.getPosORflag(), value);
                         }
-                        args.put((Integer) p.getPosORflag(), value);
                     }
                     break;
                 case FLAG:
@@ -150,10 +147,10 @@ public class GarnetService {
                         String value = task_parameter.getString(p.getName());
                         if (value == null && p.getRequired()) {
                             throw new IllegalArgumentException("缺少参数: " + p.getName());
+                        } else if (value != null) {
+                            flags.add((String) p.getPosORflag() + " " + value);
                         }
-                        flags.add((String) p.getPosORflag() + " " + value);
                     }
-
                     break;
             }
         }
@@ -166,8 +163,8 @@ public class GarnetService {
             mpc_name += "-" + args.get(i);
         }
         command.addAll(flags);
-        ProcessBuilder processBuilder = new ProcessBuilder(command);
-        processBuilder.directory(garnet_directory);
+        ProcessBuilder processBuilder = new ProcessBuilder(command).directory(garnet_directory);
+        logger.info("运行命令：" + command.toString());
         try {
             mpcTask.setStatus(MpcTask.Status.COMPILING);
             logger.info(mpcTask.getUid() + ":开始编译");
@@ -219,7 +216,7 @@ public class GarnetService {
                 "-p", part.toString(),
                 mpc_name));
         ProcessBuilder processBuilder = new ProcessBuilder(command).directory(garnet_directory);
-
+        logger.info("运行命令：", command.toString());
         try {
             mpcTask.setStatus(MpcTask.Status.RUNNING);
             logger.info(mpcTask.getUid() + ":开始运行");
@@ -251,6 +248,103 @@ public class GarnetService {
             logger.error(mpcTask.getUid() + ":运行失败");
             e.printStackTrace();
         }
+    }
 
+    public void csvExtract(String inputCsvPath, String fieldName, String prefix, Integer part) {
+        String outputFilePath = garnet_directory.getAbsolutePath() + "/Input/" + prefix + "-P" + part + "-0";
+        try (BufferedReader reader = Files.newBufferedReader(Paths.get(inputCsvPath));
+                BufferedWriter writer = Files.newBufferedWriter(Paths.get(outputFilePath))) {
+            String headerLine = reader.readLine();
+            if (headerLine == null) {
+                throw new IllegalArgumentException("CSV文件为空");
+            }
+            String[] headers = headerLine.split(",");
+            int fieldIndex = -1;
+            for (int i = 0; i < headers.length; i++) {
+                if (headers[i].trim().equals(fieldName)) {
+                    fieldIndex = i;
+                    break;
+                }
+            }
+            if (fieldIndex == -1) {
+                throw new IllegalArgumentException("字段名未找到: " + fieldName);
+            }
+            String line;
+            while ((line = reader.readLine()) != null) {
+                String[] fields = line.split(",");
+                if (fields.length > fieldIndex) {
+                    String fieldValue = fields[fieldIndex];
+                    int intValue;
+                    try {
+                        intValue = Integer.parseInt(fieldValue);
+                    } catch (NumberFormatException e) {
+                        intValue = Utils.hashStringToInt(fieldValue);
+                    }
+                    writer.write(String.valueOf(intValue));
+                    writer.newLine();
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void csvQuery(String inputCsvPath, String prefix, String fieldName, Integer part, String outputCsvPath) {
+        String fieldFilePath = garnet_directory.getAbsolutePath() + "/Output/" + prefix + "-P" + part + "-0";
+        try (BufferedReader csvReader = Files.newBufferedReader(Paths.get(inputCsvPath));
+                BufferedReader fieldReader = Files.newBufferedReader(Paths.get(fieldFilePath));
+                BufferedWriter csvWriter = Files.newBufferedWriter(Paths.get(outputCsvPath))) {
+
+            // 读取字段文件并存储在集合中
+            Set<Integer> fieldValues = new HashSet<>();
+            String fieldLine;
+            while ((fieldLine = fieldReader.readLine()) != null) {
+                try {
+                    fieldValues.add(Integer.parseInt(fieldLine));
+                } catch (NumberFormatException e) {
+                    fieldValues.add(Utils.hashStringToInt(fieldLine));
+                }
+            }
+
+            // 读取CSV文件头部
+            String headerLine = csvReader.readLine();
+            if (headerLine == null) {
+                throw new IllegalArgumentException("CSV文件为空");
+            }
+            csvWriter.write(headerLine);
+            csvWriter.newLine();
+            String[] headers = headerLine.split(",");
+            int fieldIndex = -1;
+            for (int i = 0; i < headers.length; i++) {
+                if (headers[i].trim().equals(fieldName)) {
+                    fieldIndex = i;
+                    break;
+                }
+            }
+            if (fieldIndex == -1) {
+                throw new IllegalArgumentException("字段名未找到: " + fieldName);
+            }
+            // 逐行读取CSV文件并匹配字段值
+            String line;
+            while ((line = csvReader.readLine()) != null) {
+                String[] fields = line.split(",");
+                if (fields.length > fieldIndex) {
+                    String fieldValue = fields[fieldIndex];
+                    int intValue;
+                    try {
+                        intValue = Integer.parseInt(fieldValue);
+                    } catch (NumberFormatException e) {
+                        intValue = Utils.hashStringToInt(fieldValue);
+                    }
+                    if (fieldValues.contains(intValue)) {
+                        csvWriter.write(line);
+                        csvWriter.newLine();
+                    }
+                }
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }
