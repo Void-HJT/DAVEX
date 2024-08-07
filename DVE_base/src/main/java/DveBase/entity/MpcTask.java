@@ -8,6 +8,7 @@ import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.baomidou.mybatisplus.extension.handlers.FastjsonTypeHandler;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 
@@ -41,6 +42,7 @@ public class MpcTask {
   private Integer port;
   @JsonInclude(Include.NON_NULL)
   private Long dataId;
+  @JsonIgnore
   private String mpcName;
   private TaskType taskType;
   private Status status;

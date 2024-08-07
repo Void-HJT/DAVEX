@@ -8,16 +8,16 @@ import org.springframework.context.annotation.Configuration;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 
+import DveBase.common.My;
 import DveBase.entity.Center;
 import DveBase.mapper.CenterMapper;
-import DveCenter.common.MyCenter;
 import DveCenter.module.auth.service.AuthService;
 
 @Configuration
 public class BoostConfig {
 
     @Autowired
-    private MyCenter my;
+    private My my;
 
     @Autowired
     private CenterMapper centerMapper;
@@ -27,17 +27,19 @@ public class BoostConfig {
 
     @PostConstruct
     private void boost() {
+        if (my.getDveType() != My.DveType.DVE_CENTER) {
+            throw new RuntimeException("DVE_CENTER启动失败: DVE_TYPE错误");
+        }
         LambdaQueryWrapper<Center> queryWrapper = Wrappers.<Center>lambdaQuery().eq(Center::getUid, my.getId());
         Center old_center = centerMapper.selectOne(queryWrapper);
+        Center new_center = (Center) my.getMyObject();
         if (old_center == null) {
-            centerMapper.insert(my.getCenter());
-            authService.broacast(my.getCenter());
+            centerMapper.insert(new_center);
+            authService.broacast(new_center);
 
-        } else if (!old_center.equals(my.getCenter())) {
-            centerMapper.updateById(my.getCenter());
-            authService.broacast(my.getCenter());
-        } else {
-            my.setCenter(old_center);
+        } else if (!old_center.equals(new_center)) {
+            centerMapper.updateById(new_center);
+            authService.broacast(new_center);
         }
 
     }

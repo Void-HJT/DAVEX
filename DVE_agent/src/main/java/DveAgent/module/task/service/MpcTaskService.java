@@ -12,9 +12,8 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.BodyInserters;
 
-import DveAgent.common.MyAgent;
 import DveAgent.module.auth.service.AgentWebClientService;
-import DveBase.service.directory.FileFolderService;
+import DveBase.common.My;
 import DveBase.common.Utils;
 import DveBase.entity.MpcTask;
 import DveBase.entity.MpcTaskAgent;
@@ -24,6 +23,8 @@ import DveBase.mapper.FileMapper;
 import DveBase.mapper.MpcMapper;
 import DveBase.mapper.MpcTaskAgentMapper;
 import DveBase.mapper.MpcTaskMapper;
+import DveBase.service.directory.FileFolderService;
+import DveBase.service.programs.GarnetService;
 
 @Service
 public class MpcTaskService {
@@ -35,7 +36,7 @@ public class MpcTaskService {
     private MpcTaskAgentMapper mpcTaskAgentMapper;
 
     @Autowired
-    private MyAgent my;
+    private My my;
 
     @Autowired
     GarnetService garnetService;
@@ -57,7 +58,7 @@ public class MpcTaskService {
 
     // TODO 检查File权限
     public void createMpcTask(UploadAgentTaskInfo mpctTaskInfo) throws Exception {
-        
+
         if (mpctTaskInfo.getUid() != null && mpcTaskMapper.selectById(mpctTaskInfo.getUid()) != null) {
             throw new Exception("任务已存在");
         }
@@ -97,7 +98,7 @@ public class MpcTaskService {
         garnetService.compile(mpcTask);
         garnetService.link(fileFolderService.getFilePath(fileMapper.selectById(mpcTask.getDataId()), my.getBase_path()),
                 mpcTask.getUid(),
-                Long.valueOf(mpcTask.getPart().toString()));
+                mpcTask.getPart());
     }
 
     @Async("customExecutor")

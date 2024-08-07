@@ -23,17 +23,17 @@ import org.springframework.web.multipart.MultipartFile;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 
+import DveBase.common.My;
 import DveBase.common.R;
 import DveBase.common.Utils;
 import DveBase.entity.Mpc;
 import DveBase.mapper.MpcMapper;
-import DveCenter.common.MyCenter;
 
 @RestController
 @RequestMapping("/Mpc")
 public class MpcController {
     @Autowired
-    MyCenter my;
+    My my;
 
     @Autowired
     MpcMapper mpcMapper;

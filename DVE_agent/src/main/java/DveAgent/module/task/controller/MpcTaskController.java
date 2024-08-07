@@ -10,8 +10,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import DveAgent.common.MyAgent;
-import DveAgent.module.task.service.GarnetService;
 import DveAgent.module.task.service.MpcTaskService;
 import DveBase.common.R;
 import DveBase.entity.MpcTask;
@@ -26,12 +24,6 @@ public class MpcTaskController {
     private MpcTaskService mpcTaskService;
 
     private static final Logger logger = LoggerFactory.getLogger(MpcTaskController.class);
-
-    @Autowired
-    MyAgent my;
-
-    @Autowired
-    GarnetService garnetService;
 
     @Autowired
     MpcTaskMapper mpcTaskMapper;

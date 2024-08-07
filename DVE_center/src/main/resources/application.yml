@@ -7,6 +7,7 @@ my:
   description: 'DVE Center 171'
   garnet_path: "/home/nhy/Garnet"
   base_path: "/home/nhy/DVE"
+  dve_type: "DVE_CENTER"
 
 server:
   port: 9999
@@ -41,7 +42,7 @@ spring:
 
 mybatis-plus:
   configuration:
-    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+    # log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
     map-underscore-to-camel-case: true
   global-config:
     db-config:

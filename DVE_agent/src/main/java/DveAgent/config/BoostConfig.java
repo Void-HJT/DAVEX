@@ -8,8 +8,8 @@ import org.springframework.context.annotation.Configuration;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 
-import DveAgent.common.MyAgent;
 import DveAgent.module.auth.service.AuthService;
+import DveBase.common.My;
 import DveBase.entity.Agent;
 import DveBase.mapper.AgentMapper;
 
@@ -17,7 +17,7 @@ import DveBase.mapper.AgentMapper;
 public class BoostConfig {
 
     @Autowired
-    private MyAgent my;
+    private My my;
 
     @Autowired
     private AgentMapper agentMapper;
@@ -27,16 +27,18 @@ public class BoostConfig {
 
     @PostConstruct
     private void boost() {
+        if (my.getDveType() != My.DveType.DVE_AGENT) {
+            throw new RuntimeException("DVE_AGENT启动失败: DVE_TYPE错误");
+        }
         LambdaQueryWrapper<Agent> queryWrapper = Wrappers.<Agent>lambdaQuery().eq(Agent::getUid, my.getId());
         Agent old_agent = agentMapper.selectOne(queryWrapper);
+        Agent new_agent = (Agent) my.getMyObject();
         if (old_agent == null) {
-            agentMapper.insert(my.getAgent());
-            authService.broacast(my.getAgent());
-        } else if (!old_agent.equals(my.getAgent())) {
-            authService.broacast(my.getAgent());
-            agentMapper.updateById(my.getAgent());
-        } else {
-            my.setAgent(old_agent);
+            agentMapper.insert((Agent) my.getMyObject());
+            authService.broacast(new_agent);
+        } else if (!old_agent.equals(new_agent)) {
+            authService.broacast(new_agent);
+            agentMapper.updateById(new_agent);
         }
 
     }

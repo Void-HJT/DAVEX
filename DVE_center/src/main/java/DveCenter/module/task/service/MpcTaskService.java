@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 
+import DveBase.common.My;
 import DveBase.common.R;
 import DveBase.entity.MpcTask;
 import DveBase.entity.MpcTaskAgent;
@@ -20,7 +21,7 @@ import DveBase.info.UploadAgentTaskInfo;
 import DveBase.mapper.AgentMapper;
 import DveBase.mapper.MpcTaskAgentMapper;
 import DveBase.mapper.MpcTaskMapper;
-import DveCenter.common.MyCenter;
+import DveBase.service.programs.GarnetService;
 import DveCenter.entity.Input;
 import DveCenter.mapper.InputMapper;
 import DveCenter.module.auth.service.CenterWebClientService;
@@ -43,7 +44,7 @@ public class MpcTaskService {
     private AgentMapper agentMapper;
 
     @Autowired
-    private MyCenter my;
+    private My my;
 
     @Autowired
     private GarnetService garnetService;

@@ -4,15 +4,26 @@ import java.security.KeyStore;
 import java.security.PrivateKey;
 import java.security.Signature;
 import java.security.cert.Certificate;
+import java.time.LocalDateTime;
 import java.util.Base64;
 
 import javax.annotation.PostConstruct;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
+import DveBase.entity.Agent;
+import DveBase.entity.Center;
 import nl.altindag.ssl.SSLFactory;
 
+@Component
 public class My {
+
+    public enum DveType {
+        DVE_AGENT,
+        DVE_CENTER
+    }
+
     @Value("${version}")
     protected String version;
 
@@ -52,6 +63,11 @@ public class My {
     @Value("${my.base_path}")
     protected String base_path;
 
+    @Value("${my.dve_type}")
+    protected DveType dveType;
+
+    private Object myObject;
+
     protected KeyStore keyStore;
 
     protected KeyStore trustStore;
@@ -62,8 +78,33 @@ public class My {
 
     protected SSLFactory baseSslFactory;
 
+    public Object getMyObject() {
+        return myObject;
+    }
+
     @PostConstruct
     public void init() throws Exception {
+        switch (dveType) {
+            default:
+            case DVE_AGENT:
+                myObject = new Agent();
+                ((Agent) myObject).setUid(id);
+                ((Agent) myObject).setName(name);
+                ((Agent) myObject).setIp(ip);
+                ((Agent) myObject).setPort(port);
+                ((Agent) myObject).setDescription(description);
+                ((Agent) myObject).setLastUpdated(LocalDateTime.now());
+                break;
+            case DVE_CENTER:
+                myObject = new Center();
+                ((Center) myObject).setUid(id);
+                ((Center) myObject).setName(name);
+                ((Center) myObject).setIp(ip);
+                ((Center) myObject).setPort(port);
+                ((Center) myObject).setDescription(description);
+                ((Center) myObject).setLastUpdated(LocalDateTime.now());
+                break;
+        }
     }
 
     /**
@@ -225,4 +266,11 @@ public class My {
         this.base_path = base_path;
     }
 
+    public DveType getDveType() {
+        return dveType;
+    }
+
+    public void setDveType(DveType dveType) {
+        this.dveType = dveType;
+    }
 }

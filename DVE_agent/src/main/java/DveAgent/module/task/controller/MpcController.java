@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 
-import DveAgent.common.MyAgent;
+import DveBase.common.My;
 import DveBase.common.R;
 import DveBase.entity.Mpc;
 import DveBase.mapper.MpcMapper;
@@ -22,7 +22,7 @@ import DveBase.mapper.MpcMapper;
 @RequestMapping("/Mpc")
 public class MpcController {
     @Autowired
-    MyAgent my;
+    My my;
 
     @Autowired
     MpcMapper mpcMapper;
