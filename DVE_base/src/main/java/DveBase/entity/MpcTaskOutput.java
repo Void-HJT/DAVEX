@@ -17,4 +17,5 @@ public class MpcTaskOutput {
     private String hash;
     private String path;
     private LocalDate uploadDate;
+    private String name;
 }
