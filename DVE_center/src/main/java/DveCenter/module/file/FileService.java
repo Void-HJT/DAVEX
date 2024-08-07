@@ -1,10 +1,6 @@
 package DveCenter.module.file;
 
-import java.io.BufferedInputStream;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
+import java.io.*;
 import java.net.URLEncoder;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -12,11 +8,19 @@ import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 //import java.io.File; 命名冲突，使用全限定名
 import javax.servlet.http.HttpServletResponse;
 import javax.xml.bind.DatatypeConverter;
 
+import DveBase.entity.MpcTaskOutput;
+import DveCenter.entity.MpcOutput;
+import DveCenter.mapper.MpcOutputMapper;
+import com.fasterxml.jackson.databind.MappingIterator;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.csv.CsvMapper;
+import com.fasterxml.jackson.dataformat.csv.CsvSchema;
 import org.apache.commons.io.FileUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -40,6 +44,8 @@ public class FileService {
     private OutputMapper outputMapper;
     @Autowired
     private TaskMapper taskMapper;
+    @Autowired
+    private MpcOutputMapper mpcOutputMapper;
     @Autowired
     private JdbcTemplate jdbcTemplate;
 
@@ -90,19 +96,11 @@ public class FileService {
         newOutput.setAgentId(fileInfo.getAgentId());
         newOutput.setApplicationId(applicationId.longValue());
         outputMapper.insert(newOutput);
+        String filePath = newOutput.getPath();
 
         // 存储文件到结果管理区
         try {
-            // 新建一个文件路径
-            java.io.File uploadFile = new java.io.File(newOutput.getPath());
-            // 当父级目录不存在时，自动创建
-            if (!uploadFile.getParentFile().exists()) {
-                uploadFile.getParentFile().mkdirs();
-            }
-            // 存储文件到电脑磁盘
-            // file.transferTo(uploadFile);
-            FileUtils.copyInputStreamToFile(file.getInputStream(), uploadFile);
-
+            saveFileToPath(file, filePath);
         } catch (IOException e) {
             e.printStackTrace();
             return Body.error(String.format("保存失败: 文件id %d，代理id: %d，文件名: %s，错误信息: %s",
@@ -174,18 +172,11 @@ public class FileService {
             newOutput.setAgentId(fileInfo.getAgentId());
             newOutput.setApplicationId(applicationId.longValue());
             outputMapper.insert(newOutput);
+            String filePath = newOutput.getPath();
 
             // 存储文件到结果管理区
             try {
-                // 新建一个文件路径
-                java.io.File uploadFile = new java.io.File(newOutput.getPath());
-                // 当父级目录不存在时，自动创建
-                if (!uploadFile.getParentFile().exists()) {
-                    uploadFile.getParentFile().mkdirs();
-                }
-                // 存储文件到电脑磁盘
-                // file.transferTo(uploadFile);
-                FileUtils.copyInputStreamToFile(file.getInputStream(), uploadFile);
+                saveFileToPath(file, filePath);
                 results.add(String.format("保存成功，文件id: %d，代理id: %d，文件名: %s",
                         fileInfo.getUid(), fileInfo.getAgentId(), fileName));
             } catch (IOException e) {
@@ -371,5 +362,84 @@ public class FileService {
             e.printStackTrace();
             return null;
         }
+    }
+
+    public void saveFileToPath(MultipartFile file, String filePath) throws IOException {
+        // 新建一个文件路径
+        java.io.File uploadFile = new java.io.File(filePath);
+        // 当父级目录不存在时，自动创建
+        if (!uploadFile.getParentFile().exists()) {
+            uploadFile.getParentFile().mkdirs();
+        }
+        // 存储文件到电脑磁盘
+        // file.transferTo(uploadFile);
+        FileUtils.copyInputStreamToFile(file.getInputStream(), uploadFile);
+    }
+
+    public void csvToJson(String filePath) throws IOException {
+        java.io.File csvFile = new java.io.File(filePath);
+
+        CsvMapper csvMapper = new CsvMapper();
+        CsvSchema csvSchema = CsvSchema.emptySchema().withHeader();
+        MappingIterator<Map<String, String>> it = csvMapper.readerFor(Map.class).with(csvSchema).readValues(csvFile);
+
+        List<Map<String, String>> data = it.readAll();
+        ObjectMapper jsonMapper = new ObjectMapper();
+        String json = jsonMapper.writeValueAsString(data);
+
+        try (FileWriter fileWriter = new FileWriter(csvFile)) {
+            fileWriter.write(json);
+        }
+    }
+
+    public Body<String> saveMpcFile(MultipartFile file, MpcTaskOutput mpcInfo, Long applicationId,
+                                    String base, java.sql.Timestamp expiredTime) {
+
+        // 校验sha256
+        String fileHash = getSha256(file);
+        if (!fileHash.equals(mpcInfo.getHash())) {return Body.error(String.format("哈希校验失败，任务id: %s",
+                mpcInfo.getTaskId()));}
+
+        // 文件信息加入结果表
+        // 若已存在，则进行覆盖
+        LambdaQueryWrapper<MpcOutput> queryWrapper = Wrappers.<MpcOutput>lambdaQuery()
+                .eq(MpcOutput::getTaskId, mpcInfo.getTaskId())
+                .eq(MpcOutput::getApplicationId, applicationId);
+        MpcOutput queryMpcOutput = mpcOutputMapper.selectOne(queryWrapper);
+        if (queryMpcOutput != null) {
+            if (fileHash.equals(queryMpcOutput.getHash())) {
+                jdbcTemplate.execute("SET FOREIGN_KEY_CHECKS = 0");
+                mpcOutputMapper.deleteById(queryMpcOutput.getUid());
+                jdbcTemplate.execute("SET FOREIGN_KEY_CHECKS = 1");
+            }
+        }
+        MpcOutput newMpcOutput = new MpcOutput();
+        newMpcOutput.setTaskId(mpcInfo.getTaskId());
+        newMpcOutput.setHash(mpcInfo.getHash());
+        newMpcOutput.setPath(base + "/mpc/" + fileHash + "_appid_" + applicationId);
+        newMpcOutput.setUploadDate(Timestamp.valueOf(LocalDateTime.now()));
+        newMpcOutput.setApplicationId(applicationId);
+        newMpcOutput.setExpiredTime(expiredTime);
+        newMpcOutput.setName(mpcInfo.getName());
+        mpcOutputMapper.insert(newMpcOutput);
+        String filePath = newMpcOutput.getPath();
+        String fileName = newMpcOutput.getName();
+
+        // 存储文件到结果管理区
+        try {
+            saveFileToPath(file, filePath);
+            // 判断文件是否为 CSV 文件
+            if (fileName.toLowerCase().endsWith(".csv")) {
+                // 将CSV文件转换为JSON文件
+                csvToJson(filePath);
+                newMpcOutput.setName(fileName.replaceAll("\\.csv$", ".json"));
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+            return Body.error(String.format("保存失败: 任务id: %s，错误信息: %s",
+                    mpcInfo.getTaskId(), e.getMessage()));
+        }
+        return Body.success(String.format("保存成功，任务id: %s",
+                mpcInfo.getTaskId()));
     }
 }
