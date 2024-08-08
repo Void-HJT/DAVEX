@@ -5,12 +5,11 @@ import com.baomidou.mybatisplus.annotation.TableId;
 import lombok.Data;
 
 @Data
-public class Database_table {
+public class OutsideDatabase {
     @TableId(type = IdType.AUTO)
     private Long uid;
-    private Long database_id;
     private String name;
+    private String type;
+    private String connection;
     private String description;
-    private String schema;
-    private String example;
 }

@@ -54,7 +54,7 @@ public class GarnetService {
         garnet_directory = new File(this.my.getGarnet_path());
     }
 
-    @EventListener(ApplicationReadyEvent.class)
+//    @EventListener(ApplicationReadyEvent.class)
     @Async("customExecutor")
     public void init() {
         ProcessBuilder makeBuilder = new ProcessBuilder("make").directory(garnet_directory);
