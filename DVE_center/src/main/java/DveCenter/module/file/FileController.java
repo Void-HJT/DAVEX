@@ -3,9 +3,6 @@ package DveCenter.module.file;
 import java.io.ByteArrayOutputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -15,12 +12,10 @@ import java.util.stream.Collectors;
 
 import javax.servlet.http.HttpServletResponse;
 
-import DveBase.entity.Mpc;
 import DveBase.entity.MpcTaskOutput;
-import DveBase.mapper.MpcTaskOutputMapper;
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import DveCenter.entity.MpcOutput;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
@@ -97,22 +92,21 @@ public class FileController {
         return fileService.saveFiles(files, fileInfos, applicationId, uploadBaseDir, expiredTimes);
     }
 
-    // application从center结果管理区获取文件的接口
-    @PostMapping("/fetch")
-    public Body<String> fetch(@RequestParam("outputId") Integer outputId,
+    // application从center结果管理区通过Http获取文件的接口
+    @PostMapping("/fetchbyhttp")
+    public Body<String> fetchbyhttp(@RequestParam("outputId") Integer outputId,
                                  @RequestParam("applicationId") Long applicationId,
                                  HttpServletResponse response) {
 
-        return fileService.fetchFile(outputId, applicationId, response);
+        return fileService.fetchFileByHttp(outputId, applicationId, response);
     }
 
     // application通过路径直接获取center结果管理区文件的接口
-    @PostMapping("/fetchbypath")
-    public Body<String> fetchbypath(@RequestParam("outputId") Integer outputId,
-                                       @RequestParam("applicationId") Long applicationId,
-                                    @RequestParam String downloadPath) {
+    @PostMapping("/fetch")
+    public Body<String> fetch(@RequestParam("outputId") Integer outputId,
+                                       @RequestParam("applicationId") Long applicationId) {
 
-        return fileService.fetchFileByPath(outputId, applicationId, downloadPath);
+        return fileService.fetchFile(outputId, applicationId, downloadBaseDir);
     }
 
     // application查询center结果管理区所有文件的接口
@@ -276,5 +270,36 @@ public class FileController {
         mpcInfo.setName("train.csv");
 
         return savempc(file, mpcInfo, applicationId, null);
+    }
+
+    // application通过路径直接获取center结果管理区mpc文件的接口
+    @PostMapping("/fetchmpc")
+    public Body<String> fetchmpc(@RequestParam("mpcOutputId") Integer mpcOutputId,
+                              @RequestParam("applicationId") Long applicationId) {
+
+        return fileService.fetchMpc(mpcOutputId, applicationId, downloadBaseDir);
+    }
+
+    // application查询center结果管理区所mpc有文件的接口
+    @GetMapping("/querympc")
+    public Body<List<MpcOutput>> querympc(@RequestParam("applicationId") Integer applicationId) {
+
+        return fileService.queryMpc(applicationId);
+    }
+
+    // application查询center结果管理区某些mpc文件的接口
+    @GetMapping("/querympcbyids")
+    public Body<List<MpcOutput>> querympcbyids(@RequestParam("applicationId") Integer applicationId,
+                                         @RequestParam("mpcOutputIds") List<Integer> mpcOutputIds) {
+
+        return fileService.queryMpcByIds(applicationId, mpcOutputIds);
+    }
+
+    // application删除center结果管理区mpc文件的接口
+    @PostMapping("/deletempc")
+    public Body<String> deletempc(@RequestParam("applicationId") Integer applicationId,
+                               @RequestParam("mpcOutputId") Integer mpcOutputId) {
+
+        return fileService.deleteMpc(applicationId, mpcOutputId);
     }
 }
