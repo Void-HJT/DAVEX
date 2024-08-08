@@ -66,3 +66,7 @@ threadpool:
   awaitTerminationSeconds: 6000
   # 线程名字前缀
   threadNamePrefix: 'DVE-Center-'
+
+file:
+  upload-base-dir: "/home/zkx/DAVE/Files/"
+  download-base-dir: "/home/zkx/DAVE/ApplicationFiles/"
