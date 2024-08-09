@@ -17,6 +17,7 @@ import javax.xml.bind.DatatypeConverter;
 import DveBase.entity.MpcTaskOutput;
 import DveCenter.entity.MpcOutput;
 import DveCenter.mapper.MpcOutputMapper;
+import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.fasterxml.jackson.databind.MappingIterator;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.csv.CsvMapper;
@@ -441,6 +442,9 @@ public class FileService {
                 // 将CSV文件转换为JSON文件
                 csvToJson(filePath);
                 newMpcOutput.setName(fileName.replaceAll("\\.csv$", ".json"));
+                UpdateWrapper<MpcOutput> updateWrapper = new UpdateWrapper<>();
+                updateWrapper.eq("uid", newMpcOutput.getUid());
+                mpcOutputMapper.update(newMpcOutput, updateWrapper);
             }
         } catch (IOException e) {
             e.printStackTrace();
