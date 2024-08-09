@@ -5,15 +5,20 @@ import DveAgent.config.ExternalDatabaseProperties;
 import DveBase.common.Body;
 import DveBase.entity.OutsideDatabase;
 import DveBase.entity.OutsideDatabaseTable;
+import DveBase.info.QueryRequest;
 import DveBase.mapper.DatabaseMapper;
 import DveBase.mapper.DatabaseTableMapper;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.jdbc.core.JdbcTemplate;
+
 
 import java.sql.*;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 public class DatabaseService {
@@ -23,6 +28,9 @@ public class DatabaseService {
 
     @Autowired
     private DatabaseTableMapper databaseTableMapper;
+
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
 
     @Autowired
     private ExternalDatabaseProperties externalDatabasePropertiesBean;
@@ -81,6 +89,93 @@ public class DatabaseService {
         return externalDatabasePropertiesBean.getDatabases().stream()
                 .filter(db -> db.getName().equalsIgnoreCase(dbName))
                 .findFirst();
+    }
+
+    public Body<List<OutsideDatabaseTable>> getTable(Long databaseId) {
+        LambdaQueryWrapper<OutsideDatabaseTable> queryWrapper = Wrappers.<OutsideDatabaseTable>lambdaQuery()
+                .eq(OutsideDatabaseTable::getOutsideDatabaseId,databaseId);
+        List<OutsideDatabaseTable> outsideDatabaseTables = databaseTableMapper.selectList(queryWrapper);
+        return Body.success(outsideDatabaseTables,"返回成功");
+    }
+
+    public String executeQuery(QueryRequest request,Long databaseId) {
+        String sql = buildSqlFromRequest(request);
+        LambdaQueryWrapper<OutsideDatabase> queryWrapper = Wrappers.<OutsideDatabase>lambdaQuery()
+                .eq(OutsideDatabase::getUid,databaseId);
+        OutsideDatabase database = databaseMapper.selectOne(queryWrapper);
+
+        Optional<ExternalDatabaseProperties.DatabaseConfig> dbConfig = getExternalDatabaseConfig(database.getName());
+        if (dbConfig.isPresent()) {
+            try (Connection connection = DriverManager.getConnection(
+                    dbConfig.get().getUrl(), dbConfig.get().getUsername(), dbConfig.get().getPassword());
+                 Statement statement = connection.createStatement();
+                 ResultSet resultSet = statement.executeQuery(sql)) {
+
+                // 处理结果集，将查询结果存入List<Map<String, Object>>中
+                List<Map<String, Object>> results = new ArrayList<>();
+                while (resultSet.next()) {
+                    Map<String, Object> row = new HashMap<>();
+                    for (String column : request.getColumns()) {
+                        row.put(column, resultSet.getObject(column));
+                    }
+                    results.add(row);
+                }
+                //返回
+                return results.toString();
+
+            } catch (SQLException e) {
+                e.printStackTrace();
+                // 处理异常，返回错误信息或抛出自定义异常
+                return "Error executing query: " + e.getMessage();
+            }
+        }
+        else{
+            return "External database configuration not found.";
+        }
+    }
+
+    private String buildSqlFromRequest(QueryRequest request) {
+        StringBuilder sql = new StringBuilder("SELECT ");
+
+        // 选择要查询的列
+        if (request.getColumns() == null || request.getColumns().isEmpty()) {
+            sql.append("*");
+        } else {
+            sql.append(String.join(", ", request.getColumns()));
+        }
+
+        sql.append(" FROM `").append(request.getTableName()).append("`");
+
+        // 添加查询条件
+        if (request.getConditions() != null && !request.getConditions().isEmpty()) {
+            sql.append(" WHERE ");
+            request.getConditions().forEach((column, value) -> {
+                sql.append("`").append(column).append("` = '").append(value).append("' AND ");
+            });
+            // 移除最后一个 " AND "
+            sql.setLength(sql.length() - 5);
+        }
+
+        // 添加排序条件
+        if (request.getOrderBy() != null && !request.getOrderBy().isEmpty()) {
+            sql.append(" ORDER BY ");
+            request.getOrderBy().forEach((column, order) -> {
+                sql.append("`").append(column).append("` ").append(order).append(", ");
+            });
+            // 移除最后一个 ", "
+            sql.setLength(sql.length() - 2);
+        }
+
+        // 添加分页条件
+        if (request.getLimit() != null) {
+            sql.append(" LIMIT ").append(request.getLimit());
+        }
+
+        if (request.getOffset() != null) {
+            sql.append(" OFFSET ").append(request.getOffset());
+        }
+
+        return sql.toString();
     }
 }
 
