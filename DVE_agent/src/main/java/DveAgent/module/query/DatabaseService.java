@@ -180,6 +180,11 @@ public class DatabaseService {
 
         return sql.toString();
     }
+
+    public Body<List<OutsideDatabase>> getDatabase() {
+        List<OutsideDatabase> outsideDatabases = databaseMapper.selectList(null);
+        return Body.success(outsideDatabases,"");
+    }
 }
 
 
