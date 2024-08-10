@@ -16,7 +16,10 @@ import javax.xml.bind.DatatypeConverter;
 
 import DveBase.entity.MpcTaskOutput;
 import DveCenter.entity.MpcOutput;
+import DveCenter.entity.QueryOutput;
 import DveCenter.mapper.MpcOutputMapper;
+import DveCenter.mapper.QueryOutputMapper;
+import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.fasterxml.jackson.databind.MappingIterator;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.csv.CsvMapper;
@@ -33,9 +36,9 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import DveBase.common.Body;
 import DveBase.entity.File;
 import DveCenter.entity.Output;
-import DveCenter.entity.Task;
+import DveCenter.entity.DownloadTask;
 import DveCenter.mapper.OutputMapper;
-import DveCenter.mapper.TaskMapper;
+import DveCenter.mapper.DownloadTaskMapper;
 
 @Service
 public class FileService {
@@ -43,11 +46,13 @@ public class FileService {
     @Autowired
     private OutputMapper outputMapper;
     @Autowired
-    private TaskMapper taskMapper;
+    private DownloadTaskMapper downloadTaskMapper;
     @Autowired
     private MpcOutputMapper mpcOutputMapper;
     @Autowired
     private JdbcTemplate jdbcTemplate;
+    @Autowired
+    private QueryOutputMapper queryOutputMapper;
 
     public Body<String> saveFile(MultipartFile file, File fileInfo, Integer applicationId,
             String base, java.sql.Timestamp expiredTime) {
@@ -192,7 +197,7 @@ public class FileService {
         return Body.success(results, "文件保存处理完成");
     }
 
-    public Body<String> fetchFile(Integer outputId, Long applicationId, HttpServletResponse response) {
+    public Body<String> fetchFileByHttp(Integer outputId, Long applicationId, HttpServletResponse response) {
 
         // 根据结果id查找结果表
         LambdaQueryWrapper<Output> queryWrapper = Wrappers.<Output>lambdaQuery()
@@ -210,13 +215,12 @@ public class FileService {
         }
 
         // 添加下载任务记录到任务表
-        Task newTask = new Task();
-        newTask.setFileId(queryOutput.getFileId());
-        newTask.setAgentId(queryOutput.getAgentId());
-        newTask.setApplicationId(applicationId);
-        newTask.setOutputId(queryOutput.getUid());
-        newTask.setDownloadTime(Timestamp.valueOf(LocalDateTime.now()));
-        taskMapper.insert(newTask);
+        DownloadTask newDownloadTask = new DownloadTask();
+        newDownloadTask.setApplicationId(applicationId);
+        newDownloadTask.setOutputId(queryOutput.getUid());
+        newDownloadTask.setDownloadTime(Timestamp.valueOf(LocalDateTime.now()));
+        newDownloadTask.setType("common");
+        downloadTaskMapper.insert(newDownloadTask);
 
         // 新建文件流，从磁盘读取文件流
         String filePath = queryOutput.getPath();
@@ -244,7 +248,7 @@ public class FileService {
         return Body.success(String.format("获取成功，结果id: %d，文件名: %s", outputId, fileName));
     }
 
-    public Body<String> fetchFileByPath(Integer outputId, Long applicationId, String downloadPath) {
+    public Body<String> fetchFile(Integer outputId, Long applicationId, String downloadPath) {
 
         // 根据结果id查找结果表
         LambdaQueryWrapper<Output> queryWrapper = Wrappers.<Output>lambdaQuery()
@@ -262,29 +266,18 @@ public class FileService {
         }
 
         // 添加下载任务记录到任务表
-        Task newTask = new Task();
-        newTask.setFileId(queryOutput.getFileId());
-        newTask.setAgentId(queryOutput.getAgentId());
-        newTask.setApplicationId(applicationId);
-        newTask.setOutputId(queryOutput.getUid());
-        newTask.setDownloadTime(Timestamp.valueOf(LocalDateTime.now()));
-        taskMapper.insert(newTask);
+        DownloadTask newDownloadTask = new DownloadTask();
+        newDownloadTask.setApplicationId(applicationId);
+        newDownloadTask.setOutputId(queryOutput.getUid());
+        newDownloadTask.setDownloadTime(Timestamp.valueOf(LocalDateTime.now()));
+        newDownloadTask.setType("common");
+        downloadTaskMapper.insert(newDownloadTask);
 
         // 直接通过路径访问文件
         String filePath = queryOutput.getPath();
         String fileName = queryOutput.getName();
-        var source = new java.io.File(filePath);
-        var dest = new java.io.File(downloadPath + fileName);
-        try (var fis = new FileInputStream(source);
-                var fos = new FileOutputStream(dest)) {
-
-            byte[] buffer = new byte[1024];
-            int length;
-
-            while ((length = fis.read(buffer)) > 0) {
-
-                fos.write(buffer, 0, length);
-            }
+        try {
+            copyFile(filePath, fileName, downloadPath);
         } catch (Exception e) {
             e.printStackTrace();
             return Body.error(String.format("获取失败: 结果id %d，文件名: %s，错误信息: %s", outputId, fileName, e.getMessage()));
@@ -331,11 +324,7 @@ public class FileService {
         // 删除文件及结果表
         try {
             outputMapper.deleteById(outputId);
-            java.io.File file = new java.io.File(filePath);
-            // 路径是个文件且不为空时删除文件
-            if (file.isFile() && file.exists()) {
-                file.delete();
-            }
+            deleteFileFromPath(filePath);
             // 启用外键检查
             jdbcTemplate.execute("SET FOREIGN_KEY_CHECKS = 1");
         } catch (Exception e) {
@@ -392,6 +381,30 @@ public class FileService {
         }
     }
 
+    public void copyFile(String filePath, String fileName, String downloadPath) throws Exception {
+        var source = new java.io.File(filePath);
+        var dest = new java.io.File(downloadPath + fileName);
+        try (var fis = new FileInputStream(source);
+             var fos = new FileOutputStream(dest)) {
+
+            byte[] buffer = new byte[1024];
+            int length;
+
+            while ((length = fis.read(buffer)) > 0) {
+
+                fos.write(buffer, 0, length);
+            }
+        }
+    }
+
+    public void deleteFileFromPath(String filePath) throws Exception {
+        java.io.File file = new java.io.File(filePath);
+        // 路径是个文件且不为空时删除文件
+        if (file.isFile() && file.exists()) {
+            file.delete();
+        }
+    }
+
     public Body<String> saveMpcFile(MultipartFile file, MpcTaskOutput mpcInfo, Long applicationId,
                                     String base, java.sql.Timestamp expiredTime) {
 
@@ -433,6 +446,9 @@ public class FileService {
                 // 将CSV文件转换为JSON文件
                 csvToJson(filePath);
                 newMpcOutput.setName(fileName.replaceAll("\\.csv$", ".json"));
+                UpdateWrapper<MpcOutput> updateWrapper = new UpdateWrapper<>();
+                updateWrapper.eq("uid", newMpcOutput.getUid());
+                mpcOutputMapper.update(newMpcOutput, updateWrapper);
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -441,5 +457,146 @@ public class FileService {
         }
         return Body.success(String.format("保存成功，任务id: %s",
                 mpcInfo.getTaskId()));
+    }
+
+    public Body<String> fetchMpc(Integer mpcOutputId, Long applicationId, String downloadPath) {
+        // 根据结果id查找结果表
+        LambdaQueryWrapper<MpcOutput> queryWrapper = Wrappers.<MpcOutput>lambdaQuery()
+                .eq(MpcOutput::getUid, mpcOutputId)
+                .eq(MpcOutput::getApplicationId, applicationId);
+        MpcOutput queryMpcOutput = mpcOutputMapper.selectOne(queryWrapper);
+        if (queryMpcOutput == null) {
+            return Body.error(String.format("找不到该文件，结果id: %d", mpcOutputId));
+        }
+        // 判断文件是否过期
+        Timestamp expiredTime = queryMpcOutput.getExpiredTime();
+        if (expiredTime != null && LocalDateTime.now().isAfter(expiredTime.toLocalDateTime())) {
+            return Body.error(String.format("该文件已过期，结果id: %d，文件名: %s，失效时间: %s", mpcOutputId, queryMpcOutput.getName(),
+                    queryMpcOutput.getExpiredTime()));
+        }
+
+        // 添加下载任务记录到任务表
+        DownloadTask newDownloadTask = new DownloadTask();
+        newDownloadTask.setApplicationId(applicationId);
+        newDownloadTask.setOutputId(queryMpcOutput.getUid());
+        newDownloadTask.setDownloadTime(Timestamp.valueOf(LocalDateTime.now()));
+        newDownloadTask.setType("mpc");
+        downloadTaskMapper.insert(newDownloadTask);
+
+        // 直接通过路径访问文件
+        String filePath = queryMpcOutput.getPath();
+        String fileName = queryMpcOutput.getName();
+        try {
+            copyFile(filePath, fileName, downloadPath);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return Body.error(String.format("获取失败: 结果id %d，文件名: %s，错误信息: %s", mpcOutputId, fileName, e.getMessage()));
+        }
+        return Body.success(String.format("获取成功，结果id: %d，文件名: %s", mpcOutputId, fileName));
+    }
+
+    public Body<List<MpcOutput>> queryMpc(Integer applicationId) {
+
+        LambdaQueryWrapper<MpcOutput> queryWrapper = Wrappers.<MpcOutput>lambdaQuery()
+                .eq(MpcOutput::getApplicationId, applicationId);
+        List<MpcOutput> outputs = mpcOutputMapper.selectList(queryWrapper);
+        Integer fileNum = outputs.size();
+        return Body.success(outputs, String.format("查询成功，共查询到%d个文件", fileNum));
+    }
+
+    public Body<List<MpcOutput>> queryMpcByIds(Integer applicationId, List<Integer> mpcOutputIds) {
+
+        LambdaQueryWrapper<MpcOutput> queryWrapper = Wrappers.<MpcOutput>lambdaQuery()
+                .eq(MpcOutput::getApplicationId, applicationId)
+                .in(MpcOutput::getUid, mpcOutputIds);
+
+        List<MpcOutput> outputs = mpcOutputMapper.selectList(queryWrapper);
+        Integer fileNum = outputs.size();
+        return Body.success(outputs, String.format("查询成功，共查询到%d个文件", fileNum));
+    }
+
+    public Body<String> deleteMpc(Integer applicationId, Integer mpcOutputId) {
+
+        // 根据文件id查找结果表
+        LambdaQueryWrapper<MpcOutput> queryWrapper = Wrappers.<MpcOutput>lambdaQuery()
+                .eq(MpcOutput::getApplicationId, applicationId)
+                .eq(MpcOutput::getUid, mpcOutputId);
+        MpcOutput queryMpcOutput = mpcOutputMapper.selectOne(queryWrapper);
+        if (queryMpcOutput == null) {
+            return Body.error(String.format("找不到该文件，结果id: %d", mpcOutputId));
+        }
+        String filePath = queryMpcOutput.getPath();
+        String fileName = queryMpcOutput.getName();
+
+        // 禁用外键检查
+        jdbcTemplate.execute("SET FOREIGN_KEY_CHECKS = 0");
+
+        // 删除文件及结果表
+        try {
+            mpcOutputMapper.deleteById(mpcOutputId);
+            deleteFileFromPath(filePath);
+            // 启用外键检查
+            jdbcTemplate.execute("SET FOREIGN_KEY_CHECKS = 1");
+        } catch (Exception e) {
+            // 确保在异常情况下重新启用外键检查
+            jdbcTemplate.execute("SET FOREIGN_KEY_CHECKS = 1");
+            e.printStackTrace();
+            return Body.error(String.format("删除失败: 结果id %d，文件名: %s，错误信息: %s", mpcOutputId, fileName, e.getMessage()));
+        }
+
+        return Body.success(String.format("删除成功，结果id: %d，文件名: %s", mpcOutputId, fileName));
+    }
+
+    public Body<String> saveQueryFile(MultipartFile file, String hash, Long applicationId,
+                                    String base, java.sql.Timestamp expiredTime) {
+
+        // 校验sha256
+        String fileHash = getSha256(file);
+        if (!fileHash.equals(hash)) {return Body.error(String.format("哈希校验失败，文件名: %s",
+                file.getName()));}
+
+        // 文件信息加入结果表
+        // 若已存在，则进行覆盖
+        LambdaQueryWrapper<QueryOutput> queryWrapper = Wrappers.<QueryOutput>lambdaQuery()
+                .eq(QueryOutput::getName, file.getName())
+                .eq(QueryOutput::getApplicationId, applicationId);
+        QueryOutput queryQueryOutput = queryOutputMapper.selectOne(queryWrapper);
+        if (queryQueryOutput != null) {
+            if (fileHash.equals(queryQueryOutput.getHash())) {
+                jdbcTemplate.execute("SET FOREIGN_KEY_CHECKS = 0");
+                mpcOutputMapper.deleteById(queryQueryOutput.getUid());
+                jdbcTemplate.execute("SET FOREIGN_KEY_CHECKS = 1");
+            }
+        }
+        QueryOutput newQueryOutput = new QueryOutput();
+        newQueryOutput.setHash(hash);
+        newQueryOutput.setPath(base + "/query/" + fileHash + "_appid_" + applicationId);
+        newQueryOutput.setUploadDate(Timestamp.valueOf(LocalDateTime.now()));
+        newQueryOutput.setApplicationId(applicationId);
+        newQueryOutput.setExpiredTime(expiredTime);
+        newQueryOutput.setName(file.getName());
+        queryOutputMapper.insert(newQueryOutput);
+        String filePath = newQueryOutput.getPath();
+        String fileName = newQueryOutput.getName();
+
+        // 存储文件到结果管理区
+        try {
+            saveFileToPath(file, filePath);
+            // 判断文件是否为 CSV 文件
+            if (fileName.toLowerCase().endsWith(".csv")) {
+                // 将CSV文件转换为JSON文件
+                csvToJson(filePath);
+                newQueryOutput.setName(fileName.replaceAll("\\.csv$", ".json"));
+                UpdateWrapper<QueryOutput> updateWrapper = new UpdateWrapper<>();
+                updateWrapper.eq("uid", newQueryOutput.getUid());
+                queryOutputMapper.update(newQueryOutput, updateWrapper);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+            return Body.error(String.format("保存失败: 文件名: %s，错误信息: %s",
+                    fileName, e.getMessage()));
+        }
+        return Body.success(String.format("保存成功，文件名: %s",
+                fileName));
     }
 }
