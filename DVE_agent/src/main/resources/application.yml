@@ -1,12 +1,12 @@
 version: '1.0'
 
 my:
-  id: 100
-  ip: 10.176.34.171
-  name: '171!'
+  id: 5
+  ip: 10.176.37.50
+  name: 'drt'
   description: 'DVE Agent 171'
-  garnet_path: "/home/nhy/Garnet"
-  base_path: "/home/nhy/DVE/"
+  garnet_path: "/disk2/Garnet/Garnet"
+  base_path: "/disk2"
   dve_type: "DVE_AGENT"
 
 server:
@@ -34,17 +34,18 @@ spring:
 #      username: root
 #      password: Drt1951725
 
-      # url: jdbc:mysql://10.176.37.50:3306/agent
-      # username: drt
-      # password: Drt1951725
+      url: jdbc:mysql://10.176.37.50:3306/agent
+      username: drt
+      password: Drt1951725
 
 #      url: jdbc:mysql://172.20.10.5:3306/center
 #      username: zkx
 #      password: 123456
 
-      url: jdbc:mysql://10.176.34.171:3306/agent
-      username: nhy
-      password: makeMPLgreat*2
+#      url: jdbc:mysql://10.176.34.171:3306/agent
+#      username: nhy
+#      password: makeMPLgreat*2
+
   jackson:
     serialization:
       write-dates-as-timestamps: false

@@ -1,12 +1,12 @@
 version: '1.0'
 
 my:
-  id: 1
-  ip: 10.176.34.171
-  name: '171'
-  description: 'DVE Center 171'
-  garnet_path: "/home/nhy/Garnet"
-  base_path: "/home/nhy/DVE"
+  id: 100
+  ip: 10.176.37.50
+  name: 'drt'
+  description: 'DVE Center 100'
+  garnet_path: "/disk2/Garnet/Garnet"
+  base_path: "/disk2"
   dve_type: "DVE_CENTER"
 
 server:
@@ -30,9 +30,14 @@ spring:
   datasource:
     druid:
       driver-class-name: com.mysql.cj.jdbc.Driver
-      url: jdbc:mysql://10.176.34.171:3306/center
-      username: nhy
-      password: makeMPLgreat*2
+#      url: jdbc:mysql://10.176.34.171:3306/center
+#      username: nhy
+#      password: makeMPLgreat*2
+
+      url: jdbc:mysql://10.176.37.50:3306/center
+      username: drt
+      password: Drt1951725
+
   jackson:
     serialization:
       write-dates-as-timestamps: false

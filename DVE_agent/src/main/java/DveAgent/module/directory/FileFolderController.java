@@ -1,5 +1,4 @@
 package DveAgent.module.directory;
-
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,7 +27,6 @@ import DveBase.service.directory.FileFolderService;
 @RestController // @RestController的作用等同于@Controller + @ResponseBody。
 // 相当于@Controller+@ResponseBody两个注解的结合，返回json数据不需要在方法前面加@ResponseBody注解了，但使用@RestController这个注解，就不能返回jsp,html页面，视图解析器无法解析jsp,html页面
 @RequestMapping("/directory/fileFolder")
-
 public class FileFolderController {
 
     @Autowired
