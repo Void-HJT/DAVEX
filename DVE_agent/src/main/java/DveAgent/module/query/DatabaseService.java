@@ -30,9 +30,6 @@ public class DatabaseService {
     private DatabaseTableMapper databaseTableMapper;
 
     @Autowired
-    private JdbcTemplate jdbcTemplate;
-
-    @Autowired
     private ExternalDatabaseProperties externalDatabasePropertiesBean;
 
 
@@ -100,6 +97,7 @@ public class DatabaseService {
 
     public String executeQuery(QueryRequest request,Long databaseId) {
         String sql = buildSqlFromRequest(request);
+        System.out.println(sql);
         LambdaQueryWrapper<OutsideDatabase> queryWrapper = Wrappers.<OutsideDatabase>lambdaQuery()
                 .eq(OutsideDatabase::getUid,databaseId);
         OutsideDatabase database = databaseMapper.selectOne(queryWrapper);
@@ -111,12 +109,17 @@ public class DatabaseService {
                  Statement statement = connection.createStatement();
                  ResultSet resultSet = statement.executeQuery(sql)) {
 
+                // 获取结果集的元数据
+                ResultSetMetaData metaData = resultSet.getMetaData();
+                int columnCount = metaData.getColumnCount();
+
                 // 处理结果集，将查询结果存入List<Map<String, Object>>中
                 List<Map<String, Object>> results = new ArrayList<>();
                 while (resultSet.next()) {
                     Map<String, Object> row = new HashMap<>();
-                    for (String column : request.getColumns()) {
-                        row.put(column, resultSet.getObject(column));
+                    for (int i = 1; i <= columnCount; i++) {
+                        String columnName = metaData.getColumnName(i);
+                        row.put(columnName, resultSet.getObject(i));
                     }
                     results.add(row);
                 }
