@@ -16,7 +16,9 @@ import javax.xml.bind.DatatypeConverter;
 
 import DveBase.entity.MpcTaskOutput;
 import DveCenter.entity.MpcOutput;
+import DveCenter.entity.QueryOutput;
 import DveCenter.mapper.MpcOutputMapper;
+import DveCenter.mapper.QueryOutputMapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.fasterxml.jackson.databind.MappingIterator;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -49,6 +51,8 @@ public class FileService {
     private MpcOutputMapper mpcOutputMapper;
     @Autowired
     private JdbcTemplate jdbcTemplate;
+    @Autowired
+    private QueryOutputMapper queryOutputMapper;
 
     public Body<String> saveFile(MultipartFile file, File fileInfo, Integer applicationId,
             String base, java.sql.Timestamp expiredTime) {
@@ -541,5 +545,58 @@ public class FileService {
         }
 
         return Body.success(String.format("删除成功，结果id: %d，文件名: %s", mpcOutputId, fileName));
+    }
+
+    public Body<String> saveQueryFile(MultipartFile file, String hash, Long applicationId,
+                                    String base, java.sql.Timestamp expiredTime) {
+
+        // 校验sha256
+        String fileHash = getSha256(file);
+        if (!fileHash.equals(hash)) {return Body.error(String.format("哈希校验失败，文件名: %s",
+                file.getName()));}
+
+        // 文件信息加入结果表
+        // 若已存在，则进行覆盖
+        LambdaQueryWrapper<QueryOutput> queryWrapper = Wrappers.<QueryOutput>lambdaQuery()
+                .eq(QueryOutput::getName, file.getName())
+                .eq(QueryOutput::getApplicationId, applicationId);
+        QueryOutput queryQueryOutput = queryOutputMapper.selectOne(queryWrapper);
+        if (queryQueryOutput != null) {
+            if (fileHash.equals(queryQueryOutput.getHash())) {
+                jdbcTemplate.execute("SET FOREIGN_KEY_CHECKS = 0");
+                mpcOutputMapper.deleteById(queryQueryOutput.getUid());
+                jdbcTemplate.execute("SET FOREIGN_KEY_CHECKS = 1");
+            }
+        }
+        QueryOutput newQueryOutput = new QueryOutput();
+        newQueryOutput.setHash(hash);
+        newQueryOutput.setPath(base + "/query/" + fileHash + "_appid_" + applicationId);
+        newQueryOutput.setUploadDate(Timestamp.valueOf(LocalDateTime.now()));
+        newQueryOutput.setApplicationId(applicationId);
+        newQueryOutput.setExpiredTime(expiredTime);
+        newQueryOutput.setName(file.getName());
+        queryOutputMapper.insert(newQueryOutput);
+        String filePath = newQueryOutput.getPath();
+        String fileName = newQueryOutput.getName();
+
+        // 存储文件到结果管理区
+        try {
+            saveFileToPath(file, filePath);
+            // 判断文件是否为 CSV 文件
+            if (fileName.toLowerCase().endsWith(".csv")) {
+                // 将CSV文件转换为JSON文件
+                csvToJson(filePath);
+                newQueryOutput.setName(fileName.replaceAll("\\.csv$", ".json"));
+                UpdateWrapper<QueryOutput> updateWrapper = new UpdateWrapper<>();
+                updateWrapper.eq("uid", newQueryOutput.getUid());
+                queryOutputMapper.update(newQueryOutput, updateWrapper);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+            return Body.error(String.format("保存失败: 文件名: %s，错误信息: %s",
+                    fileName, e.getMessage()));
+        }
+        return Body.success(String.format("保存成功，文件名: %s",
+                fileName));
     }
 }

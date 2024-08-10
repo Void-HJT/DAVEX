@@ -133,8 +133,8 @@ public class FileController {
     }
 
     // center向agent发送文件传输请求并调用save接口接收文件到结果管理区
-    @PostMapping("/quest")
-    public CompletableFuture<Body<String>> quest(@RequestParam("fileId") Integer fileId,
+    @PostMapping("/request")
+    public CompletableFuture<Body<String>> request(@RequestParam("fileId") Integer fileId,
                                       @RequestParam("agentId") Integer agentId,
                                       @RequestParam("folderId") Integer folderId,
                                                  @RequestParam("applicationId") Integer applicationId) throws Exception {
@@ -187,9 +187,9 @@ public class FileController {
         return future;
     }
 
-    // 测试quest接口
-    @PostMapping("/tquest")
-    public CompletableFuture<Body<String>> tquest(@RequestParam("applicationId") Integer applicationId) throws Exception {
+    // 测试request接口
+    @PostMapping("/trequest")
+    public CompletableFuture<Body<String>> trequest(@RequestParam("applicationId") Integer applicationId) throws Exception {
         // 这里创建一个 CompletableFuture 对象来处理异步结果
         CompletableFuture<Body<String>> future = new CompletableFuture<>();
 
@@ -301,5 +301,20 @@ public class FileController {
                                @RequestParam("mpcOutputId") Integer mpcOutputId) {
 
         return fileService.deleteMpc(applicationId, mpcOutputId);
+    }
+
+    // 保存query文件接口
+    @PostMapping("/savequery")
+    public Body<String> savequery(@RequestPart MultipartFile file,
+                                @RequestParam("hash") String hash,
+                                @RequestParam("applicationId") Long applicationId,
+                                @RequestParam(value = "expiredTime", required = false) java.sql.Timestamp expiredTime) {
+
+        if (expiredTime == null) {
+            // 设置默认值为当前时间的一周后
+            expiredTime = java.sql.Timestamp.from(Instant.now().plus(7, ChronoUnit.DAYS));
+        }
+
+        return fileService.saveQueryFile(file, hash, applicationId, uploadBaseDir, expiredTime);
     }
 }
