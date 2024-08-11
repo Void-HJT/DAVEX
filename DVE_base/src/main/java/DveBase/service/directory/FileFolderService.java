@@ -375,9 +375,9 @@ public class FileFolderService {
         try {
             // 获取文件的byte信息
             byte[] uploadBytes = file.getBytes();
-            // 拿到一个MD5转换器
-            MessageDigest md5 = MessageDigest.getInstance("MD5");
-            byte[] digest = md5.digest(uploadBytes);
+            // 拿到一个SHA-256转换器
+            MessageDigest sha256 = MessageDigest.getInstance("SHA-256");
+            byte[] digest = sha256.digest(uploadBytes);
             // 转换为16进制
             fileRecord.setHash(new BigInteger(1, digest).toString(16));
         } catch (Exception e) {

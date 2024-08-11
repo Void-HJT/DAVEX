@@ -34,9 +34,10 @@ public class DatabaseController {
 
     @PostMapping("/query")
     public String executeQuery(@RequestBody QueryRequest request,
+                               @RequestParam("applicationId")Long applicationId,
                                @RequestParam("databaseId")Long databaseId) {
 
-        return databaseService.executeQuery(request,databaseId);
+        return databaseService.executeQuery(request,databaseId,applicationId);
 
     }
 
