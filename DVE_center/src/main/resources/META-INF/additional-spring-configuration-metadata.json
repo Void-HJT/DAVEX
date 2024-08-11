@@ -98,5 +98,15 @@
     "name": "my.dve_type",
     "type": "java.lang.enum",
     "description": "A description for 'my.dve_type'"
+  },
+  {
+    "name": "file.upload-base-dir",
+    "type": "java.lang.String",
+    "description": "A description for 'file.upload-base-dir'"
+  },
+  {
+    "name": "file.download-base-dir",
+    "type": "java.lang.String",
+    "description": "A description for 'file.download-base-dir'"
   }
 ]}

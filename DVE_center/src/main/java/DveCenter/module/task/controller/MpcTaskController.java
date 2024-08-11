@@ -1,12 +1,10 @@
 package DveCenter.module.task.controller;
 
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.FileSystemResource;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -22,10 +20,9 @@ import DveBase.common.Utils;
 import DveBase.entity.MpcTask;
 import DveBase.entity.MpcTaskOutput;
 import DveBase.info.UploadAgentTaskInfo;
-import DveBase.mapper.MpcTaskOutputMapper;
 import DveCenter.entity.Input;
 import DveCenter.mapper.InputMapper;
-import DveCenter.module.auth.service.CenterWebClientService;
+import DveCenter.module.task.service.MpcTaskOutputService;
 import DveCenter.module.task.service.MpcTaskService;
 
 @RestController
@@ -36,16 +33,13 @@ public class MpcTaskController {
     private MpcTaskService mpcTaskService;
 
     @Autowired
-    CenterWebClientService centerWebClientService;
+    private My my;
 
     @Autowired
-    My my;
+    private InputMapper inputMapper;
 
     @Autowired
-    MpcTaskOutputMapper mpcTaskOutputMapper;
-
-    @Autowired
-    InputMapper inputMapper;
+    private MpcTaskOutputService mpcTaskOutputService;
 
     @PostMapping("/create")
     public R<MpcTask> createMpcTask(@RequestBody UploadAgentTaskInfo mpcTask) {
@@ -91,22 +85,13 @@ public class MpcTaskController {
     }
 
     @PostMapping("/save")
-    public R<?> save(@RequestPart("file") MultipartFile file, @RequestPart("metadata") MpcTaskOutput mpcTaskOutput) {
-        if (mpcTaskOutputMapper.selectById(mpcTaskOutput.getUid()) != null) {
-            return R.error("文件已保存");
-        }
-        if (!Utils.verifyFileHash((FileSystemResource) file, mpcTaskOutput.getHash(), "SHA-256")) {
-            return R.error("文件Hash不匹配");
-        }
-        String fileName = file.getOriginalFilename();
-        Path path = Paths.get(my.getBase_path()).resolve("mpctask").resolve(fileName);
+    public R<?> saveOutput(@RequestPart("file") MultipartFile file,
+            @RequestPart("metadata") MpcTaskOutput mpcTaskOutput) {
         try {
-            Files.createDirectories(path.getParent());
-            Files.write(path, file.getBytes());
-        } catch (IOException e) {
+            mpcTaskOutputService.saveOutputFromAgent(file, mpcTaskOutput);
+        } catch (Exception e) {
             return R.error(e.getMessage());
         }
-        mpcTaskOutputMapper.insert(mpcTaskOutput);
         return R.success("保存成功");
     }
 }

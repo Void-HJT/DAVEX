@@ -51,6 +51,9 @@ public class MpcTaskService {
     private GarnetService garnetService;
 
     @Autowired
+    private MpcTaskOutputService mpcTaskOutputService;
+
+    @Autowired
     private CenterWebClientService centerWebClientService;
 
     public Input createInput(Input input) {
@@ -116,17 +119,17 @@ public class MpcTaskService {
         switch (mpctTaskInfo.getTaskType()) {
             case GARNET_MPC:
             default:
-                preprocess(mpctTaskInfo);
+                mpcRun(mpctTaskInfo);
                 break;
 
             case GARNET_PSI:
-                psiPreprocess(mpctTaskInfo);
+                psiRun(mpctTaskInfo);
                 break;
         }
     }
 
     @Async("customExecutor")
-    private void preprocess(UploadAgentTaskInfo mpcTask) throws Exception {
+    private void mpcRun(UploadAgentTaskInfo mpcTask) throws Exception {
         garnetService.compile(mpcTask);
         garnetService.link(Paths.get(my.getBase_path())
                 .resolve(
@@ -140,10 +143,11 @@ public class MpcTaskService {
             throw new Exception("任务未就绪");
         }
         garnetService.run(mpcTask);
+        mpcTaskOutputService.saveOutputFromInner(mpcTaskMapper.selectById(mpcTask.getUid()));
     }
 
     @Async("customExecutor")
-    private void psiPreprocess(UploadAgentTaskInfo mpcTask) throws Exception {
+    private void psiRun(UploadAgentTaskInfo mpcTask) throws Exception {
         garnetService.compile(mpcTask);
         garnetService.idExtract(inputMapper.selectById(mpcTask.getDataId()).getPath(), mpcTask.getUid(),
                 mpcTask.getPart());
@@ -154,6 +158,7 @@ public class MpcTaskService {
             throw new Exception("任务未就绪");
         }
         garnetService.run(mpcTask);
+        // * 什么也不做，结果由Agent返回
     }
 
     public Boolean ready(String mpcTaskId) throws Exception {
