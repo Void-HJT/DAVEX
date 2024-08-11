@@ -1,5 +1,6 @@
 package DveAgent.module.comparison;
 
+import DveBase.common.My;
 import DveBase.common.R;
 import DveBase.entity.File;
 import DveBase.info.TableHeader;
@@ -23,6 +24,9 @@ public class ComparisonService {
     private FileMapper fileMapper;
 
     @Autowired
+    private My my;
+
+    @Autowired
     private FileFolderService fileFolderService;
 
     public R<TableHeader> getCsvHeader(Integer fileId, Integer folderId, Integer agentId) {
@@ -36,7 +40,7 @@ public class ComparisonService {
         if (queryFile == null) {
             return R.error(String.format("找不到该文件，文件id: %d，文件夹id: %d", fileId, folderId));
         }
-        String filePath = fileFolderService.getFilePath(queryFile, "");
+        String filePath = fileFolderService.getFilePath(queryFile, my.getBase_path());
 
         // 解析CSV文件的表头和第一条记录
         try (CSVReader csvReader = new CSVReader(new FileReader(filePath))) {
