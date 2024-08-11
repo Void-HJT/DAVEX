@@ -69,7 +69,7 @@ public class ComparisonService {
 
         WebClient webclient = centerWebClientService.center2AgentWebClient(agentId);
         TableHeader tableHeader = webclient.post()
-                .uri(uriBuilder -> uriBuilder.path("/comparison/getcsvheader")
+                .uri(uriBuilder -> uriBuilder.path("/comparison/getCsvHeader")
                         .queryParam("fileId", fileId)
                         .queryParam("folderId", folderId)
                         .queryParam("agentId", agentId).build())
@@ -86,7 +86,7 @@ public class ComparisonService {
 
         WebClient webclient = centerWebClientService.center2AgentWebClient(agentId);
         List<String> dataHash = webclient.post()
-                .uri(uriBuilder -> uriBuilder.path("/comparison/gethash")
+                .uri(uriBuilder -> uriBuilder.path("/comparison/getHash")
                         .queryParam("fileId", fileId)
                         .queryParam("folderId", folderId)
                         .queryParam("agentId", agentId)
