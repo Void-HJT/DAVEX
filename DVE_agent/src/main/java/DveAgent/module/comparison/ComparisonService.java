@@ -9,10 +9,13 @@ import DveBase.service.directory.FileFolderService;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.opencsv.CSVReader;
+import org.apache.commons.codec.digest.DigestUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.io.BufferedReader;
 import java.io.FileReader;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -65,5 +68,66 @@ public class ComparisonService {
         } catch (Exception e) {
             return R.error("解析CSV文件时出错: " + e.getMessage());
         }
+    }
+
+    public R<List<String>> getHash(Integer fileId, Integer folderId, Integer agentId,
+                                         List<String> attributes) {
+
+        // 查找文件
+        LambdaQueryWrapper<File> queryWrapper = Wrappers.<File>lambdaQuery()
+                .eq(File::getUid, fileId)
+                .eq(File::getFolderId, folderId)
+                .eq(File::getAgentId, agentId);
+        File queryFile = fileMapper.selectOne(queryWrapper);
+        if (queryFile == null) {
+            return R.error(String.format("找不到该文件，文件id: %d，文件夹id: %d", fileId, folderId));
+        }
+        String filePath = fileFolderService.getFilePath(queryFile, "");
+
+        List<String> hashResults = new ArrayList<>();
+        String delimiter = "|";  // 分隔符
+
+        try (BufferedReader reader = new BufferedReader(new FileReader(filePath))) {
+            // 读取CSV文件的表头
+            String headerLine = reader.readLine();
+            if (headerLine == null) {
+                return R.error("CSV文件内容为空");
+            }
+
+            // 分割表头以获取每列的名称
+            List<String> headers = Arrays.asList(headerLine.split(","));
+
+            // 确定要处理的列的索引
+            List<Integer> attributeIndices = new ArrayList<>();
+            for (String attribute : attributes) {
+                int index = headers.indexOf(attribute);
+                if (index == -1) {
+                    return R.error("找不到属性: " + attribute);
+                }
+                attributeIndices.add(index);
+            }
+
+            String line;
+            while ((line = reader.readLine()) != null) {
+                String[] values = line.split(",");
+                StringBuilder sb = new StringBuilder();
+
+                // 提取出指定列的值，并用分隔符拼接成一个字符串
+                for (int index : attributeIndices) {
+                    if (sb.length() > 0) {
+                        sb.append(delimiter);  // 追加分隔符
+                    }
+                    sb.append(values[index]);
+                }
+
+                // 计算拼接字符串的SHA-256哈希值
+                String hash = DigestUtils.sha256Hex(sb.toString());
+                hashResults.add(hash);
+            }
+        } catch (IOException e) {
+            return R.error("读取CSV文件出错: " + e.getMessage());
+        }
+
+        return R.success(hashResults, "获取哈希成功");
     }
 }
