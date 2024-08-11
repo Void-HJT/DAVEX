@@ -25,9 +25,9 @@ public class Swagger3Config {
 
     private ApiInfo apiInfo() {
         return new ApiInfoBuilder()
-                .title("DVE-agent 文档")
-                .description("DVE-agent 文档")
-                .version("1.0")
+                .title("DAVEX-agent 文档")
+                .description("DAVEX-agent 文档")
+                .version("0.0.1")
                 .build();
     }
 }
