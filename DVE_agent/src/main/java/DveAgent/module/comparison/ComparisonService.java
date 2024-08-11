@@ -83,7 +83,7 @@ public class ComparisonService {
         if (queryFile == null) {
             return Body.error(String.format("找不到该文件，文件id: %d，文件夹id: %d", fileId, folderId));
         }
-        String filePath = fileFolderService.getFilePath(queryFile, "");
+        String filePath = fileFolderService.getFilePath(queryFile, my.getBase_path());
 
         List<String> hashResults = new ArrayList<>();
         String delimiter = "|";  // 分隔符
