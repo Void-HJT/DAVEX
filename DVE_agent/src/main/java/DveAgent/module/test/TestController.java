@@ -71,7 +71,7 @@ public class TestController {
     @GetMapping("/download")
     public R<Mpc> getMethodName(@RequestParam String param) {
         try {
-            mpcService.downloadFile((long) 1, param);
+            mpcService.downloadMPC((long) 1, param);
         } catch (Exception e) {
             return R.error(e.getMessage());
         }

@@ -20,6 +20,7 @@ import java.util.Base64;
 import java.util.Map;
 
 import org.springframework.core.io.FileSystemResource;
+import org.springframework.web.multipart.MultipartFile;
 
 public class Utils {
 
@@ -141,13 +142,36 @@ public class Utils {
         return sb.toString();
     }
 
-    public static boolean verifyFileHash(FileSystemResource fileResource, String expectedHash, String algorithm) {
+    public static boolean verifyMultipartFileHash(MultipartFile multipartFile, String expectedHash, String algorithm) {
         try {
-            String fileHash = getFileHash(fileResource, algorithm);
+            String fileHash = getMultipartFileHash(multipartFile, algorithm);
             return fileHash.equalsIgnoreCase(expectedHash);
         } catch (IOException | NoSuchAlgorithmException e) {
             e.printStackTrace();
             return false;
         }
+    }
+
+    private static String getMultipartFileHash(MultipartFile multipartFile, String algorithm)
+            throws IOException, NoSuchAlgorithmException {
+        MessageDigest digest = MessageDigest.getInstance(algorithm);
+
+        try (InputStream inputStream = multipartFile.getInputStream()) {
+            byte[] byteArray = new byte[1024];
+            int bytesCount;
+
+            while ((bytesCount = inputStream.read(byteArray)) != -1) {
+                digest.update(byteArray, 0, bytesCount);
+            }
+        }
+
+        byte[] bytes = digest.digest();
+        StringBuilder sb = new StringBuilder();
+
+        for (byte aByte : bytes) {
+            sb.append(String.format("%02x", aByte));
+        }
+
+        return sb.toString();
     }
 }

@@ -75,8 +75,9 @@ public class GarnetService {
     }
 
     public void idExtract(String inputPath, String prefix, Integer part) throws Exception {
+        Path input = Paths.get(my.getBase_path()).resolve(inputPath);
         String outputFilePath = garnet_directory.getAbsolutePath() + "/Input/" + prefix + "-P" + part + "-0";
-        try (BufferedReader reader = Files.newBufferedReader(Paths.get(inputPath));
+        try (BufferedReader reader = Files.newBufferedReader(input);
                 BufferedWriter writer = Files.newBufferedWriter(Paths.get(outputFilePath))) {
             String line;
             while ((line = reader.readLine()) != null) {
@@ -216,7 +217,7 @@ public class GarnetService {
                 "-p", part.toString(),
                 mpc_name));
         ProcessBuilder processBuilder = new ProcessBuilder(command).directory(garnet_directory);
-        logger.info("运行命令："+ command.toString());
+        logger.info("运行命令：" + command.toString());
         try {
             mpcTask.setStatus(MpcTask.Status.RUNNING);
             logger.info(mpcTask.getUid() + ":开始运行");

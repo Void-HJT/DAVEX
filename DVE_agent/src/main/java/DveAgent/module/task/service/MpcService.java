@@ -6,6 +6,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.core.io.Resource;
@@ -18,6 +20,7 @@ import DveBase.common.R;
 import DveBase.common.Utils;
 import DveBase.entity.Mpc;
 import DveBase.mapper.MpcMapper;
+import DveBase.service.programs.GarnetService;
 
 @Service
 public class MpcService {
@@ -30,7 +33,9 @@ public class MpcService {
     @Autowired
     private MpcMapper mpcMapper;
 
-    public void downloadFile(Long centerId, String MpcID) throws Exception {
+    private static final Logger logger = LoggerFactory.getLogger(GarnetService.class);
+
+    public void downloadMPC(Long centerId, String MpcID) throws Exception {
         WebClient webClient = agentWebClientService.agent2CenterWebClient(centerId);
         Mpc mpc = webClient.get()
                 .uri(UriBuilder -> UriBuilder.path("/Mpc/select").queryParam("MpcID", MpcID).build()).retrieve()
@@ -47,8 +52,10 @@ public class MpcService {
                         mpcMapper.insert(mpc);
                     } catch (IOException e) {
                         e.printStackTrace();
+                        logger.error(e.getMessage());
                     }
                 });
+        logger.info("成功下载" + mpc.getUid() + " : " + mpc.getName());
     }
 
 }

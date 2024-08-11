@@ -90,6 +90,7 @@ public class MpcTaskController {
         try {
             mpcTaskOutputService.saveOutputFromAgent(file, mpcTaskOutput);
         } catch (Exception e) {
+            e.printStackTrace();
             return R.error(e.getMessage());
         }
         return R.success("保存成功");

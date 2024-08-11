@@ -1,8 +1,8 @@
 ```json
 {
-  "uid": 2, 
+  "uid": "PSI_GARNET", 
   "centerId": 1, 
-  "name": "PSI", 
+  "name": "PSI_GARNET", 
   "path": "programs/PSI_BASE.mpc", 
   "compileParameters": [
     {
@@ -63,6 +63,31 @@
 }
 ```
 
+```json
+{
+  "agentID2fileID": {
+    "5":[1,21]
+  },
+  "applicationId": 0,
+  "centerId": 1,
+  "compileParameters": {
+    "P0_Data": 10,
+    "P1_Data": 100
+  },
+  "host": "10.176.34.171",
+  "mpcId": "PSI_GARNET",
+  "n": 2,
+  "part": 0,
+  "port": 6000,
+  "runtimeParameters": {
+    "PK": "案号",
+    "protocol" : "semi2k-party"
+  },
+  "status": "INIT",
+  "taskType": "GARNET_PSI",
+  "uid": null
+}
+```
 
 ```json
 {
@@ -187,7 +212,7 @@
 ```json
 {
   "agentID2fileID": {
-    "100":[1,2]
+    "5":[1,25]
   },
   "applicationId": 0,
   "centerId": 1,
@@ -199,14 +224,14 @@
     "sample_number_from_party_0":50,
     "sample_number_from_party_1":49
   },
-  "host": "10.176.37.50",
-  "mpcId": 2,
+  "host": "10.176.34.171",
+  "mpcId": "",
   "mpcName": "string",
   "n": 2,
   "part": 0,
   "port": 6000,
   "runtimeParameters": {
-    "protocol": "semi2k-with-conversion"
+    "protocol": "semi2k-with-conversion-party"
   },
   "status": "INIT",
   "taskType": "GARNET_MPC",

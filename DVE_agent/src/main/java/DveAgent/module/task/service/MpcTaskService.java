@@ -80,7 +80,7 @@ public class MpcTaskService {
             mpcTaskAgentMapper.insert(mpcTaskAgent);
         }
         if (mpcMapper.selectById(mpctTaskInfo.getMpcId()) == null) {
-            mpcService.downloadFile(mpctTaskInfo.getCenterId(), mpctTaskInfo.getMpcId());
+            mpcService.downloadMPC(mpctTaskInfo.getCenterId(), mpctTaskInfo.getMpcId());
         }
         mpcTaskMapper.insert(mpctTaskInfo);
 

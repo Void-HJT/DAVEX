@@ -52,8 +52,7 @@ public class MpcController {
 
     @GetMapping("/download")
     public ResponseEntity<Resource> download(@RequestParam String MpcID) throws Exception {
-        LambdaQueryWrapper<Mpc> queryWrapper = Wrappers.<Mpc>lambdaQuery().eq(Mpc::getUid, MpcID);
-        Path filePath = Paths.get(my.getBase_path()).resolve(mpcMapper.selectOne(queryWrapper).getPath());
+        Path filePath = Paths.get(my.getBase_path()).resolve(mpcMapper.selectById(MpcID).getPath());
         Resource resource = new UrlResource(filePath.toUri());
         if (!resource.exists()) {
             throw new FileNotFoundException("File not found: " + filePath);

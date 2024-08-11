@@ -11,6 +11,9 @@ import org.springframework.core.io.FileSystemResource;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+
 import DveBase.common.My;
 import DveBase.common.Utils;
 import DveBase.entity.MpcTask;
@@ -27,10 +30,12 @@ public class MpcTaskOutputService {
     My my;
 
     public void saveOutputFromAgent(MultipartFile file, MpcTaskOutput mpcTaskOutput) throws Exception {
-        if (mpcTaskOutputMapper.selectById(mpcTaskOutput.getUid()) != null) {
+        LambdaQueryWrapper<MpcTaskOutput> queryWrapper = Wrappers.<MpcTaskOutput>lambdaQuery()
+                .eq(MpcTaskOutput::getTaskId, mpcTaskOutput.getTaskId());
+        if (mpcTaskOutputMapper.selectOne(queryWrapper) != null) {
             throw new Exception("文件已保存");
         }
-        if (!Utils.verifyFileHash((FileSystemResource) file, mpcTaskOutput.getHash(), "SHA-256")) {
+        if (!Utils.verifyMultipartFileHash(file, mpcTaskOutput.getHash(), "SHA-256")) {
             throw new Exception("文件hash不匹配");
         }
         String fileName = file.getOriginalFilename();
