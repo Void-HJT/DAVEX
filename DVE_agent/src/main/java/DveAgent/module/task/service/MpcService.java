@@ -41,21 +41,26 @@ public class MpcService {
                 .uri(UriBuilder -> UriBuilder.path("/Mpc/select").queryParam("MpcID", MpcID).build()).retrieve()
                 .bodyToMono(new ParameterizedTypeReference<R<Mpc>>() {
                 }).block().getBody().getData();
-        webClient.get()
-                .uri(UriBuilder -> UriBuilder.path("/Mpc/download").queryParam("MpcID", MpcID).build()).retrieve()
-                .bodyToMono(Resource.class).subscribe(resource -> {
-                    Path filePath = Paths.get(my.getBase_path()).resolve("programs").resolve(resource.getFilename());
-                    filePath = Utils.resolveFileNameConflict(filePath);
-                    try {
-                        Files.copy(resource.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
-                        mpc.setPath(Paths.get("programs").resolve(filePath.getFileName()).toString());
-                        mpcMapper.insert(mpc);
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                        logger.error(e.getMessage());
-                    }
-                });
+        Resource resource = webClient.get()
+                .uri(UriBuilder -> UriBuilder.path("/Mpc/download").queryParam("MpcID", MpcID).build())
+                .retrieve()
+                .bodyToMono(Resource.class)
+                .block();
+
+        if (resource != null) {
+            Path filePath = Paths.get(my.getBase_path()).resolve("programs").resolve(resource.getFilename());
+            filePath = Utils.resolveFileNameConflict(filePath);
+            try {
+                Files.copy(resource.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
+                mpc.setPath(Paths.get("programs").resolve(filePath.getFileName()).toString());
+                mpcMapper.insert(mpc);
+            } catch (IOException e) {
+                e.printStackTrace();
+                logger.error(e.getMessage());
+            }
+        }
         logger.info("成功下载" + mpc.getUid() + " : " + mpc.getName());
+        return;
     }
 
 }
