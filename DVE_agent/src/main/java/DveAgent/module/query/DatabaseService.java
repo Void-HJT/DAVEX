@@ -180,7 +180,7 @@ public class DatabaseService {
                     multipartBody.add("file", multipartFile.getResource()); // 这里的 "file" 是服务端期望的文件字段名
 
                     agentWebClientService.agent2CenterWebClient(5).post()
-                            .uri(UriBuilder -> UriBuilder.path("/file/saveQuery").queryParam("hash", hash).queryParam("applicationId",applicationId).build())
+                            .uri(UriBuilder -> UriBuilder.path("/queryFile/saveQuery").queryParam("hash", hash).queryParam("applicationId",applicationId).build())
                             .contentType(MediaType.MULTIPART_FORM_DATA).body(BodyInserters.fromMultipartData(multipartBody))
                             .retrieve().bodyToMono(new ParameterizedTypeReference<R<String>>() {
                             }).block();
