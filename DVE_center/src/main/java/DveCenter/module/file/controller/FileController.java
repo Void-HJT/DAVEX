@@ -1,4 +1,4 @@
-package DveCenter.module.file;
+package DveCenter.module.file.controller;
 
 import java.io.ByteArrayOutputStream;
 import java.io.FileInputStream;
@@ -14,6 +14,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import DveBase.entity.MpcTaskOutput;
 import DveCenter.entity.MpcOutput;
+import DveCenter.module.file.service.FileService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
@@ -93,8 +94,8 @@ public class FileController {
     }
 
     // application从center结果管理区通过Http获取文件的接口
-    @PostMapping("/fetchbyhttp")
-    public Body<String> fetchbyhttp(@RequestParam("outputId") Integer outputId,
+    @PostMapping("/fetchByHttp")
+    public Body<String> fetchByHttp(@RequestParam("outputId") Integer outputId,
                                  @RequestParam("applicationId") Long applicationId,
                                  HttpServletResponse response) {
 
@@ -117,8 +118,8 @@ public class FileController {
     }
 
     // application查询center结果管理区某些文件的接口
-    @GetMapping("/querybyids")
-    public Body<List<Output>> querybyids(@RequestParam("applicationId") Integer applicationId,
+    @GetMapping("/queryByIds")
+    public Body<List<Output>> queryByIds(@RequestParam("applicationId") Integer applicationId,
                                          @RequestParam("outputIds") List<Integer> outputIds) {
 
         return fileService.queryFileByIds(applicationId, outputIds);
@@ -239,82 +240,5 @@ public class FileController {
         }
 
         return future;
-    }
-
-    // 保存mpc文件接口
-    @PostMapping("/savempc")
-    public Body<String> savempc(@RequestPart MultipartFile file,
-                                @ModelAttribute MpcTaskOutput mpcInfo,
-                                @RequestParam("applicationId") Long applicationId,
-                                @RequestParam(value = "expiredTime", required = false) java.sql.Timestamp expiredTime) {
-
-        if (expiredTime == null) {
-            // 设置默认值为当前时间的一周后
-            expiredTime = java.sql.Timestamp.from(Instant.now().plus(7, ChronoUnit.DAYS));
-        }
-
-        return fileService.saveMpcFile(file, mpcInfo, applicationId, uploadBaseDir, expiredTime);
-    }
-
-    // 测试savempc
-    @PostMapping("/tsavempc")
-    public Body<String> tsavempc(@RequestPart MultipartFile file,
-                                 @RequestParam("applicationId") Long applicationId) {
-
-        MpcTaskOutput mpcInfo = new MpcTaskOutput();
-        mpcInfo.setUid(5L);
-        mpcInfo.setTaskId("abc");
-        mpcInfo.setHash("1c5826f1a679f10eb364dfb30baa36c9d1560b7739e3975d2caeaa7c74d0cb25");
-        mpcInfo.setPath("C:\train.csv");
-        mpcInfo.setUploadDate(null);
-        mpcInfo.setName("train.csv");
-
-        return savempc(file, mpcInfo, applicationId, null);
-    }
-
-    // application通过路径直接获取center结果管理区mpc文件的接口
-    @PostMapping("/fetchmpc")
-    public Body<String> fetchmpc(@RequestParam("mpcOutputId") Integer mpcOutputId,
-                              @RequestParam("applicationId") Long applicationId) {
-
-        return fileService.fetchMpc(mpcOutputId, applicationId, downloadBaseDir);
-    }
-
-    // application查询center结果管理区所mpc有文件的接口
-    @GetMapping("/querympc")
-    public Body<List<MpcOutput>> querympc(@RequestParam("applicationId") Integer applicationId) {
-
-        return fileService.queryMpc(applicationId);
-    }
-
-    // application查询center结果管理区某些mpc文件的接口
-    @GetMapping("/querympcbyids")
-    public Body<List<MpcOutput>> querympcbyids(@RequestParam("applicationId") Integer applicationId,
-                                         @RequestParam("mpcOutputIds") List<Integer> mpcOutputIds) {
-
-        return fileService.queryMpcByIds(applicationId, mpcOutputIds);
-    }
-
-    // application删除center结果管理区mpc文件的接口
-    @PostMapping("/deletempc")
-    public Body<String> deletempc(@RequestParam("applicationId") Integer applicationId,
-                               @RequestParam("mpcOutputId") Integer mpcOutputId) {
-
-        return fileService.deleteMpc(applicationId, mpcOutputId);
-    }
-
-    // 保存query文件接口
-    @PostMapping("/savequery")
-    public Body<String> savequery(@RequestPart MultipartFile file,
-                                @RequestParam("hash") String hash,
-                                @RequestParam("applicationId") Long applicationId,
-                                @RequestParam(value = "expiredTime", required = false) java.sql.Timestamp expiredTime) {
-
-        if (expiredTime == null) {
-            // 设置默认值为当前时间的一周后
-            expiredTime = java.sql.Timestamp.from(Instant.now().plus(7, ChronoUnit.DAYS));
-        }
-
-        return fileService.saveQueryFile(file, hash, applicationId, uploadBaseDir, expiredTime);
     }
 }
