@@ -23,7 +23,7 @@ import java.util.Set;
 @Service
 public class GroupService {
 
-    private static final Set<String> ALLOWED_METHODS = new HashSet<>(Arrays.asList("direct", "psi", "pir", "mpc"));
+    private static final Set<String> ALLOWED_METHODS = new HashSet<>(Arrays.asList("direct", "psi", "comparison", "mpc","query"));
 
     @Autowired
     ApplicationMapper applicationMapper;

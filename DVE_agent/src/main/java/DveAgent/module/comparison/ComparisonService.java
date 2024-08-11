@@ -97,7 +97,6 @@ public class ComparisonService {
 
             // 分割表头以获取每列的名称
             List<String> headers = Arrays.asList(headerLine.split(","));
-
             // 确定要处理的列的索引
             List<Integer> attributeIndices = new ArrayList<>();
             for (String attribute : attributes) {
@@ -128,7 +127,6 @@ public class ComparisonService {
         } catch (IOException e) {
             return Body.error("读取CSV文件出错: " + e.getMessage());
         }
-
         return Body.success(hashResults, "获取哈希成功");
     }
 }
