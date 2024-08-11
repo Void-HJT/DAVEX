@@ -1,5 +1,6 @@
 package DveAgent.module.comparison;
 
+import DveBase.common.Body;
 import DveBase.common.R;
 import DveBase.info.TableHeader;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,7 +21,7 @@ public class ComparisonController {
 
     // agent解析csv文件表头
     @PostMapping("/getCsvHeader")
-    public R<TableHeader> getCsvHeader(@RequestParam("fileId") Integer fileId,
+    public Body<TableHeader> getCsvHeader(@RequestParam("fileId") Integer fileId,
                                        @RequestParam("folderId") Integer folderId,
                                              @RequestParam("agentId") Integer agentId) {
 
@@ -29,10 +30,10 @@ public class ComparisonController {
 
     // agent计算哈希
     @PostMapping("/getHash")
-    public R<List<String>> getHash(@RequestParam("fileId") Integer fileId,
-                                         @RequestParam("folderId") Integer folderId,
-                                         @RequestParam("agentId") Integer agentId,
-                                         @RequestParam("attributes") List<String> attributes) {
+    public Body<List<String>> getHash(@RequestParam("fileId") Integer fileId,
+                                      @RequestParam("folderId") Integer folderId,
+                                      @RequestParam("agentId") Integer agentId,
+                                      @RequestParam("attributes") List<String> attributes) {
 
         return comparisonService.getHash(fileId, folderId, agentId, attributes);
     }

@@ -47,6 +47,8 @@ public class FileService {
     private OutputMapper outputMapper;
     @Autowired
     private JdbcTemplate jdbcTemplate;
+    @Autowired
+    private DownloadTaskMapper downloadTaskMapper;
 
     public Body<String> saveFile(MultipartFile file, File fileInfo, Integer applicationId,
             String base, java.sql.Timestamp expiredTime) {

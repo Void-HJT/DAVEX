@@ -50,14 +50,14 @@ public class ComparisonFileController {
     }
 
     // application查询center结果管理区所有comparison文件的接口
-    @GetMapping("/queryComparison")
+    @PostMapping("/queryComparison")
     public Body<List<ComparisonOutput>> query(@RequestParam("applicationId") Integer applicationId) {
 
         return comparisonFileService.queryComparison(applicationId);
     }
 
     // application查询center结果管理区某些comparison文件的接口
-    @GetMapping("/queryComparisonByIds")
+    @PostMapping("/queryComparisonByIds")
     public Body<List<ComparisonOutput>> queryComparisonByIds(@RequestParam("applicationId") Integer applicationId,
                                               @RequestParam("outputIds") List<Integer> outputIds) {
 

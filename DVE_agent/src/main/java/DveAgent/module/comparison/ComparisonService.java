@@ -1,5 +1,6 @@
 package DveAgent.module.comparison;
 
+import DveBase.common.Body;
 import DveBase.common.My;
 import DveBase.common.R;
 import DveBase.entity.File;
@@ -32,7 +33,7 @@ public class ComparisonService {
     @Autowired
     private FileFolderService fileFolderService;
 
-    public R<TableHeader> getCsvHeader(Integer fileId, Integer folderId, Integer agentId) {
+    public Body<TableHeader> getCsvHeader(Integer fileId, Integer folderId, Integer agentId) {
 
         // 查找文件
         LambdaQueryWrapper<File> queryWrapper = Wrappers.<File>lambdaQuery()
@@ -41,7 +42,7 @@ public class ComparisonService {
                 .eq(File::getAgentId, agentId);
         File queryFile = fileMapper.selectOne(queryWrapper);
         if (queryFile == null) {
-            return R.error(String.format("找不到该文件，文件id: %d，文件夹id: %d", fileId, folderId));
+            return Body.error(String.format("找不到该文件，文件id: %d，文件夹id: %d", fileId, folderId));
         }
         String filePath = fileFolderService.getFilePath(queryFile, my.getBase_path());
 
@@ -50,13 +51,13 @@ public class ComparisonService {
             // 读取表头
             String[] header = csvReader.readNext();
             if (header == null) {
-                return R.error("CSV文件为空或者表头信息无法读取");
+                return Body.error("CSV文件为空或者表头信息无法读取");
             }
 
             // 读取第一条记录
             String[] firstRecord = csvReader.readNext();
             if (firstRecord == null) {
-                return R.error("CSV文件没有包含记录信息");
+                return Body.error("CSV文件没有包含记录信息");
             }
 
             // 创建TableHeader对象并设置表头和第一条记录
@@ -64,13 +65,13 @@ public class ComparisonService {
             tableHeader.setName(Arrays.asList(header));  // 将表头转换为List<String>
             tableHeader.setExample(Arrays.asList(firstRecord));  // 将第一条记录转换为List<String>
 
-            return R.success(tableHeader, "解析成功");
+            return Body.success(tableHeader, "解析成功");
         } catch (Exception e) {
-            return R.error("解析CSV文件时出错: " + e.getMessage());
+            return Body.error("解析CSV文件时出错: " + e.getMessage());
         }
     }
 
-    public R<List<String>> getHash(Integer fileId, Integer folderId, Integer agentId,
+    public Body<List<String>> getHash(Integer fileId, Integer folderId, Integer agentId,
                                          List<String> attributes) {
 
         // 查找文件
@@ -80,7 +81,7 @@ public class ComparisonService {
                 .eq(File::getAgentId, agentId);
         File queryFile = fileMapper.selectOne(queryWrapper);
         if (queryFile == null) {
-            return R.error(String.format("找不到该文件，文件id: %d，文件夹id: %d", fileId, folderId));
+            return Body.error(String.format("找不到该文件，文件id: %d，文件夹id: %d", fileId, folderId));
         }
         String filePath = fileFolderService.getFilePath(queryFile, "");
 
@@ -91,7 +92,7 @@ public class ComparisonService {
             // 读取CSV文件的表头
             String headerLine = reader.readLine();
             if (headerLine == null) {
-                return R.error("CSV文件内容为空");
+                return Body.error("CSV文件内容为空");
             }
 
             // 分割表头以获取每列的名称
@@ -102,7 +103,7 @@ public class ComparisonService {
             for (String attribute : attributes) {
                 int index = headers.indexOf(attribute);
                 if (index == -1) {
-                    return R.error("找不到属性: " + attribute);
+                    return Body.error("找不到属性: " + attribute);
                 }
                 attributeIndices.add(index);
             }
@@ -125,9 +126,9 @@ public class ComparisonService {
                 hashResults.add(hash);
             }
         } catch (IOException e) {
-            return R.error("读取CSV文件出错: " + e.getMessage());
+            return Body.error("读取CSV文件出错: " + e.getMessage());
         }
 
-        return R.success(hashResults, "获取哈希成功");
+        return Body.success(hashResults, "获取哈希成功");
     }
 }

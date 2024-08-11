@@ -50,7 +50,7 @@ public class ComparisonService {
     @Value("${file.upload-base-dir}")
     private String uploadBaseDir;
 
-    public R<DirectoryInfo> getDirectory(Integer applicationId, Integer agentId) throws Exception {
+    public Body<DirectoryInfo> getDirectory(Integer applicationId, Integer agentId) throws Exception {
 
         WebClient webclient = centerWebClientService.center2AgentWebClient(agentId);
         DirectoryInfo directoryInfo = webclient.post()
@@ -59,13 +59,13 @@ public class ComparisonService {
                         .queryParam("agentId", agentId)
                         .queryParam("applicationId", applicationId).build())
                 .retrieve()
-                .bodyToMono(new ParameterizedTypeReference<R<DirectoryInfo>>() {
-                }).block().getBody().getData();
+                .bodyToMono(new ParameterizedTypeReference<Body<DirectoryInfo>>() {
+                }).block().getData();
 
-        return R.success(directoryInfo, "获取数据目录成功");
+        return Body.success(directoryInfo, "获取数据目录成功");
     }
 
-    public R<TableHeader> getTableHeader(Integer agentId, Integer fileId, Integer folderId) throws Exception {
+    public Body<TableHeader> getTableHeader(Integer agentId, Integer fileId, Integer folderId) throws Exception {
 
         WebClient webclient = centerWebClientService.center2AgentWebClient(agentId);
         TableHeader tableHeader = webclient.post()
@@ -74,14 +74,14 @@ public class ComparisonService {
                         .queryParam("folderId", folderId)
                         .queryParam("agentId", agentId).build())
                 .retrieve()
-                .bodyToMono(new ParameterizedTypeReference<R<TableHeader>>() {
-                }).block().getBody().getData();
+                .bodyToMono(new ParameterizedTypeReference<Body<TableHeader>>() {
+                }).block().getData();
 
 
-        return R.success(tableHeader, "获取成功");
+        return Body.success(tableHeader, "获取成功");
     }
 
-    public R<Boolean> compare(Long applicationId, Integer agentId, Integer fileId, Integer folderId,
+    public Body<Boolean> compare(Long applicationId, Integer agentId, Integer fileId, Integer folderId,
                                          List<String> attributes, List<String> values) throws Exception {
 
         WebClient webclient = centerWebClientService.center2AgentWebClient(agentId);
@@ -92,8 +92,8 @@ public class ComparisonService {
                         .queryParam("agentId", agentId)
                         .queryParam("attributes", attributes).build())
                 .retrieve()
-                .bodyToMono(new ParameterizedTypeReference<R<List<String>>>() {
-                }).block().getBody().getData();
+                .bodyToMono(new ParameterizedTypeReference<Body<List<String>>>() {
+                }).block().getData();
 
         // 计算给定 values 的哈希值
         String delimiter = "|";  // 使用相同的分隔符
@@ -130,6 +130,6 @@ public class ComparisonService {
         comparisonFileService.saveComparisonFile(file, fileService.getSha256(file), applicationId, uploadBaseDir,
                 Timestamp.valueOf(LocalDateTime.now().plusWeeks(1)));
 
-        return R.success(exists, "比对成功");
+        return Body.success(exists, "比对成功");
     }
 }

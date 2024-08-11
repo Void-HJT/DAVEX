@@ -2,9 +2,11 @@ package DveBase.common;
 
 import java.io.Serializable;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Data;
 
 @Data
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class Body<T> implements Serializable {
     private String method;
     private int code;

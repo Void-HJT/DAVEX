@@ -111,14 +111,14 @@ public class FileController {
     }
 
     // application查询center结果管理区所有文件的接口
-    @GetMapping("/query")
+    @PostMapping("/query")
     public Body<List<Output>> query(@RequestParam("applicationId") Integer applicationId) {
 
         return fileService.queryFile(applicationId);
     }
 
     // application查询center结果管理区某些文件的接口
-    @GetMapping("/queryByIds")
+    @PostMapping("/queryByIds")
     public Body<List<Output>> queryByIds(@RequestParam("applicationId") Integer applicationId,
                                          @RequestParam("outputIds") List<Integer> outputIds) {
 

@@ -67,14 +67,14 @@ public class MpcFileController {
     }
 
     // application查询center结果管理区所mpc有文件的接口
-    @GetMapping("/queryMpc")
+    @PostMapping("/queryMpc")
     public Body<List<MpcOutput>> queryMpc(@RequestParam("applicationId") Integer applicationId) {
 
         return mpcFileService.queryMpc(applicationId);
     }
 
     // application查询center结果管理区某些mpc文件的接口
-    @GetMapping("/queryMpcByIds")
+    @PostMapping("/queryMpcByIds")
     public Body<List<MpcOutput>> queryMpcByIds(@RequestParam("applicationId") Integer applicationId,
                                                @RequestParam("mpcOutputIds") List<Integer> mpcOutputIds) {
 
