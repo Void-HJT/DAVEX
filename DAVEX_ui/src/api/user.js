@@ -3,7 +3,7 @@ import request from '@/utils/request'
 export const userRegistService = ({ username, password }) => {
   let res = request.post('/register/', {
     username,
-    password
+    password,
   })
   return res
 }
@@ -11,14 +11,14 @@ export const userRegistService = ({ username, password }) => {
 export const userLoginService = ({ username, password }) => {
   let res = request.post('/login/', {
     username,
-    password
+    password,
   })
   return res
 }
 export const userLinkServer = ({ ip, port }) => {
   let res = request.post('/link/metadata/send/', {
     ip,
-    port
+    port,
   })
   return res
 }
@@ -26,14 +26,17 @@ export const userLinkServer = ({ ip, port }) => {
 //上传mpc文件接口
 export const uploadMpcToServer = ({ content, fileName, description }) => {
   let res = request.post('/model/mpc/string/', {
-    content, fileName, description
+    content,
+    fileName,
+    description,
   })
   return res
 }
 //编译mpc文件
 export const compileMpc = ({ content, parameters }) => {
   let res = request.post('/model/mpc/compile/', {
-    content, parameters
+    content,
+    parameters,
   })
   return res
 }

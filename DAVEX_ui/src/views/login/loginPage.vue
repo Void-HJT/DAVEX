@@ -1,14 +1,14 @@
 <script setup>
 import { userRegistService, userLoginService } from '@/api/user.js'
-import { watch, ref} from 'vue'
-import { useUserStore } from '../../stores';
+import { watch, ref } from 'vue'
+import { useUserStore } from '../../stores'
 // import { userRegisterService } from '@/api/user.js'
 import { useRouter } from 'vue-router'
 const isRegister = ref(false)
 const formModel = ref({
   username: '',
   password: '',
-  repassword: ''
+  repassword: '',
 })
 const rules = {
   username: [
@@ -17,23 +17,23 @@ const rules = {
       min: 6,
       max: 12,
       message: '用户名的长度应在6-12个字符之间',
-      trigger: 'blur'
-    }
+      trigger: 'blur',
+    },
   ],
   password: [
     { required: true, message: '请输入密码', trigger: 'change' },
     {
       pattern: /^\S{6,15}$/,
       message: '密码为6-15位的非空字符',
-      trigger: 'change'
-    }
+      trigger: 'change',
+    },
   ],
   repassword: [
     { required: true, message: '请再次输入密码', trigger: 'change' },
     {
       pattern: /^\S{6,15}$/,
       message: '密码为6-15位的非空字符',
-      trigger: 'blur'
+      trigger: 'blur',
     },
     {
       validator: (rule, value, callback) => {
@@ -43,69 +43,68 @@ const rules = {
           callback()
         }
       },
-      trigger: 'blur'
-    }
-  ]
+      trigger: 'blur',
+    },
+  ],
 }
 const form = ref()
 const register = async () => {
   // 对表单进行校验
   await form.value.validate()
   try {
-  const response = await userRegistService(formModel.value);
-  console.log(response)
-  if (response.status == 201) {
-    // 注册成功
-    ElMessage.success('注册成功');
-    isRegister.value = false;
-  } else {
-    // 注册失败，根据状态码或其他信息来处理
-    ElMessage.error('注册失败，该账号已被注册');
-    // 其他处理注册失败的逻辑
+    const response = await userRegistService(formModel.value)
+    console.log(response)
+    if (response.status == 201) {
+      // 注册成功
+      ElMessage.success('注册成功')
+      isRegister.value = false
+    } else {
+      // 注册失败，根据状态码或其他信息来处理
+      ElMessage.error('注册失败，该账号已被注册')
+      // 其他处理注册失败的逻辑
+      // 清空表单
+      cleanformModel()
+    }
+  } catch (error) {
+    // 捕获到异常，可以处理异常情况
+    ElMessage.error('注册失败，该账号已被注册')
     // 清空表单
     cleanformModel()
-  }
-  } catch (error) {
-  // 捕获到异常，可以处理异常情况
-  ElMessage.error('注册失败，该账号已被注册');
-  // 清空表单
-  cleanformModel()
   }
 }
 const router = useRouter()
 const userStore = useUserStore()
 
 const login = async () => {
- 
-    await form.value.validate()
-    try{
-    const res  = await userLoginService(formModel.value);
-    if(res.status == 200){
-    userStore.setToken(res.data.token)
-    ElMessage.success('登录成功')
-    userStore.isLogin = true
-    router.push('/locate/locateCompute')}
-    else {
-    // 注册失败，根据状态码或其他信息来处理
-    ElMessage.error('登录失败，账号名或密码错误');
-    // 其他处理注册失败的逻辑
+  await form.value.validate()
+  try {
+    const res = await userLoginService(formModel.value)
+    if (res.status == 200) {
+      userStore.setToken(res.data.token)
+      ElMessage.success('登录成功')
+      userStore.isLogin = true
+      router.push('/locate/locateCompute')
+    } else {
+      // 注册失败，根据状态码或其他信息来处理
+      ElMessage.error('登录失败，账号名或密码错误')
+      // 其他处理注册失败的逻辑
+      // 清空表单
+      cleanformModel()
+    }
+  } catch (error) {
+    // 捕获到异常，可以处理异常情况
+    ElMessage.error('登录失败，账号名或密码错误')
+    // 其他处理异常的逻辑
     // 清空表单
     cleanformModel()
   }
-} catch (error) {
-  // 捕获到异常，可以处理异常情况
-  ElMessage.error('登录失败，账号名或密码错误');
-  // 其他处理异常的逻辑
-  // 清空表单
-  cleanformModel()
-}
 }
 
 const cleanformModel = () => {
   formModel.value = {
     username: '',
     password: '',
-    repassword: ''
+    repassword: '',
   }
 }
 watch(isRegister, () => {
@@ -206,8 +205,9 @@ watch(isRegister, () => {
             class="button"
             type="primary"
             auto-insert-space
-            >登录</el-button
           >
+            登录
+          </el-button>
         </el-form-item>
         <el-form-item class="flex">
           <el-link type="info" :underline="false" @click="isRegister = true">

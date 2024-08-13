@@ -7,7 +7,7 @@ const baseURL = 'http://10.176.37.50:8080/'
 const instance = axios.create({
   // TODO 1. 基础地址，超时时间
   baseURL,
-  timeout: 10000
+  timeout: 10000,
 })
 //请求拦截器
 instance.interceptors.request.use(
@@ -19,7 +19,7 @@ instance.interceptors.request.use(
     }
     return config
   },
-  (err) => Promise.reject(err)
+  (err) => Promise.reject(err),
 )
 //响应拦截器
 instance.interceptors.response.use(
@@ -34,7 +34,7 @@ instance.interceptors.response.use(
   (err) => {
     // TODO 5. 处理401错误
     return Promise.reject(err)
-  }
+  },
 )
 
 export default instance

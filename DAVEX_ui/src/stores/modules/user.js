@@ -16,12 +16,12 @@ export const useUserStore = defineStore(
       token,
       setToken,
       removeToken,
-      isLogin
+      isLogin,
     }
   },
   {
-    persist: true
-  }
+    persist: true,
+  },
 )
 
 export const getBaseURL = defineStore(
@@ -34,10 +34,10 @@ export const getBaseURL = defineStore(
 
     return {
       BaseURL,
-      updateBaseURL
+      updateBaseURL,
     }
   },
   {
-    persist: true
-  }
+    persist: true,
+  },
 )

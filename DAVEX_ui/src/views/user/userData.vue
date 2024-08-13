@@ -11,12 +11,16 @@
       </el-button>
     </div>
     <el-table :data="tableData" style="width: 100%">
-      <el-table-column prop="servername" label="服务器名称" style="width: 50%" />
+      <el-table-column
+        prop="servername"
+        label="服务器名称"
+        style="width: 50%"
+      />
       <el-table-column prop="ip" label="IP地址" style="width: 25%" />
       <el-table-column prop="port" label="端口号" style="width: 25%" />
     </el-table>
     <el-dialog v-model="centerDialogVisible" title="提示" width="30%" center>
-      <span> 请指定需要进行连接的服务器IP和端口 </span>
+      <span>请指定需要进行连接的服务器IP和端口</span>
       <el-form :model="connectInfo" label-width="120px">
         <el-form-item label="IP地址">
           <el-input v-model="connectInfo.ip" />
@@ -27,11 +31,16 @@
       </el-form>
       <template #footer>
         <span class="dialog-footer">
-          <el-button type="primary" @click="sendLink"> 确认连接 </el-button>
+          <el-button type="primary" @click="sendLink">确认连接</el-button>
         </span>
       </template>
     </el-dialog>
-    <el-dialog v-model="feedbackDialogVisible" title="提示" width="30%" :before-close="feedbackDialogClose">
+    <el-dialog
+      v-model="feedbackDialogVisible"
+      title="提示"
+      width="30%"
+      :before-close="feedbackDialogClose"
+    >
       <span class="formatted-text">{{ feedbackMessage }}</span>
       <template #footer>
         <span class="dialog-footer">
@@ -65,10 +74,9 @@ const sendLink = async () => {
       centerDialogVisible.value = false
       feedbackMessage.value = '连接成功，可以加入该服务器上的任务了！'
       feedbackDialogVisible.value = true
-      fresh()//连接后刷新页面
+      fresh() //连接后刷新页面
     }
-  }
-  catch (error) {
+  } catch (error) {
     feedbackMessage.value = '连接服务器出错！'
     feedbackDialogVisible.value = true
   }
@@ -76,7 +84,7 @@ const sendLink = async () => {
 const centerDialogVisible = ref(false)
 const connectInfo = ref({
   ip: '',
-  port: ''
+  port: '',
 })
 
 const tableData = ref([])

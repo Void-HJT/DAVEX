@@ -9,7 +9,7 @@ export const userCreateLocateTask = ({
   description,
   userid,
   mpc,
-  protocol
+  protocol,
 }) => {
   let res = request.post('/task/local/model/', {
     taskName,
@@ -20,16 +20,18 @@ export const userCreateLocateTask = ({
     description,
     userid,
     mpc,
-    protocol
+    protocol,
   })
   // console.log(res)
   return res
 }
-export const getAllLocatetask = () => request.get('/task/local/model/?page=1&size=100')
+export const getAllLocatetask = () =>
+  request.get('/task/local/model/?page=1&size=100')
 
 export const getAllFiles = () => request.get('/model/userdata/')
 
-export const getAllProtocol = () => request.get('/model/protocol/?page=1&size=100')
+export const getAllProtocol = () =>
+  request.get('/model/protocol/?page=1&size=100')
 
 export const getAllModel = () => request.get('/model/mpc/?page=1&size=100')
 
@@ -38,7 +40,7 @@ export const userPostData = ({ content, description, userID, fileName }) => {
     content,
     description,
     userID,
-    fileName
+    fileName,
   })
 }
 

@@ -11,7 +11,7 @@ export const userCreateTask = ({
   description,
   mpc,
   protocol,
-  data
+  data,
 }) => {
   request.post('/task/remote/model/', {
     taskName,
@@ -25,10 +25,11 @@ export const userCreateTask = ({
     description,
     mpc,
     protocol,
-    data
+    data,
   })
 }
-export const getAlltask = () => request.get('/task/remote/model/?page=1&size=100')
+export const getAlltask = () =>
+  request.get('/task/remote/model/?page=1&size=100')
 
 export const getAllFiles = () => request.get('/model/userdata/')
 
@@ -38,6 +39,6 @@ export const userPostData = ({ content, description, userID, fileName }) => {
     content,
     description,
     userID,
-    fileName
+    fileName,
   })
 }

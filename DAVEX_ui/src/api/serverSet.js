@@ -3,5 +3,5 @@ import request from '@/utils/request'
 export const userLinkServer = ({ ip, port }) =>
   request.post('/link/metadata/send/', {
     ip,
-    port
+    port,
   })

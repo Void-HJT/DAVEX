@@ -6,7 +6,7 @@ const router = createRouter({
   routes: [
     {
       path: '/login',
-      component: () => import('@/views/login/loginPage.vue')
+      component: () => import('@/views/login/loginPage.vue'),
     }, //登陆页
     {
       path: '/',
@@ -15,69 +15,68 @@ const router = createRouter({
       children: [
         {
           path: 'locate/locateCompute',
-          component: () => import('@/views/locate/locateCompute.vue')
+          component: () => import('@/views/locate/locateCompute.vue'),
         },
         {
           path: 'locate/locateTaskTable',
-          component: () => import('@/views/locate/locateTaskTable.vue')
+          component: () => import('@/views/locate/locateTaskTable.vue'),
         },
         {
           path: 'mpc/mpC',
-          component: () => import('@/views/mpc/mpC.vue')
+          component: () => import('@/views/mpc/mpC.vue'),
         },
         {
           path: 'mpc/jionTask',
-          component: () => import('@/views/mpc/jionTask.vue')
+          component: () => import('@/views/mpc/jionTask.vue'),
         },
         {
           path: 'mpc/taskTable',
-          component: () => import('@/views/mpc/taskTable.vue')
+          component: () => import('@/views/mpc/taskTable.vue'),
         },
         {
           path: 'user/userdata',
-          component: () => import('@/views/user/userData.vue')
+          component: () => import('@/views/user/userData.vue'),
         },
         {
           path: 'user/mpcCode',
-          component: () => import('@/views/user/mpcCode.vue')
+          component: () => import('@/views/user/mpcCode.vue'),
         },
         {
           path: 'dve/testTrans',
-          component: () => import('@/views/dve/testTrans.vue')
+          component: () => import('@/views/dve/testTrans.vue'),
         },
         {
           path: 'dve/folderController',
-          component: () => import('@/views/dve/folderController.vue')
+          component: () => import('@/views/dve/folderController.vue'),
         },
         {
           path: 'datashare/comPare',
-          component: () => import('@/views/datashare/comPare.vue')
+          component: () => import('@/views/datashare/comPare.vue'),
         },
         {
           path: 'datashare/fileTrans',
-          component: () => import('@/views/datashare/fileTrans.vue')
+          component: () => import('@/views/datashare/fileTrans.vue'),
         },
         {
           path: 'datashare/mPc',
-          component: () => import('@/views/datashare/mPc.vue')
+          component: () => import('@/views/datashare/mPc.vue'),
         },
         {
           path: 'datashare/pSi',
-          component: () => import('@/views/datashare/pSi.vue')
+          component: () => import('@/views/datashare/pSi.vue'),
         },
         {
           path: 'datashare/quEry',
-          component: () => import('@/views/datashare/quEry.vue')
+          component: () => import('@/views/datashare/quEry.vue'),
         },
         {
           path: 'result/resultArea',
-          component: () => import('@/views/result/resultArea.vue')
-        }
-      ]
-    } //布局
-  ]
+          component: () => import('@/views/result/resultArea.vue'),
+        },
+      ],
+    }, //布局
+  ],
 })
-
 
 //登录访问拦截
 // router.beforeEach((to)=>{
@@ -87,6 +86,5 @@ const router = createRouter({
 //   }
 //   return true
 // })
-
 
 export default router

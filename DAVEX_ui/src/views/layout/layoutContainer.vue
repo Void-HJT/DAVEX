@@ -5,7 +5,7 @@ import {
   User,
   EditPen,
   SwitchButton,
-  CaretBottom
+  CaretBottom,
 } from '@element-plus/icons-vue' //crop
 import avatar from '@/assets/default.png'
 import { useUserStore } from '../../stores'
@@ -13,14 +13,14 @@ import { useRouter } from 'vue-router'
 const router = useRouter()
 const useStore = useUserStore()
 const handleCommand = (key) => {
-  if(key=='logout'){
-  useStore.removeToken()
-  useStore.isLogin = false
-  router.push('/login'); 
-  console.log('logout')
-}else{
-  console.log(key)
-}
+  if (key == 'logout') {
+    useStore.removeToken()
+    useStore.isLogin = false
+    router.push('/login')
+    console.log('logout')
+  } else {
+    console.log(key)
+  }
 }
 </script>
 
@@ -130,14 +130,14 @@ const handleCommand = (key) => {
           </el-menu-item>
         </el-sub-menu>
         <el-menu-item index="/result/resultArea">
-            <el-icon><EditPen /></el-icon>
-            <span class="centered-text">结果管理区</span>
-          </el-menu-item>
+          <el-icon><EditPen /></el-icon>
+          <span class="centered-text">结果管理区</span>
+        </el-menu-item>
       </el-menu>
     </el-aside>
     <el-container>
       <el-header>
-        <div class="header-text" >DAVEX_agent操作界面</div>
+        <div class="header-text">DAVEX_agent操作界面</div>
         <!-- <el-dropdown placement="bottom-end" @command = "handleCommand">
           <span class="el-dropdown__box">
             <el-avatar :src="avatar" />
@@ -217,7 +217,7 @@ const handleCommand = (key) => {
   font-family: 'SimSun', sans-serif; /* 设置为微软雅黑字体 */
 }
 .header-text {
-  width: 100%; 
+  width: 100%;
   text-align: center; /* 文本水平居中 */
   // display: inline-block; /* 使文字垂直居中生效 */
   font-size: 50px; /* 调整字体大小 */
