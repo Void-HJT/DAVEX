@@ -1,0 +1,11 @@
+package DavexBase.mapper;
+
+import org.apache.ibatis.annotations.Mapper;
+
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+
+import DavexBase.entity.ApplicationGroup;
+
+@Mapper
+public interface ApplicationGroupMapper extends BaseMapper<ApplicationGroup> {
+}
