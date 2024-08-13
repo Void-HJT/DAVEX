@@ -179,7 +179,7 @@ public class DatabaseService {
                     MultiValueMap<String, Object> multipartBody = new LinkedMultiValueMap<>();
                     multipartBody.add("file", multipartFile.getResource()); // 这里的 "file" 是服务端期望的文件字段名
 
-                    agentWebClientService.agent2CenterWebClient(5).post()
+                    agentWebClientService.agent2CenterWebClient(1).post()
                             .uri(UriBuilder -> UriBuilder.path("/queryFile/saveQuery").queryParam("hash", hash).queryParam("applicationId",applicationId).build())
                             .contentType(MediaType.MULTIPART_FORM_DATA).body(BodyInserters.fromMultipartData(multipartBody))
                             .retrieve().bodyToMono(new ParameterizedTypeReference<R<String>>() {
@@ -188,7 +188,6 @@ public class DatabaseService {
                     e.printStackTrace();
                     return "发送失败";
                 }
-
 
                 // 返回成功消息，包含文件路径
                 return "Query results save";

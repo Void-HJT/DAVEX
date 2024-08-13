@@ -22,10 +22,11 @@ public class DatabaseController {
         return databaseService.addDatabase(outsideDatabase);
     }
 
-    @GetMapping("/getDatabase")
+    @PostMapping("/getDatabase")
     public Body<List<OutsideDatabase>> getDatabase(){
         return databaseService.getDatabase();
     }
+
     @PostMapping("/getTable")
     public Body<List<OutsideDatabaseTable>> getTable(@RequestParam("databaseId") Long databaseId)
     {
