@@ -129,6 +129,10 @@ const handleCommand = (key) => {
             <span class="centered-text">比对</span>
           </el-menu-item>
         </el-sub-menu>
+        <el-menu-item index="/result/resultArea">
+            <el-icon><EditPen /></el-icon>
+            <span class="centered-text">结果管理区</span>
+          </el-menu-item>
       </el-menu>
     </el-aside>
     <el-container>

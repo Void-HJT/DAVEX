@@ -68,6 +68,10 @@ const router = createRouter({
         {
           path: 'datashare/quEry',
           component: () => import('@/views/datashare/quEry.vue')
+        },
+        {
+          path: 'result/resultArea',
+          component: () => import('@/views/result/resultArea.vue')
         }
       ]
     } //布局
