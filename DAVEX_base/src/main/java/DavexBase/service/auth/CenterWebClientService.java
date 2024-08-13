@@ -1,4 +1,4 @@
-package DavexAgent.module.auth.service;
+package DavexBase.service.auth;
 
 import org.springframework.http.MediaType;
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
@@ -13,22 +13,17 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import DavexBase.entity.Agent;
-import DavexBase.entity.Center;
 import DavexBase.mapper.AgentMapper;
-import DavexBase.mapper.CenterMapper;
 import reactor.netty.http.client.HttpClient;
 
 @Service
-public class AgentWebClientService {
-
-        private CenterMapper centerMapper;
+public class CenterWebClientService {
 
         private AgentMapper agentMapper;
 
         private ExchangeStrategies strategies;
 
-        public AgentWebClientService(ObjectMapper objectMapper, AgentMapper agentMapper, CenterMapper centerMapper) {
-                this.centerMapper = centerMapper;
+        public CenterWebClientService(ObjectMapper objectMapper, AgentMapper agentMapper) {
                 this.agentMapper = agentMapper;
                 strategies = ExchangeStrategies
                                 .builder()
@@ -43,17 +38,7 @@ public class AgentWebClientService {
                                 }).build();
         }
 
-        public WebClient agent2CenterWebClient(long center_id) throws Exception {
-                LambdaQueryWrapper<Center> queryWrapper = Wrappers.<Center>lambdaQuery().eq(Center::getUid, center_id);
-                Center center = centerMapper.selectOne(queryWrapper);
-                HttpClient httpClient = HttpClient.create();
-                return WebClient.builder().clientConnector(new ReactorClientHttpConnector(httpClient))
-                                .baseUrl("http://" + center.getIp() + ":" + center.getPort())
-                                .exchangeStrategies(strategies)
-                                .build();
-        }
-
-        public WebClient agent2AgentWebClient(long agent_id) throws Exception {
+        public WebClient center2AgentWebClient(long agent_id) throws Exception {
                 LambdaQueryWrapper<Agent> queryWrapper = Wrappers.<Agent>lambdaQuery().eq(Agent::getUid, agent_id);
                 Agent agent = agentMapper.selectOne(queryWrapper);
                 HttpClient httpClient = HttpClient.create();

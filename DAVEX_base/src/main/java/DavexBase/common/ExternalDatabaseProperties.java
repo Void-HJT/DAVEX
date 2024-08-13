@@ -1,4 +1,4 @@
-package DavexAgent.config;
+package DavexBase.common;
 
 
 import java.util.List;

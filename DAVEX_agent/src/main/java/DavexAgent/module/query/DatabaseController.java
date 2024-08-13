@@ -3,6 +3,7 @@ package DavexAgent.module.query;
 
 import java.util.List;
 
+import DavexBase.service.query.DatabaseService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;

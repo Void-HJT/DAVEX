@@ -25,7 +25,7 @@ import DavexBase.mapper.MpcTaskMapper;
 import DavexBase.service.programs.GarnetService;
 import DavexCenter.entity.Input;
 import DavexCenter.mapper.InputMapper;
-import DavexCenter.module.auth.service.CenterWebClientService;
+import DavexBase.service.auth.CenterWebClientService;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
