@@ -14,7 +14,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-
+import java.nio.file.Paths;
 //import java.io.File; 命名冲突，使用全限定名
 import javax.servlet.http.HttpServletResponse;
 import javax.xml.bind.DatatypeConverter;
@@ -89,7 +89,7 @@ public class FileService {
         newOutput.setTag(fileInfo.getTag());
         newOutput.setSize(fileInfo.getSize());
         newOutput.setDescription(fileInfo.getDescription());
-        newOutput.setPath(base + "/common/" + fileHash + "_appid_" + applicationId);
+        newOutput.setPath(Paths.get(base).resolve("common").resolve(fileHash + "_appid_" + applicationId).toString());
         newOutput.setExpiredTime(expiredTime);
         newOutput.setHash(fileHash);
         newOutput.setFileId(fileInfo.getUid());
@@ -165,7 +165,8 @@ public class FileService {
             newOutput.setTag(fileInfo.getTag());
             newOutput.setSize(fileInfo.getSize());
             newOutput.setDescription(fileInfo.getDescription());
-            newOutput.setPath(base + "/common/" + fileHash + "_appid_" + applicationId);
+            newOutput.setPath(
+                    Paths.get(base).resolve("common").resolve(fileHash + "_appid_" + applicationId).toString());
             newOutput.setExpiredTime(expiredTime);
             newOutput.setHash(fileHash);
             newOutput.setFileId(fileInfo.getUid());
@@ -378,9 +379,9 @@ public class FileService {
 
     public void copyFile(String filePath, String fileName, String downloadPath) throws Exception {
         var source = new java.io.File(filePath);
-        var dest = new java.io.File(downloadPath + fileName);
+        var dest = new java.io.File(Paths.get(downloadPath).resolve(fileName).toString());
         try (var fis = new FileInputStream(source);
-             var fos = new FileOutputStream(dest)) {
+                var fos = new FileOutputStream(dest)) {
 
             byte[] buffer = new byte[1024];
             int length;
