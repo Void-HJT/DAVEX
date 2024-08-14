@@ -35,7 +35,7 @@ public class QueryFileService {
     @Autowired
     private JdbcTemplate jdbcTemplate;
 
-    public Body<String> saveQueryFile(MultipartFile file, String hash, Long applicationId,
+    public Body<String> saveQuery(MultipartFile file, String hash, Integer applicationId,
                                       String base, java.sql.Timestamp expiredTime) {
 
         // 校验sha256
@@ -47,20 +47,19 @@ public class QueryFileService {
         // 若已存在，则进行覆盖
         LambdaQueryWrapper<QueryOutput> queryWrapper = Wrappers.<QueryOutput>lambdaQuery()
                 .eq(QueryOutput::getName, file.getOriginalFilename())
-                .eq(QueryOutput::getApplicationId, applicationId);
+                .eq(QueryOutput::getApplicationId, applicationId)
+                .eq(QueryOutput::getHash, fileHash);
         QueryOutput queryQueryOutput = queryOutputMapper.selectOne(queryWrapper);
         if (queryQueryOutput != null) {
-            if (fileHash.equals(queryQueryOutput.getHash())) {
-                jdbcTemplate.execute("SET FOREIGN_KEY_CHECKS = 0");
-                queryOutputMapper.deleteById(queryQueryOutput.getUid());
-                jdbcTemplate.execute("SET FOREIGN_KEY_CHECKS = 1");
-            }
+            jdbcTemplate.execute("SET FOREIGN_KEY_CHECKS = 0");
+            queryOutputMapper.deleteById(queryQueryOutput.getUid());
+            jdbcTemplate.execute("SET FOREIGN_KEY_CHECKS = 1");
         }
         QueryOutput newQueryOutput = new QueryOutput();
         newQueryOutput.setHash(hash);
         newQueryOutput.setPath(base + "/query/" + fileHash + "_appid_" + applicationId);
         newQueryOutput.setUploadDate(Timestamp.valueOf(LocalDateTime.now()));
-        newQueryOutput.setApplicationId(applicationId);
+        newQueryOutput.setApplicationId(Long.valueOf(applicationId));
         newQueryOutput.setExpiredTime(expiredTime);
         newQueryOutput.setName(file.getOriginalFilename());
         queryOutputMapper.insert(newQueryOutput);
@@ -88,7 +87,7 @@ public class QueryFileService {
                 fileName));
     }
 
-    public Body<String> fetchQuery(Integer outputId, Long applicationId, String downloadPath) {
+    public Body<String> fetchQuery(Integer outputId, Integer applicationId, String downloadPath) {
 
         // 根据结果id查找结果表
         LambdaQueryWrapper<QueryOutput> queryWrapper = Wrappers.<QueryOutput>lambdaQuery()
@@ -107,7 +106,7 @@ public class QueryFileService {
 
         // 添加下载任务记录到任务表
         DownloadTask newDownloadTask = new DownloadTask();
-        newDownloadTask.setApplicationId(applicationId);
+        newDownloadTask.setApplicationId(Long.valueOf(applicationId));
         newDownloadTask.setOutputId(queryQueryOutput.getUid());
         newDownloadTask.setDownloadTime(Timestamp.valueOf(LocalDateTime.now()));
         newDownloadTask.setType("query");

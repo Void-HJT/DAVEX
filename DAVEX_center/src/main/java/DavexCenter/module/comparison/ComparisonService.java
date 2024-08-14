@@ -1,12 +1,20 @@
 package DavexCenter.module.comparison;
 
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.codec.digest.DigestUtils;
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVParser;
+import org.apache.commons.csv.CSVRecord;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
@@ -69,8 +77,8 @@ public class ComparisonService {
                 return Body.success(tableHeader, "获取成功");
         }
 
-        public Body<Boolean> compare(Long applicationId, Integer agentId, Integer fileId, Integer folderId,
-                        List<String> attributes, List<String> values) throws Exception {
+        public Body<List<Boolean>> compare(Integer applicationId, Integer agentId, Integer fileId, Integer folderId,
+                        List<String> attributes, List<List<String>> valuesList) throws Exception {
 
                 WebClient webclient = centerWebClientService.center2AgentWebClient(agentId);
                 List<String> dataHash = webclient.post()
@@ -82,43 +90,90 @@ public class ComparisonService {
                                 .retrieve()
                                 .bodyToMono(new ParameterizedTypeReference<Body<List<String>>>() {
                                 }).block().getData();
-
-                // 计算给定 values 的哈希值
-                String delimiter = "|"; // 使用相同的分隔符
-
-                StringBuilder sb = new StringBuilder();
-                for (int i = 0; i < attributes.size(); i++) {
-                        if (i > 0) {
-                                sb.append(delimiter); // 追加分隔符
-                        }
-                        sb.append(values.get(i));
+                if (dataHash == null) {
+                        return Body.error("dataHash 为空，请检查输入格式.");
                 }
 
-                String computedHash = DigestUtils.sha256Hex(sb.toString());
+                // 存储每条数据的比对结果
+                List<Boolean> comparisonResults = new ArrayList<>();
+                List<Map<String, Object>> jsonResults = new ArrayList<>();
 
-                // 检查计算出的哈希值是否在 dataHash 中
-                boolean exists = dataHash.contains(computedHash);
+                for (List<String> values : valuesList) {
+                        // 计算给定 values 的哈希值
+                        String delimiter = "|";  // 使用相同的分隔符
+                        StringBuilder sb = new StringBuilder();
+                        System.out.println("Attributes size: " + attributes.size());
+                        System.out.println("Values size: " + values.size());
 
-                // 将结果存入一个 JSON 文件
-                Map<String, Object> result = new HashMap<>();
-                result.put("exists", exists);
-                result.put("computedHash", computedHash);
-                result.put("attributes", attributes);
-                result.put("values", values);
+                        for (int i = 0; i < attributes.size(); i++) {
+                                if (i > 0) {
+                                        sb.append(delimiter);  // 追加分隔符
+                                }
+                                if (i < values.size()) {
+                                        sb.append(values.get(i));
+                                } else {
+                                        // 处理错误情况
+                                        throw new IndexOutOfBoundsException("值列表的长度小于属性列表的长度");
+                                }
+                        }
 
+                        String computedHash = DigestUtils.sha256Hex(sb.toString());
+
+                        // 检查计算出的哈希值是否在 dataHash 中
+                        boolean exists = dataHash.contains(computedHash);
+
+                        // 添加比对结果
+                        comparisonResults.add(exists);
+
+                        // 将每个比对的结果添加到 JSON 结果列表中
+                        Map<String, Object> result = new HashMap<>();
+                        result.put("exists", exists);
+                        result.put("computedHash", computedHash);
+                        result.put("attributes", attributes);
+                        result.put("values", values);
+
+                        jsonResults.add(result);
+                }
+
+                // 将所有比对结果存入一个 JSON 文件
                 ObjectMapper objectMapper = new ObjectMapper();
-                byte[] jsonBytes = objectMapper.writeValueAsBytes(result);
+                byte[] jsonBytes = objectMapper.writeValueAsBytes(jsonResults);
 
-                // 使用下划线拼接 values 生成文件名
-                String fileName = String.join("_", values) + ".json";
-                // 使用 CustomMultipartFile 创建 MultipartFile
+                // 使用下划线拼接属性名生成文件名
+                String fileName = String.join("_", attributes) + ".json";
                 MultipartFile file = new CustomMultipartFile(jsonBytes, fileName);
 
                 // 调用 saveComparisonFile 方法
                 comparisonFileService.saveComparisonFile(file, fileService.getSha256(file), applicationId,
-                                uploadBaseDir,
-                                Timestamp.valueOf(LocalDateTime.now().plusWeeks(1)));
+                        uploadBaseDir, Timestamp.valueOf(LocalDateTime.now().plusWeeks(1)));
 
-                return Body.success(exists, "比对成功");
+                return Body.success(comparisonResults, "比对成功");
+        }
+
+        public Body<List<Boolean>> compareFromCsv(Integer applicationId, Integer agentId, Integer fileId, Integer folderId, MultipartFile file) throws Exception {
+
+                // 解析 CSV 文件
+                List<String> attributes = new ArrayList<>();
+                List<List<String>> valuesList = new ArrayList<>();
+
+                // 指定文件编码格式
+                Charset charset = Charset.forName("GB2312"); // 可以替换为 StandardCharsets.UTF_8
+
+                // 解析 CSV 文件
+                try (Reader reader = new InputStreamReader(file.getInputStream(), charset);
+                     CSVParser csvParser = new CSVParser(reader, CSVFormat.DEFAULT.withFirstRecordAsHeader())) {
+
+                        for (CSVRecord record : csvParser) {
+                                if (attributes.isEmpty()) {
+                                        attributes.addAll(record.toMap().keySet());
+                                }
+                                valuesList.add(new ArrayList<>(record.toMap().values()));
+                        }
+                }
+                System.out.println(attributes);
+                System.out.println(valuesList);
+
+                // 调用扩展后的 compare 方法进行多条数据的比对
+                return compare(applicationId, agentId, fileId, folderId, attributes, valuesList);
         }
 }

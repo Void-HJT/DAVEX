@@ -35,7 +35,7 @@ public class QueryFileController {
     @PostMapping("/saveQuery")
     public Body<String> saveQuery(@RequestPart("file") MultipartFile file,
                                   @RequestParam("hash") String hash,
-                                  @RequestParam("applicationId") Long applicationId,
+                                  @RequestParam("applicationId") Integer applicationId,
                                   @RequestParam(value = "expiredTime", required = false) java.sql.Timestamp expiredTime) {
 
         if (expiredTime == null) {
@@ -43,13 +43,13 @@ public class QueryFileController {
             expiredTime = java.sql.Timestamp.from(Instant.now().plus(7, ChronoUnit.DAYS));
         }
 
-        return queryFileService.saveQueryFile(file, hash, applicationId, uploadBaseDir, expiredTime);
+        return queryFileService.saveQuery(file, hash, applicationId, uploadBaseDir, expiredTime);
     }
 
     // application通过路径直接获取center结果管理区query文件的接口
     @PostMapping("/fetchQuery")
     public Body<String> fetchQuery(@RequestParam("outputId") Integer outputId,
-                              @RequestParam("applicationId") Long applicationId) {
+                                   @RequestParam("applicationId") Integer applicationId) {
 
         return queryFileService.fetchQuery(outputId, applicationId, downloadBaseDir);
     }
@@ -64,7 +64,7 @@ public class QueryFileController {
     // application查询center结果管理区某些query文件的接口
     @PostMapping("/queryQueryByIds")
     public Body<List<QueryOutput>> queryQueryByIds(@RequestParam("applicationId") Integer applicationId,
-                                         @RequestParam("outputIds") List<Integer> outputIds) {
+                                                   @RequestParam("outputIds") List<Integer> outputIds) {
 
         return queryFileService.queryQueryByIds(applicationId, outputIds);
     }
@@ -72,7 +72,7 @@ public class QueryFileController {
     // application删除center结果管理区query文件的接口
     @PostMapping("/deleteQuery")
     public Body<String> deleteQuery(@RequestParam("applicationId") Integer applicationId,
-                               @RequestParam("outputId") Integer outputId) {
+                                    @RequestParam("outputId") Integer outputId) {
 
         return queryFileService.deleteQuery(applicationId, outputId);
     }
