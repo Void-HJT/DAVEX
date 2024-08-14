@@ -20,7 +20,7 @@ import DavexBase.common.Body;
 import DavexBase.info.DirectoryInfo;
 import DavexBase.info.TableHeader;
 import DavexCenter.common.CustomMultipartFile;
-import DavexCenter.module.auth.service.CenterWebClientService;
+import DavexBase.service.auth.CenterWebClientService;
 import DavexCenter.module.file.service.ComparisonFileService;
 import DavexCenter.module.file.service.FileService;
 

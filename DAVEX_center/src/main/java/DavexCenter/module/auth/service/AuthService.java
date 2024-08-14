@@ -2,6 +2,7 @@ package DavexCenter.module.auth.service;
 
 import java.util.List;
 
+import DavexBase.service.auth.CenterWebClientService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.lang.NonNull;

@@ -1,4 +1,4 @@
-package DavexAgent.module.query;
+package DavexBase.service.query;
 
 
 import java.io.ByteArrayOutputStream;
@@ -34,8 +34,8 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import DavexAgent.config.ExternalDatabaseProperties;
-import DavexAgent.module.auth.service.AgentWebClientService;
+import DavexBase.common.ExternalDatabaseProperties;
+import DavexBase.service.auth.AgentWebClientService;
 import DavexBase.common.Body;
 import DavexBase.common.R;
 import DavexBase.entity.OutsideDatabase;
