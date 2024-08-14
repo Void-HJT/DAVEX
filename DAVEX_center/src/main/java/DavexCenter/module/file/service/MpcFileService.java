@@ -34,7 +34,7 @@ public class MpcFileService {
     @Autowired
     private DownloadTaskMapper downloadTaskMapper;
 
-    public Body<String> saveMpcFile(MultipartFile file, MpcTaskOutput mpcInfo, Long applicationId,
+    public Body<String> saveMpc(MultipartFile file, MpcTaskOutput mpcInfo, Long applicationId,
                                     String base, java.sql.Timestamp expiredTime) {
 
         // 校验sha256

@@ -45,7 +45,7 @@ public class MpcFileController {
             expiredTime = java.sql.Timestamp.from(Instant.now().plus(7, ChronoUnit.DAYS));
         }
 
-        return mpcFileService.saveMpcFile(file, mpcInfo, applicationId, uploadBaseDir, expiredTime);
+        return mpcFileService.saveMpc(file, mpcInfo, applicationId, uploadBaseDir, expiredTime);
     }
 
     // 测试savempc
