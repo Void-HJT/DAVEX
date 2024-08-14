@@ -2,23 +2,17 @@ package DavexBase.service.directory;
 
 
 import DavexBase.common.Body;
-import DavexBase.entity.Application;
-import DavexBase.entity.ApplicationGroup;
-import DavexBase.entity.Group;
-import DavexBase.entity.Rule;
-import DavexBase.mapper.ApplicationGroupMapper;
-import DavexBase.mapper.ApplicationMapper;
-import DavexBase.mapper.GroupMapper;
-import DavexBase.mapper.RuleMapper;
+import DavexBase.entity.*;
+import DavexBase.info.ApplicationAndCenterName;
+import DavexBase.info.GroupAndCenterName;
+import DavexBase.mapper.*;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 @Service
 public class GroupService {
@@ -35,28 +29,45 @@ public class GroupService {
     ApplicationGroupMapper applicationGroupMapper;
 
     @Autowired
+    CenterMapper centerMapper;
+
+    @Autowired
     RuleMapper ruleMapper;
 
     //agent查看用户
-    public Body<List<Application>> getApplication() {
+    public Body<List<ApplicationAndCenterName>> getApplication() {
         LambdaQueryWrapper<Application> queryWrapper = Wrappers.<Application>lambdaQuery();
         List<Application> applications = applicationMapper.selectList(queryWrapper);
-        return Body.success(applications,"返回用户列表");
+
+        // 新建一个列表来存储转换后的 ApplicationAndCenterName 对象
+        List<ApplicationAndCenterName> applicationAndCenterNames = new ArrayList<>();
+        applicationAndCenterNames = getApplicationAndCenterName(applications);
+        return Body.success(applicationAndCenterNames,"返回用户列表");
     }
+
     //agent根据用户id得到分组
-    public Body<List<Group>> getGroupByApplicationId(Long agentId, Long centerId, Long applicationId) {
+    public Body<List<GroupAndCenterName>> getGroupByApplicationId(Long agentId, Long centerId, Long applicationId) {
         List<Group> groups = groupMapper.getList(agentId,centerId,applicationId);
-        return Body.success(groups,"成功");
+
+        // 新建一个列表来存储转换后的对象
+        List<GroupAndCenterName> groupAndCenterNames = new ArrayList<>();
+        groupAndCenterNames = getGroupAndCenterName(groups);
+        return Body.success(groupAndCenterNames,"成功");
     }
+
     //显示用户分组
-    public Body<List<Group>> getGroup(Long agentId, Long centerId) {
+    public Body<List<GroupAndCenterName>> getGroup(Long agentId, Long centerId) {
         LambdaQueryWrapper<Group> queryWrapper = Wrappers.<Group>lambdaQuery()
                 .eq(Group::getCenterId,centerId)
                 .eq(Group::getAgentId,agentId);
         List<Group> groupList = groupMapper.selectList(queryWrapper);
         if(groupList.isEmpty()){return Body.error("没有组");}
-        return Body.success(groupList,"成功");
+
+        List<GroupAndCenterName> groupAndCenterNames = new ArrayList<>();
+        groupAndCenterNames = getGroupAndCenterName(groupList);
+        return Body.success(groupAndCenterNames,"成功");
     }
+
     //添加用户组
     public Body<String> addGroup(Long agentId, Long centerId, String name) {
         //1.查询数据库是否有同名组
@@ -151,5 +162,49 @@ public class GroupService {
         if(rule==null){return Body.error("该规则不存在");}
         ruleMapper.delete(queryWrapper);
         return Body.success("删除规则成功");
+    }
+
+    public Body<List<String>> getAllAllowedMethod(){
+        List<String> list = new ArrayList<>(ALLOWED_METHODS);
+        return Body.success(list,"返回成功");
+    }
+
+    private List<ApplicationAndCenterName> getApplicationAndCenterName(List<Application> applications){
+
+        List<ApplicationAndCenterName> applicationAndCenterNames = new ArrayList<>();
+        // 遍历 applications，进行转换
+        for (Application app : applications) {
+            ApplicationAndCenterName appAndCenter = new ApplicationAndCenterName();
+            //父类给子类赋值
+            BeanUtils.copyProperties(app, appAndCenter);
+            //单独设置中心名
+            LambdaQueryWrapper<Center> query = Wrappers.<Center>lambdaQuery()
+                    .eq(Center::getUid,app.getCenterId());
+            Center center = centerMapper.selectOne(query);
+            appAndCenter.setCenterName(center.getName()); // 这里可以进行动态赋值
+            // 添加到新列表中
+            applicationAndCenterNames.add(appAndCenter);
+        }
+        return applicationAndCenterNames;
+
+    }
+
+    private List<GroupAndCenterName> getGroupAndCenterName(List<Group> groups){
+
+        List<GroupAndCenterName> groupAndCenterNames = new ArrayList<>();
+        // 遍历 applications，进行转换
+        for (Group group : groups) {
+            GroupAndCenterName groupAndCenterName = new GroupAndCenterName();
+            //父类给子类赋值
+            BeanUtils.copyProperties(group, groupAndCenterName);
+            //单独设置中心名
+            LambdaQueryWrapper<Center> query = Wrappers.<Center>lambdaQuery()
+                    .eq(Center::getUid,group.getCenterId());
+            Center center = centerMapper.selectOne(query);
+            groupAndCenterName.setCenterName(center.getName()); // 这里可以进行动态赋值
+            // 添加到新列表中
+            groupAndCenterNames.add(groupAndCenterName);
+        }
+        return groupAndCenterNames;
     }
 }

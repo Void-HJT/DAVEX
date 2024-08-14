@@ -4,6 +4,8 @@ package DavexAgent.module.directory;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import DavexBase.info.ApplicationAndCenterName;
+import DavexBase.info.GroupAndCenterName;
 import DavexBase.service.directory.GroupService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,24 +32,25 @@ public class GroupController {
 
 
     @PostMapping("/getApplication")
-    public Body<List<Application>> getApplication(){
+    public Body<List<ApplicationAndCenterName>> getApplication(){
         return groupService.getApplication();
 
     }
+
     @PostMapping("/getGroup")
-    public Body<List<Group>> getGroup(@RequestParam("agentId") Long agentId,
+    public Body<List<GroupAndCenterName>> getGroup(@RequestParam("agentId") Long agentId,
                                       @RequestParam("centerId") Long centerId){
-        // 记录输入参数、调用方法、请求方、接收方和时间
-        String requestTime = LocalDateTime.now().toString();
-        customLogger.info("Custom Log - Input: agentId={}, centerId={}, Method: getGroup, Requester: {}, Responder: {}, Time: {}",
-                agentId, centerId, "RequesterInfo", "ResponderInfo", requestTime);
+//        // 记录输入参数、调用方法、请求方、接收方和时间
+//        String requestTime = LocalDateTime.now().toString();
+//        customLogger.info("Custom Log - Input: agentId={}, centerId={}, Method: getGroup, Requester: {}, Responder: {}, Time: {}",
+//                agentId, centerId, "RequesterInfo", "ResponderInfo", requestTime);
 
-        Body<List<Group>> response = groupService.getGroup(agentId, centerId);
+        Body<List<GroupAndCenterName>> response = groupService.getGroup(agentId, centerId);
 
-        // 记录输出结果、请求方、接收方和时间
-        String responseTime = LocalDateTime.now().toString();
-        customLogger.info("Custom Log - Output: {}, Requester: {}, Responder: {}, Time: {}",
-                response, "RequesterInfo", "ResponderInfo", responseTime);
+//        // 记录输出结果、请求方、接收方和时间
+//        String responseTime = LocalDateTime.now().toString();
+//        customLogger.info("Custom Log - Output: {}, Requester: {}, Responder: {}, Time: {}",
+//                response, "RequesterInfo", "ResponderInfo", responseTime);
 
         return response;
     }
@@ -65,9 +68,9 @@ public class GroupController {
     }
 
     @PostMapping("/getGroupByApplicationId")
-    public Body<List<Group>> getGroupByApplicationId(@RequestParam("agentId") Long agentId,
-                                                     @RequestParam("centerId") Long centerId,
-                                                     @RequestParam("applicationId") Long applicationId){
+    public Body<List<GroupAndCenterName>> getGroupByApplicationId(@RequestParam("agentId") Long agentId,
+                                                                  @RequestParam("centerId") Long centerId,
+                                                                  @RequestParam("applicationId") Long applicationId){
         return groupService.getGroupByApplicationId(agentId,centerId,applicationId);
 
     }
@@ -106,6 +109,10 @@ public class GroupController {
                                    @RequestParam("groupId") Long groupId,
                                    @RequestParam("allowMethod")String allowMethod){
         return groupService.deleteRule(agentId,groupId,allowMethod);
+    }
+    @PostMapping("/getAllAllowedMethod")
+    public Body<List<String>>getAllAllowedMethod(){
+        return groupService.getAllAllowedMethod();
     }
     
 }

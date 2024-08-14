@@ -389,12 +389,7 @@ public class FileFolderService {
         fileRecord.setFolderId(folderId);
         fileRecord.setName(fileName);
         fileRecord.setSize(file.getSize());
-        if (fileName != null) {
-            fileRecord.setType(fileName.substring(fileName.lastIndexOf(".") + 1));
-        } else {
-            // Handle the case when fileName is null
-            fileRecord.setType("");
-        }
+
         fileRecord.setCreateDate(new Timestamp(System.currentTimeMillis()));
         fileRecord.setLastUpdate(new Timestamp(System.currentTimeMillis()));
         // 其他元数据设置
@@ -415,7 +410,7 @@ public class FileFolderService {
         if (new_file == null) {
             return Body.error("该文件不存在");
         }
-        new_file.setName(file.getName() + "." + file.getType());
+        new_file.setName(file.getName());
         new_file.setDescription(file.getDescription());
         new_file.setExpiredTime(file.getExpiredTime());
         new_file.setExample(file.getExample());
