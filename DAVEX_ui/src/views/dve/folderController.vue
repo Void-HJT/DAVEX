@@ -26,6 +26,54 @@
       <div>
         <el-button @click="getDirectoryMethod">返回根目录</el-button>
         <el-button @click="returnFrontDirectory">返回上一级目录</el-button>
+        <el-popover
+          placement="top-start"
+          title="此处输入新文件夹名"
+          :width="400"
+          trigger="click"
+        >
+          <template #reference>
+            <el-button>在当前目录下新建文件夹</el-button>
+          </template>
+          <el-form
+            :model="createFolderBody"
+            label-width="80px"
+            label-position="left"
+          >
+            <el-form-item label="文件夹名">
+              <el-input v-model="createFolderBody.name"></el-input>
+            </el-form-item>
+            <el-button
+              @click="createFolderMethod"
+              calss="el-button mt-4"
+              style="width: 100%"
+            >
+              增加组别
+            </el-button>
+          </el-form>
+        </el-popover>
+        <el-popover
+          placement="top-start"
+          title="此处选择需要上传的文件"
+          :width="400"
+          trigger="click"
+        >
+          <template #reference>
+            <el-button>上传文件</el-button>
+          </template>
+          <el-upload
+            ref="upload"
+            :auto-upload="false"
+            :action="uploadUrl"
+            @change="handleChange"
+            width="100%"
+          >
+            <el-button type="primary">选择文件</el-button>
+          </el-upload>
+          <el-button @click="submitUpload" style="width: 100%">
+            上传到当前文件夹
+          </el-button>
+        </el-popover>
       </div>
       <div>
         <el-table
@@ -161,50 +209,6 @@
             </template>
           </el-table-column>
         </el-table>
-        <el-popover
-          placement="top-start"
-          title="此处输入新文件夹名"
-          :width="400"
-          trigger="click"
-        >
-          <template #reference>
-            <div>
-              <div style="height: 20px"></div>
-              <el-button class="el-button mt-4" style="width: 100%">
-                在当前目录下新建文件夹
-              </el-button>
-              <div style="height: 10px"></div>
-            </div>
-          </template>
-          <el-form
-            :model="createFolderBody"
-            label-width="80px"
-            label-position="left"
-          >
-            <el-form-item label="文件夹名">
-              <el-input v-model="createFolderBody.name"></el-input>
-            </el-form-item>
-            <el-button
-              @click="createFolderMethod"
-              calss="el-button mt-4"
-              style="width: 100%"
-            >
-              增加组别
-            </el-button>
-          </el-form>
-        </el-popover>
-        <el-upload
-          ref="upload"
-          :auto-upload="false"
-          :action="uploadUrl"
-          @change="handleChange"
-          width="100%"
-        >
-          <el-button style="width: 100%">选择文件</el-button>
-        </el-upload>
-        <el-button @click="submitUpload" style="width: 100%">
-          上传到当前文件夹
-        </el-button>
       </div>
       <el-dialog v-model="fileInfoVisible" title="文件详细信息" width="60%">
         <!-- <el-table :data="fileInfoData" style="width: 100%">
@@ -392,90 +396,158 @@
       </el-dialog>
     </el-main>
   </el-container>
-  <el-form
-    :model="getDirectoryByGroupBody"
-    label-width="80px"
-    style="max-width: 600px"
-  >
-    <el-form-item label="组Id">
-      <el-input v-model="getDirectoryByGroupBody.groupId"></el-input>
-    </el-form-item>
-    <el-form-item>
-      <el-button @click="getDirectoryByGroupMethod">
-        按照分组获取文件列表
-      </el-button>
-    </el-form-item>
-  </el-form>
-  <el-table
-    :data="directoryByGroupData"
-    style="width: 100%"
-    @row-click="showFileInfo"
-    @row-dblclick="nextFileGroup"
-  >
-    <el-table-column label="Uid" prop="uid" width="80"></el-table-column>
-    <el-table-column
-      label="所属代理"
-      prop="agentId"
-      width="80"
-    ></el-table-column>
-    <el-table-column label="名称" prop="name" width="180"></el-table-column>
-    <el-table-column label="类型" prop="type" width="180"></el-table-column>
-    <el-table-column
-      label="创建时间"
-      prop="createDate"
-      width="380"
-      :formatter="formatDate"
-    ></el-table-column>
-    <el-table-column
-      label="更新时间"
-      prop="lastUpdate"
-      width="380"
-      :formatter="formatDate"
-    ></el-table-column>
-  </el-table>
-  <el-form
-    :model="getDirectoryByApplicationBody"
-    label-width="80px"
-    style="max-width: 600px"
-  >
-    <el-form-item label="用户Id">
-      <el-input
-        v-model="getDirectoryByApplicationBody.applicationId"
-      ></el-input>
-    </el-form-item>
-    <el-form-item>
-      <el-button @click="getDirectoryByApplicationMethod">
-        按照用户获取文件列表
-      </el-button>
-    </el-form-item>
-  </el-form>
-  <el-table
-    :data="directoryByApplicationData"
-    style="width: 100%"
-    @row-click="showFileInfo"
-    @row-dblclick="nextFileGroup"
-  >
-    <el-table-column label="Uid" prop="uid" width="80"></el-table-column>
-    <el-table-column
-      label="所属代理"
-      prop="agentId"
-      width="80"
-    ></el-table-column>
-    <el-table-column label="名称" prop="name" width="180"></el-table-column>
-    <el-table-column label="类型" prop="type" width="180"></el-table-column>
-    <el-table-column
-      label="创建时间"
-      prop="createDate"
-      width="380"
-      :formatter="formatDate"
-    ></el-table-column>
-    <el-table-column
-      label="更新时间"
-      prop="lastUpdate"
-      width="380"
-      :formatter="formatDate"
-    ></el-table-column>
-  </el-table>
+  <el-container>
+    <el-header style="height: 50px">
+      <div
+        style="
+          background-color: antiquewhite;
+          height: 40px;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+        "
+      >
+        <p
+          style="
+            font-size: 20px;
+            color: black;
+            opacity: 100%;
+            text-align: center;
+          "
+        >
+          条件筛选列表
+        </p>
+      </div>
+    </el-header>
+    <el-main>
+      <el-popover
+        placement="top-start"
+        title="按分组查看文件目录"
+        :width="400"
+        trigger="click"
+      >
+        <template #reference>
+          <el-button>按分组查看文件目录</el-button>
+        </template>
+        <el-form
+          :model="getDirectoryByGroupBody"
+          label-width="80px"
+          style="max-width: 600px"
+        >
+          <el-form-item label="选择分组">
+            <el-select
+              v-model="getDirectoryByGroupBody.groupId"
+              placeholder="请选择分组"
+            >
+              <el-option
+                v-for="item in userGroupData"
+                :key="item.uid"
+                :label="item.name"
+                :value="item.uid"
+              />
+            </el-select>
+          </el-form-item>
+          <el-form-item>
+            <el-button @click="getDirectoryByGroupMethod">
+              按照分组获取文件列表
+            </el-button>
+          </el-form-item>
+        </el-form>
+      </el-popover>
+      <el-popover
+        placement="top-start"
+        title="按用户查看文件目录"
+        :width="400"
+        trigger="click"
+      >
+        <template #reference>
+          <el-button>按用户查看文件目录</el-button>
+        </template>
+        <el-form
+          :model="getDirectoryByApplicationBody"
+          label-width="80px"
+          style="max-width: 600px"
+        >
+          <el-form-item label="选择用户">
+            <el-select
+              v-model="getDirectoryByApplicationBody.applicationId"
+              placeholder="请选择用户"
+            >
+              <el-option
+                v-for="item in applicationData"
+                :key="item.uid"
+                :label="item.name"
+                :value="item.uid"
+              />
+            </el-select>
+          </el-form-item>
+          <el-form-item>
+            <el-button @click="getDirectoryByApplicationMethod">
+              按照用户获取文件列表
+            </el-button>
+          </el-form-item>
+        </el-form>
+      </el-popover>
+      <el-table
+        stripe
+        :data="directorySelectedData"
+        style="width: 100%"
+        @row-dblclick="nextFileGroup"
+        max-height="300"
+      >
+        <el-table-column fixed label="" width="50" align="center">
+          <template #default="scope">
+            <el-icon>
+              <template v-if="scope.row.type === 'folder'">
+                <el-icon color="#409efc"><Folder /></el-icon>
+              </template>
+              <template v-else-if="scope.row.type === 'file'">
+                <el-icon><Files /></el-icon>
+              </template>
+            </el-icon>
+          </template>
+        </el-table-column>
+        <el-table-column
+          label="Uid"
+          prop="uid"
+          width="80"
+          align="center"
+        ></el-table-column>
+        <el-table-column
+          label="名称"
+          prop="name"
+          width="180"
+          align="center"
+        ></el-table-column>
+        <el-table-column
+          label="所属代理"
+          prop="agentId"
+          width="80"
+        ></el-table-column>
+
+        <el-table-column
+          label="类型"
+          prop="type"
+          width="180"
+          align="center"
+        ></el-table-column>
+        <el-table-column
+          label="创建时间"
+          prop="createDate"
+          width="380"
+          :formatter="formatDate"
+          align="center"
+        ></el-table-column>
+        <el-table-column
+          label="更新时间"
+          prop="lastUpdate"
+          mid-width="380"
+          :formatter="formatDate"
+          align="center"
+        ></el-table-column>
+      </el-table>
+    </el-main>
+  </el-container>
 </template>
 
 <script lang="ts" setup>
@@ -497,7 +569,7 @@ import {
   updateFile,
   getFile,
 } from '../../api/folderController.js'
-import { getGroup, getRuleByGroup } from '../../api/testDve.js'
+import { getGroup, getRuleByGroup, getApplication } from '../../api/testDve.js'
 import { genFileId } from 'element-plus'
 import type { UploadInstance, UploadProps, UploadRawFile } from 'element-plus'
 import { nextTick, onMounted } from 'vue'
@@ -505,6 +577,7 @@ import { nextTick, onMounted } from 'vue'
 onMounted(() => {
   getDirectoryMethod()
   getGroups()
+  getApplicationMethod()
 })
 
 // 对话框是否可见
@@ -518,14 +591,14 @@ const folderVisibleDialogClose = () => {
 }
 
 const directoryData = ref([])
+const applicationData = ref([])
 const currentDirectoryData = ref([])
-const directoryByGroupData = ref([])
 const fileInfoData = ref([])
 const fileInfoVisible = ref(false)
 const folderRenameVisible = ref(false)
 const fileRuleListData = ref([])
 const userGroupData = ref([])
-const directoryByApplicationData = ref([])
+const directorySelectedData = ref([])
 const updateFileBody = ref({
   uid: '',
   agentId: '',
@@ -541,6 +614,13 @@ const updateFileBody = ref({
   example: '',
   type: '',
 })
+
+const getApplicationMethod = async () => {
+  const res = await getApplication()
+  // 确保 res.data 是一个数组
+  applicationData.value = res.data.data
+  // 现在可以安全地调用 includes
+}
 
 const uploadUrl = computed(() => {
   const url = `http://10.176.37.50:8080/directory/fileFolder/uploadFile?agentId=${uploadFileBody.value.agentId}&folderId=${uploadFileBody.value.folderId}`
@@ -696,12 +776,16 @@ const getFileInfoMethod = async (uid, agentId, parentId, type) => {
   }
 }
 
+async function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms))
+}
+
 const submitUpload = async () => {
   uploadFileBody.value.agentId = '5'
   uploadFileBody.value.folderId = currentParentId.value
-  upload.value!.submit()
-  await nextTick()
-  getDirectoryMethod()
+  await upload.value!.submit()
+  await sleep(500)
+  findCurrentFolder()
 }
 
 const setFolderInvisibleMethod = async () => {
@@ -804,7 +888,7 @@ const handleCellDoubleClick = async (row) => {
 const nextFileGroup = async (row) => {
   console.log('row:', row)
   if (row.type === 'folder') {
-    directoryByGroupData.value = row.children
+    directorySelectedData.value = row.children
   }
 }
 
@@ -848,7 +932,7 @@ const getDirectoryByGroupMethod = async () => {
   try {
     const res = await getDirectoryByGroup(getDirectoryByGroupBody.value)
     const res1 = res.data.data.children
-    directoryByGroupData.value = res1
+    directorySelectedData.value = res1
   } catch (error) {
     console.error('Failed to get group list:', error)
   }
@@ -860,7 +944,7 @@ const getDirectoryByApplicationMethod = async () => {
       getDirectoryByApplicationBody.value,
     )
     const res1 = res.data.data.children
-    directoryByApplicationData.value = res1
+    directorySelectedData.value = res1
   } catch (error) {
     console.error('Failed to get group list:', error)
   }
