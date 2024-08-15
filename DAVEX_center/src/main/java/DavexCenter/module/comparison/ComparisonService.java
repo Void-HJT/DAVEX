@@ -47,7 +47,7 @@ public class ComparisonService {
         @Value("${file.upload-base-dir}")
         private String uploadBaseDir;
 
-        public Body<DirectoryInfo> getDirectory(Integer applicationId, Integer agentId) throws Exception {
+        public Body<DirectoryInfo> getDirectory(Long applicationId, Long agentId) throws Exception {
 
                 WebClient webclient = centerWebClientService.center2AgentWebClient(agentId);
                 DirectoryInfo directoryInfo = webclient.post()
@@ -62,7 +62,7 @@ public class ComparisonService {
                 return Body.success(directoryInfo, "获取数据目录成功");
         }
 
-        public Body<TableHeader> getTableHeader(Integer agentId, Integer fileId, Integer folderId) throws Exception {
+        public Body<TableHeader> getTableHeader(Long agentId, Long fileId, Long folderId) throws Exception {
 
                 WebClient webclient = centerWebClientService.center2AgentWebClient(agentId);
                 TableHeader tableHeader = webclient.post()
@@ -77,7 +77,7 @@ public class ComparisonService {
                 return Body.success(tableHeader, "获取成功");
         }
 
-        public Body<List<Boolean>> compare(Integer applicationId, Integer agentId, Integer fileId, Integer folderId,
+        public Body<List<Boolean>> compare(Long applicationId, Long agentId, Long fileId, Long folderId,
                         List<String> attributes, List<List<String>> valuesList) throws Exception {
 
                 WebClient webclient = centerWebClientService.center2AgentWebClient(agentId);
@@ -102,8 +102,8 @@ public class ComparisonService {
                         // 计算给定 values 的哈希值
                         String delimiter = "|";  // 使用相同的分隔符
                         StringBuilder sb = new StringBuilder();
-                        System.out.println("Attributes size: " + attributes.size());
-                        System.out.println("Values size: " + values.size());
+//                        System.out.println("Attributes size: " + attributes.size());
+//                        System.out.println("Values size: " + values.size());
 
                         for (int i = 0; i < attributes.size(); i++) {
                                 if (i > 0) {
@@ -144,13 +144,13 @@ public class ComparisonService {
                 MultipartFile file = new CustomMultipartFile(jsonBytes, fileName);
 
                 // 调用 saveComparisonFile 方法
-                comparisonFileService.saveComparisonFile(file, fileService.getSha256(file), applicationId,
+                comparisonFileService.saveComparison(file, fileService.getSha256(file), applicationId,
                         uploadBaseDir, Timestamp.valueOf(LocalDateTime.now().plusWeeks(1)));
 
                 return Body.success(comparisonResults, "比对成功");
         }
 
-        public Body<List<Boolean>> compareFromCsv(Integer applicationId, Integer agentId, Integer fileId, Integer folderId, MultipartFile file) throws Exception {
+        public Body<List<Boolean>> compareFromCsv(Long applicationId, Long agentId, Long fileId, Long folderId, MultipartFile file) throws Exception {
 
                 // 解析 CSV 文件
                 List<String> attributes = new ArrayList<>();

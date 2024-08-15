@@ -34,7 +34,7 @@ public class ComparisonService {
     @Autowired
     private FileFolderService fileFolderService;
 
-    public Body<TableHeader> getCsvHeader(Integer fileId, Integer folderId, Integer agentId) {
+    public Body<TableHeader> getCsvHeader(Long fileId, Long folderId, Long agentId) {
 
         // 查找文件
         LambdaQueryWrapper<File> queryWrapper = Wrappers.<File>lambdaQuery()
@@ -72,7 +72,7 @@ public class ComparisonService {
         }
     }
 
-    public Body<List<String>> getHash(Integer fileId, Integer folderId, Integer agentId,
+    public Body<List<String>> getHash(Long fileId, Long folderId, Long agentId,
                                          List<String> attributes) {
 
         // 查找文件
