@@ -1,6 +1,7 @@
 package DavexCenter.module.file.service;
 
 import java.io.IOException;
+import java.nio.file.Paths;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -35,7 +36,7 @@ public class QueryFileService {
     @Autowired
     private JdbcTemplate jdbcTemplate;
 
-    public Body<String> saveQuery(MultipartFile file, String hash, Integer applicationId,
+    public Body<String> saveQuery(MultipartFile file, String hash, Long applicationId,
                                       String base, java.sql.Timestamp expiredTime) {
 
         // 校验sha256
@@ -57,9 +58,9 @@ public class QueryFileService {
         }
         QueryOutput newQueryOutput = new QueryOutput();
         newQueryOutput.setHash(hash);
-        newQueryOutput.setPath(base + "/query/" + fileHash + "_appid_" + applicationId);
+        newQueryOutput.setPath(Paths.get(base).resolve("query").resolve(fileHash + "_appid_" + applicationId).toString());
         newQueryOutput.setUploadDate(Timestamp.valueOf(LocalDateTime.now()));
-        newQueryOutput.setApplicationId(Long.valueOf(applicationId));
+        newQueryOutput.setApplicationId(applicationId);
         newQueryOutput.setExpiredTime(expiredTime);
         newQueryOutput.setName(file.getOriginalFilename());
         queryOutputMapper.insert(newQueryOutput);
@@ -87,7 +88,7 @@ public class QueryFileService {
                 fileName));
     }
 
-    public Body<String> fetchQuery(Integer outputId, Integer applicationId, String downloadPath) {
+    public Body<String> fetchQuery(Long outputId, Long applicationId, String downloadPath) {
 
         // 根据结果id查找结果表
         LambdaQueryWrapper<QueryOutput> queryWrapper = Wrappers.<QueryOutput>lambdaQuery()
@@ -106,7 +107,7 @@ public class QueryFileService {
 
         // 添加下载任务记录到任务表
         DownloadTask newDownloadTask = new DownloadTask();
-        newDownloadTask.setApplicationId(Long.valueOf(applicationId));
+        newDownloadTask.setApplicationId(applicationId);
         newDownloadTask.setOutputId(queryQueryOutput.getUid());
         newDownloadTask.setDownloadTime(Timestamp.valueOf(LocalDateTime.now()));
         newDownloadTask.setType("query");
@@ -124,7 +125,7 @@ public class QueryFileService {
         return Body.success(String.format("获取成功，结果id: %d，文件名: %s", outputId, fileName));
     }
 
-    public Body<List<QueryOutput>> queryQuery(Integer applicationId) {
+    public Body<List<QueryOutput>> queryQuery(Long applicationId) {
 
         LambdaQueryWrapper<QueryOutput> queryWrapper = Wrappers.<QueryOutput>lambdaQuery()
                 .eq(QueryOutput::getApplicationId, applicationId);
@@ -133,7 +134,7 @@ public class QueryFileService {
         return Body.success(outputs, String.format("查询成功，共查询到%d个文件", fileNum));
     }
 
-    public Body<List<QueryOutput>> queryQueryByIds(Integer applicationId, List<Integer> outputIds) {
+    public Body<List<QueryOutput>> queryQueryByIds(Long applicationId, List<Long> outputIds) {
 
         LambdaQueryWrapper<QueryOutput> queryWrapper = Wrappers.<QueryOutput>lambdaQuery()
                 .eq(QueryOutput::getApplicationId, applicationId)
@@ -144,7 +145,7 @@ public class QueryFileService {
         return Body.success(outputs, String.format("查询成功，共查询到%d个文件", fileNum));
     }
 
-    public Body<String> deleteQuery(Integer applicationId, Integer outputId) {
+    public Body<String> deleteQuery(Long applicationId, Long outputId) {
 
         // 根据文件id查找结果表
         LambdaQueryWrapper<QueryOutput> queryWrapper = Wrappers.<QueryOutput>lambdaQuery()

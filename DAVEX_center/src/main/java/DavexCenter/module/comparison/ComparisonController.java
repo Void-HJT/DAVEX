@@ -20,27 +20,27 @@ public class ComparisonController {
 
     // center发起数据目录获取请求
     @PostMapping("/getDirectory")
-    public Body<DirectoryInfo> getDirectory(@RequestParam("applicationId") Integer applicationId,
-                                            @RequestParam("agentId") Integer agentId) throws Exception {
+    public Body<DirectoryInfo> getDirectory(@RequestParam("applicationId") Long applicationId,
+                                            @RequestParam("agentId") Long agentId) throws Exception {
 
         return comparisonService.getDirectory(applicationId, agentId);
     }
 
     // center请求表头信息
     @PostMapping("/getTableHeader")
-    public Body<TableHeader> getTableHeader(@RequestParam("agentId") Integer agentId,
-                                            @RequestParam("fileId") Integer fileId,
-                                            @RequestParam("folderId") Integer folderId) throws Exception {
+    public Body<TableHeader> getTableHeader(@RequestParam("agentId") Long agentId,
+                                            @RequestParam("fileId") Long fileId,
+                                            @RequestParam("folderId") Long folderId) throws Exception {
 
         return comparisonService.getTableHeader(agentId, fileId, folderId);
     }
 
     // center选择属性并获取agent所有数据相应属性的哈希,与己方哈希进行比对
     @PostMapping("/compare")
-    public Body<List<Boolean>> compare(@RequestParam("applicationId") Integer applicationId,
-                                       @RequestParam("agentId") Integer agentId,
-                                       @RequestParam("fileId") Integer fileId,
-                                       @RequestParam("folderId") Integer folderId,
+    public Body<List<Boolean>> compare(@RequestParam("applicationId") Long applicationId,
+                                       @RequestParam("agentId") Long agentId,
+                                       @RequestParam("fileId") Long fileId,
+                                       @RequestParam("folderId") Long folderId,
                                        @RequestParam("attributes") List<String> attributes,
                                        @RequestParam("valuesList") List<List<String>> valuesList) throws Exception {
 
@@ -48,10 +48,10 @@ public class ComparisonController {
     }
 
     @PostMapping("/compareFromCsv")
-    public Body<List<Boolean>> compareFromCsv(@RequestParam("applicationId") Integer applicationId,
-                                              @RequestParam("agentId") Integer agentId,
-                                              @RequestParam("fileId") Integer fileId,
-                                              @RequestParam("folderId") Integer folderId,
+    public Body<List<Boolean>> compareFromCsv(@RequestParam("applicationId") Long applicationId,
+                                              @RequestParam("agentId") Long agentId,
+                                              @RequestParam("fileId") Long fileId,
+                                              @RequestParam("folderId") Long folderId,
                                               @RequestPart("file") MultipartFile file) throws Exception {
 
         return comparisonService.compareFromCsv(applicationId, agentId, fileId, folderId, file);
