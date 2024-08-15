@@ -31,7 +31,6 @@
         max-height="200"
       >
         <el-table-column
-          fixed
           label="用户ID"
           prop="uid"
           width="180"
@@ -39,7 +38,7 @@
         ></el-table-column>
         <el-table-column
           label="所属中心"
-          prop="centerId"
+          prop="centerName"
           width="180"
           align="center"
         ></el-table-column>
@@ -157,7 +156,7 @@
       ></el-table-column>
       <el-table-column
         label="所属中心"
-        prop="centerId"
+        prop="centerName"
         width="180"
         align="center"
       ></el-table-column>
