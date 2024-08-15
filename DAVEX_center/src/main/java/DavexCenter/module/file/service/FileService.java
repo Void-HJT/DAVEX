@@ -14,7 +14,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-
+import java.nio.file.Paths;
 //import java.io.File; 命名冲突，使用全限定名
 import javax.servlet.http.HttpServletResponse;
 import javax.xml.bind.DatatypeConverter;
@@ -52,14 +52,6 @@ public class FileService {
     public Body<String> saveFile(MultipartFile file, File fileInfo, Integer applicationId,
             String base, java.sql.Timestamp expiredTime) {
 
-        // 根据文件id查找文件表
-        // LambdaQueryWrapper<File> queryWrapper = Wrappers.<File>lambdaQuery()
-        // .eq(File::getUid, fileId)
-        // .eq(File::getAgentId, agentId);
-        // File queryFile = fileMapper.selectOne(queryWrapper);
-        // if(queryFile == null){return Body.error(String.format("找不到该文件，文件id: %d，代理id:
-        // %d", fileId, agentId));}
-
         // 校验sha256
         String fileHash = getSha256(file);
         if (!fileHash.equals(fileInfo.getHash())) {
@@ -72,15 +64,15 @@ public class FileService {
         LambdaQueryWrapper<Output> queryWrapper1 = Wrappers.<Output>lambdaQuery()
                 .eq(Output::getFileId, fileInfo.getUid())
                 .eq(Output::getAgentId, fileInfo.getAgentId())
-                .eq(Output::getApplicationId, applicationId);
+                .eq(Output::getApplicationId, applicationId)
+                .eq(Output::getHash, fileHash);
         Output queryOutput = outputMapper.selectOne(queryWrapper1);
         if (queryOutput != null) {
-            if (fileHash.equals(queryOutput.getHash())) {
-                jdbcTemplate.execute("SET FOREIGN_KEY_CHECKS = 0");
-                outputMapper.deleteById(queryOutput.getUid());
-                jdbcTemplate.execute("SET FOREIGN_KEY_CHECKS = 1");
-            }
+            jdbcTemplate.execute("SET FOREIGN_KEY_CHECKS = 0");
+            outputMapper.deleteById(queryOutput.getUid());
+            jdbcTemplate.execute("SET FOREIGN_KEY_CHECKS = 1");
         }
+
         Output newOutput = new Output();
         String fileName = fileInfo.getName();
         newOutput.setName(fileName);
@@ -89,7 +81,7 @@ public class FileService {
         newOutput.setTag(fileInfo.getTag());
         newOutput.setSize(fileInfo.getSize());
         newOutput.setDescription(fileInfo.getDescription());
-        newOutput.setPath(base + "/common/" + fileHash + "_appid_" + applicationId);
+        newOutput.setPath(Paths.get(base).resolve("common").resolve(fileHash + "_appid_" + applicationId).toString());
         newOutput.setExpiredTime(expiredTime);
         newOutput.setHash(fileHash);
         newOutput.setFileId(fileInfo.getUid());
@@ -124,17 +116,6 @@ public class FileService {
             File fileInfo = fileInfos.get(i);
             java.sql.Timestamp expiredTime = expiredTimes.get(i);
 
-            // 根据文件id查找文件表
-            // LambdaQueryWrapper<File> queryWrapper = Wrappers.<File>lambdaQuery()
-            // .eq(File::getUid, fileId)
-            // .eq(File::getAgentId, agentId);
-            // File queryFile = fileMapper.selectOne(queryWrapper);
-            // if (queryFile == null) {
-            // results.add(String.format("找不到该文件，文件id: %d，代理id: %d", fileId, agentId));
-            // flag = false;
-            // continue;
-            // }
-
             // 校验md5
             String fileHash = getSha256(file);
             if (!fileHash.equals(fileInfo.getHash())) {
@@ -148,15 +129,15 @@ public class FileService {
             LambdaQueryWrapper<Output> queryWrapper1 = Wrappers.<Output>lambdaQuery()
                     .eq(Output::getFileId, fileInfo.getUid())
                     .eq(Output::getAgentId, fileInfo.getAgentId())
-                    .eq(Output::getApplicationId, applicationId);
+                    .eq(Output::getApplicationId, applicationId)
+                    .eq(Output::getHash, fileHash);
             Output queryOutput = outputMapper.selectOne(queryWrapper1);
             if (queryOutput != null) {
-                if (fileHash.equals(queryOutput.getHash())) {
-                    jdbcTemplate.execute("SET FOREIGN_KEY_CHECKS = 0");
-                    outputMapper.deleteById(queryOutput.getUid());
-                    jdbcTemplate.execute("SET FOREIGN_KEY_CHECKS = 1");
-                }
+                jdbcTemplate.execute("SET FOREIGN_KEY_CHECKS = 0");
+                outputMapper.deleteById(queryOutput.getUid());
+                jdbcTemplate.execute("SET FOREIGN_KEY_CHECKS = 1");
             }
+
             Output newOutput = new Output();
             String fileName = fileInfo.getName();
             newOutput.setName(fileInfo.getName());
@@ -165,7 +146,8 @@ public class FileService {
             newOutput.setTag(fileInfo.getTag());
             newOutput.setSize(fileInfo.getSize());
             newOutput.setDescription(fileInfo.getDescription());
-            newOutput.setPath(base + "/common/" + fileHash + "_appid_" + applicationId);
+            newOutput.setPath(
+                    Paths.get(base).resolve("common").resolve(fileHash + "_appid_" + applicationId).toString());
             newOutput.setExpiredTime(expiredTime);
             newOutput.setHash(fileHash);
             newOutput.setFileId(fileInfo.getUid());
@@ -192,7 +174,7 @@ public class FileService {
         return Body.success(results, "文件保存处理完成");
     }
 
-    public Body<String> fetchFileByHttp(Integer outputId, Long applicationId, HttpServletResponse response) {
+    public Body<String> fetchFileByHttp(Integer outputId, Integer applicationId, HttpServletResponse response) {
 
         // 根据结果id查找结果表
         LambdaQueryWrapper<Output> queryWrapper = Wrappers.<Output>lambdaQuery()
@@ -243,7 +225,7 @@ public class FileService {
         return Body.success(String.format("获取成功，结果id: %d，文件名: %s", outputId, fileName));
     }
 
-    public Body<String> fetchFile(Integer outputId, Long applicationId, String downloadPath) {
+    public Body<String> fetchFile(Integer outputId, Integer applicationId, String downloadPath) {
 
         // 根据结果id查找结果表
         LambdaQueryWrapper<Output> queryWrapper = Wrappers.<Output>lambdaQuery()
@@ -262,7 +244,7 @@ public class FileService {
 
         // 添加下载任务记录到任务表
         DownloadTask newDownloadTask = new DownloadTask();
-        newDownloadTask.setApplicationId(applicationId);
+        newDownloadTask.setApplicationId(Long.valueOf(applicationId));
         newDownloadTask.setOutputId(queryOutput.getUid());
         newDownloadTask.setDownloadTime(Timestamp.valueOf(LocalDateTime.now()));
         newDownloadTask.setType("common");
@@ -378,9 +360,9 @@ public class FileService {
 
     public void copyFile(String filePath, String fileName, String downloadPath) throws Exception {
         var source = new java.io.File(filePath);
-        var dest = new java.io.File(downloadPath + fileName);
+        var dest = new java.io.File(Paths.get(downloadPath).resolve(fileName).toString());
         try (var fis = new FileInputStream(source);
-             var fos = new FileOutputStream(dest)) {
+                var fos = new FileOutputStream(dest)) {
 
             byte[] buffer = new byte[1024];
             int length;

@@ -34,7 +34,7 @@ public class ComparisonFileService {
     @Autowired
     private JdbcTemplate jdbcTemplate;
 
-    public Body<String> saveComparisonFile(MultipartFile file, String hash, Long applicationId,
+    public Body<String> saveComparison(MultipartFile file, String hash, Integer applicationId,
                                            String base, java.sql.Timestamp expiredTime) {
 
         // 校验sha256
@@ -46,20 +46,20 @@ public class ComparisonFileService {
         // 若已存在，则进行覆盖
         LambdaQueryWrapper<ComparisonOutput> queryWrapper = Wrappers.<ComparisonOutput>lambdaQuery()
                 .eq(ComparisonOutput::getName, file.getOriginalFilename())
-                .eq(ComparisonOutput::getApplicationId, applicationId);
+                .eq(ComparisonOutput::getApplicationId, applicationId)
+                .eq(ComparisonOutput::getHash, fileHash);
         ComparisonOutput queryComparisonOutput = comparisonOutputMapper.selectOne(queryWrapper);
         if (queryComparisonOutput != null) {
-            if (fileHash.equals(queryComparisonOutput.getHash())) {
-                jdbcTemplate.execute("SET FOREIGN_KEY_CHECKS = 0");
-                comparisonOutputMapper.deleteById(queryComparisonOutput.getUid());
-                jdbcTemplate.execute("SET FOREIGN_KEY_CHECKS = 1");
-            }
+            jdbcTemplate.execute("SET FOREIGN_KEY_CHECKS = 0");
+            comparisonOutputMapper.deleteById(queryComparisonOutput.getUid());
+            jdbcTemplate.execute("SET FOREIGN_KEY_CHECKS = 1");
         }
+
         ComparisonOutput newComparisonOutput = new ComparisonOutput();
         newComparisonOutput.setHash(hash);
         newComparisonOutput.setPath(base + "/comparison/" + fileHash + "_appid_" + applicationId);
         newComparisonOutput.setUploadDate(Timestamp.valueOf(LocalDateTime.now()));
-        newComparisonOutput.setApplicationId(applicationId);
+        newComparisonOutput.setApplicationId(Long.valueOf(applicationId));
         newComparisonOutput.setExpiredTime(expiredTime);
         newComparisonOutput.setName(file.getOriginalFilename());
         comparisonOutputMapper.insert(newComparisonOutput);
@@ -78,7 +78,7 @@ public class ComparisonFileService {
                 fileName));
     }
 
-    public Body<String> fetchComparison(Integer outputId, Long applicationId, String downloadPath) {
+    public Body<String> fetchComparison(Integer outputId, Integer applicationId, String downloadPath) {
 
         // 根据结果id查找结果表
         LambdaQueryWrapper<ComparisonOutput> queryWrapper = Wrappers.<ComparisonOutput>lambdaQuery()
@@ -97,7 +97,7 @@ public class ComparisonFileService {
 
         // 添加下载任务记录到任务表
         DownloadTask newDownloadTask = new DownloadTask();
-        newDownloadTask.setApplicationId(applicationId);
+        newDownloadTask.setApplicationId(Long.valueOf(applicationId));
         newDownloadTask.setOutputId(queryComparisonOutput.getUid());
         newDownloadTask.setDownloadTime(Timestamp.valueOf(LocalDateTime.now()));
         newDownloadTask.setType("comparison");

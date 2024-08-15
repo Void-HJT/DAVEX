@@ -34,22 +34,22 @@ public class ComparisonFileController {
     // 保存comparison文件接口
     @PostMapping("/saveComparison")
     public Body<String> saveComparison(@RequestPart("file") MultipartFile file,
-                                  @RequestParam("hash") String hash,
-                                  @RequestParam("applicationId") Long applicationId,
-                                  @RequestParam(value = "expiredTime", required = false) java.sql.Timestamp expiredTime) {
+                                       @RequestParam("hash") String hash,
+                                       @RequestParam("applicationId") Integer applicationId,
+                                       @RequestParam(value = "expiredTime", required = false) java.sql.Timestamp expiredTime) {
 
         if (expiredTime == null) {
             // 设置默认值为当前时间的一周后
             expiredTime = java.sql.Timestamp.from(Instant.now().plus(7, ChronoUnit.DAYS));
         }
 
-        return comparisonFileService.saveComparisonFile(file, hash, applicationId, uploadBaseDir, expiredTime);
+        return comparisonFileService.saveComparison(file, hash, applicationId, uploadBaseDir, expiredTime);
     }
 
     // application通过路径直接获取center结果管理区comparison文件的接口
     @PostMapping("/fetchComparison")
     public Body<String> fetchComparison(@RequestParam("outputId") Integer outputId,
-                                   @RequestParam("applicationId") Long applicationId) {
+                                        @RequestParam("applicationId") Integer applicationId) {
 
         return comparisonFileService.fetchComparison(outputId, applicationId, downloadBaseDir);
     }
@@ -64,7 +64,7 @@ public class ComparisonFileController {
     // application查询center结果管理区某些comparison文件的接口
     @PostMapping("/queryComparisonByIds")
     public Body<List<ComparisonOutput>> queryComparisonByIds(@RequestParam("applicationId") Integer applicationId,
-                                              @RequestParam("outputIds") List<Integer> outputIds) {
+                                                             @RequestParam("outputIds") List<Integer> outputIds) {
 
         return comparisonFileService.queryComparisonByIds(applicationId, outputIds);
     }
@@ -72,7 +72,7 @@ public class ComparisonFileController {
     // application删除center结果管理区comparison文件的接口
     @PostMapping("/deleteComparison")
     public Body<String> deleteComparison(@RequestParam("applicationId") Integer applicationId,
-                                    @RequestParam("outputId") Integer outputId) {
+                                         @RequestParam("outputId") Integer outputId) {
 
         return comparisonFileService.deleteComparison(applicationId, outputId);
     }

@@ -2,6 +2,8 @@
 package DavexAgent.module.task.service;
 
 import java.nio.file.Paths;
+import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.Map;
 
 import org.apache.commons.lang3.tuple.Pair;
@@ -141,8 +143,11 @@ public class MpcTaskService {
         MpcTaskOutput mpcTaskOutput = new MpcTaskOutput();
         mpcTaskOutput.setTaskId(mpcTask.getUid());
         mpcTaskOutput.setHash(Utils.getFileHash(fileResource, "SHA-256"));
+        mpcTaskOutput.setApplicationId(mpcTask.getApplicationId());
+        mpcTaskOutput.setUploadDate(Timestamp.valueOf(LocalDateTime.now()));
+        mpcTaskOutput.setName(mpcTask.getUid() + ".csv");
         agentWebClientService.agent2CenterWebClient(mpcTask.getCenterId()).post()
-                .uri("/MpcTasks/save")
+                .uri("/MpcTasksOutput/save")
                 .contentType(MediaType.MULTIPART_FORM_DATA).body(BodyInserters.fromMultipartData("file", fileResource)
                         .with("metadata", mpcTaskOutput))
                 .retrieve().bodyToMono(new ParameterizedTypeReference<R<String>>() {

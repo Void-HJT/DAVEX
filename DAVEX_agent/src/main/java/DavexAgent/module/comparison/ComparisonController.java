@@ -22,8 +22,8 @@ public class ComparisonController {
     // agent解析csv文件表头
     @PostMapping("/getCsvHeader")
     public Body<TableHeader> getCsvHeader(@RequestParam("fileId") Integer fileId,
-                                       @RequestParam("folderId") Integer folderId,
-                                             @RequestParam("agentId") Integer agentId) {
+                                          @RequestParam("folderId") Integer folderId,
+                                          @RequestParam("agentId") Integer agentId) {
 
         return comparisonService.getCsvHeader(fileId, folderId, agentId);
     }

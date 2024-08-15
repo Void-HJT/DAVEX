@@ -1,7 +1,5 @@
 package DavexBase.entity;
 
-import java.time.LocalDate;
-
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
@@ -16,5 +14,8 @@ public class MpcTaskOutput {
     private String taskId;
     private String hash;
     private String path;
-    private LocalDate uploadDate;
+    private java.sql.Timestamp uploadDate;
+    private Long applicationId;
+    private java.sql.Timestamp expiredTime;
+    private String name;
 }

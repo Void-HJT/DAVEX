@@ -227,13 +227,15 @@ CREATE TABLE `input` (
 DROP TABLE IF EXISTS `mpcTaskOutput`;
 
 CREATE TABLE `mpcTaskOutput` (
-    `uid` BIGINT NOT NULL AUTO_INCREMENT,
-    `task_id` VARCHAR(255) NOT NULL,
-    `hash` VARCHAR(255) NOT NULL,
-    `path` VARCHAR(255) NULL,
+    `uid` bigint NOT NULL AUTO_INCREMENT,
+    `task_id` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+    `hash` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+    `path` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL,
     `upload_date` timestamp NULL DEFAULT NULL,
-    `name` VARCHAR(255) NULL,
-    PRIMARY KEY (`uid`)
+    `application_id` int NULL DEFAULT NULL,
+    `expired_time` timestamp NULL DEFAULT NULL,
+    `name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL,
+    PRIMARY KEY (`uid`) USING BTREE
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci;
 
 DROP TABLE IF EXISTS `output`;
@@ -278,20 +280,6 @@ CREATE TABLE `download_task` (
     `type` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL,
     PRIMARY KEY (`uid`) USING BTREE
 ) ENGINE = InnoDB AUTO_INCREMENT = 26 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = DYNAMIC;
-
-DROP TABLE IF EXISTS `mpc_output`;
-
-CREATE TABLE `mpc_output` (
-    `uid` bigint NOT NULL AUTO_INCREMENT,
-    `task_id` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
-    `hash` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
-    `path` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL,
-    `upload_date` timestamp NULL DEFAULT NULL,
-    `application_id` int NULL DEFAULT NULL,
-    `expired_time` timestamp NULL DEFAULT NULL,
-    `name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL,
-    PRIMARY KEY (`uid`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 11 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = DYNAMIC;
 
 DROP TABLE IF EXISTS `query_output`;
 
