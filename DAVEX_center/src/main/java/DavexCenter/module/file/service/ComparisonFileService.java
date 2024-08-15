@@ -1,6 +1,7 @@
 package DavexCenter.module.file.service;
 
 import java.io.IOException;
+import java.nio.file.Paths;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -34,7 +35,7 @@ public class ComparisonFileService {
     @Autowired
     private JdbcTemplate jdbcTemplate;
 
-    public Body<String> saveComparison(MultipartFile file, String hash, Integer applicationId,
+    public Body<String> saveComparison(MultipartFile file, String hash, Long applicationId,
                                            String base, java.sql.Timestamp expiredTime) {
 
         // 校验sha256
@@ -57,9 +58,9 @@ public class ComparisonFileService {
 
         ComparisonOutput newComparisonOutput = new ComparisonOutput();
         newComparisonOutput.setHash(hash);
-        newComparisonOutput.setPath(base + "/comparison/" + fileHash + "_appid_" + applicationId);
+        newComparisonOutput.setPath(Paths.get(base).resolve("comparison").resolve(fileHash + "_appid_" + applicationId).toString());
         newComparisonOutput.setUploadDate(Timestamp.valueOf(LocalDateTime.now()));
-        newComparisonOutput.setApplicationId(Long.valueOf(applicationId));
+        newComparisonOutput.setApplicationId(applicationId);
         newComparisonOutput.setExpiredTime(expiredTime);
         newComparisonOutput.setName(file.getOriginalFilename());
         comparisonOutputMapper.insert(newComparisonOutput);
@@ -78,7 +79,7 @@ public class ComparisonFileService {
                 fileName));
     }
 
-    public Body<String> fetchComparison(Integer outputId, Integer applicationId, String downloadPath) {
+    public Body<String> fetchComparison(Long outputId, Long applicationId, String downloadPath) {
 
         // 根据结果id查找结果表
         LambdaQueryWrapper<ComparisonOutput> queryWrapper = Wrappers.<ComparisonOutput>lambdaQuery()
@@ -97,7 +98,7 @@ public class ComparisonFileService {
 
         // 添加下载任务记录到任务表
         DownloadTask newDownloadTask = new DownloadTask();
-        newDownloadTask.setApplicationId(Long.valueOf(applicationId));
+        newDownloadTask.setApplicationId(applicationId);
         newDownloadTask.setOutputId(queryComparisonOutput.getUid());
         newDownloadTask.setDownloadTime(Timestamp.valueOf(LocalDateTime.now()));
         newDownloadTask.setType("comparison");
@@ -115,7 +116,7 @@ public class ComparisonFileService {
         return Body.success(String.format("获取成功，结果id: %d，文件名: %s", outputId, fileName));
     }
 
-    public Body<List<ComparisonOutput>> queryComparison(Integer applicationId) {
+    public Body<List<ComparisonOutput>> queryComparison(Long applicationId) {
 
         LambdaQueryWrapper<ComparisonOutput> queryWrapper = Wrappers.<ComparisonOutput>lambdaQuery()
                 .eq(ComparisonOutput::getApplicationId, applicationId);
@@ -124,7 +125,7 @@ public class ComparisonFileService {
         return Body.success(outputs, String.format("查询成功，共查询到%d个文件", fileNum));
     }
 
-    public Body<List<ComparisonOutput>> queryComparisonByIds(Integer applicationId, List<Integer> outputIds) {
+    public Body<List<ComparisonOutput>> queryComparisonByIds(Long applicationId, List<Long> outputIds) {
 
         LambdaQueryWrapper<ComparisonOutput> queryWrapper = Wrappers.<ComparisonOutput>lambdaQuery()
                 .eq(ComparisonOutput::getApplicationId, applicationId)
@@ -135,7 +136,7 @@ public class ComparisonFileService {
         return Body.success(outputs, String.format("查询成功，共查询到%d个文件", fileNum));
     }
 
-    public Body<String> deleteComparison(Integer applicationId, Integer outputId) {
+    public Body<String> deleteComparison(Long applicationId, Long outputId) {
 
         // 根据文件id查找结果表
         LambdaQueryWrapper<ComparisonOutput> queryWrapper = Wrappers.<ComparisonOutput>lambdaQuery()

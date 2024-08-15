@@ -21,18 +21,18 @@ public class ComparisonController {
 
     // agent解析csv文件表头
     @PostMapping("/getCsvHeader")
-    public Body<TableHeader> getCsvHeader(@RequestParam("fileId") Integer fileId,
-                                          @RequestParam("folderId") Integer folderId,
-                                          @RequestParam("agentId") Integer agentId) {
+    public Body<TableHeader> getCsvHeader(@RequestParam("fileId") Long fileId,
+                                          @RequestParam("folderId") Long folderId,
+                                          @RequestParam("agentId") Long agentId) {
 
         return comparisonService.getCsvHeader(fileId, folderId, agentId);
     }
 
     // agent计算哈希
     @PostMapping("/getHash")
-    public Body<List<String>> getHash(@RequestParam("fileId") Integer fileId,
-                                      @RequestParam("folderId") Integer folderId,
-                                      @RequestParam("agentId") Integer agentId,
+    public Body<List<String>> getHash(@RequestParam("fileId") Long fileId,
+                                      @RequestParam("folderId") Long folderId,
+                                      @RequestParam("agentId") Long agentId,
                                       @RequestParam("attributes") List<String> attributes) {
 
         return comparisonService.getHash(fileId, folderId, agentId, attributes);
