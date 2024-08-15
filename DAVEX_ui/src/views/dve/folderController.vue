@@ -1,363 +1,458 @@
 <template>
-  <el-button @click="getDirectoryMethod">获取文件列表</el-button>
-
-  <div>
-    <el-table
-      :data="directoryData"
-      style="width: 100%"
-      v-loading="taskTableLoading"
-      @row-dblclick="handleCellDoubleClick"
-    >
-      <el-table-column label="Uid" prop="uid" width="80"></el-table-column>
-      <el-table-column
-        label="所属代理"
-        prop="agentId"
-        width="80"
-      ></el-table-column>
-      <el-table-column label="名称" prop="name" width="180"></el-table-column>
-      <el-table-column label="类型" prop="type" width="180"></el-table-column>
-      <el-table-column
-        label="创建时间"
-        prop="createDate"
-        width="300"
-        :formatter="formatDate"
-      ></el-table-column>
-      <el-table-column
-        label="更新时间"
-        prop="lastUpdate"
-        width="300"
-        :formatter="formatDate"
-      ></el-table-column>
-      <el-table-column
-        fixed="right"
-        label="操作"
-        width="300"
-        header-align="center"
+  <el-container>
+    <el-header style="height: 50px">
+      <div
+        style="
+          background-color: antiquewhite;
+          height: 40px;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+        "
       >
-        <template v-slot="scope">
-          <el-button
-            link
-            type="primary"
-            @click="
-              deleteFolderMethod(
-                scope.row.uid,
-                scope.row.agentId,
-                scope.row.type,
-                scope.row.parentId,
-              )
-            "
-            size="small"
-          >
-            删除
-          </el-button>
-          <el-button
-            link
-            type="primary"
-            @click="openFilenameBlock(scope.row.uid)"
-            size="small"
-          >
-            重命名
-          </el-button>
-          <el-button
-            link
-            type="primary"
-            @click="
-              getFileInfoMethod(
-                scope.row.uid,
-                scope.row.agentId,
-                scope.row.parentId,
-                scope.row.type,
-              )
-            "
-            size="small"
-          >
-            权限管理
-          </el-button>
-          <!-- <el-button
-            link
-            type="primary"
-            @click="handleResult(scope.row.id, scope.row.status)"
-            size="small"
-            >获取结果</el-button
-          >
-          <el-button link type="primary" size="small" @click = "deleteTaskByID(scope.row.id)">删除</el-button> -->
-        </template>
-      </el-table-column>
-    </el-table>
-    <el-form
-      :model="createFolderBody"
-      label-width="80px"
-      style="max-width: 600px"
-    >
-      <el-form-item label="文件夹Id">
-        <el-input v-model="createFolderBody.name"></el-input>
-      </el-form-item>
-      <el-form-item>
-        <el-button @click="createFolderMethod">
-          在当前目录下创建新文件夹
-        </el-button>
-      </el-form-item>
-    </el-form>
-
-    <el-form
-      :model="folderVisibleBody"
-      label-width="80px"
-      style="max-width: 600px"
-    >
-      <el-form-item label="文件夹Id">
-        <el-input v-model="folderVisibleBody.folderId"></el-input>
-      </el-form-item>
-      <el-form-item label="组Id">
-        <el-input v-model="folderVisibleBody.groupId"></el-input>
-      </el-form-item>
-      <el-form-item>
-        <el-button @click="setFolderVisibleMethod">
-          设置该组可见该文件夹
-        </el-button>
-        <el-button @click="setFolderInvisibleMethod">
-          设置该组不可见该文件夹
-        </el-button>
-      </el-form-item>
-    </el-form>
-    <el-form
-      :model="getDirectoryByGroupBody"
-      label-width="80px"
-      style="max-width: 600px"
-    >
-      <el-form-item label="组Id">
-        <el-input v-model="getDirectoryByGroupBody.groupId"></el-input>
-      </el-form-item>
-      <el-form-item>
-        <el-button @click="getDirectoryByGroupMethod">
-          按照分组获取文件列表
-        </el-button>
-      </el-form-item>
-    </el-form>
-    <el-table
-      :data="directoryByGroupData"
-      style="width: 100%"
-      v-loading="taskTableLoading"
-      @row-click="showFileInfo"
-      @row-dblclick="nextFileGroup"
-    >
-      <el-table-column label="Uid" prop="uid" width="80"></el-table-column>
-      <el-table-column
-        label="所属代理"
-        prop="agentId"
-        width="80"
-      ></el-table-column>
-      <el-table-column label="名称" prop="name" width="180"></el-table-column>
-      <el-table-column label="类型" prop="type" width="180"></el-table-column>
-      <el-table-column
-        label="创建时间"
-        prop="createDate"
-        width="380"
-        :formatter="formatDate"
-      ></el-table-column>
-      <el-table-column
-        label="更新时间"
-        prop="lastUpdate"
-        width="380"
-        :formatter="formatDate"
-      ></el-table-column>
-    </el-table>
-    <el-form
-      :model="getDirectoryByApplicationBody"
-      label-width="80px"
-      style="max-width: 600px"
-    >
-      <el-form-item label="用户Id">
-        <el-input
-          v-model="getDirectoryByApplicationBody.applicationId"
-        ></el-input>
-      </el-form-item>
-      <el-form-item>
-        <el-button @click="getDirectoryByApplicationMethod">
-          按照用户获取文件列表
-        </el-button>
-      </el-form-item>
-    </el-form>
-    <el-table
-      :data="directoryByApplicationData"
-      style="width: 100%"
-      v-loading="taskTableLoading"
-      @row-click="showFileInfo"
-      @row-dblclick="nextFileGroup"
-    >
-      <el-table-column label="Uid" prop="uid" width="80"></el-table-column>
-      <el-table-column
-        label="所属代理"
-        prop="agentId"
-        width="80"
-      ></el-table-column>
-      <el-table-column label="名称" prop="name" width="180"></el-table-column>
-      <el-table-column label="类型" prop="type" width="180"></el-table-column>
-      <el-table-column
-        label="创建时间"
-        prop="createDate"
-        width="380"
-        :formatter="formatDate"
-      ></el-table-column>
-      <el-table-column
-        label="更新时间"
-        prop="lastUpdate"
-        width="380"
-        :formatter="formatDate"
-      ></el-table-column>
-    </el-table>
-  </div>
-  <el-dialog v-model="fileInfoVisible" title="文件详细信息" width="60%">
-    <el-table
-      :data="fileInfoData"
-      style="width: 100%"
-      v-loading="taskTableLoading"
-    >
-      <el-table-column label="Uid" prop="uid" width="80"></el-table-column>
-      <el-table-column
-        label="所属代理"
-        prop="agentId"
-        width="80"
-      ></el-table-column>
-      <el-table-column label="名称" prop="name" width="180"></el-table-column>
-      <el-table-column label="大小" prop="size" width="180"></el-table-column>
-      <el-table-column
-        label="描述"
-        prop="description"
-        width="180"
-      ></el-table-column>
-      <el-table-column label="哈希" prop="hash" width="180"></el-table-column>
-    </el-table>
-    <span
-      style="
-        display: block;
-        text-align: center;
-        font-size: 16px;
-        line-height: 3;
-      "
-    >
-      分组与权限信息
-    </span>
-    <el-table
-      :data="userGroupData"
-      style="width: 100%"
-      @row-click="handleRowClick"
-      v-loading="taskTableLoading"
-    >
-      <el-table-column label="组Id" prop="uid" width="180"></el-table-column>
-      <el-table-column
-        label="所属中心"
-        prop="centerId"
-        width="180"
-      ></el-table-column>
-      <el-table-column label="名称" prop="name" width="180"></el-table-column>
-      <el-table-column label="权限" prop="rule" width="180"></el-table-column>
-    </el-table>
-    <span
-      style="
-        display: block;
-        text-align: center;
-        font-size: 16px;
-        line-height: 3;
-      "
-    >
-      该文件拥有的权限
-    </span>
-    <el-table
-      :data="fileRuleListData"
-      style="width: 100%"
-      v-loading="taskTableLoading"
-    >
-      <el-table-column label="Uid" prop="uid" width="80"></el-table-column>
-      <el-table-column
-        label="所属代理"
-        prop="agentId"
-        width="80"
-      ></el-table-column>
-      <el-table-column
-        label="组别"
-        prop="groupId"
-        width="180"
-      ></el-table-column>
-      <el-table-column
-        label="拥有权限"
-        prop="allowedMethod"
-        width="180"
-      ></el-table-column>
-    </el-table>
-    <span
-      style="
-        display: block;
-        text-align: center;
-        font-size: 16px;
-        line-height: 3;
-      "
-    >
-      更新文件权限
-    </span>
-    <el-form
-      :model="setFileRuleBody"
-      label-width="80px"
-      style="max-width: 600px"
-    >
-      <el-form-item label="组别">
-        <el-input v-model="setFileRuleBody.groupId"></el-input>
-      </el-form-item>
-      <el-form-item label="权限">
-        <el-input v-model="setFileRuleBody.allowedMethod"></el-input>
-      </el-form-item>
-      <el-form-item>
-        <el-button @click="setFileRuleMethod">赋予文件权限</el-button>
-        <el-button @click="deleteFileRuleMethod">移除文件权限</el-button>
-      </el-form-item>
-    </el-form>
-    <template #footer>
-      <span class="dialog-footer">
-        <el-button type="primary" @click="closeFileInfo">确认</el-button>
-      </span>
-    </template>
-  </el-dialog>
-  <el-dialog v-model="fileRenameVisible" title="文件重命名" width="30%">
-    <el-form :model="fileRenameBody" label-width="20%" style="max-width: 80%">
-      <el-form-item label="新文件名">
-        <el-input v-model="fileRenameBody.name"></el-input>
-      </el-form-item>
-    </el-form>
-    <template #footer>
-      <span class="dialog-footer">
-        <el-button type="primary" @click="closeFileRenameBlock">确认</el-button>
-      </span>
-    </template>
-  </el-dialog>
-  <el-upload
-    ref="upload"
-    :auto-upload="false"
-    :action="uploadUrl"
-    @change="handleChange"
-  >
-    <el-button type="primary">从本地选择文件</el-button>
-  </el-upload>
-  <el-button @click="submitUpload">上传到当前文件夹</el-button>
-
-  <!-- <el-upload
-    ref="upload"
-    class="upload-demo"
-    action="https://run.mocky.io/v3/9d059bf9-4660-45f2-925d-ce80ad6c4d15"
-    :limit="1"
-    :on-exceed="handleExceed"
-    :auto-upload="false"
-  >
-    <template #trigger>
-      <el-button type="primary">select file</el-button>
-    </template>
-    <el-button class="ml-3" type="success" @click="submitUpload">
-      upload to server
-    </el-button>
-    <template #tip>
-      <div class="el-upload__tip text-red">
-        limit 1 file, new file will cover the old file
+        <p
+          style="
+            font-size: 20px;
+            color: black;
+            opacity: 100%;
+            text-align: center;
+          "
+        >
+          文件列表
+        </p>
       </div>
-    </template>
-  </el-upload> -->
+    </el-header>
+    <el-main>
+      <el-button @click="getDirectoryMethod">返回根目录</el-button>
+      <el-button @click="returnFrontDirectory">返回上一级目录</el-button>
+      <div>
+        <el-table
+          :data="directoryData"
+          style="width: 100%"
+          @row-dblclick="handleCellDoubleClick"
+        >
+          <el-table-column
+            label="文件ID"
+            prop="uid"
+            width="80"
+            align="center"
+          ></el-table-column>
+          <el-table-column
+            label="所属代理"
+            prop="agentId"
+            width="80"
+            align="center"
+          ></el-table-column>
+          <el-table-column
+            label="名称"
+            prop="name"
+            width="180"
+            align="center"
+          ></el-table-column>
+          <el-table-column
+            label="类型"
+            prop="type"
+            width="180"
+            align="center"
+          ></el-table-column>
+          <el-table-column
+            label="创建时间"
+            prop="createDate"
+            width="300"
+            :formatter="formatDate"
+            align="center"
+          ></el-table-column>
+          <el-table-column
+            label="更新时间"
+            prop="lastUpdate"
+            width="300"
+            :formatter="formatDate"
+            align="center"
+          ></el-table-column>
+          <el-table-column
+            fixed="right"
+            label="操作"
+            mid-width="300"
+            header-align="center"
+            align="center"
+          >
+            <template v-slot="scope">
+              <el-button
+                link
+                type="primary"
+                @click="
+                  deleteFolderMethod(
+                    scope.row.uid,
+                    scope.row.agentId,
+                    scope.row.type,
+                    scope.row.parentId,
+                  )
+                "
+                size="small"
+              >
+                删除
+              </el-button>
+              <el-button
+                link
+                type="primary"
+                @click="
+                  scope.row.type === 'folder'
+                    ? openFolderRenameBlock(
+                        scope.row.uid,
+                        scope.row.agentId,
+                        scope.row.name,
+                      )
+                    : openFileRenameBlockMethod(
+                        scope.row.uid,
+                        scope.row.agentId,
+                        scope.row.name,
+                      )
+                "
+                size="small"
+              >
+                重命名
+              </el-button>
+              <el-button
+                v-if="scope.row.type === 'file'"
+                link
+                type="primary"
+                @click="
+                  getFileInfoMethod(
+                    scope.row.uid,
+                    scope.row.agentId,
+                    scope.row.parentId,
+                    scope.row.type,
+                  )
+                "
+                size="small"
+              >
+                权限管理
+              </el-button>
+            </template>
+          </el-table-column>
+        </el-table>
+        <el-popover
+          placement="top-start"
+          title="此处输入新文件夹名"
+          :width="400"
+          trigger="click"
+        >
+          <template #reference>
+            <div>
+              <div style="height: 20px"></div>
+              <el-button class="el-button mt-4" style="width: 100%">
+                在当前目录下新建文件夹
+              </el-button>
+            </div>
+          </template>
+          <el-form
+            :model="createFolderBody"
+            label-width="80px"
+            label-position="left"
+          >
+            <el-form-item label="文件夹名">
+              <el-input v-model="createFolderBody.name"></el-input>
+            </el-form-item>
+            <el-button
+              @click="createFolderMethod"
+              calss="el-button mt-4"
+              style="width: 100%"
+            >
+              增加组别
+            </el-button>
+          </el-form>
+        </el-popover>
+        <el-form
+          :model="folderVisibleBody"
+          label-width="80px"
+          style="max-width: 600px"
+        >
+          <el-form-item label="文件夹Id">
+            <el-input v-model="folderVisibleBody.folderId"></el-input>
+          </el-form-item>
+          <el-form-item label="组Id">
+            <el-input v-model="folderVisibleBody.groupId"></el-input>
+          </el-form-item>
+          <el-form-item>
+            <el-button @click="setFolderVisibleMethod">
+              设置该组可见该文件夹
+            </el-button>
+            <el-button @click="setFolderInvisibleMethod">
+              设置该组不可见该文件夹
+            </el-button>
+          </el-form-item>
+        </el-form>
+        <el-form
+          :model="getDirectoryByGroupBody"
+          label-width="80px"
+          style="max-width: 600px"
+        >
+          <el-form-item label="组Id">
+            <el-input v-model="getDirectoryByGroupBody.groupId"></el-input>
+          </el-form-item>
+          <el-form-item>
+            <el-button @click="getDirectoryByGroupMethod">
+              按照分组获取文件列表
+            </el-button>
+          </el-form-item>
+        </el-form>
+        <el-table
+          :data="directoryByGroupData"
+          style="width: 100%"
+          v-loading="taskTableLoading"
+          @row-click="showFileInfo"
+          @row-dblclick="nextFileGroup"
+        >
+          <el-table-column label="Uid" prop="uid" width="80"></el-table-column>
+          <el-table-column
+            label="所属代理"
+            prop="agentId"
+            width="80"
+          ></el-table-column>
+          <el-table-column
+            label="名称"
+            prop="name"
+            width="180"
+          ></el-table-column>
+          <el-table-column
+            label="类型"
+            prop="type"
+            width="180"
+          ></el-table-column>
+          <el-table-column
+            label="创建时间"
+            prop="createDate"
+            width="380"
+            :formatter="formatDate"
+          ></el-table-column>
+          <el-table-column
+            label="更新时间"
+            prop="lastUpdate"
+            width="380"
+            :formatter="formatDate"
+          ></el-table-column>
+        </el-table>
+        <el-form
+          :model="getDirectoryByApplicationBody"
+          label-width="80px"
+          style="max-width: 600px"
+        >
+          <el-form-item label="用户Id">
+            <el-input
+              v-model="getDirectoryByApplicationBody.applicationId"
+            ></el-input>
+          </el-form-item>
+          <el-form-item>
+            <el-button @click="getDirectoryByApplicationMethod">
+              按照用户获取文件列表
+            </el-button>
+          </el-form-item>
+        </el-form>
+        <el-table
+          :data="directoryByApplicationData"
+          style="width: 100%"
+          v-loading="taskTableLoading"
+          @row-click="showFileInfo"
+          @row-dblclick="nextFileGroup"
+        >
+          <el-table-column label="Uid" prop="uid" width="80"></el-table-column>
+          <el-table-column
+            label="所属代理"
+            prop="agentId"
+            width="80"
+          ></el-table-column>
+          <el-table-column
+            label="名称"
+            prop="name"
+            width="180"
+          ></el-table-column>
+          <el-table-column
+            label="类型"
+            prop="type"
+            width="180"
+          ></el-table-column>
+          <el-table-column
+            label="创建时间"
+            prop="createDate"
+            width="380"
+            :formatter="formatDate"
+          ></el-table-column>
+          <el-table-column
+            label="更新时间"
+            prop="lastUpdate"
+            width="380"
+            :formatter="formatDate"
+          ></el-table-column>
+        </el-table>
+      </div>
+      <el-dialog v-model="fileInfoVisible" title="文件详细信息" width="60%">
+        <el-table :data="fileInfoData" style="width: 100%">
+          <el-table-column label="Uid" prop="uid" width="80"></el-table-column>
+          <el-table-column
+            label="所属代理"
+            prop="agentId"
+            width="80"
+          ></el-table-column>
+          <el-table-column
+            label="名称"
+            prop="name"
+            width="180"
+          ></el-table-column>
+          <el-table-column
+            label="大小"
+            prop="size"
+            width="180"
+          ></el-table-column>
+          <el-table-column
+            label="描述"
+            prop="description"
+            width="180"
+          ></el-table-column>
+          <el-table-column
+            label="哈希"
+            prop="hash"
+            width="180"
+          ></el-table-column>
+        </el-table>
+        <span
+          style="
+            display: block;
+            text-align: center;
+            font-size: 16px;
+            line-height: 3;
+          "
+        >
+          分组与权限信息
+        </span>
+        <el-table :data="userGroupData" style="width: 100%">
+          <el-table-column
+            label="组Id"
+            prop="uid"
+            width="180"
+          ></el-table-column>
+          <el-table-column
+            label="所属中心"
+            prop="centerId"
+            width="180"
+          ></el-table-column>
+          <el-table-column
+            label="名称"
+            prop="name"
+            width="180"
+          ></el-table-column>
+          <el-table-column
+            label="权限"
+            prop="rule"
+            width="180"
+          ></el-table-column>
+        </el-table>
+        <span
+          style="
+            display: block;
+            text-align: center;
+            font-size: 16px;
+            line-height: 3;
+          "
+        >
+          该文件拥有的权限
+        </span>
+        <el-table
+          :data="fileRuleListData"
+          style="width: 100%"
+          v-loading="taskTableLoading"
+        >
+          <el-table-column label="Uid" prop="uid" width="80"></el-table-column>
+          <el-table-column
+            label="所属代理"
+            prop="agentId"
+            width="80"
+          ></el-table-column>
+          <el-table-column
+            label="组别"
+            prop="groupId"
+            width="180"
+          ></el-table-column>
+          <el-table-column
+            label="拥有权限"
+            prop="allowedMethod"
+            width="180"
+          ></el-table-column>
+        </el-table>
+        <span
+          style="
+            display: block;
+            text-align: center;
+            font-size: 16px;
+            line-height: 3;
+          "
+        >
+          更新文件权限
+        </span>
+        <el-form
+          :model="setFileRuleBody"
+          label-width="80px"
+          style="max-width: 600px"
+        >
+          <el-form-item label="组别">
+            <el-input v-model="setFileRuleBody.groupId"></el-input>
+          </el-form-item>
+          <el-form-item label="权限">
+            <el-input v-model="setFileRuleBody.allowedMethod"></el-input>
+          </el-form-item>
+          <el-form-item>
+            <el-button @click="setFileRuleMethod">赋予文件权限</el-button>
+            <el-button @click="deleteFileRuleMethod">移除文件权限</el-button>
+          </el-form-item>
+        </el-form>
+        <template #footer>
+          <span class="dialog-footer">
+            <el-button type="primary" @click="closeFileInfo">确认</el-button>
+          </span>
+        </template>
+      </el-dialog>
+      <el-dialog v-model="folderRenameVisible" title="文件夹重命名" width="30%">
+        <el-form
+          :model="folderRenameBody"
+          label-width="20%"
+          style="max-width: 80%"
+        >
+          <el-form-item label="新文件夹名">
+            <el-input v-model="folderRenameBody.name"></el-input>
+          </el-form-item>
+        </el-form>
+        <template #footer>
+          <span class="dialog-footer">
+            <el-button type="primary" @click="closeFolderRenameBlock">
+              确认
+            </el-button>
+          </span>
+        </template>
+      </el-dialog>
+      <el-dialog v-model="fileRenameVisible" title="文件重命名" width="30%">
+        <el-form :model="fileInfoBody" label-width="20%" style="max-width: 80%">
+          <el-form-item label="新文件名">
+            <el-input v-model="updateFileBody.name"></el-input>
+          </el-form-item>
+        </el-form>
+        <template #footer>
+          <span class="dialog-footer">
+            <el-button type="primary" @click="closeFileRenameBlock">
+              确认
+            </el-button>
+          </span>
+        </template>
+      </el-dialog>
+      <el-upload
+        ref="upload"
+        :auto-upload="false"
+        :action="uploadUrl"
+        @change="handleChange"
+      >
+        <el-button type="primary">从本地选择文件</el-button>
+      </el-upload>
+      <el-button @click="submitUpload">上传到当前文件夹</el-button>
+    </el-main>
+  </el-container>
 </template>
 
 <script lang="ts" setup>
@@ -376,21 +471,45 @@ import {
   setFileRule,
   deleteFileRule,
   getDirectoryByApplication,
+  updateFile,
+  getFile,
 } from '../../api/folderController.js'
 import { getGroup, getRuleByGroup } from '../../api/testDve.js'
 import { genFileId } from 'element-plus'
 import type { UploadInstance, UploadProps, UploadRawFile } from 'element-plus'
-import { nextTick } from 'vue'
+import { nextTick, onMounted } from 'vue'
+
+onMounted(() => {
+  getDirectoryMethod()
+})
+
+// 对话框是否可见
+const fileRenameVisible = ref(false)
 
 const directoryData = ref([])
 const currentDirectoryData = ref([])
 const directoryByGroupData = ref([])
 const fileInfoData = ref([])
 const fileInfoVisible = ref(false)
-const fileRenameVisible = ref(false)
+const folderRenameVisible = ref(false)
 const fileRuleListData = ref([])
 const userGroupData = ref([])
 const directoryByApplicationData = ref([])
+const updateFileBody = ref({
+  uid: '',
+  agentId: '',
+  folderId: '',
+  name: '1',
+  createDate: '',
+  lastUpdate: '',
+  tag: '',
+  size: '',
+  description: '',
+  expiredTime: '',
+  hash: '',
+  example: '',
+  type: '',
+})
 
 const uploadUrl = computed(() => {
   const url = `http://10.176.37.50:8080/directory/fileFolder/uploadFile?agentId=${uploadFileBody.value.agentId}&folderId=${uploadFileBody.value.folderId}`
@@ -441,10 +560,15 @@ const createFolderBody = ref({
   parentId: '',
 })
 
-const fileRenameBody = ref({
+const folderRenameBody = ref({
   agentId: '5',
   folderId: '',
   name: '',
+})
+
+const fileInfoBody = ref({
+  fileId: '',
+  agentId: '',
 })
 
 const uploadFileBody = ref({
@@ -479,7 +603,7 @@ const getGroups = async () => {
 
     //遍历res.data.data，对于每一个group，使用getRuleByGroup求得rule的值
     for (let i = 0; i < res.data.data.length; i++) {
-      getRuleByGroupBody.value.agentId = 5
+      getRuleByGroupBody.value.agentId = '5'
       getRuleByGroupBody.value.groupId = res.data.data[i].uid
       const rule = await getRuleByGroup(getRuleByGroupBody.value)
       //为res新增一个维度rule，其值为loading 的string
@@ -572,8 +696,7 @@ const createFolderMethod = async () => {
     createFolderBody.value.agentId = '5'
     createFolderBody.value.parentId = currentParentId.value
     await createFolder(createFolderBody.value)
-    getDirectoryMethod()
-    getDirectoryByGroupMethod()
+    findCurrentFolder()
   } catch (error) {
     console.error('Failed to create folder:', error)
   }
@@ -592,8 +715,7 @@ const deleteFolderMethod = async (uid, agentId, type, parentId) => {
       deleteFileBody.value.folderId = parentId
       await deleteFile(deleteFileBody.value)
     }
-    getDirectoryByGroupMethod()
-    getDirectoryMethod()
+    findCurrentFolder()
   } catch (error) {
     console.error('Failed to delete folder:', error)
   }
@@ -606,9 +728,43 @@ const showFileInfo = (row) => {
     fileInfoData.value = [row]
   }
 }
+
+const folderRoute = ref([])
+function addFolderRoute(row) {
+  folderRoute.value.push(row.uid, row.name)
+}
+function deleteFolderRoute() {
+  folderRoute.value.pop()
+  folderRoute.value.pop()
+}
+function getLastFolderRoute() {
+  return folderRoute.value[folderRoute.value.length - 1]
+}
+
+const findCurrentFolder = async () => {
+  //沿着folderRoute找到当前文件夹
+  const res1 = await getDirectory(getDirectoryBody.value)
+  const res = res1.data.data.children
+  currentDirectoryData.value = res
+  if (folderRoute.value.length === 1) {
+    directoryData.value = res
+    return
+  }
+  for (let i = 1; i < folderRoute.value.length; i++) {
+    for (let j = 0; j < currentDirectoryData.value.length; j++) {
+      if (currentDirectoryData.value[j].uid === folderRoute.value[i]) {
+        currentDirectoryData.value = currentDirectoryData.value[j].children
+        break
+      }
+    }
+  }
+  directoryData.value = currentDirectoryData.value
+}
+
 const handleCellDoubleClick = async (row) => {
-  console.log('row:', row)
   if (row.type === 'folder') {
+    addFolderRoute(row)
+    console.log('folderRoute:', folderRoute.value)
     currentParentId.value = row.uid
     directoryData.value = row.children
   }
@@ -651,6 +807,7 @@ const getDirectoryMethod = async () => {
     const res1 = res.data.data.children
     directoryData.value = res1
     currentDirectoryData.value = '1'
+    addFolderRoute(res.data.data)
   } catch (error) {
     console.error('Failed to get group list:', error)
   }
@@ -678,22 +835,39 @@ const getDirectoryByApplicationMethod = async () => {
   }
 }
 
-const openFilenameBlock = (folderId) => {
+const openFolderRenameBlock = (Uid, agentId, name) => {
+  folderRenameVisible.value = true
+  folderRenameBody.value.folderId = Uid
+  folderRenameBody.value.agentId = agentId
+  folderRenameBody.value.name = name
+}
+
+const closeFolderRenameBlock = async () => {
+  await setFolderName(folderRenameBody.value)
+  folderRenameVisible.value = false
+  getDirectoryMethod()
+}
+
+const openFileRenameBlockMethod = async (Uid, agentId, name) => {
   fileRenameVisible.value = true
-  console.log('folderId:', folderId)
-  fileRenameBody.value.folderId = folderId
+  console.log('name:', name)
+  fileInfoBody.value.agentId = agentId
+  fileInfoBody.value.fileId = Uid
+  const res = await getFile(fileInfoBody.value)
+  console.log('res:', res.data.body.data)
+  updateFileBody.value = res.data.body.data
 }
 
 const closeFileRenameBlock = async () => {
-  await setFolderName(fileRenameBody.value)
+  await updateFile(updateFileBody.value)
   fileRenameVisible.value = false
+  getDirectoryMethod()
 }
 
-const handleExceed: UploadProps['onExceed'] = (files) => {
-  upload.value!.clearFiles()
-  const file = files[0] as UploadRawFile
-  file.uid = genFileId()
-  upload.value!.handleStart(file)
+const returnFrontDirectory = async () => {
+  deleteFolderRoute()
+  console.log('folderRoute:', folderRoute.value)
+  findCurrentFolder()
 }
 </script>
 

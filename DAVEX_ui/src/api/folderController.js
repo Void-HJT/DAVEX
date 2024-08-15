@@ -10,6 +10,41 @@ export const getDirectory = ({ rootId }) => {
   return res
 }
 
+export const updateFile = ({
+  uid,
+  agentId,
+  folderId,
+  name,
+  createDate,
+  lastUpdata,
+  tag,
+  size,
+  description,
+  expireTime,
+  hash,
+  example,
+  type,
+
+}) => {
+  let res = request.post('/directory/fileFolder/updateFile', {
+    uid,
+  agentId,
+  folderId,
+  name,
+  createDate,
+  lastUpdata,
+  tag,
+  size,
+  description,
+  expireTime,
+  hash,
+  example,
+  type,
+  })
+
+  return res
+}
+
 export const getDirectoryByGroup = ({ rootId, agentId, groupId }) => {
   const params = new URLSearchParams()
   params.append('rootId', rootId)
@@ -116,6 +151,15 @@ export const setFolderName = ({ agentId, folderId, name }) => {
     '/directory/fileFolder/setFolderName',
     params.toString(),
   )
+  return res
+}
+
+
+export const getFile = ({ fileId, agentId, }) => {
+  const params = new URLSearchParams()
+  params.append('fileId', fileId)
+  params.append('agentId', agentId)
+  let res = request.post('/directory/fileFolder/getFile', params.toString())
   return res
 }
 

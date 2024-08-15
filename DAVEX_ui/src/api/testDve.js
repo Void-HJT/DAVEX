@@ -5,6 +5,11 @@ export const getApplication = () => {
   return res
 }
 
+export const getAllAllowedMethod = () => {
+  let res = request.post('/directory/group/getAllAllowedMethod')
+  return res
+}
+
 export const addGroup = ({ agentId, centerId, name }) => {
   const params = new URLSearchParams()
   params.append('agentId', agentId)

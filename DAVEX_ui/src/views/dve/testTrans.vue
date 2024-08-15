@@ -26,15 +26,13 @@
       <el-table
         :data="tableData"
         style="width: 100%"
-        @row-click="handleRowClick"
-        v-loading="taskTableLoading"
         stripe
         height="200"
         max-height="200"
       >
         <el-table-column
           fixed
-          label="用户Id"
+          label="用户ID"
           prop="uid"
           width="180"
           align="center"
@@ -78,64 +76,51 @@
                 align-items: center;
               "
             >
-              <el-popover
-                placement="top-start"
-                title="分组管理"
-                :width="400"
-                trigger="click"
+              <el-button
+                link
+                type="primary"
+                @click="
+                  (userGroupControllDialogVisible = true),
+                    (addApplicationGroupBody.applicationId = scope.row.uid)
+                "
+                size="small"
               >
-                <template #reference>
-                  <div>
-                    <el-button
-                      link
-                      type="primary"
-                      size="small"
-                      @click="
-                        (addApplicationGroupBody.applicationId = scope.row.uid),
-                          (addApplicationGroupBody.centerId =
-                            scope.row.centerId)
-                      "
-                    >
-                      管理分组
-                    </el-button>
-                  </div>
-                </template>
-                <!-- <div style="height: 20px;"><el-icon style="float:right;"> <CloseBold /></el-icon></div> -->
-                <el-form
-                  :model="addApplicationGroupBody"
-                  label-width="60px"
-                  label-position="left"
-                  style="
-                    display: flex;
-                    justify-content: center;
-                    align-items: center;
-                  "
-                >
-                  <el-form-item label="用户组">
-                    <el-input
-                      v-model="addApplicationGroupBody.groupId"
-                    ></el-input>
-                  </el-form-item>
-                </el-form>
-                <div
-                  style="
-                    display: flex;
-                    justify-content: center;
-                    align-items: center;
-                  "
-                >
-                  <el-button @click="addApplicationGroups">
-                    加入该用户组
-                  </el-button>
-                  <el-button @click="deleteApplicationGroupMethod">
-                    移出该用户组
-                  </el-button>
-                </div>
-              </el-popover>
+                管理分组
+              </el-button>
             </div>
           </template>
         </el-table-column>
       </el-table>
+      <el-dialog
+        v-model="userGroupControllDialogVisible"
+        title="分组管理"
+        width="500"
+        :before-close="userGroupControllDialogClose"
+      >
+        <el-form-item label="选择分组">
+          <el-select
+            v-model="addApplicationGroupBody.groupId"
+            placeholder="请选择需要管理的分组"
+          >
+            <el-option
+              v-for="item in userGroupData"
+              :key="item.uid"
+              :label="item.name"
+              :value="item.uid"
+            />
+          </el-select>
+        </el-form-item>
+        <template #footer>
+          <div class="dialog-footer">
+            <el-button type="primary" @click="addApplicationGroupMethod">
+              将用户加入该分组
+            </el-button>
+            <el-button type="primary" @click="deleteApplicationGroupMethod">
+              将用户移出该分组
+            </el-button>
+          </div>
+        </template>
+      </el-dialog>
     </el-main>
   </el-container>
   <el-header style="height: 50px">
@@ -156,14 +141,7 @@
     </div>
   </el-header>
   <el-main>
-    <el-table
-      stripe
-      :data="userGroupData"
-      style="width: 100%"
-      @row-click="handleRowClick"
-      v-loading="taskTableLoading"
-      max-height="300"
-    >
+    <el-table stripe :data="userGroupData" style="width: 100%" max-height="300">
       <el-table-column
         fixed
         label="组ID"
@@ -208,7 +186,19 @@
             >
               删除分组
             </el-button>
-            <el-popover
+            <el-button
+              link
+              type="primary"
+              @click="
+                (setGroupRuleDialogVisible = true),
+                  (setGroupRuleBody.groupId = scope.row.uid)
+              "
+              size="small"
+            >
+              管理权限
+            </el-button>
+
+            <!-- <el-popover
               placement="top-start"
               title="权限管理"
               :width="400"
@@ -229,7 +219,7 @@
                   </el-button>
                 </div>
               </template>
-              <!-- <div style="height: 20px;"><el-icon style="float:right;"> <CloseBold /></el-icon></div> -->
+              <div style="height: 20px;"><el-icon style="float:right;"> <CloseBold /></el-icon></div>
               <el-form
                 :model="setGroupRuleBody"
                 label-width="60px"
@@ -254,12 +244,41 @@
                 <el-button @click="addGroupRuleMethod">增添该权限</el-button>
                 <el-button @click="deleteRuleMethod">移除该权限</el-button>
               </div>
-            </el-popover>
+            </el-popover> -->
           </div>
         </template>
       </el-table-column>
     </el-table>
-
+    <el-dialog
+      v-model="setGroupRuleDialogVisible"
+      title="权限管理"
+      width="500"
+      :before-close="setGroupRuleDialogClose"
+    >
+      <el-form-item label="权限名">
+        <el-select
+          v-model="setGroupRuleBody.allowMethod"
+          placeholder="请选择需要管理的权限"
+        >
+          <el-option
+            v-for="item in AllAllowedMethod"
+            :key="item"
+            :label="item"
+            :value="item"
+          />
+        </el-select>
+      </el-form-item>
+      <template #footer>
+        <div class="dialog-footer">
+          <el-button type="primary" @click="addGroupRuleMethod">
+            增加该权限
+          </el-button>
+          <el-button type="primary" @click="deleteGroupRuleMethod">
+            移除该权限
+          </el-button>
+        </div>
+      </template>
+    </el-dialog>
     <el-popover
       placement="top-start"
       title="此处输入新增组名"
@@ -303,16 +322,37 @@ import {
   deleteGroup,
   deleteApplicationGroup,
   deleteRule,
+  getAllAllowedMethod,
 } from '../../api/testDve.js'
 
 onMounted(() => {
   getApplicationList()
   getGroups()
+  getAllAllowedMethodMethod()
 })
 
+// 控制对话框的变量
+const userGroupControllDialogVisible = ref(false)
+const setGroupRuleDialogVisible = ref(false)
+
+// 对话框关闭函数
+const userGroupControllDialogClose = () => {
+  addApplicationGroupBody.value.groupId = ''
+  addApplicationGroupBody.value.applicationId = ''
+  userGroupControllDialogVisible.value = false
+}
+const setGroupRuleDialogClose = () => {
+  setGroupRuleBody.value.allowMethod = ''
+  setGroupRuleBody.value.groupId = ''
+  setGroupRuleDialogVisible.value = false
+}
+
+// 表格数据
 const tableData = ref([])
 const userGroupData = ref([])
 const setGroupRulePopoverVisible = ref(false)
+
+const AllAllowedMethod = ref([])
 
 const getGroup1 = ref({
   agentId: 5,
@@ -353,6 +393,17 @@ const deleteGroupBody = ref({
   groupId: '',
 })
 
+// 初始化的函数
+const getAllAllowedMethodMethod = async () => {
+  try {
+    const res = await getAllAllowedMethod()
+    AllAllowedMethod.value = res.data.data
+    console.log(AllAllowedMethod.value)
+  } catch (error) {
+    console.error('Failed to get group list:', error)
+  }
+}
+
 const deleteGroupMethod = async (uid, centerId) => {
   try {
     deleteGroupBody.value.groupId = uid
@@ -372,7 +423,7 @@ const deleteApplicationGroupMethod = async () => {
     console.error('Failed to get group list:', error)
   }
 }
-const addApplicationGroups = async () => {
+const addApplicationGroupMethod = async () => {
   try {
     await addApplicationGroup(addApplicationGroupBody.value)
     getApplicationList()
@@ -390,7 +441,7 @@ const addGroupRuleMethod = async () => {
   }
 }
 
-const deleteRuleMethod = async () => {
+const deleteGroupRuleMethod = async () => {
   try {
     await deleteRule(setGroupRuleBody.value)
     getGroups()
@@ -422,7 +473,6 @@ const getGroups = async () => {
       //若rule不为空，则遍历rule，将每个rule中的uid添加到res[i].rule中
       if (rule.data.data != null) {
         for (let j = 0; j < rule.data.data.length; j++) {
-          console.log(rule.data.data[j])
           res.data.data[i].rule += rule.data.data[j].allowedMethod + ' '
         }
       }
@@ -448,13 +498,11 @@ const getApplicationList = async () => {
         res.data.data[i].groups = ''
         //若groups不为空，则遍历groups，将每个group中的uid添加到res[i].groups中
         if (groups.data.data != null) {
-          console.log(groups.data.data)
           for (let j = 0; j < groups.data.data.length; j++) {
             res.data.data[i].groups += groups.data.data[j].name + ' '
           }
         }
       }
-      console.log(res.data.data)
       tableData.value = res.data.data
       // 现在可以安全地调用 includes
     } else {
