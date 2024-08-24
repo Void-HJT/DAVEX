@@ -29,8 +29,8 @@ const handleCommand = (key) => {
     <el-aside width="300px">
       <div class="el-aside__logo"></div>
       <el-menu
-        active-text-color="#ffd04b"
-        background-color="#232323"
+        active-text-color="#a7e6ff"
+        background-color="#050c9c"
         :default-active="$route.path"
         text-color="#fff"
         router
@@ -165,7 +165,7 @@ const handleCommand = (key) => {
   height: 100vh;
 
   .el-aside {
-    background-color: #232323;
+    background-color: #050c9c;
     &__logo {
       height: 150px;
       background: url('@/assets/logo2.png') no-repeat center / 120px auto;
@@ -213,7 +213,7 @@ const handleCommand = (key) => {
   text-align: center; /* 文本水平居中 */
   // display: inline-block; /* 使文字垂直居中生效 */
   font-size: 30px; /* 调整字体大小 */
-  background-color: #232323; /* 可选：添加背景颜色以突出显示文字位置 */
+  background-color: #050c9c; /* 可选：添加背景颜色以突出显示文字位置 */
   font-family: 'SimSun', sans-serif; /* 设置为微软雅黑字体 */
 }
 .header-text {

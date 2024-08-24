@@ -3,7 +3,7 @@
     <el-header style="height: 50px">
       <div
         style="
-          background-color: antiquewhite;
+          background-color: #3572ef;
           height: 40px;
           display: flex;
           justify-content: center;
@@ -13,7 +13,7 @@
         <p
           style="
             font-size: 20px;
-            color: black;
+            color: white;
             opacity: 100%;
             text-align: center;
           "
@@ -400,7 +400,7 @@
     <el-header style="height: 50px">
       <div
         style="
-          background-color: antiquewhite;
+          background-color: #3572ef;
           height: 40px;
           display: flex;
           justify-content: center;
@@ -410,7 +410,7 @@
         <p
           style="
             font-size: 20px;
-            color: black;
+            color: white;
             opacity: 100%;
             text-align: center;
           "
