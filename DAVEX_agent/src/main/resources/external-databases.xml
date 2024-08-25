@@ -7,10 +7,10 @@
         <password>drt123456</password>
     </database>
     <database>
-        <name>ExternalDB2</name>
-        <type>postgresql</type>
-        <url>jdbc:postgresql://external-db2-host:5432/externaldb2</url>
-        <username>externaluser2</username>
-        <password>externalpass2</password>
+        <name>testDb</name>
+        <type>mysql</type>
+        <url>jdbc:mysql://10.176.37.50:3306/testdb</url>
+        <username>drt</username>
+        <password>Drt1951725</password>
     </database>
 </external-databases>

@@ -76,8 +76,12 @@ public class DatabaseService {
 
                 DatabaseMetaData metaData = connection.getMetaData();
 
+                // 指定要查询的数据库名称
+                String catalog = connection.getCatalog();
+                System.out.println(catalog);
+
                 // 获取所有表
-                ResultSet tables = metaData.getTables(null, null, "%", new String[]{"TABLE"});
+                ResultSet tables = metaData.getTables(catalog, null, "%", new String[]{"TABLE"});
                 while (tables.next()) {
                     String tableName = tables.getString("TABLE_NAME");
                     String tableDescription = tables.getString("REMARKS");
@@ -97,7 +101,13 @@ public class DatabaseService {
                     databaseTable.setOutsideDatabaseId(database.getUid());
                     databaseTable.setName(tableName);
                     databaseTable.setDescription(tableDescription);
-                    databaseTable.setSchemaExample(schemaArray.toString());
+
+                    // 将JSONArray转换为字符串
+                    String jsonString = schemaArray.toString();
+                    // 移除所有反斜杠
+                    String formattedJsonString = jsonString.replace("\\", "");
+
+                    databaseTable.setSchemaExample(formattedJsonString);
                     databaseTable.setExample(""); // 示例数据根据需要填写
 
                     databaseTableMapper.insert(databaseTable);
@@ -194,8 +204,7 @@ public class DatabaseService {
                 }
 
                 // 返回成功消息，包含文件路径
-                return "Query results save";
-
+                return results.toString();
 
             } catch (SQLException e) {
                 e.printStackTrace();
@@ -224,7 +233,17 @@ public class DatabaseService {
         if (request.getConditions() != null && !request.getConditions().isEmpty()) {
             sql.append(" WHERE ");
             request.getConditions().forEach((column, value) -> {
-                sql.append("`").append(column).append("` = '").append(value).append("' AND ");
+                if (value instanceof Map) {
+                    Map<String, Object> conditionMap = (Map<String, Object>) value;
+                    String operator = (String) conditionMap.get("operator");
+                    Object conditionValue = conditionMap.get("value");
+                    sql.append("`").append(column).append("` ")
+                            .append(operator).append(" '")
+                            .append(conditionValue).append("' AND ");
+                } else {
+                    sql.append("`").append(column).append("` = '")
+                            .append(value).append("' AND ");
+                }
             });
             // 移除最后一个 " AND "
             sql.setLength(sql.length() - 5);
@@ -251,6 +270,50 @@ public class DatabaseService {
 
         return sql.toString();
     }
+
+//    private String buildSqlFromRequest(QueryRequest request) {
+//        StringBuilder sql = new StringBuilder("SELECT ");
+//
+//        // 选择要查询的列
+//        if (request.getColumns() == null || request.getColumns().isEmpty()) {
+//            sql.append("*");
+//        } else {
+//            sql.append(String.join(", ", request.getColumns()));
+//        }
+//
+//        sql.append(" FROM `").append(request.getTableName()).append("`");
+//
+//        // 添加查询条件
+//        if (request.getConditions() != null && !request.getConditions().isEmpty()) {
+//            sql.append(" WHERE ");
+//            request.getConditions().forEach((column, value) -> {
+//                sql.append("`").append(column).append("` = '").append(value).append("' AND ");
+//            });
+//            // 移除最后一个 " AND "
+//            sql.setLength(sql.length() - 5);
+//        }
+//
+//        // 添加排序条件
+//        if (request.getOrderBy() != null && !request.getOrderBy().isEmpty()) {
+//            sql.append(" ORDER BY ");
+//            request.getOrderBy().forEach((column, order) -> {
+//                sql.append("`").append(column).append("` ").append(order).append(", ");
+//            });
+//            // 移除最后一个 ", "
+//            sql.setLength(sql.length() - 2);
+//        }
+//
+//        // 添加分页条件
+//        if (request.getLimit() != null) {
+//            sql.append(" LIMIT ").append(request.getLimit());
+//        }
+//
+//        if (request.getOffset() != null) {
+//            sql.append(" OFFSET ").append(request.getOffset());
+//        }
+//
+//        return sql.toString();
+//    }
 
     public Body<List<OutsideDatabase>> getDatabase() {
         List<OutsideDatabase> outsideDatabases = databaseMapper.selectList(null);
