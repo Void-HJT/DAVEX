@@ -5,7 +5,7 @@
 
     <parent>
         <groupId>org.dsg</groupId>
-        <artifactId>dve</artifactId>
+        <artifactId>davex</artifactId>
         <version>0.0.1</version>
     </parent>
 
