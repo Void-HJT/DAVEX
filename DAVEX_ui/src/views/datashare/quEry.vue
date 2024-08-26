@@ -163,7 +163,7 @@
               <el-button
                 link
                 type="primary"
-                @click="openQueryDialog(scope.row)"
+                @click="handleViewOpenQueryDialog(scope.row)"
                 size="small"
               >
                 查询
@@ -290,8 +290,8 @@
           <el-input-number v-model="queryForm.limit" placeholder="限制返回条数"></el-input-number>
         </el-form-item>
 
-        <el-form-item label="偏移量">
-          <el-input-number v-model="queryForm.offset" placeholder="偏移量"></el-input-number>
+        <el-form-item label="返回">
+          <el-input-number v-model="queryForm.offset" placeholder="从第几条返回"></el-input-number>
         </el-form-item>
       </el-form>
 
@@ -309,6 +309,7 @@ import { ref, onMounted } from 'vue'
 import {
   getDatabase,
   getDatabaseTable,
+  query,
 } from '../../api/query.js'
 
 //初始化
@@ -331,6 +332,8 @@ const exampleTableData = ref([])
 
 // 查询表单
 const queryForm = ref({
+  applicationId: 0,
+  databaseId: 0,
   tableName: '',     // 从表格式中自动填充
   columns: [],       // 用户选择的列
   conditions: [],    // 查询条件
@@ -346,6 +349,8 @@ const queryForm = ref({
 // 点击按钮处理函数
 const handleViewDatabaseTables = async (row) => {
   await getDatabaseTableList(row.uid)
+  queryForm.value.applicationId = 1
+  queryForm.value.databaseId = row.uid
   databaseControlDialogVisible.value = true
 }
 
@@ -362,6 +367,12 @@ const handleViewDatabaseTableSchemaExample = (row) => {
     console.error('Failed to parse schema example:', error)
   }
 }
+
+const handleViewOpenQueryDialog = (row) => {
+  schemaTableData.value = JSON.parse(row.schemaExample) 
+  queryForm.value.tableName = row.name; // 可以从表格中获取实际表名
+  queryDialogVisible.value = true;
+};
 
 //函数
 const getDatabaseList = async () => {
@@ -419,11 +430,6 @@ const parsedData = columnNames.map((name, index) => ({
 return parsedData;
 };
 
-const openQueryDialog = (row) => {
-  queryForm.value.tableName = row.name; // 你可以从表格中获取实际表名
-  queryDialogVisible.value = true;
-};
-
 // 动态添加条件
 const addCondition = () => {
   queryForm.value.conditions.push({
@@ -439,7 +445,7 @@ const removeCondition = (index) => {
 };
 
 // 生成查询语句
-const generateQuery = () => {
+const generateQuery = async () => {
   const queryObject = {
     tableName: queryForm.value.tableName,
     columns: queryForm.value.columns,
@@ -460,8 +466,14 @@ const generateQuery = () => {
     queryObject.orderBy[queryForm.value.orderBy.column] = queryForm.value.orderBy.order;
   }
 
-  alert(JSON.stringify(queryObject, null, 2));
-  // 在这里发送查询对象到后端
+  try{
+    const res = await query(queryForm.value.applicationId,queryForm.value.databaseId,queryObject)
+    alert(res.data)
+  }catch(error) {
+    console.error('Failed to query:', error)
+  }
+  // alert(JSON.stringify(queryObject, null, 2));
+  // // 在这里发送查询对象到后端
 };
 
 </script>
