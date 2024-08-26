@@ -124,8 +124,8 @@ public class FileController {
     }
 
     // center向agent发送文件传输请求并调用save接口接收文件到结果管理区
-    @PostMapping("/request")
-    public CompletableFuture<Body<String>> request(@RequestParam("fileId") Long fileId,
+    @PostMapping("/getFile")
+    public CompletableFuture<Body<String>> getFile(@RequestParam("fileId") Long fileId,
                                                    @RequestParam("agentId") Long agentId,
                                                    @RequestParam("folderId") Long folderId,
                                                    @RequestParam("applicationId") Long applicationId) throws Exception {
@@ -178,9 +178,9 @@ public class FileController {
         return future;
     }
 
-    // 测试request接口
-    @PostMapping("/trequest")
-    public CompletableFuture<Body<String>> trequest(@RequestParam("applicationId") Long applicationId) throws Exception {
+    // 测试getFile接口
+    @PostMapping("/tGetFile")
+    public CompletableFuture<Body<String>> tGetFile(@RequestParam("applicationId") Long applicationId) throws Exception {
         // 这里创建一个 CompletableFuture 对象来处理异步结果
         CompletableFuture<Body<String>> future = new CompletableFuture<>();
 

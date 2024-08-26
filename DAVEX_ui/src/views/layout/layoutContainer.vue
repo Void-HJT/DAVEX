@@ -109,7 +109,7 @@ const handleCommand = (key) => {
             <span class="centered-text">数据共享</span>
           </template>
           <el-menu-item index="/datashare/fileTrans">
-            <el-icon><User /></el-icon>
+            <el-icon><EditPen /></el-icon>
             <span class="centered-text">文件传输</span>
           </el-menu-item>
           <el-menu-item index="/datashare/pSi">
@@ -129,10 +129,28 @@ const handleCommand = (key) => {
             <span class="centered-text">比对</span>
           </el-menu-item>
         </el-sub-menu>
-        <el-menu-item index="/result/resultArea">
-          <el-icon><EditPen /></el-icon>
-          <span class="centered-text">结果管理区</span>
-        </el-menu-item>
+        <el-sub-menu index="/result">
+          <template #title>
+            <el-icon><UserFilled /></el-icon>
+            <span class="centered-text">结果管理区</span>
+          </template>
+          <el-menu-item index="/result/fileTrans">
+            <el-icon><EditPen /></el-icon>
+            <span class="centered-text">文件传输</span>
+          </el-menu-item>
+          <el-menu-item index="/result/mPc">
+            <el-icon><EditPen /></el-icon>
+            <span class="centered-text">MPC</span>
+          </el-menu-item>
+          <el-menu-item index="/result/quEry">
+            <el-icon><EditPen /></el-icon>
+            <span class="centered-text">QUERY</span>
+          </el-menu-item>
+          <el-menu-item index="/result/comPare">
+            <el-icon><EditPen /></el-icon>
+            <span class="centered-text">比对</span>
+          </el-menu-item>
+        </el-sub-menu>
       </el-menu>
     </el-aside>
     <el-container>

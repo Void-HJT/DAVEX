@@ -70,8 +70,20 @@ const router = createRouter({
           component: () => import('@/views/datashare/quEry.vue'),
         },
         {
-          path: 'result/resultArea',
-          component: () => import('@/views/result/resultArea.vue'),
+          path: 'result/fileTrans',
+          component: () => import('@/views/result/fileTrans.vue'),
+        },
+        {
+          path: 'result/mPc',
+          component: () => import('@/views/result/mPc.vue'),
+        },
+        {
+          path: 'result/quEry',
+          component: () => import('@/views/result/quEry.vue'),
+        },
+        {
+          path: 'result/comPare',
+          component: () => import('@/views/result/comPare.vue'),
         },
       ],
     }, //布局
