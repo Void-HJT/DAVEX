@@ -26,11 +26,11 @@ const handleCommand = (key) => {
 
 <template>
   <el-container class="layout-container">
-    <el-aside width="300px">
+    <el-aside width="270px">
       <div class="el-aside__logo"></div>
       <el-menu
-        active-text-color="#a7e6ff"
-        background-color="#050c9c"
+        active-text-color="#409eff"
+        background-color="#304156"
         :default-active="$route.path"
         text-color="#fff"
         router
@@ -165,7 +165,7 @@ const handleCommand = (key) => {
   height: 100vh;
 
   .el-aside {
-    background-color: #050c9c;
+    background-color: #304156;
     &__logo {
       height: 150px;
       background: url('@/assets/logo2.png') no-repeat center / 120px auto;
@@ -212,9 +212,14 @@ const handleCommand = (key) => {
 .centered-text {
   text-align: center; /* 文本水平居中 */
   // display: inline-block; /* 使文字垂直居中生效 */
-  font-size: 30px; /* 调整字体大小 */
-  background-color: #050c9c; /* 可选：添加背景颜色以突出显示文字位置 */
-  font-family: 'SimSun', sans-serif; /* 设置为微软雅黑字体 */
+  font-size: 25px; /* 调整字体大小 */
+  background-color: #304156; /* 可选：添加背景颜色以突出显示文字位置 */
+  //设置鼠标悬浮时的颜色
+  // &:hover {
+  //   background-color: #263445;
+  // }
+  //设置字体为黑体
+  font-family: 'SimHei', sans-serif;
 }
 .header-text {
   width: 100%;
