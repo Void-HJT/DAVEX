@@ -4,6 +4,7 @@ package DavexBase.service.query;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.math.BigInteger;
+import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
@@ -18,6 +19,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import DavexBase.common.R;
+import DavexBase.mapper.AgentMapper;
+import DavexBase.service.auth.CenterWebClientService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.MediaType;
@@ -26,7 +30,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.reactive.function.BodyInserters;
 
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
@@ -37,12 +40,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import DavexBase.common.ExternalDatabaseProperties;
 import DavexBase.service.auth.AgentWebClientService;
 import DavexBase.common.Body;
-import DavexBase.common.R;
 import DavexBase.entity.OutsideDatabase;
 import DavexBase.entity.OutsideDatabaseTable;
 import DavexBase.info.QueryRequest;
 import DavexBase.mapper.DatabaseMapper;
 import DavexBase.mapper.DatabaseTableMapper;
+import org.springframework.web.reactive.function.BodyInserters;
 
 @Service
 public class DatabaseService {
@@ -51,10 +54,16 @@ public class DatabaseService {
     private DatabaseMapper databaseMapper;
 
     @Autowired
+    private AgentMapper agentMapper;
+
+    @Autowired
     private DatabaseTableMapper databaseTableMapper;
 
     @Autowired
     private AgentWebClientService agentWebClientService;
+
+    @Autowired
+    private CenterWebClientService centerWebClientService;
 
     @Autowired
     private ExternalDatabaseProperties externalDatabasePropertiesBean;
@@ -132,7 +141,7 @@ public class DatabaseService {
         return Body.success(outsideDatabaseTables,"返回成功");
     }
 
-    public String executeQuery(QueryRequest request,Long databaseId,Long applicationId) {
+    public Body<byte[]> executeQuery(QueryRequest request, Long databaseId) {
         String sql = buildSqlFromRequest(request);
         System.out.println(sql);
         LambdaQueryWrapper<OutsideDatabase> queryWrapper = Wrappers.<OutsideDatabase>lambdaQuery()
@@ -171,49 +180,70 @@ public class DatabaseService {
                 }
 
                 byte[] jsonData = out.toByteArray();
-                //构建文件名
-                String fileName = "application_"+applicationId+"_"+"database_"+databaseId+"_"+"table_"+request.getTableName()+"_query_results.json";
 
-                // 将jsonData转换为MultipartFile
-                MultipartFile multipartFile = new MockMultipartFile("file", fileName, "application/json", jsonData);
-                // 计算文件hash
-                String hash;
-                try {
-                    // 获取文件的byte信息
-                    byte[] uploadBytes = multipartFile.getBytes();
-                    // 拿到一个SHA-256转换器
-                    MessageDigest sha256 = MessageDigest.getInstance("SHA-256");
-                    byte[] digest = sha256.digest(uploadBytes);
-                    hash = new BigInteger(1, digest).toString(16);
-                } catch (Exception e) {
-                    return "文件计算hash失败" + e.getMessage();
-                }
-                // 发送文件
-                try {
-                    MultiValueMap<String, Object> multipartBody = new LinkedMultiValueMap<>();
-                    multipartBody.add("file", multipartFile.getResource()); // 这里的 "file" 是服务端期望的文件字段名
-
-                    agentWebClientService.agent2CenterWebClient(1).post()
-                            .uri(UriBuilder -> UriBuilder.path("/queryFile/saveQuery").queryParam("hash", hash).queryParam("applicationId",applicationId).build())
-                            .contentType(MediaType.MULTIPART_FORM_DATA).body(BodyInserters.fromMultipartData(multipartBody))
-                            .retrieve().bodyToMono(new ParameterizedTypeReference<R<String>>() {
-                            }).block();
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    return "发送失败";
-                }
-
-                // 返回成功消息，包含文件路径
-                return results.toString();
+                // 返回查询文件
+                return Body.success(jsonData,"查询成功");
 
             } catch (SQLException e) {
                 e.printStackTrace();
-                // 处理异常，返回错误信息或抛出自定义异常
-                return "Error executing query: " + e.getMessage();
+                return Body.error("Error executing query: " + e.getMessage());
             }
         }
         else{
-            return "External database configuration not found.";
+            return Body.error("External database configuration not found");
+        }
+    }
+
+    public Body<String> query2Agent(QueryRequest request, Long applicationId, Long agentId, Long databaseId) {
+
+        try {
+            Body<byte[]> response = centerWebClientService.center2AgentWebClient(agentId).post()
+                    .uri(uriBuilder -> uriBuilder.path("/query/database/locateQuery")
+                            .queryParam("databaseId", databaseId)
+                            .build())
+                    .bodyValue(request)  // 将请求体设置为QueryRequest
+                    .retrieve()  // 准备接收响应
+                    .bodyToMono(new ParameterizedTypeReference<Body<byte[]>>() {})  // 指定返回类型
+                    .block();  // 阻塞等待响应并获取结果
+
+            // 从Body对象中提取data
+            byte[] jsonData = response.getData();
+
+            //构建文件名
+            String fileName = "application_"+applicationId+"_"+"database_"+databaseId+"_"+"table_"+request.getTableName()+"_query_results.json";
+            MultipartFile multipartFile = new MockMultipartFile("file", fileName, "application/json", jsonData);
+
+            String hash;
+            try {
+                // 获取文件的byte信息
+                byte[] uploadBytes = multipartFile.getBytes();
+                // 拿到一个SHA-256转换器
+                MessageDigest sha256 = MessageDigest.getInstance("SHA-256");
+                byte[] digest = sha256.digest(uploadBytes);
+                hash = new BigInteger(1, digest).toString(16);
+            } catch (Exception e) {
+                return Body.error("文件计算hash失败" + e.getMessage());
+            }
+            // 发送文件
+            try {
+                MultiValueMap<String, Object> multipartBody = new LinkedMultiValueMap<>();
+                multipartBody.add("file", multipartFile.getResource()); // 这里的 "file" 是服务端期望的文件字段名
+
+                agentWebClientService.agent2CenterWebClient(1).post()
+                        .uri(UriBuilder -> UriBuilder.path("/queryFile/saveQuery").queryParam("hash", hash).queryParam("applicationId",applicationId).build())
+                        .contentType(MediaType.MULTIPART_FORM_DATA).body(BodyInserters.fromMultipartData(multipartBody))
+                        .retrieve().bodyToMono(new ParameterizedTypeReference<R<String>>() {
+                        }).block();
+            } catch (Exception e) {
+                e.printStackTrace();
+                return Body.error("发送失败");
+            }
+            // 返回封装的结果
+            String result = new String(multipartFile.getBytes(), StandardCharsets.UTF_8);
+            return Body.success("发送成功"+result);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return Body.error("Query failed due to exception: " + e.getMessage());
         }
     }
 
@@ -271,55 +301,10 @@ public class DatabaseService {
         return sql.toString();
     }
 
-//    private String buildSqlFromRequest(QueryRequest request) {
-//        StringBuilder sql = new StringBuilder("SELECT ");
-//
-//        // 选择要查询的列
-//        if (request.getColumns() == null || request.getColumns().isEmpty()) {
-//            sql.append("*");
-//        } else {
-//            sql.append(String.join(", ", request.getColumns()));
-//        }
-//
-//        sql.append(" FROM `").append(request.getTableName()).append("`");
-//
-//        // 添加查询条件
-//        if (request.getConditions() != null && !request.getConditions().isEmpty()) {
-//            sql.append(" WHERE ");
-//            request.getConditions().forEach((column, value) -> {
-//                sql.append("`").append(column).append("` = '").append(value).append("' AND ");
-//            });
-//            // 移除最后一个 " AND "
-//            sql.setLength(sql.length() - 5);
-//        }
-//
-//        // 添加排序条件
-//        if (request.getOrderBy() != null && !request.getOrderBy().isEmpty()) {
-//            sql.append(" ORDER BY ");
-//            request.getOrderBy().forEach((column, order) -> {
-//                sql.append("`").append(column).append("` ").append(order).append(", ");
-//            });
-//            // 移除最后一个 ", "
-//            sql.setLength(sql.length() - 2);
-//        }
-//
-//        // 添加分页条件
-//        if (request.getLimit() != null) {
-//            sql.append(" LIMIT ").append(request.getLimit());
-//        }
-//
-//        if (request.getOffset() != null) {
-//            sql.append(" OFFSET ").append(request.getOffset());
-//        }
-//
-//        return sql.toString();
-//    }
-
     public Body<List<OutsideDatabase>> getDatabase() {
         List<OutsideDatabase> outsideDatabases = databaseMapper.selectList(null);
         return Body.success(outsideDatabases,"");
     }
-
 }
 
 
