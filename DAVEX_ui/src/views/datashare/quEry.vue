@@ -36,6 +36,12 @@
         align="center"
       ></el-table-column>
       <el-table-column
+        label="代理id"
+        prop="agentId"
+        width="90"
+        align="center"
+      ></el-table-column>
+      <el-table-column
         label="数据库名"
         prop="name"
         width="180"
@@ -99,6 +105,12 @@
         height="200"
         max-height="200"
       >
+        <el-table-column
+          label="代理id"
+          prop="agentId"
+          width="80"
+          align="center"
+        ></el-table-column> 
         <el-table-column
           label="表名"
           prop="name"
@@ -329,6 +341,7 @@ const currentExample = ref('')
 const schemaExample = ref('')
 const schemaTableData = ref([])
 const exampleTableData = ref([])
+let agentId = 0
 
 // 查询表单
 const queryForm = ref({
@@ -369,6 +382,7 @@ const handleViewDatabaseTableSchemaExample = (row) => {
 }
 
 const handleViewOpenQueryDialog = (row) => {
+  agentId = row.agentId
   schemaTableData.value = JSON.parse(row.schemaExample) 
   queryForm.value.tableName = row.name; // 可以从表格中获取实际表名
   queryDialogVisible.value = true;
@@ -467,8 +481,8 @@ const generateQuery = async () => {
   }
 
   try{
-    const res = await query(queryForm.value.applicationId,queryForm.value.databaseId,queryObject)
-    alert(res.data)
+    const res = await query(queryForm.value.applicationId,agentId,queryForm.value.databaseId,queryObject)
+    alert(res.data.message)
   }catch(error) {
     console.error('Failed to query:', error)
   }

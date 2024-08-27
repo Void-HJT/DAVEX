@@ -12,8 +12,9 @@ export const getDatabaseTable = (databaseId) => {
   return res
 }
 
-export const query = (applicationId, databaseId, queryObject) => {
+export const query = (applicationId, agentId,databaseId, queryObject) => {
   const params = new URLSearchParams();
+  params.append('agentId',agentId)
   params.append('applicationId', applicationId);
   params.append('databaseId', databaseId);
 
@@ -21,7 +22,7 @@ export const query = (applicationId, databaseId, queryObject) => {
   const queryString = JSON.stringify(queryObject);
 
   // 发送 POST 请求
-  let res = request.post(`/query/database/query?${params.toString()}`, queryString, {
+  let res = request.post(`/query/database/query2Agent?${params.toString()}`, queryString, {
     headers: {
       'Content-Type': 'application/json',
     },
