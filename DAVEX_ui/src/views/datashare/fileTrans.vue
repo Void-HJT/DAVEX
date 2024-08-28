@@ -103,7 +103,7 @@
                   getFileMethod(
                     scope.row.uid,
                     scope.row.agentId,
-                    scope.row.folderId
+                    scope.row.parentId
                   )
                 "
                   size="small"
@@ -115,13 +115,23 @@
         </el-table>
       </div>
       <el-dialog v-model="transSuccessVisible" title="文件传输结果" width="30%">
-        <span>文件传输完毕</span>
+        <span>文件传输完成</span>
         <template #footer>
           <div class="dialog-footer">
-            <el-button @click="transSuccessVisible = false">返回</el-button>
-            <el-button type="primary" @click="transSuccessVisible = false">
-              查看结果管理区
-            </el-button>
+            <el-button @click="transSuccessVisible = false" style="margin-right: 10px;">返回</el-button>
+            <router-link to="/result/fileTrans">
+              <el-button type="primary">
+                  查看结果管理区
+              </el-button>
+            </router-link>
+          </div>
+        </template>
+      </el-dialog>
+      <el-dialog v-model="transFailedVisible" title="文件传输结果" width="30%">
+        <span>{{ transFailedMessage }}</span>
+        <template #footer>
+          <div class="dialog-footer">
+            <el-button @click="transFailedVisible = false">返回</el-button>
           </div>
         </template>
       </el-dialog>
@@ -130,8 +140,7 @@
 </template>
 
 <script lang="ts" setup>
-import {getDirectory} from '../../api/folderController.js';
-import {getFile} from "../../api/direct.js";
+import {getFile, getDirectory} from "../../api/direct.js";
 import {onMounted, ref} from "vue";
 
 onMounted(() => {
@@ -140,11 +149,14 @@ onMounted(() => {
 
 // 对话框是否可见
 const transSuccessVisible = ref(false)
+const transFailedVisible = ref(false)
+const transFailedMessage = ref('');
 
 const directoryData = ref([])
 const currentDirectoryData = ref([])
 const getDirectoryBody = ref({
-  rootId: '1',
+  applicationId: '1',
+  agentId: '5'
 })
 const folderRoute = ref([])
 const getFileBody = ref({
@@ -160,6 +172,10 @@ function addFolderRoute(row) {
 function deleteFolderRoute() {
   folderRoute.value.pop()
   folderRoute.value.pop()
+}
+function goToResult() {
+  transSuccessVisible.value = false
+  this.$router.push('/result/fileTrans')
 }
 
 const getDirectoryMethod = async () => {
@@ -179,8 +195,14 @@ const getFileMethod = async (uid, agentId, folderId) => {
     getFileBody.value.fileId = uid
     getFileBody.value.agentId = agentId
     getFileBody.value.folderId = folderId
-    await getFile(getFileBody.value)
-    transSuccessVisible.value = true
+    const res = await getFile(getFileBody.value)
+    if (res.data.code == 1) {
+      transSuccessVisible.value = true
+    }
+    else {
+      transFailedMessage.value = res.data.message;
+      transFailedVisible.value = true
+    }
   }
   catch (error) {
     console.error('Failed to get file:', error)
