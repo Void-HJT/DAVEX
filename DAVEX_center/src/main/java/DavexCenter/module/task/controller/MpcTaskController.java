@@ -3,6 +3,7 @@ package DavexCenter.module.task.controller;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -45,6 +46,15 @@ public class MpcTaskController {
     public R<MpcTask> createMpcTask(@RequestBody UploadAgentTaskInfo mpcTask) {
         try {
             mpcTaskService.create(mpcTask);
+            switch (mpcTask.getTaskType()) {
+                case GARNET_MPC:
+                default:
+                    mpcTaskService.mpcRun(mpcTask);
+                    break;
+                case GARNET_PSI:
+                    mpcTaskService.psiRun(mpcTask);
+                    break;
+            }
         } catch (Exception e) {
             return R.error(e.getMessage());
         }
@@ -65,11 +75,19 @@ public class MpcTaskController {
             inputMapper.insert(input);
             mpcTask.setDataId(input.getUid());
             mpcTaskService.create(mpcTask);
+            switch (mpcTask.getTaskType()) {
+                case GARNET_MPC:
+                default:
+                    mpcTaskService.mpcRun(mpcTask);
+                    break;
+                case GARNET_PSI:
+                    mpcTaskService.psiRun(mpcTask);
+                    break;
+            }
         } catch (Exception e) {
             return R.error(e.getMessage());
         }
         return R.success(mpcTask, "成功创建");
-
     }
 
     @GetMapping("/ready")
@@ -95,4 +113,10 @@ public class MpcTaskController {
         }
         return R.success("保存成功");
     }
+
+    @GetMapping("list")
+    public List<MpcTask> list() {
+        return mpcTaskService.list();
+    }
+
 }

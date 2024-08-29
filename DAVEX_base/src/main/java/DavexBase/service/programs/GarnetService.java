@@ -74,7 +74,7 @@ public class GarnetService {
         }
     }
 
-    public void idExtract(String inputPath, String prefix, Integer part) throws Exception {
+    public void idExtract(String inputPath, String prefix, Long part) throws Exception {
         Path input = Paths.get(my.getBase_path()).resolve(inputPath);
         String outputFilePath = garnet_directory.getAbsolutePath() + "/Input/" + prefix + "-P" + part + "-0";
         try (BufferedReader reader = Files.newBufferedReader(input);
@@ -95,7 +95,7 @@ public class GarnetService {
         }
     }
 
-    public void link(String path, String prefix, Integer part) throws Exception {
+    public void link(String path, String prefix, Long part) throws Exception {
         List<String> command = new ArrayList<>(Arrays.asList("ln", "-s", path,
                 garnet_directory.getAbsolutePath() + "/Input/" + prefix + "-P" + part + "-0"));
         ProcessBuilder processBuilder = new ProcessBuilder(command).directory(garnet_directory);
@@ -206,7 +206,7 @@ public class GarnetService {
         String outputPrefix = garnet_directory.getAbsolutePath() + "/Output/" + mpcTask.getUid();
         String protocol = mpcTask.getRuntimeParameters().getString("protocol");
         String mpc_name = mpcTask.getMpcName();
-        Integer part = mpcTask.getPart();
+        Long part = mpcTask.getPart();
         List<String> command = new ArrayList<>(Arrays.asList(
                 "./" + protocol + ".x",
                 "-IF", inputPrefix,
@@ -251,7 +251,7 @@ public class GarnetService {
         }
     }
 
-    public void csvExtract(String inputCsvPath, String fieldName, String prefix, Integer part) {
+    public void csvExtract(String inputCsvPath, String fieldName, String prefix, Long part) {
         String outputFilePath = garnet_directory.getAbsolutePath() + "/Input/" + prefix + "-P" + part + "-0";
         try (BufferedReader reader = Files.newBufferedReader(Paths.get(inputCsvPath));
                 BufferedWriter writer = Files.newBufferedWriter(Paths.get(outputFilePath))) {
@@ -290,7 +290,7 @@ public class GarnetService {
         }
     }
 
-    public void csvQuery(String inputCsvPath, String prefix, String fieldName, Integer part, String outputCsvPath) {
+    public void csvQuery(String inputCsvPath, String prefix, String fieldName, Long part, String outputCsvPath) {
         String fieldFilePath = garnet_directory.getAbsolutePath() + "/Output/" + prefix + "-P" + part + "-0";
         try (BufferedReader csvReader = Files.newBufferedReader(Paths.get(inputCsvPath));
                 BufferedReader fieldReader = Files.newBufferedReader(Paths.get(fieldFilePath));

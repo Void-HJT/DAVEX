@@ -37,7 +37,7 @@ public class MpcTask {
   @TableField(typeHandler = FastjsonTypeHandler.class)
   private JSONObject runtimeParameters;
   private Integer N;
-  private Integer part;
+  private Long part;
   private String host;
   private Integer port;
   @JsonInclude(Include.NON_NULL)

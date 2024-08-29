@@ -3,9 +3,7 @@ package DavexCenter.module.task.service;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
-import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.scheduling.annotation.Async;
@@ -22,10 +20,10 @@ import DavexBase.info.UploadAgentTaskInfo;
 import DavexBase.mapper.AgentMapper;
 import DavexBase.mapper.MpcTaskAgentMapper;
 import DavexBase.mapper.MpcTaskMapper;
+import DavexBase.service.auth.CenterWebClientService;
 import DavexBase.service.programs.GarnetService;
 import DavexCenter.entity.Input;
 import DavexCenter.mapper.InputMapper;
-import DavexBase.service.auth.CenterWebClientService;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -80,17 +78,13 @@ public class MpcTaskService {
         return mpcTaskMapper.selectOne(queryWrapper);
     }
 
-    public void create(UploadAgentTaskInfo mpctTaskInfo) throws Exception {
-        if (mpctTaskInfo.getCenterId() != my.getId()) {
+    public void create(UploadAgentTaskInfo mpcTaskInfo) throws Exception {
+        if (mpcTaskInfo.getCenterId() != my.getId()) {
             throw new Exception("发送错误");
         }
 
-        if (mpctTaskInfo.getUid() != null && mpcTaskMapper.selectById(mpctTaskInfo.getUid()) != null) {
-            throw new Exception("任务已存在");
-        }
-
-        for (Map.Entry<Long, Pair<Long, Long>> entry : mpctTaskInfo.getAgentID2fileID().entrySet()) {
-            if (agentMapper.selectById(entry.getKey()) == null) {
+        for (UploadAgentTaskInfo.PartInfo partInfo : mpcTaskInfo.getPartInfo()) {
+            if (agentMapper.selectById(partInfo.getAgentID()) == null) {
                 throw new Exception("Agent不存在");
             }
             // TODO 检查app有权访问File
@@ -98,38 +92,29 @@ public class MpcTaskService {
             // throw new Exception("文件不存在");
             // }
         }
-        mpcTaskMapper.insert(mpctTaskInfo);
-        // TODO 不把其他方使用的数据发送给无关方
-        // mpctTaskInfo.setNull();
-        // mpctTaskInfo.setDataId(null);
+        mpcTaskMapper.insert(mpcTaskInfo);
         List<Mono<R<?>>> monos = new ArrayList<Mono<R<?>>>();
-        for (Map.Entry<Long, Pair<Long, Long>> entry : mpctTaskInfo.getAgentID2fileID().entrySet()) {
+        for (UploadAgentTaskInfo.PartInfo partInfo : mpcTaskInfo.getPartInfo()) {
             MpcTaskAgent mpcTaskAgent = new MpcTaskAgent();
-            mpcTaskAgent.setAgentId(entry.getKey());
-            mpcTaskAgent.setPart(entry.getValue().getLeft());
-            mpcTaskAgent.setMpcTaskId(mpctTaskInfo.getUid());
-            mpcTaskAgent.setCenterId(mpctTaskInfo.getCenterId());
+            mpcTaskAgent.setAgentId(partInfo.getAgentID());
+            mpcTaskAgent.setPart(partInfo.getPart());
+            mpcTaskAgent.setMpcTaskId(mpcTaskInfo.getUid());
+            mpcTaskAgent.setCenterId(mpcTaskInfo.getCenterId());
             mpcTaskAgentMapper.insert(mpcTaskAgent);
-            monos.add(centerWebClientService.center2AgentWebClient(entry.getKey()).post().uri("/MpcTasks/create")
-                    .bodyValue((UploadAgentTaskInfo) mpctTaskInfo).retrieve()
+            UploadAgentTaskInfo mpcTaskInfoCopy = mpcTaskInfo;
+            mpcTaskInfoCopy.maskFileID();
+            mpcTaskInfoCopy.setPart(partInfo.getPart());
+            mpcTaskInfoCopy.setDataId(partInfo.getFileID());
+            monos.add(centerWebClientService.center2AgentWebClient(partInfo.getAgentID()).post().uri("/MpcTasks/create")
+                    .bodyValue((UploadAgentTaskInfo) mpcTaskInfoCopy).retrieve()
                     .bodyToMono(new ParameterizedTypeReference<R<?>>() {
                     }));
         }
         Mono.when(monos).block();
-        switch (mpctTaskInfo.getTaskType()) {
-            case GARNET_MPC:
-            default:
-                mpcRun(mpctTaskInfo);
-                break;
-
-            case GARNET_PSI:
-                psiRun(mpctTaskInfo);
-                break;
-        }
     }
 
     @Async("customExecutor")
-    private void mpcRun(UploadAgentTaskInfo mpcTask) throws Exception {
+    public void mpcRun(UploadAgentTaskInfo mpcTask) throws Exception {
         garnetService.compile(mpcTask);
         garnetService.link(Paths.get(my.getBase_path())
                 .resolve(
@@ -147,7 +132,7 @@ public class MpcTaskService {
     }
 
     @Async("customExecutor")
-    private void psiRun(UploadAgentTaskInfo mpcTask) throws Exception {
+    public void psiRun(UploadAgentTaskInfo mpcTask) throws Exception {
         garnetService.compile(mpcTask);
         garnetService.idExtract(inputMapper.selectById(mpcTask.getDataId()).getPath(), mpcTask.getUid(),
                 mpcTask.getPart());
@@ -235,5 +220,9 @@ public class MpcTaskService {
             }
         }
         return true;
+    }
+
+    public List<MpcTask> list() {
+        return mpcTaskMapper.selectList(null);
     }
 }
