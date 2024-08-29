@@ -8,6 +8,7 @@ import lombok.Data;
 public class OutsideDatabase {
     @TableId(type = IdType.AUTO)
     private Long uid;
+    private Long agentId;
     private String name;
     private String type;
     private String connection;

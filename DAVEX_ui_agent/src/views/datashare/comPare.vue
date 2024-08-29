@@ -1,6 +1,6 @@
 <template>
   <div>
-    <span>结果管理区</span>
+    <span>比对</span>
   </div>
 </template>
 

@@ -15,6 +15,7 @@ import DavexBase.common.Body;
 import DavexBase.entity.OutsideDatabase;
 import DavexBase.entity.OutsideDatabaseTable;
 import DavexBase.info.QueryRequest;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController // @RestController的作用等同于@Controller + @ResponseBody。
 // 相当于@Controller+@ResponseBody两个注解的结合，返回json数据不需要在方法前面加@ResponseBody注解了，但使用@RestController这个注解，就不能返回jsp,html页面，视图解析器无法解析jsp,html页面
@@ -39,13 +40,18 @@ public class DatabaseController {
         return  databaseService.getTable(databaseId);
     }
 
-    @PostMapping("/query")
-    public String executeQuery(@RequestBody QueryRequest request,
-                               @RequestParam("applicationId")Long applicationId,
-                               @RequestParam("databaseId")Long databaseId) {
+    @PostMapping("/locateQuery")
+    public Body<byte[]> executeQuery(@RequestBody QueryRequest request,
+                                            @RequestParam("databaseId")Long databaseId) {
+        return databaseService.executeQuery(request,databaseId);
+    }
 
-        return databaseService.executeQuery(request,databaseId,applicationId);
-
+    @PostMapping("/query2Agent")
+    public Body<String> query2Agent(@RequestBody QueryRequest request,
+                                    @RequestParam("applicationId") Long applicationId,
+                                    @RequestParam("agentId") Long agentId,
+                                    @RequestParam("databaseId")Long databaseId){
+        return databaseService.query2Agent(request,applicationId,agentId,databaseId);
     }
 
 }
