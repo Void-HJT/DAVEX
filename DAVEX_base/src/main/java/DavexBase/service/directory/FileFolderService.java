@@ -806,11 +806,11 @@ public class FileFolderService {
 
     }
 
-    public R<File> getFile(Long fileId, Long agentId) {
+    public Body<File> getFile(Long fileId, Long agentId) {
 
         LambdaQueryWrapper<File> queryWrapper = Wrappers.<File>lambdaQuery().eq(File::getUid,fileId).eq(File::getAgentId,agentId);
         File file = fileMapper.selectOne(queryWrapper);
-        return R.success(file,"查询成功");
+        return Body.success(file,"查询成功");
     }
 
     public String test(){
@@ -839,4 +839,12 @@ public class FileFolderService {
             return Body.success(rowCount,"成功获取行数");
         }
     }
+
+
+    public Body<Folder> getFolder(Long folderId, Long agentId) {
+        LambdaQueryWrapper<Folder> queryWrapper = Wrappers.<Folder>lambdaQuery().eq(Folder::getUid,folderId).eq(Folder::getAgentId,agentId);
+        Folder folder = folderMapper.selectOne(queryWrapper);
+        return Body.success(folder,"查询成功");
+    }
+
 }

@@ -2,6 +2,9 @@ package DavexCenter.module.directory;
 
 
 import DavexBase.common.Body;
+import DavexBase.entity.Agent;
+import DavexBase.entity.Center;
+import DavexBase.entity.Group;
 import DavexBase.entity.Rule;
 import DavexBase.info.ApplicationAndCenterName;
 import DavexBase.info.GroupAndCenterName;
@@ -33,15 +36,15 @@ public class GroupController {
 
     }
 
-    @PostMapping("/getGroup")
-    public Body<List<GroupAndCenterName>> getGroup(@RequestParam("agentId") Long agentId,
+    @PostMapping("/getGroupList")
+    public Body<List<GroupAndCenterName>> getGroupList(@RequestParam("agentId") Long agentId,
                                       @RequestParam("centerId") Long centerId){
 //        // 记录输入参数、调用方法、请求方、接收方和时间
 //        String requestTime = LocalDateTime.now().toString();
 //        customLogger.info("Custom Log - Input: agentId={}, centerId={}, Method: getGroup, Requester: {}, Responder: {}, Time: {}",
 //                agentId, centerId, "RequesterInfo", "ResponderInfo", requestTime);
 
-        Body<List<GroupAndCenterName>> response = groupService.getGroup(agentId, centerId);
+        Body<List<GroupAndCenterName>> response = groupService.getGroupList(agentId, centerId);
 
 //        // 记录输出结果、请求方、接收方和时间
 //        String responseTime = LocalDateTime.now().toString();
@@ -109,6 +112,23 @@ public class GroupController {
     @PostMapping("/getAllAllowedMethod")
     public Body<List<String>>getAllAllowedMethod(){
         return groupService.getAllAllowedMethod();
+    }
+
+    @PostMapping("/getAgent")
+    public Body<Agent> getAgent(@RequestParam("agentId") Long agentId){
+        return groupService.getAgent(agentId);
+    }
+
+    @PostMapping("/getCenter")
+    public Body<Center> getCenter(@RequestParam("centerId") Long centerId){
+        return groupService.getCenter(centerId);
+    }
+
+    @PostMapping("/getGroup")
+    public Body<Group> getGroup(@RequestParam("groupId") Long groupId,
+                                @RequestParam("agentId") Long agentId,
+                                @RequestParam("centerId") Long centerId){
+        return groupService.getGroup(groupId,agentId,centerId);
     }
     
 }

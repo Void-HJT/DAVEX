@@ -4,6 +4,7 @@ package DavexAgent.module.directory;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import DavexBase.entity.*;
 import DavexBase.info.ApplicationAndCenterName;
 import DavexBase.info.GroupAndCenterName;
 import DavexBase.service.directory.GroupService;
@@ -16,9 +17,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import DavexBase.common.Body;
-import DavexBase.entity.Application;
-import DavexBase.entity.Group;
-import DavexBase.entity.Rule;
 
 @RestController // @RestController的作用等同于@Controller + @ResponseBody。
 // 相当于@Controller+@ResponseBody两个注解的结合，返回json数据不需要在方法前面加@ResponseBody注解了，但使用@RestController这个注解，就不能返回jsp,html页面，视图解析器无法解析jsp,html页面
@@ -37,15 +35,15 @@ public class GroupController {
 
     }
 
-    @PostMapping("/getGroup")
-    public Body<List<GroupAndCenterName>> getGroup(@RequestParam("agentId") Long agentId,
+    @PostMapping("/getGroupList")
+    public Body<List<GroupAndCenterName>> getGroupList(@RequestParam("agentId") Long agentId,
                                       @RequestParam("centerId") Long centerId){
 //        // 记录输入参数、调用方法、请求方、接收方和时间
 //        String requestTime = LocalDateTime.now().toString();
 //        customLogger.info("Custom Log - Input: agentId={}, centerId={}, Method: getGroup, Requester: {}, Responder: {}, Time: {}",
 //                agentId, centerId, "RequesterInfo", "ResponderInfo", requestTime);
 
-        Body<List<GroupAndCenterName>> response = groupService.getGroup(agentId, centerId);
+        Body<List<GroupAndCenterName>> response = groupService.getGroupList(agentId, centerId);
 
 //        // 记录输出结果、请求方、接收方和时间
 //        String responseTime = LocalDateTime.now().toString();
@@ -113,6 +111,23 @@ public class GroupController {
     @PostMapping("/getAllAllowedMethod")
     public Body<List<String>>getAllAllowedMethod(){
         return groupService.getAllAllowedMethod();
+    }
+
+    @PostMapping("/getAgent")
+    public Body<Agent> getAgent(@RequestParam("agentId") Long agentId){
+        return groupService.getAgent(agentId);
+    }
+
+    @PostMapping("/getCenter")
+    public Body<Center> getCenter(@RequestParam("centerId") Long centerId){
+        return groupService.getCenter(centerId);
+    }
+
+    @PostMapping("/getGroup")
+    public Body<Group> getGroup(@RequestParam("groupId") Long groupId,
+                                @RequestParam("agentId") Long agentId,
+                                @RequestParam("centerId") Long centerId){
+        return groupService.getGroup(groupId,agentId,centerId);
     }
     
 }

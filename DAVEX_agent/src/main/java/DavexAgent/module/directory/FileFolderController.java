@@ -1,6 +1,8 @@
 package DavexAgent.module.directory;
 import java.util.List;
 
+import DavexBase.entity.Folder;
+import DavexBase.entity.Group;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
@@ -146,12 +148,6 @@ public class FileFolderController {
         return fileFolderService.sendFile(fileId, agentId, folderId, my.getBase_path());
     }
 
-    @PostMapping ("/getFile")
-    public R<File> getFile(@RequestParam("fileId") Long fileId,
-                          @RequestParam("agentId") Long agentId) {
-        return fileFolderService.getFile(fileId,agentId);
-    }
-
     @PostMapping("/getDirectory")
     public Body<DirectoryInfo> getDirectory(@RequestParam("rootId") Long rootFolderId) {
         DirectoryInfo directory = fileFolderService.getDirectoryStructure(rootFolderId);
@@ -217,6 +213,15 @@ public class FileFolderController {
         return fileFolderService.getRowCount(fileId,agentId,my.getBase_path());
     }
 
+    @PostMapping ("/getFile")
+    public Body<File> getFile(@RequestParam("fileId") Long fileId,
+                           @RequestParam("agentId") Long agentId) {
+        return fileFolderService.getFile(fileId,agentId);
+    }
 
-
+    @PostMapping("/getFolder")
+    public Body<Folder> getFolder(@RequestParam("folderId") Long folderId,
+                               @RequestParam("agentId") Long agentId) {
+        return fileFolderService.getFolder(folderId,agentId);
+    }
 }

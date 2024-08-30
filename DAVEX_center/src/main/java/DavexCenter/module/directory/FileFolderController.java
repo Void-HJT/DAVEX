@@ -5,6 +5,7 @@ import DavexBase.common.My;
 import DavexBase.common.R;
 import DavexBase.entity.Agent;
 import DavexBase.entity.File;
+import DavexBase.entity.Folder;
 import DavexBase.info.DirectoryInfo;
 import DavexBase.info.FileInfo;
 import DavexBase.service.directory.FileFolderService;
@@ -140,12 +141,6 @@ public class FileFolderController {
         return fileFolderService.sendFile(fileId, agentId, folderId, my.getBase_path());
     }
 
-    @PostMapping ("/getFile")
-    public R<File> getFile(@RequestParam("fileId") Long fileId,
-                          @RequestParam("agentId") Long agentId) {
-        return fileFolderService.getFile(fileId,agentId);
-    }
-
     @PostMapping("/getDirectory")
     public Body<DirectoryInfo> getDirectory(@RequestParam("rootId") Long rootFolderId) {
         DirectoryInfo directory = fileFolderService.getDirectoryStructure(rootFolderId);
@@ -209,6 +204,18 @@ public class FileFolderController {
     public Body<Long> getRowCount(@RequestParam("fileId") Long fileId,
                                   @RequestParam("agentId")Long agentId){
         return fileFolderService.getRowCount(fileId,agentId,my.getBase_path());
+    }
+
+    @PostMapping ("/getFile")
+    public Body<File> getFile(@RequestParam("fileId") Long fileId,
+                              @RequestParam("agentId") Long agentId) {
+        return fileFolderService.getFile(fileId,agentId);
+    }
+
+    @PostMapping("/getFolder")
+    public Body<Folder> getFolder(@RequestParam("folderId") Long folderId,
+                                  @RequestParam("agentId") Long agentId) {
+        return fileFolderService.getFolder(folderId,agentId);
     }
 
 
