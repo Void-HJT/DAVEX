@@ -3,6 +3,8 @@ package DavexAgent.config;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.json.JsonReadFeature;
 import com.fasterxml.jackson.databind.Module;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
@@ -28,6 +30,10 @@ public class JacksonConfig {
         ObjectMapper mapper = new ObjectMapper();
         mapper.registerModule(new JavaTimeModule());
         mapper.registerModule(parameterModule());
+        // JSON支持注释
+        mapper.configure(JsonParser.Feature.ALLOW_COMMENTS, true);
+        // JSON支持尾逗号
+        mapper.configure(JsonReadFeature.ALLOW_TRAILING_COMMA.mappedFeature(), true);
         return mapper;
     }
 }
