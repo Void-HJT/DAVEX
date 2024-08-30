@@ -1,23 +1,24 @@
 ```json
 {
-  "uid": "PSI_GARNET", 
-  "centerId": 1, 
-  "name": "PSI_GARNET", 
-  "path": "programs/PSI_BASE.mpc", 
+  "uid": "PSI_GARNET", //字符串 不需要
+  "centerId": 1, //
+  "name": "PSI_GARNET",//前端指定 
+  "path": "programs/PSI_BASE.mpc",//无视 
   "compileParameters": [
     {
-      "name": "P0_Data", 
-      "limit": {
+      "name": "P0_Data", //前端指定
+      "limit": {//
         "max": 999, 
         "min": 999, 
         "defaultValue": 1
       }, 
       "required": true, 
       "auto": false, 
-      "limitType": "NUM", 
-      "posORflag": 0, 
-      "description": "第0方数据", 
-      "parameterType": "POS"
+      "limitType": "NUM", //选类型 NUM STRING ENUM
+      //枚举是一个数组 value
+      "posORflag": 0, //先选 POS 012345 FLAG -I
+      "description": "第0方数据", //前端手动填
+      "parameterType": "POS"//先选 POS FLAG
     }, 
     {
       "name": "P1_Data", 
