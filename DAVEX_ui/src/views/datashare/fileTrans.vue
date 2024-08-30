@@ -173,10 +173,6 @@ function deleteFolderRoute() {
   folderRoute.value.pop()
   folderRoute.value.pop()
 }
-function goToResult() {
-  transSuccessVisible.value = false
-  this.$router.push('/result/fileTrans')
-}
 
 const getDirectoryMethod = async () => {
   try {
