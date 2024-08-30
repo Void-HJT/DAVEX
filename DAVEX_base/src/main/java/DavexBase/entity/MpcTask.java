@@ -46,4 +46,6 @@ public class MpcTask {
   private String mpcName;
   private TaskType taskType;
   private Status status;
+  @JsonIgnore
+  private String message = "";
 }

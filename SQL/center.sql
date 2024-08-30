@@ -182,6 +182,7 @@ CREATE TABLE `mpcTask` (
     `mpc_name` varchar(255) DEFAULT NULL,
     `task_type` ENUM('GARNET_PSI', 'GARNET_MPC') NULL,
     `status` varchar(255) DEFAULT NULL,
+    `message` VARCHAR(255) NULL,
     PRIMARY KEY (`uid`)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci;
 

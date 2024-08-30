@@ -9,6 +9,7 @@ import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
+import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 
@@ -224,5 +225,31 @@ public class MpcTaskService {
 
     public List<MpcTask> list() {
         return mpcTaskMapper.selectList(null);
+    }
+
+    public UploadAgentTaskInfo parameterUpdate(UploadAgentTaskInfo mpcTask) {
+        MpcTask.TaskType type = mpcTask.getTaskType();
+        if (type == MpcTask.TaskType.GARNET_PSI) {
+            JSONObject compileParameters = new JSONObject();
+            Long P0_data = garnetService.csvCount(inputMapper.selectById(mpcTask.getDataId()).getPath());
+            Long P1_data = null;
+            UploadAgentTaskInfo.PartInfo p1 = mpcTask.getPartInfo().get(0);
+            try {
+                P1_data = centerWebClientService.center2AgentWebClient(p1.getAgentID()).post()
+                        .uri(uriBuilder -> uriBuilder.path("/directory/fileFolder/getRowCount")
+                                .queryParam("agentId", p1.getAgentID())
+                                .queryParam("fileId", p1.getFileID())
+                                .build())
+                        .retrieve().bodyToMono(new ParameterizedTypeReference<R<Long>>() {
+                        }).block().getBody().getData();
+            } catch (Exception e) {
+                e.printStackTrace();
+                return mpcTask;
+            }
+            compileParameters.put("P0_data", P0_data);
+            compileParameters.put("P1_data", P1_data);
+            mpcTask.setCompileParameters(compileParameters);
+        }
+        return mpcTask;
     }
 }

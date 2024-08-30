@@ -153,6 +153,9 @@ public class GarnetService {
                         }
                     }
                     break;
+                case HYPER:
+                default:
+                    break;
             }
         }
         Path mpc_path = Paths.get(my.getBase_path()).resolve(mpc.getPath());
@@ -346,6 +349,16 @@ public class GarnetService {
 
         } catch (IOException e) {
             e.printStackTrace();
+        }
+    }
+
+    public Long csvCount(String inputCsvPath) {
+        try (BufferedReader reader = Files.newBufferedReader(Paths.get(inputCsvPath))) {
+            Long count = reader.lines().count();
+            return count - 1;
+        } catch (IOException e) {
+            e.printStackTrace();
+            return 0L;
         }
     }
 }

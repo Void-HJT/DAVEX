@@ -8,7 +8,9 @@ public class Parameter {
         // 位置参数
         POS,
         // 选项参数
-        FLAG
+        FLAG,
+        // 超参数
+        HYPER
     }
 
     public enum LimitType {
@@ -109,14 +111,13 @@ public class Parameter {
 
     private String name;
     private ArgumentsType parameterType;
-    // 表示位置参数的位置或者选项参数的选项。选项参数时，形如"-R"、"--name"。
+    // 表示位置参数的位置或者选项参数的选项；选项参数时，形如"-R"、"--name"；超参数时，忽略该值
     private Object posORflag;
     private LimitType limitType;
     private Object limit;
     private Boolean required;
     private String description;
-    // 表示是否由系统自动生成，为true时，则直接使用limit中的DefaultValue，不需要用户输入
-    // required为true时，auto必须为false
+    // 表示是否由系统自动生成
     private Boolean auto;
 
     public Parameter(String name, ArgumentsType parameterType, LimitType limitType, Object posORflag,
