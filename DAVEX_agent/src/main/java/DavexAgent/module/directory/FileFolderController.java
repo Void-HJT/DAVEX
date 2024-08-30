@@ -211,4 +211,12 @@ public class FileFolderController {
         return fileFolderService.test();
     }
 
+    @PostMapping("/getRowCount")
+    public Body<Long> getRowCount(@RequestParam("fileId") Long fileId,
+                                  @RequestParam("agentId")Long agentId){
+        return fileFolderService.getRowCount(fileId,agentId,my.getBase_path());
+    }
+
+
+
 }

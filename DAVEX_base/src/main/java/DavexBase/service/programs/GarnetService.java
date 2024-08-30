@@ -53,7 +53,7 @@ public class GarnetService {
         this.my = my;
         garnet_directory = new File(this.my.getGarnet_path());
     }
-
+    //这行注释可以不检查garnet
     @EventListener(ApplicationReadyEvent.class)
     @Async("customExecutor")
     public void init() {
