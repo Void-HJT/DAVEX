@@ -3,8 +3,8 @@ import { useUserStore } from '../stores'
 
 const useStore = useUserStore()
 
-// const baseURL = 'http://10.176.34.50:8080/'
-const baseURL = 'http://10.176.34.171:9999/'
+const baseURL = 'http://10.176.34.50:8080/'
+// const baseURL = 'http://10.176.34.171:9999/'
 const instance = axios.create({
   // TODO 1. 基础地址，超时时间
   baseURL,
