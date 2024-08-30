@@ -30,3 +30,50 @@ export const query = (applicationId, agentId,databaseId, queryObject) => {
 
   return res;
 };
+
+// 查询结果管理区所有文件
+export const getQueryResult = ({ applicationId }) => {
+  const params = new URLSearchParams()
+  params.append('applicationId', applicationId)
+  let res = request.post(
+      'queryFile/queryQuery',
+      params.toString()
+  )
+  return res
+}
+
+// 查询结果管理区部分文件
+export const getQueryResultByIds = ({ applicationId, outputIds }) => {
+  const params = new URLSearchParams()
+  params.append('applicationId', applicationId)
+  params.append('outputIds', outputIds)
+  let res = request.post(
+      'queryFile/queryQueryByIds',
+      params.toString()
+  )
+  return res
+}
+
+// 从结果管理区获取文件
+export const fetchQuery = ({ outputId, applicationId }) => {
+  const params = new URLSearchParams()
+  params.append('outputId', outputId)
+  params.append('applicationId', applicationId)
+  let res = request.post(
+      'queryFile/fetchQuery',
+      params.toString()
+  )
+  return res
+}
+
+// 从结果管理区删除文件
+export const deleteQuery = ({ outputId, applicationId }) => {
+  const params = new URLSearchParams()
+  params.append('outputId', outputId)
+  params.append('applicationId', applicationId)
+  let res = request.post(
+      'queryFile/deleteQuery',
+      params.toString()
+  )
+  return res
+}
