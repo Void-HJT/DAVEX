@@ -1,9 +1,6 @@
 package DavexBase.info;
 
-import java.util.Map;
-
-import org.apache.commons.lang3.tuple.ImmutablePair;
-import org.apache.commons.lang3.tuple.Pair;
+import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
@@ -11,22 +8,58 @@ import DavexBase.entity.MpcTask;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class UploadAgentTaskInfo extends MpcTask {
-    // (agentID, (part, fileID))
-    private Map<Long, Pair<Long, Long>> agentID2fileID;
+    public static class PartInfo {
+        private Long agentID;
+        private Long part;
+        private Long fileID;
 
-    public Map<Long, Pair<Long, Long>> getAgentID2fileID() {
-        return agentID2fileID;
+        public PartInfo() {
+        }
+
+        public PartInfo(Long agentID, Long part, Long fileID) {
+            this.agentID = agentID;
+            this.part = part;
+            this.fileID = fileID;
+        }
+
+        public Long getAgentID() {
+            return agentID;
+        }
+
+        public void setAgentID(Long agent_id) {
+            this.agentID = agent_id;
+        }
+
+        public Long getPart() {
+            return part;
+        }
+
+        public void setPart(Long part) {
+            this.part = part;
+        }
+
+        public Long getFileID() {
+            return fileID;
+        }
+
+        public void setFileID(Long file_id) {
+            this.fileID = file_id;
+        }
     }
 
-    public void setAgentID2fileID(Map<Long, Pair<Long, Long>> agentID2fileID) {
-        this.agentID2fileID = agentID2fileID;
+    private List<PartInfo> partInfo;
+
+    public List<PartInfo> getPartInfo() {
+        return partInfo;
     }
 
-    public void setNull() {
-        for (Map.Entry<Long, Pair<Long, Long>> entry : agentID2fileID.entrySet()) {
-            Pair<Long, Long> originalPair = entry.getValue();
-            Pair<Long, Long> updatedPair = new ImmutablePair<Long, Long>(originalPair.getLeft(), 0L);
-            entry.setValue(updatedPair);
+    public void setPartInfo(List<PartInfo> partInfo) {
+        this.partInfo = partInfo;
+    }
+
+    public void maskFileID() {
+        for (PartInfo partInfo : this.partInfo) {
+            partInfo.setFileID(null);
         }
     }
 }

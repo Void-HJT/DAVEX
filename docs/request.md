@@ -66,9 +66,11 @@
 
 ```json
 {
-  "agentID2fileID": {
-    "5":[1,21]
-  },
+  "partInfo": [{
+    "agentID":5,
+    "part":1,
+    "fileID":21
+  }],
   "applicationId": 0,
   "centerId": 1,
   "compileParameters": {

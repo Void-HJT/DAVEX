@@ -4,9 +4,7 @@ package DavexAgent.module.task.service;
 import java.nio.file.Paths;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
-import java.util.Map;
 
-import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.core.io.FileSystemResource;
@@ -15,7 +13,6 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.BodyInserters;
 
-import DavexBase.service.auth.AgentWebClientService;
 import DavexBase.common.My;
 import DavexBase.common.R;
 import DavexBase.common.Utils;
@@ -27,6 +24,7 @@ import DavexBase.mapper.FileMapper;
 import DavexBase.mapper.MpcMapper;
 import DavexBase.mapper.MpcTaskAgentMapper;
 import DavexBase.mapper.MpcTaskMapper;
+import DavexBase.service.auth.AgentWebClientService;
 import DavexBase.service.directory.FileFolderService;
 import DavexBase.service.programs.GarnetService;
 
@@ -66,17 +64,10 @@ public class MpcTaskService {
         if (mpctTaskInfo.getUid() != null && mpcTaskMapper.selectById(mpctTaskInfo.getUid()) != null) {
             throw new Exception("任务已存在");
         }
-        Map<Long, Pair<Long, Long>> map = mpctTaskInfo.getAgentID2fileID();
-        if (!map.containsKey(my.getId())) {
-            throw new Exception("发送错误");
-        }
-        mpctTaskInfo.setDataId(map.get(my.getId()).getRight());
-        // TODO 取消强制类型转换
-        mpctTaskInfo.setPart(Math.toIntExact(map.get(my.getId()).getLeft()));
-        for (Map.Entry<Long, Pair<Long, Long>> entry : map.entrySet()) {
+        for (UploadAgentTaskInfo.PartInfo partInfo : mpctTaskInfo.getPartInfo()) {
             MpcTaskAgent mpcTaskAgent = new MpcTaskAgent();
-            mpcTaskAgent.setAgentId(entry.getKey());
-            mpcTaskAgent.setPart(entry.getValue().getLeft());
+            mpcTaskAgent.setAgentId(partInfo.getAgentID());
+            mpcTaskAgent.setPart(partInfo.getPart());
             mpcTaskAgent.setMpcTaskId(mpctTaskInfo.getUid());
             mpcTaskAgent.setCenterId(mpctTaskInfo.getCenterId());
             mpcTaskAgentMapper.insert(mpcTaskAgent);
