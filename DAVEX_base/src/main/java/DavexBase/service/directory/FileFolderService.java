@@ -20,6 +20,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.BufferedReader;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
@@ -385,6 +387,7 @@ public class FileFolderService {
         }
 
         String fileName = file.getOriginalFilename();
+        fileRecord.setType(file.getOriginalFilename().substring(file.getOriginalFilename().lastIndexOf(".")));
         fileRecord.setAgentId(agentId);
         fileRecord.setFolderId(folderId);
         fileRecord.setName(fileName);
@@ -814,4 +817,26 @@ public class FileFolderService {
         return "1";
     }
 
+    public Body<Long> getRowCount(Long fileId, Long agentId,String baseDirectory) {
+        LambdaQueryWrapper<File> queryWrapper = Wrappers.<File>lambdaQuery().eq(File::getAgentId,agentId).eq(File::getUid,fileId);
+        File file = fileMapper.selectOne(queryWrapper);
+        if(file==null){return Body.error("找不到文件");}
+        if(!file.getType().equals(".csv"))
+        {
+            return Body.error("非csv文件");
+        }
+        else
+        {
+            String filePath = getFilePath(file, baseDirectory);
+            long rowCount = 0;
+            try (BufferedReader reader = new BufferedReader(new FileReader(filePath))) {
+                while (reader.readLine() != null) {
+                    rowCount++;
+                }
+            } catch (IOException e) {
+                return Body.error("读取文件时出错：" + e.getMessage());
+            }
+            return Body.success(rowCount,"成功获取行数");
+        }
+    }
 }

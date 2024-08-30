@@ -3,6 +3,7 @@ package DavexCenter.module.query.controller;
 import DavexBase.common.Body;
 import DavexBase.entity.OutsideDatabase;
 import DavexBase.entity.OutsideDatabaseTable;
+import DavexBase.info.QueryRequest;
 import DavexBase.service.query.DatabaseService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -13,7 +14,6 @@ import java.util.List;
 // 相当于@Controller+@ResponseBody两个注解的结合，返回json数据不需要在方法前面加@ResponseBody注解了，但使用@RestController这个注解，就不能返回jsp,html页面，视图解析器无法解析jsp,html页面
 @RequestMapping("/query/database")
 public class DatabaseController {
-
     @Autowired
     DatabaseService databaseService;
 
@@ -31,6 +31,20 @@ public class DatabaseController {
     public Body<List<OutsideDatabaseTable>> getTable(@RequestParam("databaseId") Long databaseId)
     {
         return  databaseService.getTable(databaseId);
+    }
+
+    @PostMapping("/locateQuery")
+    public Body<byte[]> executeQuery(@RequestBody QueryRequest request,
+                                     @RequestParam("databaseId")Long databaseId) {
+        return databaseService.executeQuery(request,databaseId);
+    }
+
+    @PostMapping("/query2Agent")
+    public Body<String> query2Agent(@RequestBody QueryRequest request,
+                                    @RequestParam("applicationId") Long applicationId,
+                                    @RequestParam("agentId") Long agentId,
+                                    @RequestParam("databaseId")Long databaseId){
+        return databaseService.query2Agent(request,applicationId,agentId,databaseId);
     }
 
 }
