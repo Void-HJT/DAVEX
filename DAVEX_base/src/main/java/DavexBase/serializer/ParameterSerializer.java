@@ -39,8 +39,10 @@ public class ParameterSerializer extends StdSerializer<Parameter> {
                 gen.writeStringField("limitType", "NUM");
                 gen.writeObjectField("limit", (Parameter.NUMLimit<?>) parameter.getLimit());
                 break;
+            case AUTO:
+                gen.writeStringField("limitType", "AUTO");
+                break;
             case STRING:
-            default:
                 gen.writeStringField("limitType", "STRING");
                 gen.writeObjectField("limit", (Parameter.STRINGLimit) parameter.getLimit());
                 break;
@@ -50,7 +52,6 @@ public class ParameterSerializer extends StdSerializer<Parameter> {
                 break;
         }
         gen.writeBooleanField("required", parameter.getRequired());
-        gen.writeBooleanField("auto", parameter.getAuto());
         gen.writeStringField("description", parameter.getDescription());
         gen.writeEndObject();
     }

@@ -53,7 +53,8 @@ public class GarnetService {
         this.my = my;
         garnet_directory = new File(this.my.getGarnet_path());
     }
-    //这行注释可以不检查garnet
+
+    // 这行注释可以不检查garnet
     @EventListener(ApplicationReadyEvent.class)
     @Async("customExecutor")
     public void init() {
@@ -129,30 +130,28 @@ public class GarnetService {
         List<String> flags = new ArrayList<>();
         for (Parameter p : mpc_parameters) {
             switch (p.getParameterType()) {
-                case POS:
-                    if (p.getAuto()) {
+                case POS: {
+                    String value = task_parameter.getString(p.getName());
+                    if (value == null && p.getRequired()) {
+                        throw new IllegalArgumentException("缺少参数: " + p.getName());
+                    } else if (value != null) {
+                        args.put((Integer) p.getPosORflag(), value);
+                    } else if (!p.getRequired()) {
                         args.put((Integer) p.getPosORflag(), p.getDefaultValue());
-                    } else {
-                        String value = task_parameter.getString(p.getName());
-                        if (value == null && p.getRequired()) {
-                            throw new IllegalArgumentException("缺少参数: " + p.getName());
-                        } else if (value != null) {
-                            args.put((Integer) p.getPosORflag(), value);
-                        }
                     }
                     break;
-                case FLAG:
-                    if (p.getAuto()) {
+                }
+                case FLAG: {
+                    String value = task_parameter.getString(p.getName());
+                    if (value == null && p.getRequired()) {
+                        throw new IllegalArgumentException("缺少参数: " + p.getName());
+                    } else if (value != null) {
+                        flags.add((String) p.getPosORflag() + " " + value);
+                    } else if (!p.getRequired()) {
                         flags.add((String) p.getPosORflag() + " " + p.getDefaultValue());
-                    } else {
-                        String value = task_parameter.getString(p.getName());
-                        if (value == null && p.getRequired()) {
-                            throw new IllegalArgumentException("缺少参数: " + p.getName());
-                        } else if (value != null) {
-                            flags.add((String) p.getPosORflag() + " " + value);
-                        }
                     }
                     break;
+                }
                 case HYPER:
                 default:
                     break;
