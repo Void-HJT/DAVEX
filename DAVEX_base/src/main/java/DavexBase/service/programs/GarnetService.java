@@ -292,11 +292,11 @@ public class GarnetService {
         }
     }
 
-    public void csvQuery(String inputCsvPath, String prefix, String fieldName, Long part, String outputCsvPath) {
-        String fieldFilePath = garnet_directory.getAbsolutePath() + "/Output/" + prefix + "-P" + part + "-0";
+    public void csvQuery(String inputCsvPath, String prefix, String fieldName, Long part, Path outputCsvPath) {
+        Path fieldFilePath = Paths.get(garnet_directory.getAbsolutePath() + "/Output/" + prefix + "-P" + part + "-0");
         try (BufferedReader csvReader = Files.newBufferedReader(Paths.get(inputCsvPath));
-                BufferedReader fieldReader = Files.newBufferedReader(Paths.get(fieldFilePath));
-                BufferedWriter csvWriter = Files.newBufferedWriter(Paths.get(outputCsvPath))) {
+                BufferedReader fieldReader = Files.newBufferedReader(fieldFilePath);
+                BufferedWriter csvWriter = Files.newBufferedWriter(outputCsvPath)) {
 
             // 读取字段文件并存储在集合中
             Set<Integer> fieldValues = new HashSet<>();
@@ -352,9 +352,9 @@ public class GarnetService {
     }
 
     public Long csvCount(String inputCsvPath) {
-        try (BufferedReader reader = Files.newBufferedReader(Paths.get(inputCsvPath))) {
+        try (BufferedReader reader = Files.newBufferedReader(Paths.get(my.getBase_path()).resolve(inputCsvPath))) {
             Long count = reader.lines().count();
-            return count - 1;
+            return count;
         } catch (IOException e) {
             e.printStackTrace();
             return 0L;

@@ -48,4 +48,25 @@ public class MpcTask {
   private Status status;
   @JsonIgnore
   private String message = "";
+
+  public MpcTask(MpcTask other) {
+    this.uid = other.uid;
+    this.applicationId = other.applicationId;
+    this.centerId = other.centerId;
+    this.mpcId = other.mpcId;
+    this.compileParameters = other.compileParameters;
+    this.runtimeParameters = other.runtimeParameters;
+    this.N = other.N;
+    this.part = other.part;
+    this.host = other.host;
+    this.port = other.port;
+    this.dataId = other.dataId;
+    this.mpcName = other.mpcName;
+    this.taskType = other.taskType;
+    this.status = other.status;
+    this.message = other.message;
+  }
+
+  public MpcTask() {
+  }
 }

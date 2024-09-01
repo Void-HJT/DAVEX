@@ -45,7 +45,7 @@ public class MpcTaskController {
     @PostMapping("/create")
     public R<MpcTask> createMpcTask(@RequestBody UploadAgentTaskInfo mpcTask) {
         try {
-            mpcTaskService.create(mpcTask);
+            mpcTask = mpcTaskService.create(mpcTask);
             switch (mpcTask.getTaskType()) {
                 case GARNET_MPC:
                 default:
@@ -64,7 +64,7 @@ public class MpcTaskController {
     @PostMapping("/create_with_input")
     public R<MpcTask> postMethodName(@RequestPart("file") MultipartFile file,
             @RequestPart("mpcTask") UploadAgentTaskInfo mpcTask) {
-        Path path = Utils.resolveFileNameConflict(
+         Path path = Utils.resolveFileNameConflict(
                 Paths.get(my.getBase_path()).resolve("Input").resolve(file.getOriginalFilename()));
         Input input = new Input();
         input.setApplicationId(mpcTask.getApplicationId());

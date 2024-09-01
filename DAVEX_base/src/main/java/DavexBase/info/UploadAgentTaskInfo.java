@@ -1,5 +1,6 @@
 package DavexBase.info;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -20,6 +21,12 @@ public class UploadAgentTaskInfo extends MpcTask {
             this.agentID = agentID;
             this.part = part;
             this.fileID = fileID;
+        }
+
+        public PartInfo(PartInfo other) {
+            this.agentID = other.agentID;
+            this.part = other.part;
+            this.fileID = other.fileID;
         }
 
         public Long getAgentID() {
@@ -61,5 +68,16 @@ public class UploadAgentTaskInfo extends MpcTask {
         for (PartInfo partInfo : this.partInfo) {
             partInfo.setFileID(null);
         }
+    }
+
+    public UploadAgentTaskInfo(UploadAgentTaskInfo other) {
+        super(other);
+        this.partInfo = new ArrayList<>();
+        for (PartInfo partInfo : other.partInfo) {
+            this.partInfo.add(new PartInfo(partInfo));
+        }
+    }
+
+    public UploadAgentTaskInfo() {
     }
 }

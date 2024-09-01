@@ -13,6 +13,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 
+import DavexBase.common.Body;
 import DavexBase.common.My;
 import DavexBase.common.R;
 import DavexBase.entity.MpcTask;
@@ -79,7 +80,7 @@ public class MpcTaskService {
         return mpcTaskMapper.selectOne(queryWrapper);
     }
 
-    public void create(UploadAgentTaskInfo mpcTaskInfo) throws Exception {
+    public UploadAgentTaskInfo create(UploadAgentTaskInfo mpcTaskInfo) throws Exception {
         if (mpcTaskInfo.getCenterId() != my.getId()) {
             throw new Exception("发送错误");
         }
@@ -93,6 +94,7 @@ public class MpcTaskService {
             // throw new Exception("文件不存在");
             // }
         }
+        mpcTaskInfo = parameterUpdate(mpcTaskInfo);
         mpcTaskMapper.insert(mpcTaskInfo);
         List<Mono<R<?>>> monos = new ArrayList<Mono<R<?>>>();
         for (UploadAgentTaskInfo.PartInfo partInfo : mpcTaskInfo.getPartInfo()) {
@@ -102,7 +104,7 @@ public class MpcTaskService {
             mpcTaskAgent.setMpcTaskId(mpcTaskInfo.getUid());
             mpcTaskAgent.setCenterId(mpcTaskInfo.getCenterId());
             mpcTaskAgentMapper.insert(mpcTaskAgent);
-            UploadAgentTaskInfo mpcTaskInfoCopy = mpcTaskInfo;
+            UploadAgentTaskInfo mpcTaskInfoCopy = new UploadAgentTaskInfo(mpcTaskInfo);
             mpcTaskInfoCopy.maskFileID();
             mpcTaskInfoCopy.setPart(partInfo.getPart());
             mpcTaskInfoCopy.setDataId(partInfo.getFileID());
@@ -112,6 +114,7 @@ public class MpcTaskService {
                     }));
         }
         Mono.when(monos).block();
+        return mpcTaskInfo;
     }
 
     @Async("customExecutor")
@@ -240,14 +243,15 @@ public class MpcTaskService {
                                 .queryParam("agentId", p1.getAgentID())
                                 .queryParam("fileId", p1.getFileID())
                                 .build())
-                        .retrieve().bodyToMono(new ParameterizedTypeReference<R<Long>>() {
-                        }).block().getBody().getData();
+                        .retrieve().bodyToMono(new ParameterizedTypeReference<Body<Long>>() {
+                        }).block().getData();
             } catch (Exception e) {
                 e.printStackTrace();
                 return mpcTask;
             }
-            compileParameters.put("P0_data", P0_data);
-            compileParameters.put("P1_data", P1_data);
+            compileParameters.put("P0_Data", P0_data);
+            // directory/fileFolder/getRowCoun得到的csv行数包含表头
+            compileParameters.put("P1_Data", P1_data - 1);
             mpcTask.setCompileParameters(compileParameters);
         }
         return mpcTask;
