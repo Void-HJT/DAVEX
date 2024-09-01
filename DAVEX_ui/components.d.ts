@@ -7,6 +7,7 @@ export {}
 
 declare module 'vue' {
   export interface GlobalComponents {
+    BaseModal: typeof import('./src/components/common/BaseModal.vue')['default']
     ElAside: typeof import('element-plus/es')['ElAside']
     ElAvatar: (typeof import('element-plus/es'))['ElAvatar']
     ElButt: typeof import('element-plus/es')['ElButt']
@@ -16,6 +17,8 @@ declare module 'vue' {
     ElCol: typeof import('element-plus/es')['ElCol']
     ElContainer: typeof import('element-plus/es')['ElContainer']
     ElDatePicker: typeof import('element-plus/es')['ElDatePicker']
+    ElDescriptions: typeof import('element-plus/es')['ElDescriptions']
+    ElDescriptionsItem: typeof import('element-plus/es')['ElDescriptionsItem']
     ElDialog: typeof import('element-plus/es')['ElDialog']
     ElDropdown: (typeof import('element-plus/es'))['ElDropdown']
     ElDropdownItem: (typeof import('element-plus/es'))['ElDropdownItem']
@@ -42,6 +45,7 @@ declare module 'vue' {
     ElTable: typeof import('element-plus/es')['ElTable']
     'ElTable-': typeof import('element-plus/es')['ElTable-']
     ElTableColumn: typeof import('element-plus/es')['ElTableColumn']
+    ElTag: typeof import('element-plus/es')['ElTag']
     ElTimePicker: typeof import('element-plus/es')['ElTimePicker']
     ElUpload: typeof import('element-plus/es')['ElUpload']
     RouterLink: typeof import('vue-router')['RouterLink']

@@ -41,7 +41,7 @@ export const getGroup = ({ agentId, centerId }) => {
   const params = new URLSearchParams()
   params.append('agentId', agentId)
   params.append('centerId', centerId)
-  let res = request.post('/directory/group/getGroup', params.toString())
+  let res = request.post('/directory/group/getGroupList', params.toString())
   return res
 }
 

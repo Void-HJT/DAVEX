@@ -311,6 +311,29 @@
         <el-button type="primary" @click="generateQuery">生成查询语句</el-button>
       </template>
     </el-dialog>
+
+    <el-dialog v-model="querySuccessVisible" title="查询完成" width="30%">
+    <span>{{ querySuccessMessage }}</span>
+    <template #footer>
+      <div class="dialog-footer">
+        <el-button @click="querySuccessVisible = false" style="margin-right: 10px;">返回</el-button>
+        <router-link to="/result/quEry">
+          <el-button type="primary">
+            查看结果管理区
+          </el-button>
+        </router-link>
+      </div>
+    </template>
+  </el-dialog>
+  <el-dialog v-model="queryFailedVisible" title="查询失败" width="30%">
+    <span>{{ queryFailedMessage }}</span>
+    <template #footer>
+      <div class="dialog-footer">
+        <el-button @click="queryFailedVisible = false">返回</el-button>
+      </div>
+    </template>
+  </el-dialog>
+
   </el-container>
 </template>
 
@@ -334,6 +357,11 @@ const databaseControlDialogVisible = ref(false)
 const exampleDialogVisible = ref(false)
 const schemaDialogVisible = ref(false)
 const queryDialogVisible = ref(false)
+const querySuccessVisible = ref(false)
+const queryFailedVisible = ref(false)
+const querySuccessMessage = ref('');
+const queryFailedMessage = ref('');
+
 // 表格数据
 const databaseData = ref([])
 const databaseTableData = ref([])
@@ -482,9 +510,12 @@ const generateQuery = async () => {
 
   try{
     const res = await query(queryForm.value.applicationId,agentId,queryForm.value.databaseId,queryObject)
-    alert(res.data.message)
+    //
+    querySuccessMessage.value = res.data.message
+    querySuccessVisible.value = true
   }catch(error) {
-    console.error('Failed to query:', error)
+    queryFailedMessage.value = 'Failed to query:' + error
+    queryFailedVisible.value = true
   }
   // alert(JSON.stringify(queryObject, null, 2));
   // // 在这里发送查询对象到后端

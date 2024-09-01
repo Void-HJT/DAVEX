@@ -239,7 +239,7 @@
             width="180"
           ></el-table-column>
         </el-table> -->
-        <span
+        <!-- <span
           style="
             display: block;
             text-align: center;
@@ -270,7 +270,7 @@
             prop="rule"
             width="180"
           ></el-table-column>
-        </el-table>
+        </el-table> -->
         <span
           style="
             display: block;
@@ -282,7 +282,7 @@
           该文件拥有的权限
         </span>
         <el-table :data="fileRuleListData" style="width: 100%">
-          <el-table-column label="Uid" prop="uid" width="80"></el-table-column>
+          <el-table-column label="序号" prop="uid" width="80"></el-table-column>
           <el-table-column
             label="所属代理"
             prop="agentId"
@@ -309,22 +309,49 @@
         >
           更新文件权限
         </span>
-        <el-form
-          :model="setFileRuleBody"
-          label-width="80px"
-          style="max-width: 600px"
-        >
-          <el-form-item label="组别">
-            <el-input v-model="setFileRuleBody.groupId"></el-input>
-          </el-form-item>
-          <el-form-item label="权限">
-            <el-input v-model="setFileRuleBody.allowedMethod"></el-input>
-          </el-form-item>
-          <el-form-item>
-            <el-button @click="setFileRuleMethod">赋予文件权限</el-button>
-            <el-button @click="deleteFileRuleMethod">移除文件权限</el-button>
-          </el-form-item>
-        </el-form>
+        <div class="form-container">
+          <el-form
+            :model="setFileRuleBody"
+            style="max-width: 600px"
+            class="styled-form"
+          >
+            <!-- 第一个选择框：选择需要管理的分组 -->
+            <el-form-item label="选择分组">
+              <el-select
+                v-model="selectedGroupUid"
+                placeholder="请选择需要管理的分组"
+                @change="updateGroupId"
+              >
+                <el-option
+                  v-for="item in userGroupData"
+                  :key="item.uid"
+                  :label="item.name"
+                  :value="item.uid"
+                />
+              </el-select>
+            </el-form-item>
+            <!-- 第二个选择框：选择对应的权限 -->
+            <el-form-item label="选择权限">
+              <el-select
+                v-model="selectedAllowedMethod"
+                placeholder="请选择对应的权限"
+                @change="updateAllowedMethod"
+              >
+                <el-option
+                  v-for="method in currentAllowedMethods"
+                  :key="method"
+                  :label="method"
+                  :value="method"
+                />
+              </el-select>
+            </el-form-item>
+
+            <el-form-item>
+              <el-button @click="setFileRuleMethod">赋予文件权限</el-button>
+              <el-button @click="deleteFileRuleMethod">移除文件权限</el-button>
+            </el-form-item>
+          </el-form>
+        </div>
         <template #footer>
           <span class="dialog-footer">
             <el-button type="primary" @click="closeFileInfo">确认</el-button>
@@ -590,6 +617,8 @@ const folderVisibleDialogClose = () => {
   folderVisibleBody.value.groupId = ''
 }
 
+const selectedGroupUid = ref(null)
+const selectedAllowedMethod = ref(null)
 const directoryData = ref([])
 const applicationData = ref([])
 const currentDirectoryData = ref([])
@@ -984,6 +1013,51 @@ const returnFrontDirectory = async () => {
   console.log('folderRoute:', folderRoute.value)
   findCurrentFolder()
 }
+
+// 计算属性，返回当前选中组的 allowedMethod 列表
+const currentAllowedMethods = computed(() => {
+  const selectedGroup = userGroupData.value.find(
+    (group) => group.uid === selectedGroupUid.value,
+  )
+  if (selectedGroup && selectedGroup.rule) {
+    // 将 allowedMethod 字符串按空格分割成数组
+    return selectedGroup.rule.trim().split(' ')
+  }
+  return []
+})
+
+// 更新 setFileRuleBody.groupId
+const updateGroupId = () => {
+  setFileRuleBody.value.groupId = selectedGroupUid.value
+  // 清空已选择的权限
+  selectedAllowedMethod.value = null
+  // 更新 allowedMethod 为空
+  setFileRuleBody.value.allowedMethod = ''
+}
+
+// 更新 setFileRuleBody.allowedMethod
+const updateAllowedMethod = () => {
+  setFileRuleBody.value.allowedMethod = selectedAllowedMethod.value
+}
 </script>
 
-<style></style>
+<style scoped>
+.form-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.styled-form {
+  width: 100%;
+  max-width: 600px;
+  padding: 20px;
+  border: 1px solid #dcdfe6;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  background-color: #ffffff;
+  display: flex; /* 使用 Flexbox */
+  flex-direction: column; /* 设置为纵向布局 */
+  align-items: center; /* 居中对齐子元素 */
+}
+</style>

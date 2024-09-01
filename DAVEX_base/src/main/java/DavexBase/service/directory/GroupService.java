@@ -34,6 +34,9 @@ public class GroupService {
     @Autowired
     RuleMapper ruleMapper;
 
+    @Autowired
+    AgentMapper agentMapper;
+
     //agent查看用户
     public Body<List<ApplicationAndCenterName>> getApplication() {
         LambdaQueryWrapper<Application> queryWrapper = Wrappers.<Application>lambdaQuery();
@@ -56,7 +59,7 @@ public class GroupService {
     }
 
     //显示用户分组
-    public Body<List<GroupAndCenterName>> getGroup(Long agentId, Long centerId) {
+    public Body<List<GroupAndCenterName>> getGroupList(Long agentId, Long centerId) {
         LambdaQueryWrapper<Group> queryWrapper = Wrappers.<Group>lambdaQuery()
                 .eq(Group::getCenterId,centerId)
                 .eq(Group::getAgentId,agentId);
@@ -206,5 +209,29 @@ public class GroupService {
             groupAndCenterNames.add(groupAndCenterName);
         }
         return groupAndCenterNames;
+    }
+
+    public Body<Agent> getAgent(Long agentId) {
+
+        LambdaQueryWrapper<Agent> queryWrapper = Wrappers.<Agent>lambdaQuery()
+                .eq(Agent::getUid, agentId);
+        Agent agent = agentMapper.selectOne(queryWrapper);
+        return Body.success(agent,"查询成功");
+    }
+
+    public Body<Center> getCenter(Long centerId){
+        LambdaQueryWrapper<Center> queryWrapper = Wrappers.<Center>lambdaQuery()
+                .eq(Center::getUid, centerId);
+        Center center = centerMapper.selectOne(queryWrapper);
+        return Body.success(center,"查询成功");
+    }
+
+    public Body<Group> getGroup(Long groupId, Long agentId, Long centerId) {
+        LambdaQueryWrapper<Group> queryWrapper = Wrappers.<Group>lambdaQuery()
+                .eq(Group::getUid, groupId)
+                .eq(Group::getAgentId,agentId)
+                .eq(Group::getCenterId,centerId);
+        Group group = groupMapper.selectOne(queryWrapper);
+        return Body.success(group,"查询成功");
     }
 }

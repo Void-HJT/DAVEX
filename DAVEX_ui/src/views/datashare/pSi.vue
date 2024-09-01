@@ -15,11 +15,6 @@
         <el-input v-model="creatPsiTaskBody.runtimeParameters.PK"></el-input>
       </el-form-item>
     </el-form>
-    <el-form :model="creatPsiTaskBody" label-width="20%" style="max-width: 80%">
-      <el-form-item label="新文件名">
-        <el-input v-model="creatPsiTaskBody.agentID2fileID[5]"></el-input>
-      </el-form-item>
-    </el-form>
   </div>
 </template>
 
@@ -31,9 +26,13 @@ import type { UploadInstance, UploadProps, UploadRawFile } from 'element-plus'
 import axios from 'axios'
 
 const creatPsiTaskBody = ref({
-  agentID2fileID: {
-    5: [1, 21],
-  }, //需要修改
+  partInfo: [
+    {
+      agentID: 5,
+      part: 1,
+      fileID: 21,
+    },
+  ],
   applicationId: 0, //后台配置
   centerId: 1, //后台配置
   compileParameters: {
@@ -73,7 +72,6 @@ function upload(params) {
   }).then((resp) => {
     console.log('success')
   })
-  // createPsiTask(formData.value)
 }
 function submitUpload() {
   photoRef.value.submit()
