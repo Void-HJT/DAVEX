@@ -100,17 +100,18 @@ const deleteFailedVisible = ref(false)
 const deleteSuccessMessage = ref('');
 const deleteFailedMessage = ref('');
 
+const applicationId = 6
 const resultData = ref([])
 const getResultBody = ref({
-  applicationId: '1'
+  applicationId: applicationId
 })
 const fetchFileBody = ref({
   outputId: '',
-  applicationId: '1'
+  applicationId: applicationId
 })
 const deleteFileBody = ref({
   outputId: '',
-  applicationId: '1'
+  applicationId: applicationId
 })
 
 const getResultDataMethod = async () => {

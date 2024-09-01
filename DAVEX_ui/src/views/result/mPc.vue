@@ -95,17 +95,18 @@ const deleteFailedVisible = ref(false)
 const deleteSuccessMessage = ref('');
 const deleteFailedMessage = ref('');
 
+const applicationId = 6
 const resultData = ref([])
 const getResultBody = ref({
-  applicationId: '1'
+  applicationId: applicationId
 })
 const fetchMpcBody = ref({
   outputId: '',
-  applicationId: '1'
+  applicationId: applicationId
 })
 const deleteMpcBody = ref({
   outputId: '',
-  applicationId: '1'
+  applicationId: applicationId
 })
 
 const getMpcResultMethod = async () => {

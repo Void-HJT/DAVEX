@@ -116,6 +116,7 @@
                   link
                   type="danger"
                   size="small"
+                  disabled
               >
                 无权比对
               </el-button>
@@ -245,10 +246,11 @@ const compareFailedMessage = ref('');
 const selectAttributesVisible = ref(false)
 const inputDataVisible = ref(false)
 
+const applicationId = 6
 const directoryData = ref([])
 const currentDirectoryData = ref([])
 const getDirectoryBody = ref({
-  applicationId: '1',
+  applicationId: applicationId,
   agentId: '5'
 })
 const folderRoute = ref([])
@@ -260,7 +262,7 @@ const getTableHeaderBody = ref({
 const tableHeaders = ref([])
 const selectedAttributes = ref([])
 const compareFromCsvBody = ref({
-  applicationId: '1',
+  applicationId: applicationId,
   agentId: '',
   fileId: '',
   folderId: '',

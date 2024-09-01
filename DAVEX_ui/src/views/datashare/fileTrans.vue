@@ -161,10 +161,11 @@ const transSuccessVisible = ref(false)
 const transFailedVisible = ref(false)
 const transFailedMessage = ref('');
 
+const applicationId = 6
 const directoryData = ref([])
 const currentDirectoryData = ref([])
 const getDirectoryBody = ref({
-  applicationId: '1',
+  applicationId: applicationId,
   agentId: '5'
 })
 const folderRoute = ref([])
@@ -172,7 +173,7 @@ const getFileBody = ref({
   fileId: '',
   agentId: '',
   folderId: '',
-  applicationId: '1'
+  applicationId: applicationId
 })
 
 function addFolderRoute(row) {
