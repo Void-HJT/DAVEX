@@ -12,10 +12,10 @@ export const getMpcResult = ({ applicationId }) => {
 }
 
 // 查询结果管理区部分文件
-export const getMpcResultByIds = ({ applicationId, outputIds }) => {
+export const getMpcResultByIds = ({ applicationId, mpcOutputIds }) => {
     const params = new URLSearchParams()
     params.append('applicationId', applicationId)
-    params.append('outputIds', outputIds)
+    params.append('mpcOutputIds', mpcOutputIds)
     let res = request.post(
         'MpcTasksOutput/queryByIds',
         params.toString()
@@ -24,9 +24,9 @@ export const getMpcResultByIds = ({ applicationId, outputIds }) => {
 }
 
 // 从结果管理区获取文件
-export const fetchMpc = ({ outputId, applicationId }) => {
+export const fetchMpc = ({ mpcOutputId, applicationId }) => {
     const params = new URLSearchParams()
-    params.append('outputId', outputId)
+    params.append('mpcOutputId', mpcOutputId)
     params.append('applicationId', applicationId)
     let res = request.post(
         'MpcTasksOutput/fetch',
@@ -36,9 +36,9 @@ export const fetchMpc = ({ outputId, applicationId }) => {
 }
 
 // 从结果管理区删除文件
-export const deleteMpc = ({ outputId, applicationId }) => {
+export const deleteMpc = ({ mpcOutputId, applicationId }) => {
     const params = new URLSearchParams()
-    params.append('outputId', outputId)
+    params.append('mpcOutputId', mpcOutputId)
     params.append('applicationId', applicationId)
     let res = request.post(
         'MpcTasksOutput/delete',

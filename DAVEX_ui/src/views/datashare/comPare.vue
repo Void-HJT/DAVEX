@@ -96,7 +96,7 @@
           >
             <template v-slot="scope">
               <el-button
-                  v-if="scope.row.type === 'file' && scope.row.name.endsWith('.csv')"
+                  v-if="scope.row.type === 'file' && scope.row.name.endsWith('.csv') && isAccessible(scope.row.ruleList)"
                   link
                   type="primary"
                   @click="
@@ -110,6 +110,14 @@
                   size="small"
               >
                 查看表头信息
+              </el-button>
+              <el-button
+                  v-if="scope.row.type === 'file' && scope.row.name.endsWith('.csv') && !isAccessible(scope.row.ruleList)"
+                  link
+                  type="danger"
+                  size="small"
+              >
+                无权比对
               </el-button>
             </template>
           </el-table-column>
@@ -148,11 +156,12 @@
       :auto-upload="false"
       :on-change="handleFileChange"
       v-if="getTableHeaderBody.fileId"
+      style="margin-top: 20px; margin-bottom: 20px;"
   >
     <template #trigger>
-      <el-button type="primary">上传csv文件</el-button>
+      <el-button type="primary" style="margin-right: 10px;">上传csv文件</el-button>
     </template>
-    <el-button class="ml-3" type="success" @click="submitUpload">
+    <el-button class="ml-3" type="success" @click="submitUpload" style="margin-right: 10px;">
       比对
     </el-button>
     <template #tip>
@@ -161,8 +170,43 @@
       </div>
     </template>
   </el-upload>
+
+  <el-button type="primary" v-if="getTableHeaderBody.fileId" @click="selectAttributesVisible = true">输入数据进行比对</el-button>
+  <el-dialog v-model="selectAttributesVisible" title="选择属性" width="30%">
+    <el-checkbox-group v-model="selectedAttributes" style="display: flex; flex-wrap: wrap;">
+      <el-checkbox
+          v-for="(header, index) in tableHeaders"
+          :label="header.name"
+          :key="index"
+          style="margin-bottom: 10px;"
+      >
+        {{ header.name }}
+      </el-checkbox>
+    </el-checkbox-group>
+    <template #footer>
+      <div class="dialog-footer">
+        <el-button @click="selectAttributesVisible = false" style="margin-right: 10px;">返回</el-button>
+        <el-button type="primary" @click="confirmAttributes">
+          确定
+        </el-button>
+      </div>
+    </template>
+  </el-dialog>
+  <el-dialog v-model="inputDataVisible" title="输入数据" width="30%">
+    <span></span>
+    <template #footer>
+      <div class="dialog-footer">
+        <el-button @click="inputDataVisible = false" style="margin-right: 10px;">重新选择属性</el-button>
+        <el-button type="primary">
+          比对
+        </el-button>
+      </div>
+    </template>
+  </el-dialog>
+
   <el-dialog v-model="compareSuccessVisible" title="比对完成" width="30%">
-    <span>{{ compareSuccessMessage }}</span>
+<!--    <span>{{ compareSuccessMessage }}</span>-->
+    <span>比对完成，比对结果文件已存至结果管理区</span>
     <template #footer>
       <div class="dialog-footer">
         <el-button @click="compareSuccessVisible = false" style="margin-right: 10px;">返回</el-button>
@@ -188,7 +232,6 @@
 import {getDirectory, getTableHeader, compareFromCsv} from "../../api/comparison.js";
 import {onMounted, ref} from "vue";
 import {genFileId, UploadInstance, UploadProps, UploadRawFile} from "element-plus";
-import axios from "axios";
 
 onMounted(() => {
   getDirectoryMethod()
@@ -199,6 +242,8 @@ const compareSuccessVisible = ref(false)
 const compareFailedVisible = ref(false)
 const compareSuccessMessage = ref('');
 const compareFailedMessage = ref('');
+const selectAttributesVisible = ref(false)
+const inputDataVisible = ref(false)
 
 const directoryData = ref([])
 const currentDirectoryData = ref([])
@@ -213,6 +258,7 @@ const getTableHeaderBody = ref({
   folderId: ''
 })
 const tableHeaders = ref([])
+const selectedAttributes = ref([])
 const compareFromCsvBody = ref({
   applicationId: '1',
   agentId: '',
@@ -229,6 +275,10 @@ function addFolderRoute(row) {
 function deleteFolderRoute() {
   folderRoute.value.pop()
   folderRoute.value.pop()
+}
+function confirmAttributes() {
+  selectAttributesVisible.value = false;
+  inputDataVisible.value = true;
 }
 
 const compareFromCsvMethod = async () => {
@@ -346,6 +396,10 @@ const handleFileChange: UploadProps['onChange'] = (file, fileList) => {
 
 const submitUpload = () => {
   compareFromCsvMethod()
+}
+
+const isAccessible = (ruleList) => {
+  return ruleList.includes('comparison')
 }
 </script>
 

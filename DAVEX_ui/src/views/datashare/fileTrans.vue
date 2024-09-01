@@ -96,7 +96,7 @@
           >
             <template v-slot="scope">
               <el-button
-                  v-if="scope.row.type === 'file'"
+                  v-if="scope.row.type === 'file' && isAccessible(scope.row.ruleList)"
                   link
                   type="primary"
                   @click="
@@ -109,6 +109,15 @@
                   size="small"
               >
                 获取文件
+              </el-button>
+              <el-button
+                  v-if="scope.row.type === 'file' && !isAccessible(scope.row.ruleList)"
+                  link
+                  type="danger"
+                  size="small"
+                  disabled
+              >
+                无权获取文件
               </el-button>
             </template>
           </el-table-column>
@@ -251,6 +260,10 @@ const formatDate = (row, column, cellValue) => {
   const minutes = String(date.getMinutes()).padStart(2, '0')
   const seconds = String(date.getSeconds()).padStart(2, '0')
   return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`
+}
+
+const isAccessible = (ruleList) => {
+  return ruleList.includes('direct')
 }
 </script>
 
