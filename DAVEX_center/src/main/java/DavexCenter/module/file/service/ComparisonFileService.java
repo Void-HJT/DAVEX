@@ -35,7 +35,7 @@ public class ComparisonFileService {
     @Autowired
     private JdbcTemplate jdbcTemplate;
 
-    public Body<String> saveComparison(MultipartFile file, String hash, Long applicationId,
+    public Body<String> saveComparison(MultipartFile file, String hash, Long applicationId, Long agentId, Long fileId, Long folderId, String fileName,
                                            String base, java.sql.Timestamp expiredTime) {
 
         // 校验sha256
@@ -63,6 +63,10 @@ public class ComparisonFileService {
         newComparisonOutput.setApplicationId(applicationId);
         newComparisonOutput.setExpiredTime(expiredTime);
         newComparisonOutput.setName(file.getOriginalFilename());
+        newComparisonOutput.setAgentId(agentId);
+        newComparisonOutput.setFileId(fileId);
+        newComparisonOutput.setFolderId(folderId);
+        newComparisonOutput.setDestName(fileName);
         comparisonOutputMapper.insert(newComparisonOutput);
         String filePath = newComparisonOutput.getPath();
         String fileName = newComparisonOutput.getName();

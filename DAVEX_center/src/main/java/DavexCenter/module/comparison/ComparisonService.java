@@ -93,6 +93,14 @@ public class ComparisonService {
                 if (dataHash == null) {
                         return Body.error("属性输入有误");
                 }
+                String fileName = webclient.post()
+                        .uri(uriBuilder -> uriBuilder.path("/comparison/getFileName")
+                                .queryParam("fileId", fileId)
+                                .queryParam("folderId", folderId)
+                                .queryParam("agentId", agentId).build())
+                        .retrieve()
+                        .bodyToMono(new ParameterizedTypeReference<Body<String>>() {
+                        }).block().getData();
 
                 // 存储每条数据的比对结果
                 List<Boolean> comparisonResults = new ArrayList<>();
@@ -141,11 +149,12 @@ public class ComparisonService {
                 byte[] jsonBytes = objectMapper.writeValueAsBytes(jsonResults);
 
                 // 使用下划线拼接属性名生成文件名
-                String fileName = String.join("_", attributes) + ".json";
-                MultipartFile file = new CustomMultipartFile(jsonBytes, fileName);
+                String resultName = "agent_" + agentId + "_file_" + fileId + "_folder_" + folderId + "_dataNum_" + valuesList.size() +
+                        "_attributes_" + String.join("_", attributes) + ".json";
+                MultipartFile file = new CustomMultipartFile(jsonBytes, resultName);
 
                 // 调用 saveComparisonFile 方法
-                comparisonFileService.saveComparison(file, fileService.getSha256(file), applicationId,
+                comparisonFileService.saveComparison(file, fileService.getSha256(file), applicationId, agentId, fileId, folderId, fileName,
                         uploadBaseDir, Timestamp.valueOf(LocalDateTime.now().plusWeeks(1)));
 
                 return Body.success(comparisonResults, "比对成功");

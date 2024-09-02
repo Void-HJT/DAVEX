@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import DavexBase.info.FileInfo;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -129,5 +130,10 @@ public class ComparisonService {
             return Body.error("读取CSV文件出错: " + e.getMessage());
         }
         return Body.success(hashResults, "获取哈希成功");
+    }
+
+    public Body<String> getFileName(Long fileId, Long folderId, Long agentId) {
+        FileInfo fileInfo = fileFolderService.getFileInfo(fileId, agentId, folderId).getData();
+        return Body.success(fileInfo.getName());
     }
 }

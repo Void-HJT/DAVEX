@@ -36,6 +36,10 @@ public class ComparisonFileController {
     public Body<String> saveComparison(@RequestPart("file") MultipartFile file,
                                        @RequestParam("hash") String hash,
                                        @RequestParam("applicationId") Long applicationId,
+                                       @RequestParam("agentId") Long agentId,
+                                       @RequestParam("fileId") Long fileId,
+                                       @RequestParam("folderId") Long folderId,
+                                       @RequestParam("fileName") String fileName,
                                        @RequestParam(value = "expiredTime", required = false) java.sql.Timestamp expiredTime) {
 
         if (expiredTime == null) {
@@ -43,7 +47,7 @@ public class ComparisonFileController {
             expiredTime = java.sql.Timestamp.from(Instant.now().plus(7, ChronoUnit.DAYS));
         }
 
-        return comparisonFileService.saveComparison(file, hash, applicationId, uploadBaseDir, expiredTime);
+        return comparisonFileService.saveComparison(file, hash, applicationId, agentId, fileId, folderId, uploadBaseDir, expiredTime);
     }
 
     // application通过路径直接获取center结果管理区comparison文件的接口
