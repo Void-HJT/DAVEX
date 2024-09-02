@@ -3,7 +3,7 @@
     <el-header style="height: 50px">
       <div
           style="
-          background-color: #3572ef;
+          background-color: antiquewhite;
           height: 40px;
           display: flex;
           justify-content: center;
@@ -13,7 +13,7 @@
         <p
             style="
             font-size: 20px;
-            color: white;
+            color: black;
             opacity: 100%;
             text-align: center;
           "

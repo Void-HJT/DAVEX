@@ -91,7 +91,7 @@ public class ComparisonService {
                                 .bodyToMono(new ParameterizedTypeReference<Body<List<String>>>() {
                                 }).block().getData();
                 if (dataHash == null) {
-                        return Body.error("dataHash 为空，请检查输入格式.");
+                        return Body.error("属性输入有误");
                 }
 
                 // 存储每条数据的比对结果
@@ -113,7 +113,8 @@ public class ComparisonService {
                                         sb.append(values.get(i));
                                 } else {
                                         // 处理错误情况
-                                        throw new IndexOutOfBoundsException("值列表的长度小于属性列表的长度");
+//                                        throw new IndexOutOfBoundsException("值列表的长度小于属性列表的长度");
+                                        return Body.error("输入格式有误");
                                 }
                         }
 

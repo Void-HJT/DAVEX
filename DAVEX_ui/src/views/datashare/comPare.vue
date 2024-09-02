@@ -3,7 +3,7 @@
     <el-header style="height: 50px">
       <div
           style="
-          background-color: #3572ef;
+          background-color: antiquewhite;
           height: 40px;
           display: flex;
           justify-content: center;
@@ -13,7 +13,7 @@
         <p
             style="
             font-size: 20px;
-            color: white;
+            color: black;
             opacity: 100%;
             text-align: center;
           "
@@ -194,11 +194,31 @@
     </template>
   </el-dialog>
   <el-dialog v-model="inputDataVisible" title="输入数据" width="30%">
-    <span></span>
+    <div v-for="(rowData, rowIndex) in inputData" :key="rowIndex" class="input-row">
+      <div v-for="(attribute, index) in selectedAttributes" :key="index" class="input-item">
+        <el-form-item :label="attribute">
+          <el-input v-model="inputData[rowIndex][index]" placeholder="请输入数据"></el-input>
+        </el-form-item>
+      </div>
+      <el-button
+          type="danger"
+          size="small"
+          @click="removeDataRow(rowIndex)"
+          v-if="inputData.length > 1"
+          style="margin-bottom: 10px;"
+      >
+        删除数据
+      </el-button>
+    </div>
+
+    <el-button type="primary" size="small" @click="addDataRow" style="margin-bottom: 10px;">
+      添加数据
+    </el-button>
+
     <template #footer>
       <div class="dialog-footer">
-        <el-button @click="inputDataVisible = false" style="margin-right: 10px;">重新选择属性</el-button>
-        <el-button type="primary">
+        <el-button @click="resetAttributes" style="margin-right: 10px;">重新选择属性</el-button>
+        <el-button type="primary" @click="compareData">
           比对
         </el-button>
       </div>
@@ -206,8 +226,8 @@
   </el-dialog>
 
   <el-dialog v-model="compareSuccessVisible" title="比对完成" width="30%">
-<!--    <span>{{ compareSuccessMessage }}</span>-->
-    <span>比对完成，比对结果文件已存至结果管理区</span>
+    <span>{{ compareSuccessMessage }}</span>
+<!--    <span>比对完成，比对结果文件已存至结果管理区</span>-->
     <template #footer>
       <div class="dialog-footer">
         <el-button @click="compareSuccessVisible = false" style="margin-right: 10px;">返回</el-button>
@@ -230,7 +250,7 @@
 </template>
 
 <script lang="ts" setup>
-import {getDirectory, getTableHeader, compareFromCsv} from "../../api/comparison.js";
+import {getDirectory, getTableHeader, compareFromCsv, compare} from "../../api/comparison.js";
 import {onMounted, ref} from "vue";
 import {genFileId, UploadInstance, UploadProps, UploadRawFile} from "element-plus";
 
@@ -259,6 +279,7 @@ const getTableHeaderBody = ref({
   fileId: '',
   folderId: ''
 })
+const inputData = ref([[]])
 const tableHeaders = ref([])
 const selectedAttributes = ref([])
 const compareFromCsvBody = ref({
@@ -267,6 +288,14 @@ const compareFromCsvBody = ref({
   fileId: '',
   folderId: '',
   file: null as File | null
+})
+const compareBody = ref({
+  applicationId: applicationId,
+  agentId: '',
+  fileId: '',
+  folderId: '',
+  attributes: [],
+  valuesList: [[]]
 })
 const fileName = ref('')
 const upload = ref<UploadInstance>()
@@ -279,13 +308,50 @@ function deleteFolderRoute() {
   folderRoute.value.pop()
 }
 function confirmAttributes() {
-  selectAttributesVisible.value = false;
-  inputDataVisible.value = true;
+  selectAttributesVisible.value = false
+  inputDataVisible.value = true
+}
+function resetAttributes() {
+  inputDataVisible.value = false
+  selectAttributesVisible.value = true
+  selectedAttributes.value = []
+  inputData.value = [[]]
+}
+function addDataRow() {
+  inputData.value.push(new Array(selectedAttributes.value.length).fill(''));
+}
+function removeDataRow(rowIndex) {
+  if (inputData.value.length > 1) {
+    inputData.value.splice(rowIndex, 1);
+  }
 }
 
 const compareFromCsvMethod = async () => {
   try {
     const res = await compareFromCsv(compareFromCsvBody.value)
+    console.log(res.data)
+    if (res.data.code == 1) {
+      const booleanArray = res.data.data
+      const resultList = booleanArray.map((result, index) => `${index + 1}. ${result ? 'yes' : 'no'}`).join('; ')
+      compareSuccessMessage.value = `比对结果依次为: ${resultList}`
+      compareSuccessVisible.value = true
+    }
+    else {
+      compareFailedMessage.value = res.data.message
+      compareFailedVisible.value = true
+    }
+  }
+  catch (error) {
+    console.error('Failed to compare:', error)
+  }
+}
+
+const compareMethod = async () => {
+  try {
+    compareBody.value.attributes = selectedAttributes.value
+    compareBody.value.valuesList = inputData.value
+    console.log(compareBody.value)
+    const res = await compare(compareBody.value)
     console.log(res.data)
     if (res.data.code == 1) {
       const booleanArray = res.data.data
@@ -311,6 +377,9 @@ const getTableHeaderMethod = async (agentId, fileId, folderId, name) => {
     compareFromCsvBody.value.agentId = agentId
     compareFromCsvBody.value.fileId = fileId
     compareFromCsvBody.value.folderId = folderId
+    compareBody.value.agentId = agentId
+    compareBody.value.fileId = fileId
+    compareBody.value.folderId = folderId
     fileName.value = name
     const res = await getTableHeader(getTableHeaderBody.value)
     console.log(res.data.data.name)
@@ -398,6 +467,11 @@ const handleFileChange: UploadProps['onChange'] = (file, fileList) => {
 
 const submitUpload = () => {
   compareFromCsvMethod()
+}
+
+const compareData = () => {
+  compareMethod()
+  inputDataVisible.value = false
 }
 
 const isAccessible = (ruleList) => {
