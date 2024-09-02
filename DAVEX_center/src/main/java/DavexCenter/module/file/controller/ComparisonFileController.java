@@ -47,7 +47,7 @@ public class ComparisonFileController {
             expiredTime = java.sql.Timestamp.from(Instant.now().plus(7, ChronoUnit.DAYS));
         }
 
-        return comparisonFileService.saveComparison(file, hash, applicationId, agentId, fileId, folderId, uploadBaseDir, expiredTime);
+        return comparisonFileService.saveComparison(file, hash, applicationId, agentId, fileId, folderId, fileName, uploadBaseDir, expiredTime);
     }
 
     // application通过路径直接获取center结果管理区comparison文件的接口

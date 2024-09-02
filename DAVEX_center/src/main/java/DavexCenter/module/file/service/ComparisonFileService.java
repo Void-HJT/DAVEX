@@ -69,7 +69,7 @@ public class ComparisonFileService {
         newComparisonOutput.setDestName(fileName);
         comparisonOutputMapper.insert(newComparisonOutput);
         String filePath = newComparisonOutput.getPath();
-        String fileName = newComparisonOutput.getName();
+        String resultName = newComparisonOutput.getName();
 
         // 存储文件到结果管理区
         try {
@@ -77,10 +77,10 @@ public class ComparisonFileService {
         } catch (IOException e) {
             e.printStackTrace();
             return Body.error(String.format("保存失败: 文件名: %s，错误信息: %s",
-                    fileName, e.getMessage()));
+                    resultName, e.getMessage()));
         }
         return Body.success(String.format("保存成功，文件名: %s",
-                fileName));
+                resultName));
     }
 
     public Body<String> fetchComparison(Long outputId, Long applicationId, String downloadPath) {
