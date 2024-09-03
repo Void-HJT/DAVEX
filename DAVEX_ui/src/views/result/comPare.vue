@@ -37,7 +37,7 @@
             <el-popover effect="light" trigger="hover" placement="top" width="auto">
               <template #default>
                 <div>name: {{ scope.row.name }}</div>
-                <div>name: {{ scope.row.dest_name }}</div>
+                <div>destName: {{ scope.row.dest_name }}</div>
               </template>
               <template #reference>
                 <el-tag>{{ scope.row.name }}</el-tag>
