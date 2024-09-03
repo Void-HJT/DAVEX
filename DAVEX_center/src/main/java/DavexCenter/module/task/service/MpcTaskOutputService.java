@@ -71,12 +71,13 @@ public class MpcTaskOutputService {
         Path outputPath = Paths.get(my.getGarnet_path()).resolve("Output")
                 .resolve(mpcTask.getUid() + "-P" + mpcTask.getPart() + "-0");
         Path savePath = Paths.get(my.getBase_path()).resolve("mpctask").resolve(mpcTask.getUid());
-        mpcTaskOutput.setPath(Paths.get("mpctask").resolve(mpcTask.getUid()).toString());
+        mpcTaskOutput.setPath(Paths.get("/home/nhy/DAVEX/base/mpctask").resolve(mpcTask.getUid()).toString());
         mpcTaskOutput.setTaskId(mpcTask.getUid());
         mpcTaskOutput.setExpiredTime(java.sql.Timestamp
                 .from(Instant.now().plus(7, ChronoUnit.DAYS)));
         mpcTaskOutput.setName(outputPath.getFileName().toString());
         mpcTaskOutput.setApplicationId(mpcTask.getApplicationId());
+        mpcTaskOutput.setUploadDate(Timestamp.valueOf(LocalDateTime.now()));
         try {
             mpcTaskOutput.setHash(Utils.getFileHash(new FileSystemResource(outputPath), "SHA-256"));
             Files.move(outputPath, savePath, StandardCopyOption.REPLACE_EXISTING);

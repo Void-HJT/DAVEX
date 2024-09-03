@@ -24,7 +24,7 @@
     </el-header>
     <el-main>
       <el-table :data="resultData" style="width: 100%">
-        <el-table-column label="UploadDate" width="300">
+        <el-table-column label="上传时间" width="300">
           <template #default="scope">
             <div style="display: flex; align-items: center">
               <el-icon><timer /></el-icon>
@@ -32,11 +32,11 @@
             </div>
           </template>
         </el-table-column>
-        <el-table-column label="Name" width="300">
+        <el-table-column label="文件名" width="300">
           <template #default="scope">
             <el-popover effect="light" trigger="hover" placement="top" width="auto">
               <template #default>
-                <div>name: {{ scope.row.name }}</div>
+                <div>文件名: {{ scope.row.name }}</div>
               </template>
               <template #reference>
                 <el-tag>{{ scope.row.name }}</el-tag>
@@ -44,7 +44,7 @@
             </el-popover>
           </template>
         </el-table-column>
-        <el-table-column label="ExpiredDate" width="300">
+        <el-table-column label="过期时间" width="300">
           <template #default="scope">
             <div style="display: flex; align-items: center">
               <el-icon><timer /></el-icon>
@@ -52,17 +52,17 @@
             </div>
           </template>
         </el-table-column>
-        <el-table-column label="Operations">
+        <el-table-column label="操作">
           <template #default="scope">
             <el-button size="small" @click="fetchQueryMethod(scope.row.uid)">
-              Fetch
+              获取文件
             </el-button>
             <el-button
                 size="small"
                 type="danger"
                 @click="deleteQueryMethod(scope.row.uid)"
             >
-              Delete
+              删除文件
             </el-button>
           </template>
         </el-table-column>
