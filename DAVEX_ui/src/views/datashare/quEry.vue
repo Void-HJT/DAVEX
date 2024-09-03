@@ -370,10 +370,11 @@ const schemaExample = ref('')
 const schemaTableData = ref([])
 const exampleTableData = ref([])
 let agentId = 0
+let applicationId = 6
 
 // 查询表单
 const queryForm = ref({
-  applicationId: 0,
+  applicationId: applicationId,
   databaseId: 0,
   tableName: '',     // 从表格式中自动填充
   columns: [],       // 用户选择的列
@@ -390,7 +391,7 @@ const queryForm = ref({
 // 点击按钮处理函数
 const handleViewDatabaseTables = async (row) => {
   await getDatabaseTableList(row.uid)
-  queryForm.value.applicationId = 1
+  queryForm.value.applicationId = applicationId
   queryForm.value.databaseId = row.uid
   databaseControlDialogVisible.value = true
 }

@@ -188,6 +188,45 @@ export const setFileRule = ({
   let res = request.post('/directory/fileFolder/setFileRule', params.toString())
   return res
 }
+export const getGroupInfoByGroupId = ({
+  groupId,
+  agentId,
+  centerId,
+}) => {
+  const params = new URLSearchParams()
+  params.append('groupId', groupId)
+  params.append('agentId', agentId)
+  params.append('centerId', centerId)
+  let res = request.post(
+    '/directory/group/getGroup',
+    params.toString(),
+  )
+  return res
+}
+export const getCenterInfoByCenterId = ({
+  centerId,
+}) => {
+  const params = new URLSearchParams()
+  params.append('centerId', centerId)
+  let res = request.post(
+    '/directory/group/getCenter',
+    params.toString(),
+  )
+  return res
+}
+
+
+export const getAgentInfoByAgentId = ({
+  agentId,
+}) => {
+  const params = new URLSearchParams()
+  params.append('agentId', agentId)
+  let res = request.post(
+    '/directory/group/getAgent',
+    params.toString(),
+  )
+  return res
+}
 
 export const deleteFileRule = ({
   fileId,
