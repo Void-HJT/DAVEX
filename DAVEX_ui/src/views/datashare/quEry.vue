@@ -499,9 +499,16 @@ const generateQuery = async () => {
   };
 
   queryForm.value.conditions.forEach(condition => {
+    let value = condition.value;
+
+    // 如果操作符是LIKE，自动添加百分号%
+    if (condition.operator === 'LIKE') {
+      value = `%${value}%`;
+    }
+
     queryObject.conditions[condition.column] = {
       operator: condition.operator,
-      value: condition.value,
+      value: value,
     };
   });
 
@@ -512,7 +519,8 @@ const generateQuery = async () => {
   try{
     const res = await query(queryForm.value.applicationId,agentId,queryForm.value.databaseId,queryObject)
     //
-    querySuccessMessage.value = res.data.message
+    // querySuccessMessage.value = res.data.message
+    querySuccessMessage.value = "查询成功"  
     querySuccessVisible.value = true
   }catch(error) {
     queryFailedMessage.value = 'Failed to query:' + error
