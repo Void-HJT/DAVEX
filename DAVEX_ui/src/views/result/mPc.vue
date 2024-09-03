@@ -18,13 +18,13 @@
             text-align: center;
           "
         >
-          MPC结果列表
+          MPC/PSI结果列表
         </p>
       </div>
     </el-header>
     <el-main>
       <el-table :data="resultData" style="width: 100%">
-        <el-table-column label="UploadDate" width="300">
+        <el-table-column label="上传时间" width="300">
           <template #default="scope">
             <div style="display: flex; align-items: center">
               <el-icon><timer /></el-icon>
@@ -32,11 +32,11 @@
             </div>
           </template>
         </el-table-column>
-        <el-table-column label="Name" width="300">
+        <el-table-column label="文件名" width="300">
           <template #default="scope">
             <el-popover effect="light" trigger="hover" placement="top" width="auto">
               <template #default>
-                <div>name: {{ scope.row.name }}</div>
+                <div>文件名: {{ scope.row.name }}</div>
               </template>
               <template #reference>
                 <el-tag>{{ scope.row.name }}</el-tag>
@@ -44,7 +44,7 @@
             </el-popover>
           </template>
         </el-table-column>
-        <el-table-column label="ExpiredDate" width="300">
+        <el-table-column label="过期时间" width="300">
           <template #default="scope">
             <div style="display: flex; align-items: center">
               <el-icon><timer /></el-icon>
@@ -52,17 +52,17 @@
             </div>
           </template>
         </el-table-column>
-        <el-table-column label="Operations">
+        <el-table-column label="操作">
           <template #default="scope">
             <el-button size="small" @click="fetchMpcMethod(scope.row.uid)">
-              Fetch
+              获取文件
             </el-button>
             <el-button
                 size="small"
                 type="danger"
                 @click="deleteMpcMethod(scope.row.uid)"
             >
-              Delete
+              删除文件
             </el-button>
           </template>
         </el-table-column>
@@ -128,11 +128,11 @@ const getResultBody = ref({
   applicationId: applicationId
 })
 const fetchMpcBody = ref({
-  outputId: '',
+  mpcOutputId: '',
   applicationId: applicationId
 })
 const deleteMpcBody = ref({
-  outputId: '',
+  mpcOutputId: '',
   applicationId: applicationId
 })
 
@@ -146,9 +146,9 @@ const getMpcResultMethod = async () => {
   }
 }
 
-const fetchMpcMethod = async (outputId) => {
+const fetchMpcMethod = async (mpcOutputId) => {
   try {
-    fetchMpcBody.value.outputId = outputId
+    fetchMpcBody.value.mpcOutputId = mpcOutputId
     const res = await fetchMpc(fetchMpcBody.value)
     if (res.data.code == 1) {
       fetchSuccessMessage.value = res.data.message;
@@ -164,9 +164,9 @@ const fetchMpcMethod = async (outputId) => {
   }
 }
 
-const deleteMpcMethod = async (outputId) => {
+const deleteMpcMethod = async (mpcOutputId) => {
   try {
-    deleteMpcBody.value.outputId = outputId
+    deleteMpcBody.value.mpcOutputId = mpcOutputId
     const res = await deleteMpc(deleteMpcBody.value)
     if (res.data.code == 1) {
       deleteSuccessMessage.value = res.data.message;

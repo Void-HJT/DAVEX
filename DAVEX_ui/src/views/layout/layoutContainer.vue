@@ -140,7 +140,7 @@ const handleCommand = (key) => {
           </el-menu-item>
           <el-menu-item index="/result/mPc">
             <el-icon><EditPen /></el-icon>
-            <span class="centered-text">MPC</span>
+            <span class="centered-text">MPC/PSI</span>
           </el-menu-item>
           <el-menu-item index="/result/quEry">
             <el-icon><EditPen /></el-icon>
