@@ -6,7 +6,7 @@
         style="max-width: 60%"
         class="styled-form"
       >
-        <el-form-item label="新文件名">
+        <el-form-item label="主键">
           <el-input v-model="creatPsiTaskBody.runtimeParameters.PK"></el-input>
         </el-form-item>
         <el-form-item label="AgentID">
@@ -32,6 +32,14 @@
       </el-form>
     </div>
   </div>
+  <el-dialog v-model="infoDialogVisible" title="提示信息" width="30%">
+    <span>{{ infoDialogText }}</span>
+    <template #footer>
+      <span class="dialog-footer">
+        <el-button @click="infoDialogVisible = false">关闭</el-button>
+      </span>
+    </template>
+  </el-dialog>
 </template>
 
 <script lang="ts" setup>
@@ -88,7 +96,13 @@ function upload(params) {
 }
 function submitUpload() {
   photoRef.value.submit()
+  infoDialogText.value = '创建PSI任务成功'
+  infoDialogVisible.value = true
 }
+// 信息提示框
+const infoDialogVisible = ref(false)
+const infoDialogText = ref('')
+// 信息提示框
 </script>
 
 <style scoped>

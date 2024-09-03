@@ -1,319 +1,343 @@
 <template>
   <div>
-    <el-upload ref="photoRef" :auto-upload="false" :http-request="upload">
-      <template #trigger>
-        <el-button type="primary">选择文件</el-button>
-      </template>
+    <div class="form-container">
+      <el-form
+        :model="mpcTaskInfo"
+        label-width="auto"
+        style="max-width: 100%"
+        class="styled-form"
+      >
+        <el-form-item label="mpc任务名">
+          <el-input v-model="mpcTaskInfo.name" />
+        </el-form-item>
+        <!-- <el-button @click="console.log(mpcTaskInfo)">测试编译参数</el-button> -->
+        <el-form-item>
+          <el-button @click="addcompileRarameter">增加编译参数</el-button>
 
-      <el-button class="ml-3" type="success" @click="submitUpload">
-        上传文件
-      </el-button>
-    </el-upload>
-    <el-form :model="mpcTaskInfo" label-width="auto" style="max-width: 600px">
-      <el-form-item label="mpc任务名">
-        <el-input v-model="mpcTaskInfo.name" />
-      </el-form-item>
-      <el-button @click="console.log(mpcTaskInfo)">测试编译参数</el-button>
-      <el-button @click="addcompileRarameter">增加编译参数</el-button>
-      <el-button @click="addruntimeRarameter">增加运行参数</el-button>
-    </el-form>
-  </div>
-  <div>
-    <el-table
-      :data="mpcTaskInfo.compileParameters"
-      style="width: 100%; margin-top: 20px"
-      stripe
-      border
-      height="300px"
-      max-height="300px"
-    >
-      <el-table-column
-        type="index"
-        label="序号"
-        width="100"
-        align="center"
-      ></el-table-column>
-      <!-- 列：编译参数名 -->
-      <el-table-column
-        prop="name"
-        label="编译参数名"
-        width="150"
-        align="center"
-      >
-        <template #default="scope">
-          <el-input v-model="scope.row.name" />
-        </template>
-      </el-table-column>
-      <el-table-column
-        prop="limitType"
-        label="参数限制"
-        width="150"
-        align="center"
-      >
-        <template #default="scope">
-          <el-select v-model="scope.row.limitType" placeholder="设置参数内容">
-            <el-option label="NUM" value="NUM" />
-            <el-option label="STRING" value="STRING" />
-            <el-option label="ENUM" value="ENUM" />
-          </el-select>
-        </template>
-      </el-table-column>
+          <el-button @click="addruntimeRarameter">增加运行参数</el-button>
+        </el-form-item>
+        <el-upload ref="photoRef" :auto-upload="false" :http-request="upload">
+          <template #trigger>
+            <el-button type="primary">选择文件</el-button>
+          </template>
 
-      <el-table-column
-        prop="limitType"
-        label="参数限制"
-        width="150"
-        align="center"
-      >
-        <template #default="scope">
-          <el-button type="primary" @click="handleConfig(scope.row)">
-            配置参数限制
+          <el-button class="ml-3" type="success" @click="submitUpload">
+            上传文件
           </el-button>
-        </template>
-      </el-table-column>
-      <!-- 列：参数类型 -->
-
-      <!-- 列：禁止为空 -->
-      <el-table-column
-        prop="required"
-        label="禁止为空"
-        width="100"
-        align="center"
-      >
-        <template #default="scope">
-          <el-switch v-model="scope.row.required" />
-        </template>
-      </el-table-column>
-
-      <!-- 列：参数类型 -->
-      <el-table-column
-        prop="parameterType"
-        label="参数类型"
-        width="150"
-        align="center"
-      >
-        <template #default="scope">
-          <el-select
-            v-model="scope.row.parameterType"
-            placeholder="设置参数类型"
-            @change="() => handleParameterTypeChange(scope.row)"
+        </el-upload>
+      </el-form>
+    </div>
+    <div class="form-container">
+      <el-form label-width="auto" style="max-width: 100%" class="styled-form">
+        <el-table
+          :data="mpcTaskInfo.compileParameters"
+          style="width: 100%; margin-top: 20px"
+          stripe
+          border
+          height="300px"
+          max-height="300px"
+        >
+          <el-table-column
+            type="index"
+            label="序号"
+            width="100"
+            align="center"
+          ></el-table-column>
+          <!-- 列：编译参数名 -->
+          <el-table-column
+            prop="name"
+            label="编译参数名"
+            width="150"
+            align="center"
           >
-            <el-option label="位置参数" value="POS" />
-            <el-option label="FLAG参数" value="FLAG" />
-          </el-select>
-        </template>
-      </el-table-column>
-
-      <!-- 列：FLAG参数 -->
-      <el-table-column
-        prop="posORflag"
-        label="参数详情"
-        width="200"
-        align="center"
-      >
-        <template #default="scope">
-          <span v-if="scope.row.parameterType === 'POS'">
-            当前是第 {{ scope.row.posORflag }} 位
-          </span>
-          <el-input
-            v-else
-            v-model="scope.row.posORflag"
-            placeholder="输入FLAG参数"
-          />
-        </template>
-      </el-table-column>
-
-      <!-- 列：参数描述 -->
-      <el-table-column
-        prop="description"
-        label="参数描述"
-        width="300"
-        align="center"
-      >
-        <template #default="scope">
-          <el-input v-model="scope.row.description" type="textarea" />
-        </template>
-      </el-table-column>
-
-      <!-- 操作列：删除按钮 -->
-      <el-table-column label="操作" mid-width="100" align="center">
-        <template #default="scope">
-          <el-button
-            type="danger"
-            @click="removeCompileParameter(scope.$index)"
+            <template #default="scope">
+              <el-input v-model="scope.row.name" />
+            </template>
+          </el-table-column>
+          <el-table-column
+            prop="limitType"
+            label="参数限制"
+            width="150"
+            align="center"
           >
-            删除
-          </el-button>
-        </template>
-      </el-table-column>
-    </el-table>
-    <el-table
-      :data="mpcTaskInfo.runtimeParameters"
-      style="width: 100%; margin-top: 20px"
-      stripe
-      border
-      height="300px"
-      max-height="300px"
-    >
-      <el-table-column
-        type="index"
-        label="序号"
-        width="100"
-        align="center"
-      ></el-table-column>
-      <!-- 列：编译参数名 -->
-      <el-table-column
-        prop="name"
-        label="运行参数名"
-        width="150"
-        align="center"
-      >
-        <template #default="scope">
-          <el-input v-model="scope.row.name" />
-        </template>
-      </el-table-column>
-      <el-table-column
-        prop="limitType"
-        label="参数限制"
-        width="150"
-        align="center"
-      >
-        <template #default="scope">
-          <el-select v-model="scope.row.limitType" placeholder="设置参数内容">
-            <el-option label="NUM" value="NUM" />
-            <el-option label="STRING" value="STRING" />
-            <el-option label="ENUM" value="ENUM" />
-          </el-select>
-        </template>
-      </el-table-column>
+            <template #default="scope">
+              <el-select
+                v-model="scope.row.limitType"
+                placeholder="设置参数内容"
+              >
+                <el-option label="NUM" value="NUM" />
+                <el-option label="STRING" value="STRING" />
+                <el-option label="ENUM" value="ENUM" />
+              </el-select>
+            </template>
+          </el-table-column>
 
-      <el-table-column
-        prop="limitType"
-        label="参数限制"
-        width="150"
-        align="center"
-      >
-        <template #default="scope">
-          <el-button type="primary" @click="handleConfig(scope.row)">
-            配置参数限制
-          </el-button>
-        </template>
-      </el-table-column>
-      <!-- 列：参数类型 -->
-
-      <!-- 列：禁止为空 -->
-      <el-table-column
-        prop="required"
-        label="禁止为空"
-        width="100"
-        align="center"
-      >
-        <template #default="scope">
-          <el-switch v-model="scope.row.required" />
-        </template>
-      </el-table-column>
-
-      <!-- 列：参数类型 -->
-      <el-table-column
-        prop="parameterType"
-        label="参数类型"
-        width="150"
-        align="center"
-      >
-        <template #default="scope">
-          <el-select
-            v-model="scope.row.parameterType"
-            placeholder="设置参数类型"
-            @change="() => handleParameterTypeChange(scope.row)"
+          <el-table-column
+            prop="limitType"
+            label="参数限制"
+            width="150"
+            align="center"
           >
-            <el-option label="位置参数" value="POS" />
-            <el-option label="FLAG参数" value="FLAG" />
-          </el-select>
-        </template>
-      </el-table-column>
+            <template #default="scope">
+              <el-button type="primary" @click="handleConfig(scope.row)">
+                配置参数限制
+              </el-button>
+            </template>
+          </el-table-column>
+          <!-- 列：参数类型 -->
 
-      <!-- 列：FLAG参数 -->
-      <el-table-column
-        prop="posORflag"
-        label="参数详情"
-        width="200"
-        align="center"
+          <!-- 列：禁止为空 -->
+          <el-table-column
+            prop="required"
+            label="禁止为空"
+            width="100"
+            align="center"
+          >
+            <template #default="scope">
+              <el-switch v-model="scope.row.required" />
+            </template>
+          </el-table-column>
+
+          <!-- 列：参数类型 -->
+          <el-table-column
+            prop="parameterType"
+            label="参数类型"
+            width="150"
+            align="center"
+          >
+            <template #default="scope">
+              <el-select
+                v-model="scope.row.parameterType"
+                placeholder="设置参数类型"
+                @change="() => handleParameterTypeChange(scope.row)"
+              >
+                <el-option label="位置参数" value="POS" />
+                <el-option label="选项参数" value="FLAG" />
+              </el-select>
+            </template>
+          </el-table-column>
+
+          <!-- 列：FLAG参数 -->
+          <el-table-column
+            prop="posORflag"
+            label="参数详情"
+            width="200"
+            align="center"
+          >
+            <template #default="scope">
+              <span v-if="scope.row.parameterType === 'POS'">
+                当前是第 {{ scope.row.posORflag }} 位
+              </span>
+              <el-input
+                v-else
+                v-model="scope.row.posORflag"
+                placeholder="输入选项参数"
+              />
+            </template>
+          </el-table-column>
+
+          <!-- 列：参数描述 -->
+          <el-table-column
+            prop="description"
+            label="参数描述"
+            width="300"
+            align="center"
+          >
+            <template #default="scope">
+              <el-input v-model="scope.row.description" type="textarea" />
+            </template>
+          </el-table-column>
+
+          <!-- 操作列：删除按钮 -->
+          <el-table-column label="操作" mid-width="100" align="center">
+            <template #default="scope">
+              <el-button
+                type="danger"
+                @click="removeCompileParameter(scope.$index)"
+              >
+                删除
+              </el-button>
+            </template>
+          </el-table-column>
+        </el-table>
+      </el-form>
+    </div>
+    <div class="form-container">
+      <el-form label-width="auto" style="max-width: 100%" class="styled-form">
+        <el-table
+          :data="mpcTaskInfo.runtimeParameters"
+          style="width: 100%; margin-top: 20px"
+          stripe
+          border
+          height="300px"
+          max-height="300px"
+        >
+          <el-table-column
+            type="index"
+            label="序号"
+            width="100"
+            align="center"
+          ></el-table-column>
+          <!-- 列：编译参数名 -->
+          <el-table-column
+            prop="name"
+            label="运行参数名"
+            width="150"
+            align="center"
+          >
+            <template #default="scope">
+              <el-input v-model="scope.row.name" />
+            </template>
+          </el-table-column>
+          <el-table-column
+            prop="limitType"
+            label="参数限制"
+            width="150"
+            align="center"
+          >
+            <template #default="scope">
+              <el-select
+                v-model="scope.row.limitType"
+                placeholder="设置参数内容"
+              >
+                <el-option label="NUM" value="NUM" />
+                <el-option label="STRING" value="STRING" />
+                <el-option label="ENUM" value="ENUM" />
+              </el-select>
+            </template>
+          </el-table-column>
+
+          <el-table-column
+            prop="limitType"
+            label="参数限制"
+            width="150"
+            align="center"
+          >
+            <template #default="scope">
+              <el-button type="primary" @click="handleConfig(scope.row)">
+                配置参数限制
+              </el-button>
+            </template>
+          </el-table-column>
+          <!-- 列：参数类型 -->
+
+          <!-- 列：禁止为空 -->
+          <el-table-column
+            prop="required"
+            label="禁止为空"
+            width="100"
+            align="center"
+          >
+            <template #default="scope">
+              <el-switch v-model="scope.row.required" />
+            </template>
+          </el-table-column>
+
+          <!-- 列：参数类型 -->
+          <el-table-column
+            prop="parameterType"
+            label="参数类型"
+            width="150"
+            align="center"
+          >
+            <template #default="scope">
+              <el-select
+                v-model="scope.row.parameterType"
+                placeholder="设置参数类型"
+                @change="() => handleParameterTypeChange(scope.row)"
+              >
+                <el-option label="位置参数" value="POS" />
+                <el-option label="选项参数" value="FLAG" />
+              </el-select>
+            </template>
+          </el-table-column>
+
+          <!-- 列：FLAG参数 -->
+          <el-table-column
+            prop="posORflag"
+            label="参数详情"
+            width="200"
+            align="center"
+          >
+            <template #default="scope">
+              <span v-if="scope.row.parameterType === 'POS'">
+                当前是第 {{ scope.row.posORflag }} 位
+              </span>
+              <el-input
+                v-else
+                v-model="scope.row.posORflag"
+                placeholder="输入选项参数"
+              />
+            </template>
+          </el-table-column>
+
+          <!-- 列：参数描述 -->
+          <el-table-column
+            prop="description"
+            label="参数描述"
+            width="300"
+            align="center"
+          >
+            <template #default="scope">
+              <el-input v-model="scope.row.description" type="textarea" />
+            </template>
+          </el-table-column>
+
+          <!-- 操作列：删除按钮 -->
+          <el-table-column label="操作" mid-width="100" align="center">
+            <template #default="scope">
+              <el-button
+                type="danger"
+                @click="removeCompileParameter(scope.$index)"
+              >
+                删除
+              </el-button>
+            </template>
+          </el-table-column>
+        </el-table>
+      </el-form>
+    </div>
+    <div>
+      <el-table
+        :data="mpcTaskList"
+        style="width: 100%; margin-top: 20px"
+        stripe
+        border
+        height="300px"
+        max-height="300px"
       >
-        <template #default="scope">
-          <span v-if="scope.row.parameterType === 'POS'">
-            当前是第 {{ scope.row.posORflag }} 位
-          </span>
-          <el-input
-            v-else
-            v-model="scope.row.posORflag"
-            placeholder="输入FLAG参数"
-          />
-        </template>
-      </el-table-column>
-
-      <!-- 列：参数描述 -->
-      <el-table-column
-        prop="description"
-        label="参数描述"
-        width="300"
-        align="center"
-      >
-        <template #default="scope">
-          <el-input v-model="scope.row.description" type="textarea" />
-        </template>
-      </el-table-column>
-
-      <!-- 操作列：删除按钮 -->
-      <el-table-column label="操作" mid-width="100" align="center">
-        <template #default="scope">
-          <el-button
-            type="danger"
-            @click="removeCompileParameter(scope.$index)"
-          >
-            删除
-          </el-button>
-        </template>
-      </el-table-column>
-    </el-table>
-    <el-table
-      :data="mpcTaskList"
-      style="width: 100%; margin-top: 20px"
-      stripe
-      border
-      height="300px"
-      max-height="300px"
-    >
-      <el-table-column
-        type="index"
-        label="序号"
-        width="100"
-        align="center"
-      ></el-table-column>
-      <!-- 列：编译参数名 -->
-      <el-table-column
-        prop="name"
-        label="程序名称"
-        width="150"
-        align="center"
-      ></el-table-column>
-      <!-- 操作列：删除按钮 -->
-      <el-table-column label="操作" mid-width="100" align="center">
-        <template #default="scope">
-          <el-button
-            type="primary"
-            @click="showParameters(scope.row, 'runtime')"
-          >
-            查看运行参数
-          </el-button>
-          <el-button
-            type="success"
-            @click="showParameters(scope.row, 'compile')"
-          >
-            查看编译参数
-          </el-button>
-        </template>
-      </el-table-column>
-    </el-table>
+        <el-table-column
+          type="index"
+          label="序号"
+          width="100"
+          align="center"
+        ></el-table-column>
+        <!-- 列：编译参数名 -->
+        <el-table-column
+          prop="name"
+          label="程序名称"
+          width="150"
+          align="center"
+        ></el-table-column>
+        <!-- 操作列：删除按钮 -->
+        <el-table-column label="操作" mid-width="100" align="center">
+          <template #default="scope">
+            <el-button
+              type="primary"
+              @click="showParameters(scope.row, 'runtime')"
+            >
+              查看运行参数
+            </el-button>
+            <el-button
+              type="success"
+              @click="showParameters(scope.row, 'compile')"
+            >
+              查看编译参数
+            </el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+    </div>
     <div class="form-container">
       <el-form
         :model="creatMpcTaskBody"
@@ -531,6 +555,15 @@
       <el-button @click="parameterDialogVisible = false">关闭</el-button>
     </template>
   </el-dialog>
+  <!-- 增加一个对话框，显示提示信息 -->
+  <el-dialog v-model="infoDialogVisible" title="提示信息" width="30%">
+    <span>{{ infoDialogText }}</span>
+    <template #footer>
+      <span class="dialog-footer">
+        <el-button @click="infoDialogVisible = false">关闭</el-button>
+      </span>
+    </template>
+  </el-dialog>
 </template>
 
 <script lang="ts" setup>
@@ -728,7 +761,8 @@ function uploadMpcTask(params) {
 }
 function submitMpcTask() {
   mpcTaskRef.value.submit()
-  console.log(creatMpcTaskBody.value)
+  infoDialogText.value = '创建隐私计算任务成功'
+  infoDialogVisible.value = true
 }
 //创建隐私计算任务相关代码
 //查看MPC列表
@@ -813,6 +847,10 @@ const saveRuntimeParameters = () => {
   runtimeDialogVisible.value = false
 }
 //查看MPC列表
+// 信息提示框
+const infoDialogVisible = ref(false)
+const infoDialogText = ref('')
+// 信息提示框
 </script>
 
 <style scoped>
