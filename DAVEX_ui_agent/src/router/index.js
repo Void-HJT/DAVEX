@@ -22,18 +22,6 @@ const router = createRouter({
           component: () => import('@/views/locate/locateTaskTable.vue'),
         },
         {
-          path: 'mpc/mpC',
-          component: () => import('@/views/mpc/mpC.vue'),
-        },
-        {
-          path: 'mpc/jionTask',
-          component: () => import('@/views/mpc/jionTask.vue'),
-        },
-        {
-          path: 'mpc/taskTable',
-          component: () => import('@/views/mpc/taskTable.vue'),
-        },
-        {
           path: 'user/userdata',
           component: () => import('@/views/user/userData.vue'),
         },

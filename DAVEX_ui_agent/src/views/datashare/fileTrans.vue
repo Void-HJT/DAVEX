@@ -3,7 +3,7 @@
     <el-header style="height: 50px">
       <div
           style="
-          background-color: #3572ef;
+          background-color: antiquewhite;
           height: 40px;
           display: flex;
           justify-content: center;
@@ -13,7 +13,7 @@
         <p
             style="
             font-size: 20px;
-            color: white;
+            color: black;
             opacity: 100%;
             text-align: center;
           "
@@ -96,7 +96,7 @@
           >
             <template v-slot="scope">
               <el-button
-                  v-if="scope.row.type === 'file'"
+                  v-if="scope.row.type === 'file' && isAccessible(scope.row.ruleList)"
                   link
                   type="primary"
                   @click="
@@ -109,6 +109,15 @@
                   size="small"
               >
                 获取文件
+              </el-button>
+              <el-button
+                  v-if="scope.row.type === 'file' && !isAccessible(scope.row.ruleList)"
+                  link
+                  type="danger"
+                  size="small"
+                  disabled
+              >
+                无权获取文件
               </el-button>
             </template>
           </el-table-column>
@@ -152,10 +161,11 @@ const transSuccessVisible = ref(false)
 const transFailedVisible = ref(false)
 const transFailedMessage = ref('');
 
+const applicationId = 6
 const directoryData = ref([])
 const currentDirectoryData = ref([])
 const getDirectoryBody = ref({
-  applicationId: '1',
+  applicationId: applicationId,
   agentId: '5'
 })
 const folderRoute = ref([])
@@ -163,7 +173,7 @@ const getFileBody = ref({
   fileId: '',
   agentId: '',
   folderId: '',
-  applicationId: '1'
+  applicationId: applicationId
 })
 
 function addFolderRoute(row) {
@@ -172,10 +182,6 @@ function addFolderRoute(row) {
 function deleteFolderRoute() {
   folderRoute.value.pop()
   folderRoute.value.pop()
-}
-function goToResult() {
-  transSuccessVisible.value = false
-  this.$router.push('/result/fileTrans')
 }
 
 const getDirectoryMethod = async () => {
@@ -255,6 +261,10 @@ const formatDate = (row, column, cellValue) => {
   const minutes = String(date.getMinutes()).padStart(2, '0')
   const seconds = String(date.getSeconds()).padStart(2, '0')
   return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`
+}
+
+const isAccessible = (ruleList) => {
+  return ruleList.includes('direct')
 }
 </script>
 

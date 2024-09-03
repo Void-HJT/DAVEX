@@ -44,14 +44,7 @@ export const userPostData = ({ content, description, userID, fileName }) => {
   })
 }
 
-// const taskdata = [
-//   {
-//     index: 0,
-//     data: 0,
-//     task: 0
-//   }
-// ]
-// const tableData = []
+
 
 export const userFileToTask = (taskdata) => {
   request.post('/task/local/data/', taskdata)

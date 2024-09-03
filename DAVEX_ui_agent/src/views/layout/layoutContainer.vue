@@ -35,6 +35,60 @@ const handleCommand = (key) => {
         text-color="#fff"
         router
       >
+        <!-- <el-menu-item index="/locate" class="custom-menu-item">
+          <el-icon><Management /></el-icon>
+          <span class="centered-text">本地计算</span>
+        </el-menu-item> -->
+        <!-- <el-sub-menu index="/locate">
+          <template #title>
+            <el-icon><Management /></el-icon>
+            <span class="centered-text">单机模拟</span>
+          </template>
+          <el-menu-item index="/locate/locateCompute">
+            <el-icon><User /></el-icon>
+            <span class="centered-text">创建任务</span>
+          </el-menu-item>
+          <el-menu-item index="/locate/locateTaskTable">
+            <el-icon><EditPen /></el-icon>
+            <span class="centered-text">查看任务</span>
+          </el-menu-item>
+        </el-sub-menu> -->
+        <!-- <el-menu-item index="/mpc">
+          <el-icon><Promotion /></el-icon>
+          <span>多方计算</span>
+        </el-menu-item> -->
+        <!-- <el-sub-menu index="/mpc">
+          <template #title>
+            <el-icon><UserFilled /></el-icon>
+            <span class="centered-text">多方计算</span>
+          </template>
+          <el-menu-item index="/mpc/mpC">
+            <el-icon><User /></el-icon>
+            <span class="centered-text">创建任务</span>
+          </el-menu-item>
+          <el-menu-item index="/mpc/taskTable">
+            <el-icon><EditPen /></el-icon>
+            <span class="centered-text">我的任务</span>
+          </el-menu-item>
+          <el-menu-item index="/mpc/jionTask">
+            <el-icon><EditPen /></el-icon>
+            <span class="centered-text">加入任务</span>
+          </el-menu-item>
+        </el-sub-menu>
+        <el-sub-menu index="/user">
+          <template #title>
+            <el-icon><UserFilled /></el-icon>
+            <span class="centered-text">个人中心</span>
+          </template>
+          <el-menu-item index="/user/userData">
+            <el-icon><User /></el-icon>
+            <span class="centered-text">服务器设置</span>
+          </el-menu-item>
+          <el-menu-item index="/user/mpcCode">
+            <el-icon><EditPen /></el-icon>
+            <span class="centered-text">编写MPC代码</span>
+          </el-menu-item>
+        </el-sub-menu> -->
         <el-sub-menu index="/dve">
           <template #title>
             <el-icon><UserFilled /></el-icon>
@@ -49,6 +103,54 @@ const handleCommand = (key) => {
             <span class="centered-text">文件管理</span>
           </el-menu-item>
         </el-sub-menu>
+        <!-- <el-sub-menu index="/datashare">
+          <template #title>
+            <el-icon><UserFilled /></el-icon>
+            <span class="centered-text">数据共享</span>
+          </template>
+          <el-menu-item index="/datashare/fileTrans">
+            <el-icon><EditPen /></el-icon>
+            <span class="centered-text">文件传输</span>
+          </el-menu-item>
+          <el-menu-item index="/datashare/pSi">
+            <el-icon><EditPen /></el-icon>
+            <span class="centered-text">PSI</span>
+          </el-menu-item>
+          <el-menu-item index="/datashare/mPc">
+            <el-icon><EditPen /></el-icon>
+            <span class="centered-text">MPC</span>
+          </el-menu-item>
+          <el-menu-item index="/datashare/quEry">
+            <el-icon><EditPen /></el-icon>
+            <span class="centered-text">QUERY</span>
+          </el-menu-item>
+          <el-menu-item index="/datashare/comPare">
+            <el-icon><EditPen /></el-icon>
+            <span class="centered-text">比对</span>
+          </el-menu-item>
+        </el-sub-menu>
+        <el-sub-menu index="/result">
+          <template #title>
+            <el-icon><UserFilled /></el-icon>
+            <span class="centered-text">结果管理区</span>
+          </template>
+          <el-menu-item index="/result/fileTrans">
+            <el-icon><EditPen /></el-icon>
+            <span class="centered-text">文件传输</span>
+          </el-menu-item>
+          <el-menu-item index="/result/mPc">
+            <el-icon><EditPen /></el-icon>
+            <span class="centered-text">MPC/PSI</span>
+          </el-menu-item>
+          <el-menu-item index="/result/quEry">
+            <el-icon><EditPen /></el-icon>
+            <span class="centered-text">QUERY</span>
+          </el-menu-item>
+          <el-menu-item index="/result/comPare">
+            <el-icon><EditPen /></el-icon>
+            <span class="centered-text">比对</span>
+          </el-menu-item>
+        </el-sub-menu> -->
       </el-menu>
     </el-aside>
     <el-container>
