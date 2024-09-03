@@ -6,11 +6,13 @@ import DavexBase.entity.*;
 import DavexBase.info.DirectoryInfo;
 import DavexBase.info.FileInfo;
 import DavexBase.mapper.*;
+import DavexBase.service.auth.CenterWebClientService;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
 import org.springframework.http.HttpHeaders;
@@ -64,6 +66,9 @@ public class FileFolderService {
 
     @Autowired
     private FolderVisibilityMapper folderVisibilityMapper;
+
+    @Autowired
+    private CenterWebClientService centerWebClientService;
 
     public Body<?> getFileByRuleOrNot(Long agentId, Long applicationId, Long fileId, String method) {
 
@@ -847,4 +852,20 @@ public class FileFolderService {
         return Body.success(folder,"查询成功");
     }
 
+    public Body<DirectoryInfo> getDirectory2Agent(Long agentId, Long applicationId) {
+        try {
+            Body<DirectoryInfo> response = centerWebClientService.center2AgentWebClient(agentId).post()
+                    .uri(uriBuilder -> uriBuilder.path("/directory/fileFolder/getDirectoryByApplication")
+                            .queryParam("rootId",1)
+                            .queryParam("agentId",agentId)
+                            .queryParam("applicationId",applicationId)
+                            .build())// 将请求体设置为QueryRequest
+                    .retrieve()  // 准备接收响应
+                    .bodyToMono(new ParameterizedTypeReference<Body<DirectoryInfo>>(){})  // 指定返回类型
+                    .block();  // 阻塞等待响应并获取结果
+            return response;
+        } catch (Exception e) {
+            return Body.error(e.getMessage());
+        }
+    }
 }

@@ -218,6 +218,12 @@ public class FileFolderController {
         return fileFolderService.getFolder(folderId,agentId);
     }
 
+    @PostMapping("/getDirectory2Agent")
+    public Body<DirectoryInfo> getDirectory2Agent(@RequestParam("agentId") Long agentId,
+                                                  @RequestParam("applicationId") Long applicationId) {
+        return fileFolderService.getDirectory2Agent(agentId,applicationId);
+    }
+
 
 
 }
