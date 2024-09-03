@@ -134,6 +134,6 @@ public class ComparisonService {
 
     public Body<String> getFileName(Long fileId, Long folderId, Long agentId) {
         FileInfo fileInfo = fileFolderService.getFileInfo(fileId, agentId, folderId).getData();
-        return Body.success(fileInfo.getName());
+        return Body.success(fileInfo.getName(), "获取成功");
     }
 }
