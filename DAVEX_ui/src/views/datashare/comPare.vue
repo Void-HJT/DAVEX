@@ -3,7 +3,7 @@
     <el-header style="height: 50px">
       <div
           style="
-          background-color: #3572ef;
+          background-color: antiquewhite;
           height: 40px;
           display: flex;
           justify-content: center;
@@ -13,7 +13,7 @@
         <p
             style="
             font-size: 20px;
-            color: white;
+            color: black;
             opacity: 100%;
             text-align: center;
           "
@@ -96,7 +96,7 @@
           >
             <template v-slot="scope">
               <el-button
-                  v-if="scope.row.type === 'file' && scope.row.name.endsWith('.csv')"
+                  v-if="scope.row.type === 'file' && scope.row.name.endsWith('.csv') && isAccessible(scope.row.ruleList)"
                   link
                   type="primary"
                   @click="
@@ -111,6 +111,15 @@
               >
                 查看表头信息
               </el-button>
+              <el-button
+                  v-if="scope.row.type === 'file' && scope.row.name.endsWith('.csv') && !isAccessible(scope.row.ruleList)"
+                  link
+                  type="danger"
+                  size="small"
+                  disabled
+              >
+                无权比对
+              </el-button>
             </template>
           </el-table-column>
         </el-table>
@@ -118,49 +127,130 @@
     </el-main>
   </el-container>
 
-  <el-descriptions
-      class="margin-top"
-      :title="'文件表头信息 当前选择文件：' + fileName"
-      :column="3"
-      :size="'default'"
-      border
-      v-if="getTableHeaderBody.fileId"
-  >
-    <el-descriptions-item
-        v-for="(header, index) in tableHeaders"
-        :key="index"
-    >
-      <template #label>
-        <div class="cell-item">
-          {{ header.name }}
-        </div>
-      </template>
-      {{ header.example }}
-    </el-descriptions-item>
-  </el-descriptions>
+  <el-container v-if="getTableHeaderBody.fileId">
+    <el-header style="height: 50px">
+      <div
+          style="
+          background-color: antiquewhite;
+          height: 40px;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+        "
+      >
+        <p
+            style="
+            font-size: 20px;
+            color: black;
+            opacity: 100%;
+            text-align: center;
+          "
+        >
+          文件表头信息
+        </p>
+      </div>
+    </el-header>
+    <el-main>
+      <el-descriptions
+          class="margin-top"
+          :title="'当前选择文件：' + fileName"
+          :column="3"
+          :size="'default'"
+          border
+      >
+        <el-descriptions-item
+            v-for="(header, index) in tableHeaders"
+            :key="index"
+        >
+          <template #label>
+            <div class="cell-item">
+              {{ header.name }}
+            </div>
+          </template>
+          {{ header.example }}
+        </el-descriptions-item>
+      </el-descriptions>
 
-  <el-upload
-      ref="upload"
-      class="upload-demo"
-      action="/"
-      :limit="1"
-      :on-exceed="handleExceed"
-      :auto-upload="false"
-      :on-change="handleFileChange"
-      v-if="getTableHeaderBody.fileId"
-  >
-    <template #trigger>
-      <el-button type="primary">上传csv文件</el-button>
-    </template>
-    <el-button class="ml-3" type="success" @click="submitUpload">
-      比对
-    </el-button>
-    <template #tip>
-      <div class="el-upload__tip text-red">
-        limit 1 file, new file will cover the old file
+      <el-upload
+          ref="upload"
+          class="upload-demo"
+          action="/"
+          :limit="1"
+          :on-exceed="handleExceed"
+          :auto-upload="false"
+          :on-change="handleFileChange"
+          style="margin-top: 20px; margin-bottom: 20px;"
+      >
+        <template #trigger>
+          <el-button type="primary" style="margin-right: 10px;">上传csv文件</el-button>
+        </template>
+        <el-button class="ml-3" type="success" @click="submitUpload" style="margin-right: 10px;">
+          比对
+        </el-button>
+        <template #tip>
+          <div class="el-upload__tip text-red">
+            limit 1 file, new file will cover the old file
+          </div>
+        </template>
+      </el-upload>
+
+      <el-button type="primary" @click="selectAttributesVisible = true">输入数据进行比对</el-button>
+    </el-main>
+  </el-container>
+
+  <el-dialog v-model="selectAttributesVisible" title="选择属性" width="30%">
+    <el-checkbox-group v-model="selectedAttributes" style="display: flex; flex-wrap: wrap;">
+      <el-checkbox
+          v-for="(header, index) in tableHeaders"
+          :label="header.name"
+          :key="index"
+          style="margin-bottom: 10px;"
+      >
+        {{ header.name }}
+      </el-checkbox>
+    </el-checkbox-group>
+    <template #footer>
+      <div class="dialog-footer">
+        <el-button @click="selectAttributesVisible = false" style="margin-right: 10px;">返回</el-button>
+        <el-button type="primary" @click="confirmAttributes">
+          确定
+        </el-button>
       </div>
     </template>
-  </el-upload>
+  </el-dialog>
+
+  <el-dialog v-model="inputDataVisible" title="输入数据" width="30%">
+    <div v-for="(rowData, rowIndex) in inputData"
+         :key="rowIndex"
+         class="input-row data-row"
+         style="margin-bottom: 10px; padding: 10px; border: 2px solid #dcdfe6; border-radius: 4px;">
+      <div v-for="(attribute, index) in selectedAttributes" :key="index" class="input-item" style="margin-bottom: 10px">
+        <el-form-item :label="attribute">
+          <el-input v-model="inputData[rowIndex][index]" placeholder="请输入数据"></el-input>
+        </el-form-item>
+      </div>
+      <el-button
+          type="danger"
+          size="small"
+          @click="removeDataRow(rowIndex)"
+          v-if="inputData.length > 1"
+      >
+        删除数据
+      </el-button>
+    </div>
+    <el-button type="primary" size="small" @click="addDataRow" style="margin-bottom: 10px;">
+      添加数据
+    </el-button>
+    <template #footer>
+      <div class="dialog-footer">
+        <el-button @click="resetAttributes" style="margin-right: 10px;">重新选择属性</el-button>
+        <el-button type="primary" @click="compareData">
+          比对
+        </el-button>
+      </div>
+    </template>
+  </el-dialog>
+
   <el-dialog v-model="compareSuccessVisible" title="比对完成" width="30%">
     <span>{{ compareSuccessMessage }}</span>
     <template #footer>
@@ -185,10 +275,9 @@
 </template>
 
 <script lang="ts" setup>
-import {getDirectory, getTableHeader, compareFromCsv} from "../../api/comparison.js";
+import {getDirectory, getTableHeader, compareFromCsv, compare} from "../../api/comparison.js";
 import {onMounted, ref} from "vue";
 import {genFileId, UploadInstance, UploadProps, UploadRawFile} from "element-plus";
-import axios from "axios";
 
 onMounted(() => {
   getDirectoryMethod()
@@ -199,11 +288,14 @@ const compareSuccessVisible = ref(false)
 const compareFailedVisible = ref(false)
 const compareSuccessMessage = ref('');
 const compareFailedMessage = ref('');
+const selectAttributesVisible = ref(false)
+const inputDataVisible = ref(false)
 
+const applicationId = 6
 const directoryData = ref([])
 const currentDirectoryData = ref([])
 const getDirectoryBody = ref({
-  applicationId: '1',
+  applicationId: applicationId,
   agentId: '5'
 })
 const folderRoute = ref([])
@@ -212,13 +304,23 @@ const getTableHeaderBody = ref({
   fileId: '',
   folderId: ''
 })
+const inputData = ref([[]])
 const tableHeaders = ref([])
+const selectedAttributes = ref([])
 const compareFromCsvBody = ref({
-  applicationId: '1',
+  applicationId: applicationId,
   agentId: '',
   fileId: '',
   folderId: '',
   file: null as File | null
+})
+const compareBody = ref({
+  applicationId: applicationId,
+  agentId: '',
+  fileId: '',
+  folderId: '',
+  attributes: [],
+  valuesList: [[]]
 })
 const fileName = ref('')
 const upload = ref<UploadInstance>()
@@ -230,10 +332,49 @@ function deleteFolderRoute() {
   folderRoute.value.pop()
   folderRoute.value.pop()
 }
+function confirmAttributes() {
+  selectAttributesVisible.value = false
+  inputDataVisible.value = true
+}
+function resetAttributes() {
+  inputDataVisible.value = false
+  selectAttributesVisible.value = true
+  selectedAttributes.value = []
+  inputData.value = [[]]
+}
+function addDataRow() {
+  inputData.value.push(new Array(selectedAttributes.value.length).fill(''));
+}
+function removeDataRow(rowIndex) {
+  if (inputData.value.length > 1) {
+    inputData.value.splice(rowIndex, 1);
+  }
+}
 
 const compareFromCsvMethod = async () => {
   try {
     const res = await compareFromCsv(compareFromCsvBody.value)
+    console.log(res.data)
+    if (res.data.code == 1) {
+      compareSuccessMessage.value = `比对完成，比对结果文件已存至结果管理区`
+      compareSuccessVisible.value = true
+    }
+    else {
+      compareFailedMessage.value = res.data.message
+      compareFailedVisible.value = true
+    }
+  }
+  catch (error) {
+    console.error('Failed to compare:', error)
+  }
+}
+
+const compareMethod = async () => {
+  try {
+    compareBody.value.attributes = selectedAttributes.value
+    compareBody.value.valuesList = inputData.value
+    console.log(compareBody.value)
+    const res = await compare(compareBody.value)
     console.log(res.data)
     if (res.data.code == 1) {
       const booleanArray = res.data.data
@@ -259,6 +400,9 @@ const getTableHeaderMethod = async (agentId, fileId, folderId, name) => {
     compareFromCsvBody.value.agentId = agentId
     compareFromCsvBody.value.fileId = fileId
     compareFromCsvBody.value.folderId = folderId
+    compareBody.value.agentId = agentId
+    compareBody.value.fileId = fileId
+    compareBody.value.folderId = folderId
     fileName.value = name
     const res = await getTableHeader(getTableHeaderBody.value)
     console.log(res.data.data.name)
@@ -346,6 +490,15 @@ const handleFileChange: UploadProps['onChange'] = (file, fileList) => {
 
 const submitUpload = () => {
   compareFromCsvMethod()
+}
+
+const compareData = () => {
+  compareMethod()
+  inputDataVisible.value = false
+}
+
+const isAccessible = (ruleList) => {
+  return ruleList.includes('comparison')
 }
 </script>
 

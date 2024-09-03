@@ -135,8 +135,8 @@ public class FileController {
                         .queryParam("fileId", fileId)
                         .queryParam("agentId", agentId).build())
                 .retrieve()
-                .bodyToMono(new ParameterizedTypeReference<R<File>>() {
-                }).block().getBody().getData();
+                .bodyToMono(new ParameterizedTypeReference<Body<File>>() {
+                }).block().getData();
 
         Flux<byte[]> fileFlux = webclient.post().uri(uriBuilder -> uriBuilder.path("/directory/fileFolder/sendFile")
                 .queryParam("fileId", fileId)

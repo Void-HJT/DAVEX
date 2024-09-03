@@ -27,17 +27,25 @@ export const getTableHeader = ({ agentId, fileId, folderId }) => {
 
 // 输入属性比对
 export const compare = ({ applicationId, agentId, fileId, folderId, attributes, valuesList }) => {
-    const params = new URLSearchParams()
-    params.append('applicationId', applicationId)
-    params.append('agentId', agentId)
-    params.append('fileId', fileId)
-    params.append('folderId', folderId)
-    params.append('attributes', attributes)
-    params.append('valuesList', valuesList)
+    const formData = new FormData()
+
+    formData.append('applicationId', applicationId)
+    formData.append('agentId', agentId)
+    formData.append('fileId', fileId)
+    formData.append('folderId', folderId)
+    formData.append('attributes', JSON.stringify(attributes))
+    formData.append('valuesList', JSON.stringify(valuesList))
+
     let res = request.post(
-        'comparison/compare',
-        params.toString()
+        'comparison/compareFromJson',
+        formData,
+        {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+            }
+        }
     )
+
     return res
 }
 
