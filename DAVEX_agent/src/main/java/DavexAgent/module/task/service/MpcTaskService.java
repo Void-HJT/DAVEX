@@ -1,6 +1,8 @@
 
 package DavexAgent.module.task.service;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
@@ -125,7 +127,8 @@ public class MpcTaskService {
     @Async("customExecutor")
     public void psiRun(MpcTask mpcTask) throws Exception {
         garnetService.run(mpcTask);
-        String filePath = Paths.get(my.getBase_path()).resolve("mpctask").resolve(mpcTask.getUid() + ".csv").toString();
+        Path filePath = Paths.get(my.getBase_path()).resolve("mpctask").resolve(mpcTask.getUid() + ".csv");
+        Files.createDirectories(filePath.getParent());
         garnetService.csvQuery(
                 fileFolderService.getFilePath(fileMapper.selectById(mpcTask.getDataId()), my.getBase_path()),
                 mpcTask.getUid(), mpcTask.getRuntimeParameters().getString("PK"), mpcTask.getPart(),

@@ -107,6 +107,7 @@ public class DatabaseService {
                     }
 
                     OutsideDatabaseTable databaseTable = new OutsideDatabaseTable();
+                    databaseTable.setAgentId(database.getAgentId());
                     databaseTable.setOutsideDatabaseId(database.getUid());
                     databaseTable.setName(tableName);
                     databaseTable.setDescription(tableDescription);

@@ -1,35 +1,24 @@
 ```json
 {
-  "uid": "PSI_GARNET", //字符串 不需要
-  "centerId": 1, //
-  "name": "PSI_GARNET",//前端指定 
-  "path": "programs/PSI_BASE.mpc",//无视 
+  "uid": "PSI_GARNET",
+  "centerId": 1, 
+  "name": "PSI_GARNET",
+  "path": "programs/PSI_BASE.mpc", 
   "compileParameters": [
     {
-      "name": "P0_Data", //前端指定
-      "limit": {//
-        "max": 999, 
-        "min": 999, 
-        "defaultValue": 1
-      }, 
-      "required": true, 
-      "auto": false, 
-      "limitType": "NUM", //选类型 NUM STRING ENUM
-      //枚举是一个数组 value
-      "posORflag": 0, //先选 POS 012345 FLAG -I
-      "description": "第0方数据", //前端手动填
-      "parameterType": "POS"//先选 POS FLAG
+      "name": "P0_Data", 
+      "limit": {}, 
+      "required": false, 
+      "limitType": "AUTO", 
+      "posORflag": 0, 
+      "description": "第0方数据", 
+      "parameterType": "POS"
     }, 
     {
       "name": "P1_Data", 
-      "limit": {
-        "max": 999, 
-        "min": 999, 
-        "defaultValue": 1
-      }, 
-      "required": true, 
-      "auto": false, 
-      "limitType": "NUM", 
+      "limit": {}, 
+      "required": false, 
+      "limitType": "AUTO", 
       "posORflag": 1, 
       "description": "第1方数据", 
       "parameterType": "POS"
@@ -41,12 +30,11 @@
       "limit": {
         "defaultValue": "semi2k-party"
       }, 
-      "required": true, 
-      "auto": false, 
+      "required": false, 
       "limitType": "STRING", 
       "posORflag": null, 
       "description": "运行虚拟机", 
-      "parameterType": "FLAG"
+      "parameterType": "HYPER"
     }, 
     {
       "name": "PK", 
@@ -54,11 +42,10 @@
         "defaultValue": "id"
       }, 
       "required": true, 
-      "auto": false, 
       "limitType": "STRING", 
       "posORflag": null, 
       "description": "主键", 
-      "parameterType": "FLAG"
+      "parameterType": "HYPER"
     }
   ]
 }
@@ -67,16 +54,13 @@
 ```json
 {
   "partInfo": [{
-    "agentID":5,
+    "agentID":100,
     "part":1,
-    "fileID":21
+    "fileID":3
   }],
   "applicationId": 0,
   "centerId": 1,
-  "compileParameters": {
-    "P0_Data": 10,
-    "P1_Data": 100
-  },
+  "compileParameters": {},
   "host": "10.176.34.171",
   "mpcId": "PSI_GARNET",
   "n": 2,
@@ -105,7 +89,7 @@
         "min": 999, 
         "defaultValue": 2
       }, 
-      "required": true, 
+      "required": true,
       "auto": false, 
       "limitType": "NUM", 
       "posORflag": 0, 
@@ -214,9 +198,11 @@
 
 ```json
 {
-  "agentID2fileID": {
-    "5":[1,25]
-  },
+  "partInfo": [{
+    "agentID":5,
+    "part":1,
+    "fileID":25
+  }],
   "applicationId": 0,
   "centerId": 1,
   "compileParameters": {

@@ -155,7 +155,7 @@ const handleCommand = (key) => {
     </el-aside>
     <el-container>
       <el-header>
-        <div class="header-text">DAVEX_agent操作界面</div>
+        <div class="header-text">DAVEX_center操作界面</div>
         <!-- <el-dropdown placement="bottom-end" @command = "handleCommand">
           <span class="el-dropdown__box">
             <el-avatar :src="avatar" />

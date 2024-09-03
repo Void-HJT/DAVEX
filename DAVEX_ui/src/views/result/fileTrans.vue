@@ -1,53 +1,80 @@
 <template>
-  <el-table :data="resultData" style="width: 100%">
-    <el-table-column label="UploadDate" width="300">
-      <template #default="scope">
-        <div style="display: flex; align-items: center">
-          <el-icon><timer /></el-icon>
-          <span style="margin-left: 10px">{{ formatDate(scope.row.uploadDate) }}</span>
-        </div>
-      </template>
-    </el-table-column>
-    <el-table-column label="Name" width="300">
-      <template #default="scope">
-        <el-popover effect="light" trigger="hover" placement="top" width="auto">
-          <template #default>
-            <div>name: {{ scope.row.name }}</div>
-            <div>type: {{ scope.row.type }}</div>
-            <div>tag: {{ scope.row.tag }}</div>
-            <div>size: {{ scope.row.size }}</div>
-            <div>description: {{ scope.row.description }}</div>
-            <div>agent: {{ scope.row.agentId }}</div>
-          </template>
-          <template #reference>
-            <el-tag>{{ scope.row.name }}</el-tag>
-          </template>
-        </el-popover>
-      </template>
-    </el-table-column>
-    <el-table-column label="ExpiredDate" width="300">
-      <template #default="scope">
-        <div style="display: flex; align-items: center">
-          <el-icon><timer /></el-icon>
-          <span style="margin-left: 10px">{{ formatDate(scope.row.expiredTime) }}</span>
-        </div>
-      </template>
-    </el-table-column>
-    <el-table-column label="Operations">
-      <template #default="scope">
-        <el-button size="small" @click="fetchFileMethod(scope.row.uid)">
-          Fetch
-        </el-button>
-        <el-button
-            size="small"
-            type="danger"
-            @click="deleteFileMethod(scope.row.uid)"
+  <el-container>
+    <el-header style="height: 50px">
+      <div
+          style="
+          background-color: antiquewhite;
+          height: 40px;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+        "
+      >
+        <p
+            style="
+            font-size: 20px;
+            color: black;
+            opacity: 100%;
+            text-align: center;
+          "
         >
-          Delete
-        </el-button>
-      </template>
-    </el-table-column>
-  </el-table>
+          文件传输结果列表
+        </p>
+      </div>
+    </el-header>
+    <el-main>
+      <el-table :data="resultData" style="width: 100%">
+        <el-table-column label="UploadDate" width="300">
+          <template #default="scope">
+            <div style="display: flex; align-items: center">
+              <el-icon><timer /></el-icon>
+              <span style="margin-left: 10px">{{ formatDate(scope.row.uploadDate) }}</span>
+            </div>
+          </template>
+        </el-table-column>
+        <el-table-column label="Name" width="300">
+          <template #default="scope">
+            <el-popover effect="light" trigger="hover" placement="top" width="auto">
+              <template #default>
+                <div>name: {{ scope.row.name }}</div>
+                <div>type: {{ scope.row.type }}</div>
+                <div>tag: {{ scope.row.tag }}</div>
+                <div>size: {{ scope.row.size }}</div>
+                <div>description: {{ scope.row.description }}</div>
+                <div>agent: {{ scope.row.agentId }}</div>
+              </template>
+              <template #reference>
+                <el-tag>{{ scope.row.name }}</el-tag>
+              </template>
+            </el-popover>
+          </template>
+        </el-table-column>
+        <el-table-column label="ExpiredDate" width="300">
+          <template #default="scope">
+            <div style="display: flex; align-items: center">
+              <el-icon><timer /></el-icon>
+              <span style="margin-left: 10px">{{ formatDate(scope.row.expiredTime) }}</span>
+            </div>
+          </template>
+        </el-table-column>
+        <el-table-column label="Operations">
+          <template #default="scope">
+            <el-button size="small" @click="fetchFileMethod(scope.row.uid)">
+              Fetch
+            </el-button>
+            <el-button
+                size="small"
+                type="danger"
+                @click="deleteFileMethod(scope.row.uid)"
+            >
+              Delete
+            </el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+    </el-main>
+  </el-container>
+
   <el-dialog v-model="fetchSuccessVisible" title="文件获取结果" width="30%">
     <span>{{ fetchSuccessMessage }}</span>
     <template #footer>
@@ -100,17 +127,18 @@ const deleteFailedVisible = ref(false)
 const deleteSuccessMessage = ref('');
 const deleteFailedMessage = ref('');
 
+const applicationId = 6
 const resultData = ref([])
 const getResultBody = ref({
-  applicationId: '1'
+  applicationId: applicationId
 })
 const fetchFileBody = ref({
   outputId: '',
-  applicationId: '1'
+  applicationId: applicationId
 })
 const deleteFileBody = ref({
   outputId: '',
-  applicationId: '1'
+  applicationId: applicationId
 })
 
 const getResultDataMethod = async () => {

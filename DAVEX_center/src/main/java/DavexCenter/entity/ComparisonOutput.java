@@ -15,5 +15,9 @@ public class ComparisonOutput {
     private Long applicationId;
     private java.sql.Timestamp expiredTime;
     private String name;
+    private Long agentId;
+    private Long fileId;
+    private Long folderId;
+    private String destName;
 
 }

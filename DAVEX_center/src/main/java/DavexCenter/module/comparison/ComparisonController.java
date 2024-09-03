@@ -2,6 +2,8 @@ package DavexCenter.module.comparison;
 
 import java.util.List;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -55,5 +57,30 @@ public class ComparisonController {
                                               @RequestPart("file") MultipartFile file) throws Exception {
 
         return comparisonService.compareFromCsv(applicationId, agentId, fileId, folderId, file);
+    }
+
+    // 处理前端传值问题
+    @PostMapping("/compareFromJson")
+    public Body<List<Boolean>> compareFromJson(
+            @RequestParam("applicationId") Long applicationId,
+            @RequestParam("agentId") Long agentId,
+            @RequestParam("fileId") Long fileId,
+            @RequestParam("folderId") Long folderId,
+            @RequestParam("attributes") String attributesJson,
+            @RequestParam("valuesList") String valuesListJson
+    ) throws Exception {
+        ObjectMapper objectMapper = new ObjectMapper();
+
+        // 将 JSON 字符串转换为 Java List
+        List<String> attributes = objectMapper.readValue(attributesJson, new TypeReference<List<String>>(){});
+        List<List<String>> valuesList = objectMapper.readValue(valuesListJson, new TypeReference<List<List<String>>>(){});
+        System.out.println("ApplicationId: " + applicationId);
+        System.out.println("AgentId: " + agentId);
+        System.out.println("FileId: " + fileId);
+        System.out.println("FolderId: " + folderId);
+        System.out.println("Attributes: " + attributes);
+        System.out.println("ValuesList: " + valuesList);
+
+        return comparisonService.compare(applicationId, agentId, fileId, folderId, attributes, valuesList);
     }
 }

@@ -8,13 +8,16 @@ public class Parameter {
         // 位置参数
         POS,
         // 选项参数
-        FLAG
+        FLAG,
+        // 超参数
+        HYPER
     }
 
     public enum LimitType {
         NUM,
         ENUM,
-        STRING
+        STRING,
+        AUTO
     }
 
     public static class NUMLimit<T extends Number> {
@@ -109,37 +112,26 @@ public class Parameter {
 
     private String name;
     private ArgumentsType parameterType;
-    // 表示位置参数的位置或者选项参数的选项。选项参数时，形如"-R"、"--name"。
+    // 表示位置参数的位置或者选项参数的选项；选项参数时，形如"-R"、"--name"；超参数时，忽略该值
     private Object posORflag;
     private LimitType limitType;
     private Object limit;
     private Boolean required;
     private String description;
-    // 表示是否由系统自动生成，为true时，则直接使用limit中的DefaultValue，不需要用户输入
-    // required为true时，auto必须为false
-    private Boolean auto;
+
+    public Parameter() {
+    }
 
     public Parameter(String name, ArgumentsType parameterType, LimitType limitType, Object posORflag,
             Object limit, String description,
-            Boolean required, Boolean auto) {
+            Boolean required) {
         this.name = name;
         this.parameterType = parameterType;
         setPosORflag(posORflag);
         this.limitType = limitType;
         setLimit(limit);
         this.required = required;
-        setAuto(auto);
         this.description = description;
-    }
-
-    public Boolean getAuto() {
-        return auto;
-    }
-
-    public void setAuto(Boolean auto) {
-        if (auto && this.required)
-            throw new IllegalArgumentException("auto不能与required字段冲突");
-        this.auto = auto;
     }
 
     public String getDescription() {
@@ -194,11 +186,15 @@ public class Parameter {
                 }
                 break;
             case FLAG:
-            default:
                 if (posORflag instanceof String) {
                     this.posORflag = posORflag;
                 } else {
                     throw new IllegalArgumentException("posORflag must be String:" + posORflag.toString());
+                }
+                break;
+            case HYPER:
+                if (posORflag != null) {
+                    throw new IllegalArgumentException("posORflag must be null");
                 }
                 break;
         }
@@ -219,6 +215,11 @@ public class Parameter {
             case ENUM:
                 if (!(limit instanceof ENUMLimit)) {
                     throw new IllegalArgumentException("limit must be ENUMLimit");
+                }
+                break;
+            case AUTO:
+                if (limit != null) {
+                    throw new IllegalArgumentException("limit must be null");
                 }
                 break;
             case STRING:
@@ -246,8 +247,10 @@ public class Parameter {
             case ENUM:
                 return ((ENUMLimit) limit).getDefaultValue();
             case STRING:
-            default:
                 return ((STRINGLimit) limit).getDefaultValue();
+            default:
+            case AUTO:
+                return null;
         }
     }
 }

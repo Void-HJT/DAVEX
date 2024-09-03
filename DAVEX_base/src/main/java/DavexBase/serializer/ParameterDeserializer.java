@@ -1,5 +1,7 @@
 package DavexBase.serializer;
 
+import java.io.IOException;
+
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationContext;
@@ -11,8 +13,6 @@ import DavexBase.info.Parameter;
 import DavexBase.info.Parameter.ENUMLimit;
 import DavexBase.info.Parameter.NUMLimit;
 import DavexBase.info.Parameter.STRINGLimit;
-
-import java.io.IOException;
 
 public class ParameterDeserializer extends StdDeserializer<Parameter> {
 
@@ -35,12 +35,16 @@ public class ParameterDeserializer extends StdDeserializer<Parameter> {
                 .valueOf(node.get("parameterType").asText());
         Object posORflag = null;
 
-        if (parameterType == Parameter.ArgumentsType.POS) {
-            posORflag = node.get("posORflag").intValue();
-        } else if (parameterType == Parameter.ArgumentsType.FLAG) {
-            posORflag = node.get("posORflag").asText();
+        switch (parameterType) {
+            case POS:
+                posORflag = node.get("posORflag").intValue();
+                break;
+            case FLAG:
+                posORflag = node.get("posORflag").asText();
+                break;
+            case HYPER:
+                break;
         }
-
         Parameter.LimitType limitType = Parameter.LimitType
                 .valueOf(node.get("limitType").asText());
         Object limit = null;
@@ -53,13 +57,13 @@ public class ParameterDeserializer extends StdDeserializer<Parameter> {
                 limit = mapper.treeToValue(node.get("limit"), ENUMLimit.class);
                 break;
             case STRING:
-            default:
                 limit = mapper.treeToValue(node.get("limit"), STRINGLimit.class);
+                break;
+            case AUTO:
                 break;
         }
 
         Boolean required = node.get("required").asBoolean();
-        Boolean auto = node.get("auto").asBoolean();
-        return new Parameter(name, parameterType, limitType, posORflag, limit, description, required, auto);
+        return new Parameter(name, parameterType, limitType, posORflag, limit, description, required);
     }
 }

@@ -45,7 +45,7 @@ public class MpcTaskController {
     @PostMapping("/create")
     public R<MpcTask> createMpcTask(@RequestBody UploadAgentTaskInfo mpcTask) {
         try {
-            mpcTaskService.create(mpcTask);
+            mpcTask = mpcTaskService.create(mpcTask);
             switch (mpcTask.getTaskType()) {
                 case GARNET_MPC:
                 default:
@@ -74,7 +74,7 @@ public class MpcTaskController {
             Files.write(path, file.getBytes());
             inputMapper.insert(input);
             mpcTask.setDataId(input.getUid());
-            mpcTaskService.create(mpcTask);
+            mpcTask = mpcTaskService.create(mpcTask);
             switch (mpcTask.getTaskType()) {
                 case GARNET_MPC:
                 default:

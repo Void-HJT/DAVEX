@@ -37,4 +37,13 @@ public class ComparisonController {
 
         return comparisonService.getHash(fileId, folderId, agentId, attributes);
     }
+
+    // 文件名
+    @PostMapping("/getFileName")
+    public Body<String> getFileName(@RequestParam("fileId") Long fileId,
+                                          @RequestParam("folderId") Long folderId,
+                                          @RequestParam("agentId") Long agentId) {
+
+        return comparisonService.getFileName(fileId, folderId, agentId);
+    }
 }
