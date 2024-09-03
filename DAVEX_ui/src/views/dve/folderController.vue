@@ -211,66 +211,6 @@
         </el-table>
       </div>
       <el-dialog v-model="fileInfoVisible" title="文件详细信息" width="60%">
-        <!-- <el-table :data="fileInfoData" style="width: 100%">
-          <el-table-column label="Uid" prop="uid" width="80"></el-table-column>
-          <el-table-column
-            label="所属代理"
-            prop="agentId"
-            width="80"
-          ></el-table-column>
-          <el-table-column
-            label="名称"
-            prop="name"
-            width="180"
-          ></el-table-column>
-          <el-table-column
-            label="大小"
-            prop="size"
-            width="180"
-          ></el-table-column>
-          <el-table-column
-            label="描述"
-            prop="description"
-            width="180"
-          ></el-table-column>
-          <el-table-column
-            label="哈希"
-            prop="hash"
-            width="180"
-          ></el-table-column>
-        </el-table> -->
-        <!-- <span
-          style="
-            display: block;
-            text-align: center;
-            font-size: 16px;
-            line-height: 3;
-          "
-        >
-          分组与权限信息
-        </span>
-        <el-table :data="userGroupData" style="width: 100%">
-          <el-table-column
-            label="组Id"
-            prop="uid"
-            width="180"
-          ></el-table-column>
-          <el-table-column
-            label="所属中心"
-            prop="centerId"
-            width="180"
-          ></el-table-column>
-          <el-table-column
-            label="名称"
-            prop="name"
-            width="180"
-          ></el-table-column>
-          <el-table-column
-            label="权限"
-            prop="rule"
-            width="180"
-          ></el-table-column>
-        </el-table> -->
         <span
           style="
             display: block;
@@ -281,22 +221,47 @@
         >
           该文件拥有的权限
         </span>
-        <el-table :data="fileRuleListData" style="width: 100%">
-          <el-table-column label="序号" prop="uid" width="80"></el-table-column>
+        <el-table
+          :data="fileRuleListData"
+          style="width: 100%"
+          stripe
+          max-height="300"
+        >
+          <el-table-column
+            label="序号"
+            prop="uid"
+            width="80"
+            align="center"
+          ></el-table-column>
           <el-table-column
             label="所属代理"
             prop="agentId"
             width="80"
+            align="center"
+          ></el-table-column>
+          <el-table-column
+            label="代理名"
+            prop="agentName"
+            width="80"
+            align="center"
           ></el-table-column>
           <el-table-column
             label="组别"
             prop="groupId"
+            width="100"
+            align="center"
+          ></el-table-column>
+          <el-table-column
+            label="组别名"
+            prop="groupName"
             width="180"
+            align="center"
           ></el-table-column>
           <el-table-column
             label="拥有权限"
             prop="allowedMethod"
-            width="180"
+            mid-width="180"
+            align="center"
           ></el-table-column>
         </el-table>
         <span
@@ -595,6 +560,9 @@ import {
   getDirectoryByApplication,
   updateFile,
   getFile,
+  getCenterInfoByCenterId,
+  getGroupInfoByGroupId,
+  getAgentInfoByAgentId,
 } from '../../api/folderController.js'
 import { getGroup, getRuleByGroup, getApplication } from '../../api/testDve.js'
 import { genFileId } from 'element-plus'
@@ -735,6 +703,20 @@ const setFileRuleBody = ref({
   allowedMethod: '',
 })
 
+const getCenterInfoByCenterIdBody = ref({
+  centerId: '1',
+})
+
+const getAgentInfoByAgentIdBody = ref({
+  agentId: '5',
+})
+
+const getGroupInfoByGroupIdBody = ref({
+  groupId: '',
+  agentId: '5',
+  centerId: '1',
+})
+
 const upload = ref<UploadInstance | null>(null)
 
 const getGroups = async () => {
@@ -767,6 +749,22 @@ const setFileRuleMethod = async () => {
   try {
     await setFileRule(setFileRuleBody.value)
     const res = await getFileInfo(getFileInfoBody.value)
+    if (res.data.data.ruleList != null) {
+      for (let j = 0; j < res.data.data.ruleList.length; j++) {
+        getGroupInfoByGroupIdBody.value.groupId =
+          res.data.data.ruleList[j].groupId
+        getAgentInfoByAgentIdBody.value.agentId =
+          res.data.data.ruleList[j].agentId
+        const gName = await getGroupInfoByGroupId(
+          getGroupInfoByGroupIdBody.value,
+        )
+        const aName = await getAgentInfoByAgentId(
+          getAgentInfoByAgentIdBody.value,
+        )
+        res.data.data.ruleList[j].agentName = aName.data.data.name
+        res.data.data.ruleList[j].groupName = gName.data.data.name
+      }
+    }
     fileRuleListData.value = res.data.data.ruleList
   } catch (error) {
     console.error('Failed to set file rule:', error)
@@ -777,6 +775,22 @@ const deleteFileRuleMethod = async () => {
   try {
     await deleteFileRule(setFileRuleBody.value)
     const res = await getFileInfo(getFileInfoBody.value)
+    if (res.data.data.ruleList != null) {
+      for (let j = 0; j < res.data.data.ruleList.length; j++) {
+        getGroupInfoByGroupIdBody.value.groupId =
+          res.data.data.ruleList[j].groupId
+        getAgentInfoByAgentIdBody.value.agentId =
+          res.data.data.ruleList[j].agentId
+        const gName = await getGroupInfoByGroupId(
+          getGroupInfoByGroupIdBody.value,
+        )
+        const aName = await getAgentInfoByAgentId(
+          getAgentInfoByAgentIdBody.value,
+        )
+        res.data.data.ruleList[j].agentName = aName.data.data.name
+        res.data.data.ruleList[j].groupName = gName.data.data.name
+      }
+    }
     fileRuleListData.value = res.data.data.ruleList
   } catch (error) {
     console.error('Failed to set file rule:', error)
@@ -787,15 +801,30 @@ const getFileInfoMethod = async (uid, agentId, parentId, type) => {
   try {
     if (type === 'file') {
       setFileRuleBody.value.fileId = uid
-      console.log('setFileRuleBody:', setFileRuleBody.value)
       setFileRuleBody.value.agentId = agentId
       setFileRuleBody.value.folderId = parentId
       getFileInfoBody.value.uid = uid
       getFileInfoBody.value.agentId = agentId
       getFileInfoBody.value.folderId = parentId
-      console.log('getFileInfoBody:', getFileInfoBody.value)
       const res = await getFileInfo(getFileInfoBody.value)
       fileInfoData.value = [res.data.data]
+      // 若rule不为空，则遍历rule，将每个rule中的uid添加到res[i].rule中
+      if (res.data.data.ruleList != null) {
+        for (let j = 0; j < res.data.data.ruleList.length; j++) {
+          getGroupInfoByGroupIdBody.value.groupId =
+            res.data.data.ruleList[j].groupId
+          getAgentInfoByAgentIdBody.value.agentId =
+            res.data.data.ruleList[j].agentId
+          const gName = await getGroupInfoByGroupId(
+            getGroupInfoByGroupIdBody.value,
+          )
+          const aName = await getAgentInfoByAgentId(
+            getAgentInfoByAgentIdBody.value,
+          )
+          res.data.data.ruleList[j].agentName = aName.data.data.name
+          res.data.data.ruleList[j].groupName = gName.data.data.name
+        }
+      }
       fileRuleListData.value = res.data.data.ruleList
       fileInfoVisible.value = true
       getGroups()
