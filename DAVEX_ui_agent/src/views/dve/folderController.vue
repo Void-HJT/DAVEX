@@ -3,7 +3,7 @@
     <el-header style="height: 50px">
       <div
         style="
-          background-color: #3572ef;
+          background-color: antiquewhite;
           height: 40px;
           display: flex;
           justify-content: center;
@@ -13,7 +13,7 @@
         <p
           style="
             font-size: 20px;
-            color: white;
+            color: black;
             opacity: 100%;
             text-align: center;
           "
@@ -211,66 +211,6 @@
         </el-table>
       </div>
       <el-dialog v-model="fileInfoVisible" title="文件详细信息" width="60%">
-        <!-- <el-table :data="fileInfoData" style="width: 100%">
-          <el-table-column label="Uid" prop="uid" width="80"></el-table-column>
-          <el-table-column
-            label="所属代理"
-            prop="agentId"
-            width="80"
-          ></el-table-column>
-          <el-table-column
-            label="名称"
-            prop="name"
-            width="180"
-          ></el-table-column>
-          <el-table-column
-            label="大小"
-            prop="size"
-            width="180"
-          ></el-table-column>
-          <el-table-column
-            label="描述"
-            prop="description"
-            width="180"
-          ></el-table-column>
-          <el-table-column
-            label="哈希"
-            prop="hash"
-            width="180"
-          ></el-table-column>
-        </el-table> -->
-        <span
-          style="
-            display: block;
-            text-align: center;
-            font-size: 16px;
-            line-height: 3;
-          "
-        >
-          分组与权限信息
-        </span>
-        <el-table :data="userGroupData" style="width: 100%">
-          <el-table-column
-            label="组Id"
-            prop="uid"
-            width="180"
-          ></el-table-column>
-          <el-table-column
-            label="所属中心"
-            prop="centerId"
-            width="180"
-          ></el-table-column>
-          <el-table-column
-            label="名称"
-            prop="name"
-            width="180"
-          ></el-table-column>
-          <el-table-column
-            label="权限"
-            prop="rule"
-            width="180"
-          ></el-table-column>
-        </el-table>
         <span
           style="
             display: block;
@@ -281,22 +221,47 @@
         >
           该文件拥有的权限
         </span>
-        <el-table :data="fileRuleListData" style="width: 100%">
-          <el-table-column label="Uid" prop="uid" width="80"></el-table-column>
+        <el-table
+          :data="fileRuleListData"
+          style="width: 100%"
+          stripe
+          max-height="300"
+        >
+          <el-table-column
+            label="序号"
+            prop="uid"
+            width="80"
+            align="center"
+          ></el-table-column>
           <el-table-column
             label="所属代理"
             prop="agentId"
             width="80"
+            align="center"
+          ></el-table-column>
+          <el-table-column
+            label="代理名"
+            prop="agentName"
+            width="80"
+            align="center"
           ></el-table-column>
           <el-table-column
             label="组别"
             prop="groupId"
+            width="100"
+            align="center"
+          ></el-table-column>
+          <el-table-column
+            label="组别名"
+            prop="groupName"
             width="180"
+            align="center"
           ></el-table-column>
           <el-table-column
             label="拥有权限"
             prop="allowedMethod"
-            width="180"
+            mid-width="180"
+            align="center"
           ></el-table-column>
         </el-table>
         <span
@@ -309,22 +274,49 @@
         >
           更新文件权限
         </span>
-        <el-form
-          :model="setFileRuleBody"
-          label-width="80px"
-          style="max-width: 600px"
-        >
-          <el-form-item label="组别">
-            <el-input v-model="setFileRuleBody.groupId"></el-input>
-          </el-form-item>
-          <el-form-item label="权限">
-            <el-input v-model="setFileRuleBody.allowedMethod"></el-input>
-          </el-form-item>
-          <el-form-item>
-            <el-button @click="setFileRuleMethod">赋予文件权限</el-button>
-            <el-button @click="deleteFileRuleMethod">移除文件权限</el-button>
-          </el-form-item>
-        </el-form>
+        <div class="form-container">
+          <el-form
+            :model="setFileRuleBody"
+            style="max-width: 600px"
+            class="styled-form"
+          >
+            <!-- 第一个选择框：选择需要管理的分组 -->
+            <el-form-item label="选择分组">
+              <el-select
+                v-model="selectedGroupUid"
+                placeholder="请选择需要管理的分组"
+                @change="updateGroupId"
+              >
+                <el-option
+                  v-for="item in userGroupData"
+                  :key="item.uid"
+                  :label="item.name"
+                  :value="item.uid"
+                />
+              </el-select>
+            </el-form-item>
+            <!-- 第二个选择框：选择对应的权限 -->
+            <el-form-item label="选择权限">
+              <el-select
+                v-model="selectedAllowedMethod"
+                placeholder="请选择对应的权限"
+                @change="updateAllowedMethod"
+              >
+                <el-option
+                  v-for="method in currentAllowedMethods"
+                  :key="method"
+                  :label="method"
+                  :value="method"
+                />
+              </el-select>
+            </el-form-item>
+
+            <el-form-item>
+              <el-button @click="setFileRuleMethod">赋予文件权限</el-button>
+              <el-button @click="deleteFileRuleMethod">移除文件权限</el-button>
+            </el-form-item>
+          </el-form>
+        </div>
         <template #footer>
           <span class="dialog-footer">
             <el-button type="primary" @click="closeFileInfo">确认</el-button>
@@ -400,7 +392,7 @@
     <el-header style="height: 50px">
       <div
         style="
-          background-color: #3572ef;
+          background-color: antiquewhite;
           height: 40px;
           display: flex;
           justify-content: center;
@@ -410,7 +402,7 @@
         <p
           style="
             font-size: 20px;
-            color: white;
+            color: black;
             opacity: 100%;
             text-align: center;
           "
@@ -568,6 +560,9 @@ import {
   getDirectoryByApplication,
   updateFile,
   getFile,
+  getCenterInfoByCenterId,
+  getGroupInfoByGroupId,
+  getAgentInfoByAgentId,
 } from '../../api/folderController.js'
 import { getGroup, getRuleByGroup, getApplication } from '../../api/testDve.js'
 import { genFileId } from 'element-plus'
@@ -590,6 +585,8 @@ const folderVisibleDialogClose = () => {
   folderVisibleBody.value.groupId = ''
 }
 
+const selectedGroupUid = ref(null)
+const selectedAllowedMethod = ref(null)
 const directoryData = ref([])
 const applicationData = ref([])
 const currentDirectoryData = ref([])
@@ -706,6 +703,20 @@ const setFileRuleBody = ref({
   allowedMethod: '',
 })
 
+const getCenterInfoByCenterIdBody = ref({
+  centerId: '1',
+})
+
+const getAgentInfoByAgentIdBody = ref({
+  agentId: '5',
+})
+
+const getGroupInfoByGroupIdBody = ref({
+  groupId: '',
+  agentId: '5',
+  centerId: '1',
+})
+
 const upload = ref<UploadInstance | null>(null)
 
 const getGroups = async () => {
@@ -738,6 +749,22 @@ const setFileRuleMethod = async () => {
   try {
     await setFileRule(setFileRuleBody.value)
     const res = await getFileInfo(getFileInfoBody.value)
+    if (res.data.data.ruleList != null) {
+      for (let j = 0; j < res.data.data.ruleList.length; j++) {
+        getGroupInfoByGroupIdBody.value.groupId =
+          res.data.data.ruleList[j].groupId
+        getAgentInfoByAgentIdBody.value.agentId =
+          res.data.data.ruleList[j].agentId
+        const gName = await getGroupInfoByGroupId(
+          getGroupInfoByGroupIdBody.value,
+        )
+        const aName = await getAgentInfoByAgentId(
+          getAgentInfoByAgentIdBody.value,
+        )
+        res.data.data.ruleList[j].agentName = aName.data.data.name
+        res.data.data.ruleList[j].groupName = gName.data.data.name
+      }
+    }
     fileRuleListData.value = res.data.data.ruleList
   } catch (error) {
     console.error('Failed to set file rule:', error)
@@ -748,6 +775,22 @@ const deleteFileRuleMethod = async () => {
   try {
     await deleteFileRule(setFileRuleBody.value)
     const res = await getFileInfo(getFileInfoBody.value)
+    if (res.data.data.ruleList != null) {
+      for (let j = 0; j < res.data.data.ruleList.length; j++) {
+        getGroupInfoByGroupIdBody.value.groupId =
+          res.data.data.ruleList[j].groupId
+        getAgentInfoByAgentIdBody.value.agentId =
+          res.data.data.ruleList[j].agentId
+        const gName = await getGroupInfoByGroupId(
+          getGroupInfoByGroupIdBody.value,
+        )
+        const aName = await getAgentInfoByAgentId(
+          getAgentInfoByAgentIdBody.value,
+        )
+        res.data.data.ruleList[j].agentName = aName.data.data.name
+        res.data.data.ruleList[j].groupName = gName.data.data.name
+      }
+    }
     fileRuleListData.value = res.data.data.ruleList
   } catch (error) {
     console.error('Failed to set file rule:', error)
@@ -758,15 +801,30 @@ const getFileInfoMethod = async (uid, agentId, parentId, type) => {
   try {
     if (type === 'file') {
       setFileRuleBody.value.fileId = uid
-      console.log('setFileRuleBody:', setFileRuleBody.value)
       setFileRuleBody.value.agentId = agentId
       setFileRuleBody.value.folderId = parentId
       getFileInfoBody.value.uid = uid
       getFileInfoBody.value.agentId = agentId
       getFileInfoBody.value.folderId = parentId
-      console.log('getFileInfoBody:', getFileInfoBody.value)
       const res = await getFileInfo(getFileInfoBody.value)
       fileInfoData.value = [res.data.data]
+      // 若rule不为空，则遍历rule，将每个rule中的uid添加到res[i].rule中
+      if (res.data.data.ruleList != null) {
+        for (let j = 0; j < res.data.data.ruleList.length; j++) {
+          getGroupInfoByGroupIdBody.value.groupId =
+            res.data.data.ruleList[j].groupId
+          getAgentInfoByAgentIdBody.value.agentId =
+            res.data.data.ruleList[j].agentId
+          const gName = await getGroupInfoByGroupId(
+            getGroupInfoByGroupIdBody.value,
+          )
+          const aName = await getAgentInfoByAgentId(
+            getAgentInfoByAgentIdBody.value,
+          )
+          res.data.data.ruleList[j].agentName = aName.data.data.name
+          res.data.data.ruleList[j].groupName = gName.data.data.name
+        }
+      }
       fileRuleListData.value = res.data.data.ruleList
       fileInfoVisible.value = true
       getGroups()
@@ -984,6 +1042,51 @@ const returnFrontDirectory = async () => {
   console.log('folderRoute:', folderRoute.value)
   findCurrentFolder()
 }
+
+// 计算属性，返回当前选中组的 allowedMethod 列表
+const currentAllowedMethods = computed(() => {
+  const selectedGroup = userGroupData.value.find(
+    (group) => group.uid === selectedGroupUid.value,
+  )
+  if (selectedGroup && selectedGroup.rule) {
+    // 将 allowedMethod 字符串按空格分割成数组
+    return selectedGroup.rule.trim().split(' ')
+  }
+  return []
+})
+
+// 更新 setFileRuleBody.groupId
+const updateGroupId = () => {
+  setFileRuleBody.value.groupId = selectedGroupUid.value
+  // 清空已选择的权限
+  selectedAllowedMethod.value = null
+  // 更新 allowedMethod 为空
+  setFileRuleBody.value.allowedMethod = ''
+}
+
+// 更新 setFileRuleBody.allowedMethod
+const updateAllowedMethod = () => {
+  setFileRuleBody.value.allowedMethod = selectedAllowedMethod.value
+}
 </script>
 
-<style></style>
+<style scoped>
+.form-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.styled-form {
+  width: 100%;
+  max-width: 600px;
+  padding: 20px;
+  border: 1px solid #dcdfe6;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  background-color: #ffffff;
+  display: flex; /* 使用 Flexbox */
+  flex-direction: column; /* 设置为纵向布局 */
+  align-items: center; /* 居中对齐子元素 */
+}
+</style>

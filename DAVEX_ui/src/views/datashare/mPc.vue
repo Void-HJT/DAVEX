@@ -381,6 +381,11 @@
             label="参数类型"
             align="center"
           ></el-table-column>
+          <el-table-column
+            prop="description"
+            label="参数描述"
+            align="center"
+          ></el-table-column>
           <el-table-column prop="limit" label="限制条件" align="center">
             <template #default="scope">
               <span>{{ formatLimit(scope.row.limit) }}</span>
