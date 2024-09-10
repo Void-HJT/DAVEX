@@ -71,7 +71,7 @@ public class MpcTaskOutputService {
         Path outputPath = Paths.get(my.getGarnet_path()).resolve("Output")
                 .resolve(mpcTask.getUid() + "-P" + mpcTask.getPart() + "-0");
         Path savePath = Paths.get(my.getBase_path()).resolve("mpctask").resolve(mpcTask.getUid());
-        mpcTaskOutput.setPath(Paths.get("/home/nhy/DAVEX/base/mpctask").resolve(mpcTask.getUid()).toString());
+        mpcTaskOutput.setPath(Paths.get(my.getBase_path()).resolve("mpctask").resolve(mpcTask.getUid()).toString());
         mpcTaskOutput.setTaskId(mpcTask.getUid());
         mpcTaskOutput.setExpiredTime(java.sql.Timestamp
                 .from(Instant.now().plus(7, ChronoUnit.DAYS)));
