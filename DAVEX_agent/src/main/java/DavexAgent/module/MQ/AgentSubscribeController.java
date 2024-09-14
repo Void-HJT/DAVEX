@@ -14,13 +14,17 @@ import org.springframework.web.bind.annotation.RestController;
 public class AgentSubscribeController {
 
     class AgentMessageListener {
-        public void handleMessage(String message) {
-            System.out.println("Received message: " + message);
+        public void handleMessage(String message)
+        {
+            messageService.handleMessage(message);
         }
     }
 
     @Autowired
     AgentSubscribeService agentSubscribeService;
+
+    @Autowired
+    MessageService messageService;
 
     @PostMapping("/subscribe")
     public Body<String> subscribe(@RequestParam("centerId") String centerId,

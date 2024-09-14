@@ -10,9 +10,10 @@ import lombok.Data;
 @Data
 public class Application {
 
-  @TableId(type = IdType.AUTO)
-  private Long uid;
-  private Long centerId;
+  @TableId
+  private String uid;
+
+  private String centerId;
   private String name;
   private byte[] crt;
   private LocalDateTime lastUpdated;

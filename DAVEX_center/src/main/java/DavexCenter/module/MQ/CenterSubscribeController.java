@@ -13,11 +13,15 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/center/rabbitMQ")
 public class CenterSubscribeController {
 
-    class AgentMessageListener {
-        public void handleMessage(String message) {
-            System.out.println("Received message: " + message);
+    class CenterMessageListener {
+        public void handleMessage(String message)
+        {
+            messageService.handleMessage(message);
         }
     }
+
+    @Autowired
+    MessageService messageService;
 
     @Autowired
     CenterSubscribeService centerSubscribeService;
@@ -26,7 +30,7 @@ public class CenterSubscribeController {
     public Body<String> subscribe(@RequestParam("centerId") String centerId,
                                   @RequestParam("queueName") String queueName,
                                   @RequestParam("routingKey") String routingKey){
-        return centerSubscribeService.subscribeToCenter(centerId, queueName, routingKey, new AgentMessageListener());
+        return centerSubscribeService.subscribeToCenter(centerId, queueName, routingKey, new CenterMessageListener());
     }
 
     @PostMapping("/unsubscribe")
