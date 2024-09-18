@@ -110,7 +110,7 @@ DROP TABLE IF EXISTS `file`;
 CREATE TABLE `file` (
     `uid` varchar(255) NOT NULL,
     `agent_id` varchar(255) NOT NULL,
-    `folder_id` bigint DEFAULT NULL,
+    `folder_id` varchar(255) DEFAULT NULL,
     `name` varchar(255) DEFAULT NULL,
     `create_date` timestamp NULL DEFAULT NULL,
     `last_update` timestamp NULL DEFAULT NULL,
@@ -143,9 +143,9 @@ CREATE TABLE `file_rule` (
 DROP TABLE IF EXISTS `folder`;
 
 CREATE TABLE `folder` (
-    `uid` bigint NOT NULL AUTO_INCREMENT,
+    `uid` varchar(255) NOT NULL AUTO_INCREMENT,
     `agent_id` varchar(255) NOT NULL,
-    `parent_id` bigint DEFAULT NULL,
+    `parent_id` varchar(255) DEFAULT NULL,
     `name` varchar(255) DEFAULT NULL,
     `create_date` timestamp NULL DEFAULT NULL,
     `last_update` timestamp NULL DEFAULT NULL,

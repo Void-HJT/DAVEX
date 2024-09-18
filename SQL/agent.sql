@@ -75,7 +75,7 @@ DROP TABLE IF EXISTS `file`;
 CREATE TABLE `file` (
     `uid` varchar(255) NOT NULL,
     `agent_id` varchar(255) NOT NULL,
-    `folder_id` bigint NOT NULL,
+    `folder_id` varchar(255) NOT NULL,
     `name` varchar(255) DEFAULT NULL,
     `create_date` timestamp NULL DEFAULT NULL,
     `last_update` timestamp NULL DEFAULT NULL,
@@ -97,7 +97,7 @@ DROP TABLE IF EXISTS `file_rule`;
 CREATE TABLE `file_rule` (
     `uid` bigint NOT NULL AUTO_INCREMENT,
     `agent_id` varchar(255) NOT NULL,
-    `file_id` bigint NOT NULL,
+    `file_id` varchar(255) NOT NULL,
     `rule_id` bigint NOT NULL,
     PRIMARY KEY (`uid`) USING BTREE
 ) ENGINE = InnoDB AUTO_INCREMENT = 25 DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci;
@@ -108,9 +108,9 @@ CREATE TABLE `file_rule` (
 DROP TABLE IF EXISTS `folder`;
 
 CREATE TABLE `folder` (
-    `uid` bigint NOT NULL AUTO_INCREMENT,
+    `uid` varchar(255) NOT NULL AUTO_INCREMENT,
     `agent_id` varchar(255) NOT NULL,
-    `parent_id` bigint NOT NULL,
+    `parent_id` varchar(255) NOT NULL,
     `name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
     `create_date` timestamp NULL DEFAULT NULL,
     `last_update` timestamp NULL DEFAULT NULL,
@@ -125,7 +125,7 @@ DROP TABLE IF EXISTS `folder_visibility`;
 CREATE TABLE `folder_visibility` (
     `uid` bigint NOT NULL AUTO_INCREMENT,
     `agent_id` varchar(255) NOT NULL,
-    `folder_id` bigint NOT NULL,
+    `folder_id` varchar(255) NOT NULL,
     `group_id` bigint NOT NULL,
     PRIMARY KEY (`uid`) USING BTREE
 ) ENGINE = InnoDB AUTO_INCREMENT = 15 DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci;
