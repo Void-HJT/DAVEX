@@ -12,5 +12,5 @@ import DavexBase.info.ApplicationInfo;
 
 @Mapper
 public interface ApplicationMapper extends BaseMapper<Application> {
-    List<ApplicationInfo> getApplicationInfo(@Param("agentId") Long agentId,@Param("centerId") Long centerId);
+    List<ApplicationInfo> getApplicationInfo(@Param("agentId") String agentId,@Param("centerId") String centerId);
 }

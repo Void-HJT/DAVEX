@@ -20,7 +20,7 @@ public class File {
   private String uid;
 
   private String agentId;
-  private Long folderId;
+  private String folderId;
 
   private String name;
   private java.sql.Timestamp createDate;

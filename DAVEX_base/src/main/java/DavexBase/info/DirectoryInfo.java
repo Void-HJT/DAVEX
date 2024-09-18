@@ -9,9 +9,9 @@ import lombok.Data;
 
 @Data
 public class DirectoryInfo {
-    private Long uid;
-    private Long agentId;
-    private Long parentId;
+    private String uid;
+    private String agentId;
+    private String parentId;
     private String name;
     private String type; // "file" or "folder"
     private java.sql.Timestamp createDate;
