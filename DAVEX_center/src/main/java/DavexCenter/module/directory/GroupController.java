@@ -37,8 +37,8 @@ public class GroupController {
     }
 
     @PostMapping("/getGroupList")
-    public Body<List<GroupAndCenterName>> getGroupList(@RequestParam("agentId") Long agentId,
-                                      @RequestParam("centerId") Long centerId){
+    public Body<List<GroupAndCenterName>> getGroupList(@RequestParam("agentId") String agentId,
+                                      @RequestParam("centerId") String centerId){
 //        // 记录输入参数、调用方法、请求方、接收方和时间
 //        String requestTime = LocalDateTime.now().toString();
 //        customLogger.info("Custom Log - Input: agentId={}, centerId={}, Method: getGroup, Requester: {}, Responder: {}, Time: {}",
@@ -54,57 +54,57 @@ public class GroupController {
         return response;
     }
     @PostMapping("/addGroup")
-    public Body<String> addGroup(@RequestParam("agentId") Long agentId,
-                                 @RequestParam("centerId") Long centerId,
+    public Body<String> addGroup(@RequestParam("agentId") String agentId,
+                                 @RequestParam("centerId") String centerId,
                                  @RequestParam("name") String name){
         return groupService.addGroup(agentId,centerId,name);
     }
     @PostMapping("/deleteGroup")
-    public Body<String> deleteGroup(@RequestParam("agentId") Long agentId,
-                                    @RequestParam("centerId") Long centerId,
+    public Body<String> deleteGroup(@RequestParam("agentId") String agentId,
+                                    @RequestParam("centerId") String centerId,
                                     @RequestParam("groupId") Long groupId){
         return groupService.deleteGroup(agentId,centerId,groupId);
     }
 
     @PostMapping("/getGroupByApplicationId")
-    public Body<List<GroupAndCenterName>> getGroupByApplicationId(@RequestParam("agentId") Long agentId,
-                                                                  @RequestParam("centerId") Long centerId,
-                                                                  @RequestParam("applicationId") Long applicationId){
+    public Body<List<GroupAndCenterName>> getGroupByApplicationId(@RequestParam("agentId") String agentId,
+                                                                  @RequestParam("centerId") String centerId,
+                                                                  @RequestParam("applicationId") String applicationId){
         return groupService.getGroupByApplicationId(agentId,centerId,applicationId);
 
     }
 
     @PostMapping("/addApplicationGroup")
-    public Body<String> addApplicationGroup(@RequestParam("agentId") Long agentId,
-                                            @RequestParam("centerId") Long centerId,
-                                            @RequestParam("applicationId") Long applicationId,
+    public Body<String> addApplicationGroup(@RequestParam("agentId") String agentId,
+                                            @RequestParam("centerId") String centerId,
+                                            @RequestParam("applicationId") String applicationId,
                                             @RequestParam("groupId") Long groupId){
         return groupService.addApplicationGroup(agentId,centerId,applicationId,groupId);
 
     }
     @PostMapping("/deleteApplicationGroup")
-    public Body<String> deleteApplicationGroup(@RequestParam("agentId") Long agentId,
-                                            @RequestParam("centerId") Long centerId,
-                                               @RequestParam("applicationId") Long applicationId,
+    public Body<String> deleteApplicationGroup(@RequestParam("agentId") String agentId,
+                                            @RequestParam("centerId") String centerId,
+                                               @RequestParam("applicationId") String applicationId,
                                                @RequestParam("groupId") Long groupId){
         return groupService.deleteApplicationGroup(agentId,centerId,applicationId,groupId);
 
     }
 
     @PostMapping("/addRule")
-    public Body<String> addRule(@RequestParam("agentId") Long agentId,
+    public Body<String> addRule(@RequestParam("agentId") String agentId,
                                 @RequestParam("groupId") Long groupId,
                                 @RequestParam("allowMethod")String allowMethod){
         return groupService.addRule(agentId,groupId,allowMethod);
 
     }
     @PostMapping("/getRuleByGroup")
-    public Body<List<Rule>> getRuleByGroup(@RequestParam("agentId") Long agentId,
+    public Body<List<Rule>> getRuleByGroup(@RequestParam("agentId") String agentId,
                                            @RequestParam("groupId") Long groupId){
         return groupService.getRuleByGroup(agentId,groupId);
     }
     @PostMapping("/deleteRule")
-    public Body<String> deleteRule(@RequestParam("agentId") Long agentId,
+    public Body<String> deleteRule(@RequestParam("agentId") String agentId,
                                    @RequestParam("groupId") Long groupId,
                                    @RequestParam("allowMethod")String allowMethod){
         return groupService.deleteRule(agentId,groupId,allowMethod);
@@ -115,19 +115,19 @@ public class GroupController {
     }
 
     @PostMapping("/getAgent")
-    public Body<Agent> getAgent(@RequestParam("agentId") Long agentId){
+    public Body<Agent> getAgent(@RequestParam("agentId") String agentId){
         return groupService.getAgent(agentId);
     }
 
     @PostMapping("/getCenter")
-    public Body<Center> getCenter(@RequestParam("centerId") Long centerId){
+    public Body<Center> getCenter(@RequestParam("centerId") String centerId){
         return groupService.getCenter(centerId);
     }
 
     @PostMapping("/getGroup")
     public Body<Group> getGroup(@RequestParam("groupId") Long groupId,
-                                @RequestParam("agentId") Long agentId,
-                                @RequestParam("centerId") Long centerId){
+                                @RequestParam("agentId") String agentId,
+                                @RequestParam("centerId") String centerId){
         return groupService.getGroup(groupId,agentId,centerId);
     }
     

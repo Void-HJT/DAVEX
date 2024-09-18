@@ -132,7 +132,7 @@ public class ComparisonService {
         return Body.success(hashResults, "获取哈希成功");
     }
 
-    public Body<String> getFileName(Long fileId, Long folderId, Long agentId) {
+    public Body<String> getFileName(String fileId, String folderId, String agentId) {
         FileInfo fileInfo = fileFolderService.getFileInfo(fileId, agentId, folderId).getData();
         return Body.success(fileInfo.getName(), "获取成功");
     }

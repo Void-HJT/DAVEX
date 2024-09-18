@@ -9,9 +9,9 @@ import lombok.Data;
 public class Folder {
 
   @TableId
-  private Long uid;
+  private String uid;
   private String agentId;
-  private Long parentId;
+  private String parentId;
   private String name;
   private java.sql.Timestamp createDate;
   private java.sql.Timestamp lastUpdate;

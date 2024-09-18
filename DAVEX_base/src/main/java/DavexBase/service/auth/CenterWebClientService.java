@@ -38,7 +38,7 @@ public class CenterWebClientService {
                                 }).build();
         }
 
-        public WebClient center2AgentWebClient(long agent_id) throws Exception {
+        public WebClient center2AgentWebClient(String agent_id) throws Exception {
                 LambdaQueryWrapper<Agent> queryWrapper = Wrappers.<Agent>lambdaQuery().eq(Agent::getUid, agent_id);
                 Agent agent = agentMapper.selectOne(queryWrapper);
                 HttpClient httpClient = HttpClient.create();

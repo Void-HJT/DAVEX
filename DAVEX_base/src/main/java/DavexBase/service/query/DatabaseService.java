@@ -195,7 +195,7 @@ public class DatabaseService {
         }
     }
 
-    public Body<String> query2Agent(QueryRequest request, Long applicationId, Long agentId, Long databaseId) {
+    public Body<String> query2Agent(QueryRequest request, String applicationId, String agentId, Long databaseId) {
 
         try {
             Body<byte[]> response = centerWebClientService.center2AgentWebClient(agentId).post()

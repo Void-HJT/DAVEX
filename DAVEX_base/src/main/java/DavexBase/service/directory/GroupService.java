@@ -49,7 +49,7 @@ public class GroupService {
     }
 
     //agent根据用户id得到分组
-    public Body<List<GroupAndCenterName>> getGroupByApplicationId(Long agentId, Long centerId, Long applicationId) {
+    public Body<List<GroupAndCenterName>> getGroupByApplicationId(String agentId, String centerId, String applicationId) {
         List<Group> groups = groupMapper.getList(agentId,centerId,applicationId);
 
         // 新建一个列表来存储转换后的对象
@@ -59,7 +59,7 @@ public class GroupService {
     }
 
     //显示用户分组
-    public Body<List<GroupAndCenterName>> getGroupList(Long agentId, Long centerId) {
+    public Body<List<GroupAndCenterName>> getGroupList(String agentId, String centerId) {
         LambdaQueryWrapper<Group> queryWrapper = Wrappers.<Group>lambdaQuery()
                 .eq(Group::getCenterId,centerId)
                 .eq(Group::getAgentId,agentId);
@@ -72,7 +72,7 @@ public class GroupService {
     }
 
     //添加用户组
-    public Body<String> addGroup(Long agentId, Long centerId, String name) {
+    public Body<String> addGroup(String agentId, String centerId, String name) {
         //1.查询数据库是否有同名组
         LambdaQueryWrapper<Group> queryWrapper = Wrappers.<Group>lambdaQuery()
                 .eq(Group::getAgentId,agentId)
@@ -88,7 +88,7 @@ public class GroupService {
         return Body.success("新增组成功");
     }
     //删除用户
-    public Body<String> deleteGroup(Long agentId, Long centerId, Long groupId) {
+    public Body<String> deleteGroup(String agentId, String centerId, Long groupId) {
         //1.查询数据库是组否存在
         LambdaQueryWrapper<Group> queryWrapper = Wrappers.<Group>lambdaQuery()
                 .eq(Group::getUid,groupId)
@@ -100,7 +100,7 @@ public class GroupService {
         return Body.success("删除组成功");
     }
     //用户划分组
-    public Body<String> addApplicationGroup(Long agentId, Long centerId, Long applicationId, Long groupId) {
+    public Body<String> addApplicationGroup(String agentId, String centerId, String applicationId, Long groupId) {
         //1.判断是否有分组重复
         LambdaQueryWrapper<ApplicationGroup> queryWrapper = Wrappers.<ApplicationGroup>lambdaQuery()
                 .eq(ApplicationGroup::getCenterId,centerId)
@@ -117,7 +117,7 @@ public class GroupService {
         return Body.success("分组成功");
     }
     //删除用户划分组
-    public Body<String> deleteApplicationGroup(Long agentId, Long centerId, Long applicationId,Long groupId) {
+    public Body<String> deleteApplicationGroup(String agentId, String centerId, String applicationId,Long groupId) {
         LambdaQueryWrapper<ApplicationGroup> queryWrapper = Wrappers.<ApplicationGroup>lambdaQuery()
                 .eq(ApplicationGroup::getApplicationId,applicationId)
                 .eq(ApplicationGroup::getGroupId,groupId)
@@ -130,7 +130,7 @@ public class GroupService {
     }
 
     //设定用户组的访问权限
-    public Body<String> addRule(Long agentId, Long groupId, String allowMethod) {
+    public Body<String> addRule(String agentId, Long groupId, String allowMethod) {
         Rule rule = new Rule();
         //1.判断输入的权限是否是指定的
         if(!ALLOWED_METHODS.contains(allowMethod)){return Body.error("规则种类错误");}
@@ -148,7 +148,7 @@ public class GroupService {
 
     }
 
-    public Body<List<Rule>> getRuleByGroup(Long agentId, Long groupId) {
+    public Body<List<Rule>> getRuleByGroup(String agentId, Long groupId) {
         LambdaQueryWrapper<Rule> queryRuleWrapper = Wrappers.<Rule>lambdaQuery()
                 .eq(Rule::getGroupId, groupId)
                 .eq(Rule::getAgentId, agentId);
@@ -156,7 +156,7 @@ public class GroupService {
         return Body.success(rules,"成功");
     }
 
-    public Body<String> deleteRule(Long agentId, Long groupId,String allowMethod) {
+    public Body<String> deleteRule(String agentId, Long groupId,String allowMethod) {
         LambdaQueryWrapper<Rule> queryWrapper = Wrappers.<Rule>lambdaQuery()
                 .eq(Rule::getGroupId,groupId)
                 .eq(Rule::getAllowedMethod,allowMethod)
@@ -211,7 +211,7 @@ public class GroupService {
         return groupAndCenterNames;
     }
 
-    public Body<Agent> getAgent(Long agentId) {
+    public Body<Agent> getAgent(String agentId) {
 
         LambdaQueryWrapper<Agent> queryWrapper = Wrappers.<Agent>lambdaQuery()
                 .eq(Agent::getUid, agentId);
@@ -219,14 +219,14 @@ public class GroupService {
         return Body.success(agent,"查询成功");
     }
 
-    public Body<Center> getCenter(Long centerId){
+    public Body<Center> getCenter(String centerId){
         LambdaQueryWrapper<Center> queryWrapper = Wrappers.<Center>lambdaQuery()
                 .eq(Center::getUid, centerId);
         Center center = centerMapper.selectOne(queryWrapper);
         return Body.success(center,"查询成功");
     }
 
-    public Body<Group> getGroup(Long groupId, Long agentId, Long centerId) {
+    public Body<Group> getGroup(Long groupId, String agentId, String centerId) {
         LambdaQueryWrapper<Group> queryWrapper = Wrappers.<Group>lambdaQuery()
                 .eq(Group::getUid, groupId)
                 .eq(Group::getAgentId,agentId)

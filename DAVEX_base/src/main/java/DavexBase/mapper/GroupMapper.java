@@ -13,7 +13,7 @@ import DavexBase.entity.Group;
 @Mapper
 public interface GroupMapper extends BaseMapper<Group> {
 
-    List<Group> getList(@Param("agentId") Long agentId,
-                        @Param("centerId") Long centerId,
-                        @Param("applicationId") Long applicationId);
+    List<Group> getList(@Param("agentId") String agentId,
+                        @Param("centerId") String centerId,
+                        @Param("applicationId") String applicationId);
 }

@@ -12,7 +12,7 @@ public class FolderVisibility {
   private Long uid;
 
   private String agentId;
-  private Long folderId;
+  private String folderId;
   private Long groupId;
 
 }

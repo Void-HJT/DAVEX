@@ -3,15 +3,15 @@ package DavexBase.info;
 import DavexBase.entity.Application;
 
 public class ApplicationInfo extends Application {
-    private Long agentId;
+    private String agentId;
     private Long groupId;
     private String groupName;
 
-    public Long getAgentId() {
+    public String getAgentId() {
         return agentId;
     }
 
-    public void setAgentId(Long agentId) {
+    public void setAgentId(String agentId) {
         this.agentId = agentId;
     }
 

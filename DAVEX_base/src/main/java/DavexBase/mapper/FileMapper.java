@@ -13,7 +13,7 @@ import DavexBase.info.FileInfo;
 
 @Mapper
 public interface FileMapper extends BaseMapper<File> {
-    FileInfo getFileInfo(@Param("fileId") Long uid, @Param("agentId") Long agentId, @Param("folderId") Long folderId);
+    FileInfo getFileInfo(@Param("fileId") String uid, @Param("agentId") String agentId, @Param("folderId") String folderId);
 
-    List<File> selectByFolderId(Long uid);
+    List<File> selectByFolderId(String uid);
 }

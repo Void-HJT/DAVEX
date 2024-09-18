@@ -11,7 +11,7 @@ import DavexBase.entity.Folder;
 
 @Mapper
 public interface FolderMapper extends BaseMapper<Folder> {
-    List<Folder> selectByParentId(@Param("parentId")Long uid);
+    List<Folder> selectByParentId(@Param("parentId")String uid);
 
-    Folder select(@Param("id") Long rootFolderId);
+    Folder select(@Param("id") String rootFolderId);
 }
