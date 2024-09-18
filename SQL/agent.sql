@@ -35,6 +35,7 @@ CREATE TABLE `application` (
     `crt` BLOB DEFAULT NULL,
     `last_updated` timestamp NULL DEFAULT NULL,
     `description` varchar(255) DEFAULT NULL,
+    `attribute` JSON DEFAULT NULL,
     PRIMARY KEY (`uid`, `center_id`),
     UNIQUE KEY `name` (`name`)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci;
@@ -82,7 +83,7 @@ CREATE TABLE `file` (
     `name` varchar(255) DEFAULT NULL,
     `create_date` timestamp NULL DEFAULT NULL,
     `last_update` timestamp NULL DEFAULT NULL,
-    `tag` varchar(255) DEFAULT NULL,
+    `attribute` JSON DEFAULT NULL,
     `size` BIGINT DEFAULT NULL,
     `description` varchar(255) DEFAULT NULL,
     `expired_time` timestamp NULL DEFAULT NULL,

@@ -1,11 +1,19 @@
 package DavexBase.entity;
 
+import org.springframework.boot.autoconfigure.domain.EntityScan;
+
+import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableName;
+import com.baomidou.mybatisplus.extension.handlers.FastjsonTypeHandler;
 
 import lombok.Data;
 
 @Data
+@EntityScan
+@TableName(value = "file", autoResultMap = true)
 public class File {
 
   @TableId(type = IdType.AUTO)
@@ -17,7 +25,8 @@ public class File {
   private String name;
   private java.sql.Timestamp createDate;
   private java.sql.Timestamp lastUpdate;
-  private String tag;
+  @TableField(typeHandler = FastjsonTypeHandler.class)
+  private JSONObject attribute;
   private Long size;
   private String description;
   private java.sql.Timestamp expiredTime;

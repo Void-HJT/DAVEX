@@ -1,27 +1,5 @@
 package DavexBase.service.directory;
 
-import DavexBase.common.Body;
-import DavexBase.common.R;
-import DavexBase.entity.*;
-import DavexBase.info.DirectoryInfo;
-import DavexBase.info.FileInfo;
-import DavexBase.mapper.*;
-import DavexBase.service.auth.CenterWebClientService;
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
-import com.baomidou.mybatisplus.core.toolkit.Wrappers;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.core.io.Resource;
-import org.springframework.core.io.UrlResource;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
-
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
@@ -40,6 +18,43 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
+
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+
+import DavexBase.common.Body;
+import DavexBase.entity.Agent;
+import DavexBase.entity.ApplicationGroup;
+import DavexBase.entity.File;
+import DavexBase.entity.FileRule;
+import DavexBase.entity.Folder;
+import DavexBase.entity.FolderVisibility;
+import DavexBase.entity.Group;
+import DavexBase.entity.Rule;
+import DavexBase.info.DirectoryInfo;
+import DavexBase.info.FileInfo;
+import DavexBase.mapper.AgentMapper;
+import DavexBase.mapper.ApplicationGroupMapper;
+import DavexBase.mapper.FileMapper;
+import DavexBase.mapper.FileRuleMapper;
+import DavexBase.mapper.FolderMapper;
+import DavexBase.mapper.FolderVisibilityMapper;
+import DavexBase.mapper.GroupMapper;
+import DavexBase.mapper.RuleMapper;
+import DavexBase.service.auth.CenterWebClientService;
 
 @Service
 public class FileFolderService {
@@ -432,7 +447,7 @@ public class FileFolderService {
     }
 
     // 设置文件规则
-    public Body<String> setFileRule(Long fileId, Long agentId, Long folderId, Long groupId,String allowMethod) {
+    public Body<String> setFileRule(Long fileId, Long agentId, Long folderId, Long groupId, String allowMethod) {
         LambdaQueryWrapper<File> queryFileWrapper = Wrappers.<File>lambdaQuery()
                 .eq(File::getUid, fileId)
                 .eq(File::getAgentId, agentId)
@@ -444,7 +459,7 @@ public class FileFolderService {
         LambdaQueryWrapper<Rule> queryRuleWrapper = Wrappers.<Rule>lambdaQuery()
                 .eq(Rule::getGroupId, groupId)
                 .eq(Rule::getAgentId, agentId)
-                .eq(Rule::getAllowedMethod,allowMethod);
+                .eq(Rule::getAllowedMethod, allowMethod);
         Rule rule = ruleMapper.selectOne(queryRuleWrapper);
         if (rule == null) {
             return Body.error("该规则不存在");
@@ -464,8 +479,9 @@ public class FileFolderService {
         fileRuleMapper.insert(fileRule);
         return Body.success("成功插入");
     }
-    //删除文件规则
-    public Body<String> deleteFileRule(Long fileId, Long agentId, Long folderId, Long groupId,String allowMethod){
+
+    // 删除文件规则
+    public Body<String> deleteFileRule(Long fileId, Long agentId, Long folderId, Long groupId, String allowMethod) {
 
         LambdaQueryWrapper<File> queryFileWrapper = Wrappers.<File>lambdaQuery()
                 .eq(File::getUid, fileId)
@@ -478,7 +494,7 @@ public class FileFolderService {
         LambdaQueryWrapper<Rule> queryRuleWrapper = Wrappers.<Rule>lambdaQuery()
                 .eq(Rule::getGroupId, groupId)
                 .eq(Rule::getAgentId, agentId)
-                .eq(Rule::getAllowedMethod,allowMethod);
+                .eq(Rule::getAllowedMethod, allowMethod);
         Rule rule = ruleMapper.selectOne(queryRuleWrapper);
 
         LambdaQueryWrapper<FileRule> queryFileRuleWrapper = Wrappers.<FileRule>lambdaQuery()
@@ -628,7 +644,7 @@ public class FileFolderService {
         node.setName(file.getName());
         node.setCreateDate(file.getCreateDate());
         node.setLastUpdate(file.getLastUpdate());
-        node.setTag(file.getTag());
+        node.setAttribute(file.getAttribute());
         node.setSize(file.getSize());
         node.setDescription(file.getDescription());
         node.setHash(file.getHash());
@@ -813,25 +829,26 @@ public class FileFolderService {
 
     public Body<File> getFile(Long fileId, Long agentId) {
 
-        LambdaQueryWrapper<File> queryWrapper = Wrappers.<File>lambdaQuery().eq(File::getUid,fileId).eq(File::getAgentId,agentId);
+        LambdaQueryWrapper<File> queryWrapper = Wrappers.<File>lambdaQuery().eq(File::getUid, fileId)
+                .eq(File::getAgentId, agentId);
         File file = fileMapper.selectOne(queryWrapper);
-        return Body.success(file,"查询成功");
+        return Body.success(file, "查询成功");
     }
 
-    public String test(){
+    public String test() {
         return "1";
     }
 
-    public Body<Long> getRowCount(Long fileId, Long agentId,String baseDirectory) {
-        LambdaQueryWrapper<File> queryWrapper = Wrappers.<File>lambdaQuery().eq(File::getAgentId,agentId).eq(File::getUid,fileId);
+    public Body<Long> getRowCount(Long fileId, Long agentId, String baseDirectory) {
+        LambdaQueryWrapper<File> queryWrapper = Wrappers.<File>lambdaQuery().eq(File::getAgentId, agentId)
+                .eq(File::getUid, fileId);
         File file = fileMapper.selectOne(queryWrapper);
-        if(file==null){return Body.error("找不到文件");}
-        if(!file.getType().equals(".csv"))
-        {
-            return Body.error("非csv文件");
+        if (file == null) {
+            return Body.error("找不到文件");
         }
-        else
-        {
+        if (!file.getType().equals(".csv")) {
+            return Body.error("非csv文件");
+        } else {
             String filePath = getFilePath(file, baseDirectory);
             long rowCount = 0;
             try (BufferedReader reader = new BufferedReader(new FileReader(filePath))) {
@@ -841,28 +858,29 @@ public class FileFolderService {
             } catch (IOException e) {
                 return Body.error("读取文件时出错：" + e.getMessage());
             }
-            return Body.success(rowCount,"成功获取行数");
+            return Body.success(rowCount, "成功获取行数");
         }
     }
 
-
     public Body<Folder> getFolder(Long folderId, Long agentId) {
-        LambdaQueryWrapper<Folder> queryWrapper = Wrappers.<Folder>lambdaQuery().eq(Folder::getUid,folderId).eq(Folder::getAgentId,agentId);
+        LambdaQueryWrapper<Folder> queryWrapper = Wrappers.<Folder>lambdaQuery().eq(Folder::getUid, folderId)
+                .eq(Folder::getAgentId, agentId);
         Folder folder = folderMapper.selectOne(queryWrapper);
-        return Body.success(folder,"查询成功");
+        return Body.success(folder, "查询成功");
     }
 
     public Body<DirectoryInfo> getDirectory2Agent(Long agentId, Long applicationId) {
         try {
             Body<DirectoryInfo> response = centerWebClientService.center2AgentWebClient(agentId).post()
                     .uri(uriBuilder -> uriBuilder.path("/directory/fileFolder/getDirectoryByApplication")
-                            .queryParam("rootId",1)
-                            .queryParam("agentId",agentId)
-                            .queryParam("applicationId",applicationId)
+                            .queryParam("rootId", 1)
+                            .queryParam("agentId", agentId)
+                            .queryParam("applicationId", applicationId)
                             .build())// 将请求体设置为QueryRequest
-                    .retrieve()  // 准备接收响应
-                    .bodyToMono(new ParameterizedTypeReference<Body<DirectoryInfo>>(){})  // 指定返回类型
-                    .block();  // 阻塞等待响应并获取结果
+                    .retrieve() // 准备接收响应
+                    .bodyToMono(new ParameterizedTypeReference<Body<DirectoryInfo>>() {
+                    }) // 指定返回类型
+                    .block(); // 阻塞等待响应并获取结果
             return response;
         } catch (Exception e) {
             return Body.error(e.getMessage());
