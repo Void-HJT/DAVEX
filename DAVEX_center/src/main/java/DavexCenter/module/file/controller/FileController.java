@@ -50,7 +50,7 @@ public class FileController {
     @PostMapping("/save")
     public Body<String> save(@RequestPart("file") MultipartFile file,
                              @ModelAttribute("fileInfo") File fileInfo,
-                             @RequestParam("applicationId") Long applicationId,
+                             @RequestParam("applicationId") String applicationId,
                              @RequestParam(value = "expiredTime", required = false) java.sql.Timestamp expiredTime) {
 
         if (expiredTime == null) {
@@ -65,7 +65,7 @@ public class FileController {
     @PostMapping("/saves")
     public Body<List<String>> saves(@RequestPart("files") List<MultipartFile> files,
                                     @ModelAttribute("fileInfos") List<File> fileInfos,
-                                    @RequestParam("applicationId") Long applicationId,
+                                    @RequestParam("applicationId") String applicationId,
                                     @RequestParam(value = "expiredTimes", required = false) List<java.sql.Timestamp> expiredTimes) {
 
         // 如果没有提供失效时间，则设置默认值为当前时间的一周后
@@ -86,7 +86,7 @@ public class FileController {
     // application从center结果管理区通过Http获取文件的接口
     @PostMapping("/fetchByHttp")
     public Body<String> fetchByHttp(@RequestParam("outputId") Long outputId,
-                                    @RequestParam("applicationId") Long applicationId,
+                                    @RequestParam("applicationId") String applicationId,
                                     HttpServletResponse response) {
 
         return fileService.fetchFileByHttp(outputId, applicationId, response);
@@ -95,21 +95,21 @@ public class FileController {
     // application通过路径直接获取center结果管理区文件的接口
     @PostMapping("/fetch")
     public Body<String> fetch(@RequestParam("outputId") Long outputId,
-                              @RequestParam("applicationId") Long applicationId) {
+                              @RequestParam("applicationId") String applicationId) {
 
         return fileService.fetchFile(outputId, applicationId, downloadBaseDir);
     }
 
     // application查询center结果管理区所有文件的接口
     @PostMapping("/query")
-    public Body<List<Output>> query(@RequestParam("applicationId") Long applicationId) {
+    public Body<List<Output>> query(@RequestParam("applicationId") String applicationId) {
 
         return fileService.queryFile(applicationId);
     }
 
     // application查询center结果管理区某些文件的接口
     @PostMapping("/queryByIds")
-    public Body<List<Output>> queryByIds(@RequestParam("applicationId") Long applicationId,
+    public Body<List<Output>> queryByIds(@RequestParam("applicationId") String applicationId,
                                          @RequestParam("outputIds") List<Long> outputIds) {
 
         return fileService.queryFileByIds(applicationId, outputIds);
@@ -117,7 +117,7 @@ public class FileController {
 
     // application删除center结果管理区文件的接口
     @PostMapping("/delete")
-    public Body<String> delete(@RequestParam("applicationId") Long applicationId,
+    public Body<String> delete(@RequestParam("applicationId") String applicationId,
                                @RequestParam("outputId") Long outputId) {
 
         return fileService.deleteFile(applicationId, outputId);
@@ -125,10 +125,10 @@ public class FileController {
 
     // center向agent发送文件传输请求并调用save接口接收文件到结果管理区
     @PostMapping("/getFile")
-    public CompletableFuture<Body<String>> getFile(@RequestParam("fileId") Long fileId,
-                                                   @RequestParam("agentId") Long agentId,
-                                                   @RequestParam("folderId") Long folderId,
-                                                   @RequestParam("applicationId") Long applicationId) throws Exception {
+    public CompletableFuture<Body<String>> getFile(@RequestParam("fileId") String fileId,
+                                                   @RequestParam("agentId") String agentId,
+                                                   @RequestParam("folderId") String folderId,
+                                                   @RequestParam("applicationId") String applicationId) throws Exception {
         WebClient webclient = centerWebClientService.center2AgentWebClient(agentId);
         File fileInfo = webclient.post()
                 .uri(uriBuilder -> uriBuilder.path("/directory/fileFolder/getFile")
@@ -180,15 +180,15 @@ public class FileController {
 
     // 测试getFile接口
     @PostMapping("/tGetFile")
-    public CompletableFuture<Body<String>> tGetFile(@RequestParam("applicationId") Long applicationId) throws Exception {
+    public CompletableFuture<Body<String>> tGetFile(@RequestParam("applicationId") String applicationId) throws Exception {
         // 这里创建一个 CompletableFuture 对象来处理异步结果
         CompletableFuture<Body<String>> future = new CompletableFuture<>();
 
         // 修改为从本地文件读取数据而不是从 WebClient 获取
         File fileInfo = new File();
-        fileInfo.setUid(5L);
-        fileInfo.setAgentId(5L);
-        fileInfo.setFolderId(10L);
+        fileInfo.setUid("5");
+        fileInfo.setAgentId("5");
+        fileInfo.setFolderId("10");
         fileInfo.setName("安全多方学习_从安全计算到安全学习_韩伟力.pdf");
         fileInfo.setType("pdf");
         fileInfo.setCreateDate(Timestamp.valueOf("2024-07-21 09:39:09"));

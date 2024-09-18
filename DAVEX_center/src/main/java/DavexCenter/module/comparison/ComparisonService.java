@@ -47,7 +47,7 @@ public class ComparisonService {
         @Value("${file.upload-base-dir}")
         private String uploadBaseDir;
 
-        public Body<DirectoryInfo> getDirectory(Long applicationId, Long agentId) throws Exception {
+        public Body<DirectoryInfo> getDirectory(String applicationId, String agentId) throws Exception {
 
                 WebClient webclient = centerWebClientService.center2AgentWebClient(agentId);
                 DirectoryInfo directoryInfo = webclient.post()
@@ -62,7 +62,7 @@ public class ComparisonService {
                 return Body.success(directoryInfo, "获取数据目录成功");
         }
 
-        public Body<TableHeader> getTableHeader(Long agentId, Long fileId, Long folderId) throws Exception {
+        public Body<TableHeader> getTableHeader(String agentId, String fileId, String folderId) throws Exception {
 
                 WebClient webclient = centerWebClientService.center2AgentWebClient(agentId);
                 TableHeader tableHeader = webclient.post()
@@ -77,7 +77,7 @@ public class ComparisonService {
                 return Body.success(tableHeader, "获取成功");
         }
 
-        public Body<List<Boolean>> compare(Long applicationId, Long agentId, Long fileId, Long folderId,
+        public Body<List<Boolean>> compare(String applicationId, String agentId, String fileId, String folderId,
                         List<String> attributes, List<List<String>> valuesList) throws Exception {
 
                 WebClient webclient = centerWebClientService.center2AgentWebClient(agentId);
@@ -160,7 +160,7 @@ public class ComparisonService {
                 return Body.success(comparisonResults, "比对成功");
         }
 
-        public Body<List<Boolean>> compareFromCsv(Long applicationId, Long agentId, Long fileId, Long folderId, MultipartFile file) throws Exception {
+        public Body<List<Boolean>> compareFromCsv(String applicationId, String agentId, String fileId, String folderId, MultipartFile file) throws Exception {
 
                 // 解析 CSV 文件
                 List<String> attributes = new ArrayList<>();

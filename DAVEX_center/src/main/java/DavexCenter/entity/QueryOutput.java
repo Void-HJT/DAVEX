@@ -12,7 +12,7 @@ public class QueryOutput {
     private String hash;
     private String path;
     private java.sql.Timestamp uploadDate;
-    private Long applicationId;
+    private String applicationId;
     private java.sql.Timestamp expiredTime;
     private String name;
 

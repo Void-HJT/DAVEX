@@ -35,7 +35,7 @@ public class ComparisonFileService {
     @Autowired
     private JdbcTemplate jdbcTemplate;
 
-    public Body<String> saveComparison(MultipartFile file, String hash, Long applicationId, Long agentId, Long fileId, Long folderId, String fileName,
+    public Body<String> saveComparison(MultipartFile file, String hash, String applicationId, String agentId, String fileId, String folderId, String fileName,
                                            String base, java.sql.Timestamp expiredTime) {
 
         // 校验sha256
@@ -83,7 +83,7 @@ public class ComparisonFileService {
                 resultName));
     }
 
-    public Body<String> fetchComparison(Long outputId, Long applicationId, String downloadPath) {
+    public Body<String> fetchComparison(Long outputId, String applicationId, String downloadPath) {
 
         // 根据结果id查找结果表
         LambdaQueryWrapper<ComparisonOutput> queryWrapper = Wrappers.<ComparisonOutput>lambdaQuery()
@@ -120,7 +120,7 @@ public class ComparisonFileService {
         return Body.success(String.format("获取成功，结果id: %d，文件名: %s", outputId, fileName));
     }
 
-    public Body<List<ComparisonOutput>> queryComparison(Long applicationId) {
+    public Body<List<ComparisonOutput>> queryComparison(String applicationId) {
 
         LambdaQueryWrapper<ComparisonOutput> queryWrapper = Wrappers.<ComparisonOutput>lambdaQuery()
                 .eq(ComparisonOutput::getApplicationId, applicationId);
@@ -129,7 +129,7 @@ public class ComparisonFileService {
         return Body.success(outputs, String.format("查询成功，共查询到%d个文件", fileNum));
     }
 
-    public Body<List<ComparisonOutput>> queryComparisonByIds(Long applicationId, List<Long> outputIds) {
+    public Body<List<ComparisonOutput>> queryComparisonByIds(String applicationId, List<Long> outputIds) {
 
         LambdaQueryWrapper<ComparisonOutput> queryWrapper = Wrappers.<ComparisonOutput>lambdaQuery()
                 .eq(ComparisonOutput::getApplicationId, applicationId)
@@ -140,7 +140,7 @@ public class ComparisonFileService {
         return Body.success(outputs, String.format("查询成功，共查询到%d个文件", fileNum));
     }
 
-    public Body<String> deleteComparison(Long applicationId, Long outputId) {
+    public Body<String> deleteComparison(String applicationId, Long outputId) {
 
         // 根据文件id查找结果表
         LambdaQueryWrapper<ComparisonOutput> queryWrapper = Wrappers.<ComparisonOutput>lambdaQuery()

@@ -50,7 +50,7 @@ public class FileService {
     @Autowired
     private DownloadTaskMapper downloadTaskMapper;
 
-    public Body<String> saveFile(MultipartFile file, File fileInfo, Long applicationId,
+    public Body<String> saveFile(MultipartFile file, File fileInfo, String applicationId,
             String base, java.sql.Timestamp expiredTime) {
 
         // 校验sha256
@@ -103,7 +103,7 @@ public class FileService {
                 fileInfo.getUid(), fileInfo.getAgentId(), fileName));
     }
 
-    public Body<List<String>> saveFiles(List<MultipartFile> files, List<File> fileInfos, Long applicationId,
+    public Body<List<String>> saveFiles(List<MultipartFile> files, List<File> fileInfos, String applicationId,
             String base, List<java.sql.Timestamp> expiredTimes) {
         List<String> results = new ArrayList<>();
 
@@ -175,7 +175,7 @@ public class FileService {
         return Body.success(results, "文件保存处理完成");
     }
 
-    public Body<String> fetchFileByHttp(Long outputId, Long applicationId, HttpServletResponse response) {
+    public Body<String> fetchFileByHttp(Long outputId, String applicationId, HttpServletResponse response) {
 
         // 根据结果id查找结果表
         LambdaQueryWrapper<Output> queryWrapper = Wrappers.<Output>lambdaQuery()
@@ -226,7 +226,7 @@ public class FileService {
         return Body.success(String.format("获取成功，结果id: %d，文件名: %s", outputId, fileName));
     }
 
-    public Body<String> fetchFile(Long outputId, Long applicationId, String downloadPath) {
+    public Body<String> fetchFile(Long outputId, String applicationId, String downloadPath) {
 
         // 根据结果id查找结果表
         LambdaQueryWrapper<Output> queryWrapper = Wrappers.<Output>lambdaQuery()
@@ -263,7 +263,7 @@ public class FileService {
         return Body.success(String.format("获取成功，结果id: %d，文件名: %s", outputId, fileName));
     }
 
-    public Body<List<Output>> queryFile(Long applicationId) {
+    public Body<List<Output>> queryFile(String applicationId) {
 
         LambdaQueryWrapper<Output> queryWrapper = Wrappers.<Output>lambdaQuery()
                 .eq(Output::getApplicationId, applicationId);
@@ -272,7 +272,7 @@ public class FileService {
         return Body.success(outputs, String.format("查询成功，共查询到%d个文件", fileNum));
     }
 
-    public Body<List<Output>> queryFileByIds(Long applicationId, List<Long> outputIds) {
+    public Body<List<Output>> queryFileByIds(String applicationId, List<Long> outputIds) {
 
         LambdaQueryWrapper<Output> queryWrapper = Wrappers.<Output>lambdaQuery()
                 .eq(Output::getApplicationId, applicationId)
@@ -283,7 +283,7 @@ public class FileService {
         return Body.success(outputs, String.format("查询成功，共查询到%d个文件", fileNum));
     }
 
-    public Body<String> deleteFile(Long applicationId, Long outputId) {
+    public Body<String> deleteFile(String applicationId, Long outputId) {
 
         // 根据文件id查找结果表
         LambdaQueryWrapper<Output> queryWrapper = Wrappers.<Output>lambdaQuery()

@@ -12,12 +12,12 @@ public class ComparisonOutput {
     private String hash;
     private String path;
     private java.sql.Timestamp uploadDate;
-    private Long applicationId;
+    private String applicationId;
     private java.sql.Timestamp expiredTime;
     private String name;
-    private Long agentId;
-    private Long fileId;
-    private Long folderId;
+    private String agentId;
+    private String fileId;
+    private String folderId;
     private String destName;
 
 }

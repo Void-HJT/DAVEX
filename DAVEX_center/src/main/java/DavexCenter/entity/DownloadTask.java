@@ -10,7 +10,7 @@ public class DownloadTask {
 
     @TableId(type = IdType.AUTO)
     private Long uid;
-    private Long applicationId;
+    private String applicationId;
     private Long outputId;
     private java.sql.Timestamp downloadTime;
     private String type;

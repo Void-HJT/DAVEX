@@ -20,7 +20,7 @@ public class Output {
     private String path;
     private java.sql.Timestamp expiredTime;
     private String hash;
-    private Long fileId;
-    private Long agentId;
-    private Long applicationId;
+    private String fileId;
+    private String agentId;
+    private String applicationId;
 }

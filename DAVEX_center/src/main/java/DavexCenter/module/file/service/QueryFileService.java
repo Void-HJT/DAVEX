@@ -36,7 +36,7 @@ public class QueryFileService {
     @Autowired
     private JdbcTemplate jdbcTemplate;
 
-    public Body<String> saveQuery(MultipartFile file, String hash, Long applicationId,
+    public Body<String> saveQuery(MultipartFile file, String hash, String applicationId,
                                       String base, java.sql.Timestamp expiredTime) {
 
         // 校验sha256
@@ -88,7 +88,7 @@ public class QueryFileService {
                 fileName));
     }
 
-    public Body<String> fetchQuery(Long outputId, Long applicationId, String downloadPath) {
+    public Body<String> fetchQuery(Long outputId, String applicationId, String downloadPath) {
 
         // 根据结果id查找结果表
         LambdaQueryWrapper<QueryOutput> queryWrapper = Wrappers.<QueryOutput>lambdaQuery()
@@ -125,7 +125,7 @@ public class QueryFileService {
         return Body.success(String.format("获取成功，结果id: %d，文件名: %s", outputId, fileName));
     }
 
-    public Body<List<QueryOutput>> queryQuery(Long applicationId) {
+    public Body<List<QueryOutput>> queryQuery(String applicationId) {
 
         LambdaQueryWrapper<QueryOutput> queryWrapper = Wrappers.<QueryOutput>lambdaQuery()
                 .eq(QueryOutput::getApplicationId, applicationId);
@@ -134,7 +134,7 @@ public class QueryFileService {
         return Body.success(outputs, String.format("查询成功，共查询到%d个文件", fileNum));
     }
 
-    public Body<List<QueryOutput>> queryQueryByIds(Long applicationId, List<Long> outputIds) {
+    public Body<List<QueryOutput>> queryQueryByIds(String applicationId, List<Long> outputIds) {
 
         LambdaQueryWrapper<QueryOutput> queryWrapper = Wrappers.<QueryOutput>lambdaQuery()
                 .eq(QueryOutput::getApplicationId, applicationId)
@@ -145,7 +145,7 @@ public class QueryFileService {
         return Body.success(outputs, String.format("查询成功，共查询到%d个文件", fileNum));
     }
 
-    public Body<String> deleteQuery(Long applicationId, Long outputId) {
+    public Body<String> deleteQuery(String applicationId, Long outputId) {
 
         // 根据文件id查找结果表
         LambdaQueryWrapper<QueryOutput> queryWrapper = Wrappers.<QueryOutput>lambdaQuery()

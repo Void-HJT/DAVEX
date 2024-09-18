@@ -21,18 +21,18 @@ public class ComparisonController {
 
     // agent解析csv文件表头
     @PostMapping("/getCsvHeader")
-    public Body<TableHeader> getCsvHeader(@RequestParam("fileId") Long fileId,
-                                          @RequestParam("folderId") Long folderId,
-                                          @RequestParam("agentId") Long agentId) {
+    public Body<TableHeader> getCsvHeader(@RequestParam("fileId") String fileId,
+                                          @RequestParam("folderId") String folderId,
+                                          @RequestParam("agentId") String agentId) {
 
         return comparisonService.getCsvHeader(fileId, folderId, agentId);
     }
 
     // agent计算哈希
     @PostMapping("/getHash")
-    public Body<List<String>> getHash(@RequestParam("fileId") Long fileId,
-                                      @RequestParam("folderId") Long folderId,
-                                      @RequestParam("agentId") Long agentId,
+    public Body<List<String>> getHash(@RequestParam("fileId") String fileId,
+                                      @RequestParam("folderId") String folderId,
+                                      @RequestParam("agentId") String agentId,
                                       @RequestParam("attributes") List<String> attributes) {
 
         return comparisonService.getHash(fileId, folderId, agentId, attributes);
@@ -40,9 +40,9 @@ public class ComparisonController {
 
     // 文件名
     @PostMapping("/getFileName")
-    public Body<String> getFileName(@RequestParam("fileId") Long fileId,
-                                          @RequestParam("folderId") Long folderId,
-                                          @RequestParam("agentId") Long agentId) {
+    public Body<String> getFileName(@RequestParam("fileId") String fileId,
+                                          @RequestParam("folderId") String folderId,
+                                          @RequestParam("agentId") String agentId) {
 
         return comparisonService.getFileName(fileId, folderId, agentId);
     }
