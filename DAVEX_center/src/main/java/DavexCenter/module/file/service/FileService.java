@@ -7,6 +7,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.URLEncoder;
+import java.nio.file.Paths;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.sql.Timestamp;
@@ -14,7 +15,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.nio.file.Paths;
+
 //import java.io.File; 命名冲突，使用全限定名
 import javax.servlet.http.HttpServletResponse;
 import javax.xml.bind.DatatypeConverter;
@@ -78,7 +79,7 @@ public class FileService {
         newOutput.setName(fileName);
         newOutput.setType(fileInfo.getType());
         newOutput.setUploadDate(Timestamp.valueOf(LocalDateTime.now()));
-        newOutput.setTag(fileInfo.getTag());
+        newOutput.setAttribute(fileInfo.getAttribute());
         newOutput.setSize(fileInfo.getSize());
         newOutput.setDescription(fileInfo.getDescription());
         newOutput.setPath(Paths.get(base).resolve("common").resolve(fileHash + "_appid_" + applicationId).toString());
@@ -143,7 +144,7 @@ public class FileService {
             newOutput.setName(fileInfo.getName());
             newOutput.setType(fileInfo.getType());
             newOutput.setUploadDate(Timestamp.valueOf(LocalDateTime.now()));
-            newOutput.setTag(fileInfo.getTag());
+            newOutput.setAttribute(fileInfo.getAttribute());
             newOutput.setSize(fileInfo.getSize());
             newOutput.setDescription(fileInfo.getDescription());
             newOutput.setPath(

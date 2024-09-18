@@ -42,6 +42,9 @@ public class My {
     @Value("${server.port}")
     protected int port;
 
+    @Value("${my.rules_path}")
+    protected String rules_path;
+
     // @Value("${ssl.keystore-path}")
     // protected String keyStorePath;
 
@@ -56,6 +59,10 @@ public class My {
 
     // @Value("${ssl.key-store-type}")
     // protected String keyStoreType;
+
+    public String getRules_path() {
+        return rules_path;
+    }
 
     @Value("${my.garnet_path}")
     protected String garnet_path;

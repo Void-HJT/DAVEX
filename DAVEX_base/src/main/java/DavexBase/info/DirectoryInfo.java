@@ -1,9 +1,11 @@
 package DavexBase.info;
 
-import lombok.Data;
-
 import java.util.ArrayList;
 import java.util.List;
+
+import com.alibaba.fastjson.JSONObject;
+
+import lombok.Data;
 
 @Data
 public class DirectoryInfo {
@@ -17,7 +19,7 @@ public class DirectoryInfo {
     private List<DirectoryInfo> children = new ArrayList<>();
 
     // File specific fields
-    private String tag;
+    private JSONObject attribute;
     private Long size;
     private String description;
     private String hash;

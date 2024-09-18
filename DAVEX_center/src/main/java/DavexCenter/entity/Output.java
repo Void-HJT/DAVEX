@@ -1,7 +1,9 @@
 package DavexCenter.entity;
 
+import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
+
 import lombok.Data;
 
 @Data
@@ -12,7 +14,7 @@ public class Output {
     private String name;
     private String type;
     private java.sql.Timestamp uploadDate;
-    private String tag;
+    private JSONObject attribute;
     private long size;
     private String description;
     private String path;
