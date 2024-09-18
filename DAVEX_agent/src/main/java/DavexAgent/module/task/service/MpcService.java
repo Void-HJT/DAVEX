@@ -14,12 +14,12 @@ import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 
-import DavexBase.service.auth.AgentWebClientService;
 import DavexBase.common.My;
 import DavexBase.common.R;
 import DavexBase.common.Utils;
 import DavexBase.entity.Mpc;
 import DavexBase.mapper.MpcMapper;
+import DavexBase.service.auth.AgentWebClientService;
 import DavexBase.service.programs.GarnetService;
 
 @Service
@@ -35,7 +35,7 @@ public class MpcService {
 
     private static final Logger logger = LoggerFactory.getLogger(GarnetService.class);
 
-    public void downloadMPC(Long centerId, String MpcID) throws Exception {
+    public void downloadMPC(String centerId, String MpcID) throws Exception {
         WebClient webClient = agentWebClientService.agent2CenterWebClient(centerId);
         Mpc mpc = webClient.get()
                 .uri(UriBuilder -> UriBuilder.path("/Mpc/select").queryParam("MpcID", MpcID).build()).retrieve()

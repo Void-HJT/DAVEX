@@ -29,8 +29,8 @@ public class MpcTask {
 
   @TableId(type = IdType.ASSIGN_UUID)
   private String uid;
-  private Long applicationId;
-  private Long centerId;
+  private String applicationId;
+  private String centerId;
   private String mpcId;
   @TableField(typeHandler = FastjsonTypeHandler.class)
   private JSONObject compileParameters;
@@ -41,7 +41,7 @@ public class MpcTask {
   private String host;
   private Integer port;
   @JsonInclude(Include.NON_NULL)
-  private Long dataId;
+  private String dataId;
   @JsonIgnore
   private String mpcName;
   private TaskType taskType;

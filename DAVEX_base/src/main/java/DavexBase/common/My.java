@@ -28,7 +28,7 @@ public class My {
     protected String version;
 
     @Value("${my.id}")
-    protected Long id;
+    protected String id;
 
     @Value("${my.name}")
     protected String name;
@@ -165,7 +165,7 @@ public class My {
         return version;
     }
 
-    public long getId() {
+    public String getId() {
         return id;
     }
 
@@ -181,7 +181,7 @@ public class My {
         this.version = version;
     }
 
-    public void setId(Long id) {
+    public void setId(String id) {
         this.id = id;
     }
 

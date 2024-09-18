@@ -10,14 +10,14 @@ import DavexBase.entity.MpcTask;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class UploadAgentTaskInfo extends MpcTask {
     public static class PartInfo {
-        private Long agentID;
+        private String agentID;
         private Long part;
-        private Long fileID;
+        private String fileID;
 
         public PartInfo() {
         }
 
-        public PartInfo(Long agentID, Long part, Long fileID) {
+        public PartInfo(String agentID, Long part, String fileID) {
             this.agentID = agentID;
             this.part = part;
             this.fileID = fileID;
@@ -29,11 +29,11 @@ public class UploadAgentTaskInfo extends MpcTask {
             this.fileID = other.fileID;
         }
 
-        public Long getAgentID() {
+        public String getAgentID() {
             return agentID;
         }
 
-        public void setAgentID(Long agent_id) {
+        public void setAgentID(String agent_id) {
             this.agentID = agent_id;
         }
 
@@ -45,11 +45,11 @@ public class UploadAgentTaskInfo extends MpcTask {
             this.part = part;
         }
 
-        public Long getFileID() {
+        public String getFileID() {
             return fileID;
         }
 
-        public void setFileID(Long file_id) {
+        public void setFileID(String file_id) {
             this.fileID = file_id;
         }
     }

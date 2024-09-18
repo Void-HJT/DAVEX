@@ -43,7 +43,7 @@ public class AgentWebClientService {
                                 }).build();
         }
 
-        public WebClient agent2CenterWebClient(long center_id) throws Exception {
+        public WebClient agent2CenterWebClient(String center_id) throws Exception {
                 LambdaQueryWrapper<Center> queryWrapper = Wrappers.<Center>lambdaQuery().eq(Center::getUid, center_id);
                 Center center = centerMapper.selectOne(queryWrapper);
                 HttpClient httpClient = HttpClient.create();
@@ -53,7 +53,7 @@ public class AgentWebClientService {
                                 .build();
         }
 
-        public WebClient agent2AgentWebClient(long agent_id) throws Exception {
+        public WebClient agent2AgentWebClient(String agent_id) throws Exception {
                 LambdaQueryWrapper<Agent> queryWrapper = Wrappers.<Agent>lambdaQuery().eq(Agent::getUid, agent_id);
                 Agent agent = agentMapper.selectOne(queryWrapper);
                 HttpClient httpClient = HttpClient.create();

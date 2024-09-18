@@ -15,8 +15,8 @@ public class MpcTaskAgent {
   private Long uid;
   @TableField("mpcTask_id")
   private String mpcTaskId;
-  private Long centerId;
-  private Long agentId;
+  private String centerId;
+  private String agentId;
   private Long part;
 
 }

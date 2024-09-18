@@ -184,8 +184,8 @@ CREATE TABLE `group` (
 DROP TABLE IF EXISTS `input`;
 
 CREATE TABLE `input` (
-    `uid` bigint NOT NULL AUTO_INCREMENT,
-    `application_id` bigint NOT NULL,
+    `uid` varchar(255) NOT NULL AUTO_INCREMENT,
+    `application_id` varchar(255) NOT NULL,
     `path` varchar(255) NOT NULL,
     PRIMARY KEY (`uid`)
 ) ENGINE = InnoDB AUTO_INCREMENT = 52 DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci;
@@ -200,7 +200,7 @@ CREATE TABLE `mpc` (
     `name` varchar(255) DEFAULT NULL,
     `compile_parameters` json DEFAULT NULL,
     `runtime_parameters` json DEFAULT NULL,
-    `center_id` bigint DEFAULT NULL,
+    `center_id` varchar(255) DEFAULT NULL,
     `path` varchar(255) DEFAULT NULL,
     PRIMARY KEY (`uid`)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci;
@@ -212,8 +212,8 @@ DROP TABLE IF EXISTS `mpcTask`;
 
 CREATE TABLE `mpcTask` (
     `uid` varchar(32) NOT NULL,
-    `application_id` bigint DEFAULT NULL,
-    `center_id` bigint DEFAULT NULL,
+    `application_id` varchar(255) DEFAULT NULL,
+    `center_id` varchar(255) DEFAULT NULL,
     `mpc_id` varchar(32) DEFAULT NULL,
     `compile_parameters` json DEFAULT NULL,
     `runtime_parameters` json DEFAULT NULL,
@@ -221,7 +221,7 @@ CREATE TABLE `mpcTask` (
     `part` int DEFAULT NULL,
     `host` varchar(255) DEFAULT NULL,
     `port` int DEFAULT NULL,
-    `data_id` bigint DEFAULT NULL,
+    `data_id` varchar(255) DEFAULT NULL,
     `mpc_name` varchar(255) DEFAULT NULL,
     `task_type` enum('GARNET_PSI', 'GARNET_MPC') DEFAULT NULL,
     `status` varchar(255) DEFAULT NULL,
@@ -237,8 +237,8 @@ DROP TABLE IF EXISTS `mpcTask_agent`;
 CREATE TABLE `mpcTask_agent` (
     `uid` bigint NOT NULL AUTO_INCREMENT,
     `mpcTask_id` varchar(255) DEFAULT NULL,
-    `center_id` bigint DEFAULT NULL,
-    `agent_id` bigint DEFAULT NULL,
+    `center_id` varchar(255) DEFAULT NULL,
+    `agent_id` varchar(255) DEFAULT NULL,
     `part` int DEFAULT NULL,
     PRIMARY KEY (`uid`)
 ) ENGINE = InnoDB AUTO_INCREMENT = 42 DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci;
@@ -254,7 +254,7 @@ CREATE TABLE `mpcTaskOutput` (
     `hash` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
     `path` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
     `upload_date` timestamp NULL DEFAULT NULL,
-    `application_id` int DEFAULT NULL,
+    `application_id` varchar(255) DEFAULT NULL,
     `expired_time` timestamp NULL DEFAULT NULL,
     `name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
     PRIMARY KEY (`uid`) USING BTREE
@@ -276,9 +276,9 @@ CREATE TABLE `output` (
     `path` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
     `expired_time` timestamp NULL DEFAULT NULL,
     `hash` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
-    `file_id` int DEFAULT NULL,
-    `agent_id` int DEFAULT NULL,
-    `application_id` int DEFAULT NULL,
+    `file_id` varchar(255) DEFAULT NULL,
+    `agent_id` varchar(255) DEFAULT NULL,
+    `application_id` varchar(255) DEFAULT NULL,
     PRIMARY KEY (`uid`) USING BTREE
 ) ENGINE = InnoDB AUTO_INCREMENT = 48 DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = DYNAMIC;
 
@@ -289,7 +289,7 @@ DROP TABLE IF EXISTS `outside_database`;
 
 CREATE TABLE `outside_database` (
     `uid` bigint NOT NULL AUTO_INCREMENT,
-    `agent_id` bigint DEFAULT NULL,
+    `agent_id` varchar(255) DEFAULT NULL,
     `name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
     `type` enum('mysql') CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
     `connection` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
@@ -304,7 +304,7 @@ DROP TABLE IF EXISTS `outside_database_table`;
 
 CREATE TABLE `outside_database_table` (
     `uid` bigint NOT NULL AUTO_INCREMENT,
-    `agent_id` bigint DEFAULT NULL,
+    `agent_id` varchar(255) DEFAULT NULL,
     `outside_database_id` bigint DEFAULT NULL,
     `name` varchar(1000) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
     `description` varchar(1000) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
@@ -323,7 +323,7 @@ CREATE TABLE `query_output` (
     `hash` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
     `path` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
     `upload_date` timestamp NULL DEFAULT NULL,
-    `application_id` int DEFAULT NULL,
+    `application_id` varchar(255) DEFAULT NULL,
     `expired_time` timestamp NULL DEFAULT NULL,
     `name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
     PRIMARY KEY (`uid`) USING BTREE
@@ -364,10 +364,10 @@ DROP TABLE IF EXISTS `task`;
 
 CREATE TABLE `task` (
     `uid` int NOT NULL AUTO_INCREMENT,
-    `file_id` int DEFAULT NULL,
-    `agent_id` int DEFAULT NULL,
-    `application_id` int DEFAULT NULL,
-    `output_id` int DEFAULT NULL,
+    `file_id` varchar(255) DEFAULT NULL,
+    `agent_id` varchar(255) DEFAULT NULL,
+    `application_id` varchar(255) DEFAULT NULL,
+    `output_id` varchar(255) DEFAULT NULL,
     `download_time` timestamp NULL DEFAULT NULL,
     PRIMARY KEY (`uid`) USING BTREE
 ) ENGINE = InnoDB AUTO_INCREMENT = 21 DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = DYNAMIC;

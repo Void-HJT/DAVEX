@@ -9,7 +9,7 @@ import lombok.Data;
 public class Input {
 
     @TableId(type = IdType.AUTO)
-    private Long uid;
-    private Long applicationId;
+    private String uid;
+    private String applicationId;
     private String path;
 }
