@@ -225,7 +225,7 @@ watch(isRegister, () => {
   background-color: #fff;
   .bg {
     background:
-      url('@/assets/logo2.png') no-repeat 5% 5% / 50px auto,
+      //url('@/assets/logo2.png') no-repeat 5% 5% / 50px auto,
       url('@/assets/login_bg.jpg') no-repeat left / cover;
     border-radius: 0 20px 20px 0;
   }
