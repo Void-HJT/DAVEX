@@ -4,20 +4,35 @@ package DavexCenter.module.application;
 import DavexBase.common.Body;
 import DavexBase.entity.Application;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
-@RestController // @RestController的作用等同于@Controller + @ResponseBody。
-// 相当于@Controller+@ResponseBody两个注解的结合，返回json数据不需要在方法前面加@ResponseBody注解了，但使用@RestController这个注解，就不能返回jsp,html页面，视图解析器无法解析jsp,html页面
-@RequestMapping("/application/Manage")
+import java.util.List;
+
+@RestController
+@RequestMapping("/application/management")
 public class ApplicationController {
     @Autowired
     ApplicationService applicationService;
 
     @PostMapping("/addApplication")
     public Body<String> addApplication(@RequestBody Application application){
+
         return applicationService.addApplication(application);
     }
+
+    @PostMapping("/deleteApplication")
+    public Body<String> deleteApplication(@RequestParam("applicationId") String applicationId){
+        return applicationService.deleteApplication(applicationId);
+    }
+
+    @PostMapping("/updateApplication")
+    public Body<String> updateApplication(@RequestBody Application application){
+        return applicationService.updateApplication(application);
+    }
+
+    @PostMapping("/getApplicationList")
+    public Body<List<Application>> getApplicationList(){
+        return applicationService.getApplicationList();
+    }
+
 }

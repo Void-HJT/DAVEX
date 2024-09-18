@@ -10,9 +10,9 @@ public class ApplicationGroup {
 
   @TableId(type = IdType.AUTO)
   private Long uid;
-  private Long agentId;
-  private Long centerId;
-  private Long applicationId;
+  private String agentId;
+  private String centerId;
+  private String applicationId;
   private Long groupId;
 
 }

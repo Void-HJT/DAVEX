@@ -16,10 +16,10 @@ import lombok.Data;
 @TableName(value = "file", autoResultMap = true)
 public class File {
 
-  @TableId(type = IdType.AUTO)
-  private Long uid;
+  @TableId
+  private String uid;
 
-  private Long agentId;
+  private String agentId;
   private Long folderId;
 
   private String name;
