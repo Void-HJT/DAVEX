@@ -7,7 +7,7 @@ import {
   SwitchButton,
   CaretBottom,
 } from '@element-plus/icons-vue' //crop
-import avatar from '@/assets/default.png'
+// import avatar from '@/assets/default.png'
 import { useUserStore } from '../../stores'
 import { useRouter } from 'vue-router'
 const router = useRouter()
@@ -186,7 +186,7 @@ const handleCommand = (key) => {
     background-color: #304156;
     &__logo {
       height: 150px;
-      background: url('@/assets/logo2.png') no-repeat center / 120px auto;
+      //background: url('@/assets/logo2.png') no-repeat center / 120px auto;
     }
     .el-menu {
       justify-content: center;
