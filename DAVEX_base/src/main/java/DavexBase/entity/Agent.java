@@ -11,7 +11,7 @@ import lombok.Data;
 public class Agent {
 
   @TableId
-  private Long uid;
+  private String uid;
   private String name;
   private String ip;
   private int port;
@@ -56,7 +56,7 @@ public class Agent {
   public int hashCode() {
     final int prime = 31;
     int result = 1;
-    result = prime * result + (int) (uid ^ (uid >>> 32));
+    result = prime * result + ((uid == null) ? 0 : uid.hashCode());
     result = prime * result + ((name == null) ? 0 : name.hashCode());
     result = prime * result + ((ip == null) ? 0 : ip.hashCode());
     result = prime * result + (int) (port ^ (port >>> 32));

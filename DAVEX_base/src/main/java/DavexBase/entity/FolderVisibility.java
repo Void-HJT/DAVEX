@@ -11,7 +11,7 @@ public class FolderVisibility {
   @TableId(type = IdType.AUTO)
   private Long uid;
 
-  private Long agentId;
+  private String agentId;
   private Long folderId;
   private Long groupId;
 

@@ -9,8 +9,8 @@ public class FileRule {
 
   @TableId(type = IdType.AUTO)
   private Long uid;
-  private Long agentId;
-  private Long fileId;
+  private String agentId;
+  private String fileId;
   private Long ruleId;
 
 }

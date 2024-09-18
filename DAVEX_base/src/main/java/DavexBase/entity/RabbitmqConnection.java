@@ -6,7 +6,7 @@ import lombok.Data;
 @Data
 public class RabbitmqConnection {
     @TableId
-    private String centerId;
+    private String uid;
     private String host;
     private int port;
     private String username;

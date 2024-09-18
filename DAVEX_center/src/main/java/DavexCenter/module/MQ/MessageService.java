@@ -3,6 +3,7 @@ package DavexCenter.module.MQ;
 import DavexBase.entity.Application;
 import DavexBase.mapper.ApplicationMapper;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -13,6 +14,10 @@ public class MessageService {
 
     // 使用 Jackson ObjectMapper
     private final ObjectMapper objectMapper = new ObjectMapper();
+    @Autowired
+    public MessageService() {
+        this.objectMapper.registerModule(new JavaTimeModule());
+    }
 
     public void handleMessage(String message) {
         if(message.startsWith("Create")||message.startsWith("Delete")||message.startsWith("Update")) {

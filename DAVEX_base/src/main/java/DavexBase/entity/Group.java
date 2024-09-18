@@ -12,8 +12,8 @@ public class Group {
 
   @TableId(type = IdType.AUTO)
   private Long uid;
-  private long agentId;
-  private long centerId;
+  private String agentId;
+  private String centerId;
   private String name;
 
 }

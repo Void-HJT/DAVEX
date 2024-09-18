@@ -11,7 +11,7 @@ import lombok.Data;
 public class Center {
 
   @TableId
-  private Long uid;
+  private String uid;
 
   private String name;
   private String ip;

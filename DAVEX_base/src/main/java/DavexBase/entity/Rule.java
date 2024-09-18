@@ -10,7 +10,7 @@ public class Rule {
   @TableId(type = IdType.AUTO)
   private Long uid;
 
-  private Long agentId;
+  private String agentId;
   private Long groupId;
   private String allowedMethod;
 

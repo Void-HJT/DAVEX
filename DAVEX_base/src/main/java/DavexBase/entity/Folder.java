@@ -8,9 +8,9 @@ import lombok.Data;
 @Data
 public class Folder {
 
-  @TableId(type = IdType.AUTO)
+  @TableId
   private Long uid;
-  private Long agentId;
+  private String agentId;
   private Long parentId;
   private String name;
   private java.sql.Timestamp createDate;
