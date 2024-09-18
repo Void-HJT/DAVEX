@@ -6,6 +6,8 @@ import DavexBase.entity.Application;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/application/management")
 public class ApplicationController {
@@ -26,6 +28,11 @@ public class ApplicationController {
     @PostMapping("/updateApplication")
     public Body<String> updateApplication(@RequestBody Application application){
         return applicationService.updateApplication(application);
+    }
+
+    @PostMapping("/getApplicationList")
+    public Body<List<Application>> getApplicationList(){
+        return applicationService.getApplicationList();
     }
 
 }
