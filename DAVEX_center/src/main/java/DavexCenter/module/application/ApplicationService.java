@@ -25,7 +25,7 @@ public class ApplicationService {
     @Autowired
     CenterPublishService centerPublishService;
 
-    @Value("${service.id}")
+    @Value("${my.id}")
     private String uid;
 
     // 使用 Jackson ObjectMapper
@@ -38,9 +38,10 @@ public class ApplicationService {
 
     public Body<String> addApplication(Application application) {
         //设置application
-        List<Object> uidList = applicationMapper.selectObjs(new QueryWrapper<Application>().select("uid"));
+        List<Object> uidList = applicationMapper.selectObjs(new QueryWrapper<Application>().select("uid")
+                .eq("center_id",uid));
         // 遍历uidList中的每个uid
-        int maxTailNumber = -1; // 初始化最大尾部数字
+        int maxTailNumber = 0; // 初始化最大尾部数字
         for (Object obj : uidList) {
             if (obj instanceof String) {
                 String uid = (String) obj;
@@ -58,8 +59,6 @@ public class ApplicationService {
                 }
             }
         }
-
-        if(maxTailNumber==-1){return Body.error("自动获取uid列表失败");}
         application.setCenterId(uid);
         application.setUid(uid+"-AXX"+(maxTailNumber+1));
         application.setLastUpdated(LocalDateTime.now());
