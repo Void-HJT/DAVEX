@@ -35,6 +35,11 @@ spring:
   mvc:
     pathmatch:
       matching-strategy: ANT_PATH_MATCHER
+  rabbitmq:
+    host: !!
+    port: !!
+    username: !!
+    password: !!
 
 mybatis-plus:
   configuration:

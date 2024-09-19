@@ -58,6 +58,7 @@ public class ApplicationService {
                 }
             }
         }
+
         if(maxTailNumber==-1){return Body.error("自动获取uid列表失败");}
         application.setCenterId(uid);
         application.setUid(uid+"-AXX"+(maxTailNumber+1));
