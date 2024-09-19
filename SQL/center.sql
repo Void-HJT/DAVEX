@@ -143,7 +143,7 @@ CREATE TABLE `file_rule` (
 DROP TABLE IF EXISTS `folder`;
 
 CREATE TABLE `folder` (
-    `uid` varchar(255) NOT NULL AUTO_INCREMENT,
+    `uid` varchar(255) NOT NULL,
     `agent_id` varchar(255) NOT NULL,
     `parent_id` varchar(255) DEFAULT NULL,
     `name` varchar(255) DEFAULT NULL,
@@ -184,7 +184,7 @@ CREATE TABLE `group` (
 DROP TABLE IF EXISTS `input`;
 
 CREATE TABLE `input` (
-    `uid` varchar(255) NOT NULL AUTO_INCREMENT,
+    `uid` varchar(255) NOT NULL,
     `application_id` varchar(255) NOT NULL,
     `path` varchar(255) NOT NULL,
     PRIMARY KEY (`uid`)

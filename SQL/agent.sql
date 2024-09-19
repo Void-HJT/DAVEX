@@ -108,7 +108,7 @@ CREATE TABLE `file_rule` (
 DROP TABLE IF EXISTS `folder`;
 
 CREATE TABLE `folder` (
-    `uid` varchar(255) NOT NULL AUTO_INCREMENT,
+    `uid` varchar(255) NOT NULL,
     `agent_id` varchar(255) NOT NULL,
     `parent_id` varchar(255) NOT NULL,
     `name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
