@@ -87,7 +87,7 @@ public class MpcTaskOutputService {
         mpcTaskOutputMapper.insert(mpcTaskOutput);
     }
 
-    public Body<String> fetchMpc(Long mpcOutputId, Long applicationId) {
+    public Body<String> fetchMpc(Long mpcOutputId, String applicationId) {
         // 根据结果id查找结果表
         LambdaQueryWrapper<MpcTaskOutput> queryWrapper = Wrappers.<MpcTaskOutput>lambdaQuery()
                 .eq(MpcTaskOutput::getUid, mpcOutputId)

@@ -42,7 +42,7 @@ public class MpcTaskOutputController {
 
     @PostMapping("/fetch")
     public Body<String> fetchMpc(@RequestParam("mpcOutputId") Long mpcOutputId,
-            @RequestParam("applicationId") Long applicationId) {
+            @RequestParam("applicationId") String applicationId) {
 
         return mpcTaskOutputService.fetchMpc(mpcOutputId, applicationId);
     }

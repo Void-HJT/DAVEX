@@ -1,9 +1,7 @@
 package DavexAgent.module.query;
 
-
 import java.util.List;
 
-import DavexBase.service.query.DatabaseService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -15,7 +13,7 @@ import DavexBase.common.Body;
 import DavexBase.entity.OutsideDatabase;
 import DavexBase.entity.OutsideDatabaseTable;
 import DavexBase.info.QueryRequest;
-import org.springframework.web.multipart.MultipartFile;
+import DavexBase.service.query.DatabaseService;
 
 @RestController // @RestController的作用等同于@Controller + @ResponseBody。
 // 相当于@Controller+@ResponseBody两个注解的结合，返回json数据不需要在方法前面加@ResponseBody注解了，但使用@RestController这个注解，就不能返回jsp,html页面，视图解析器无法解析jsp,html页面
@@ -25,33 +23,32 @@ public class DatabaseController {
     DatabaseService databaseService;
 
     @PostMapping("/addDatabase")
-    public Body<String> addDatabase(@RequestBody OutsideDatabase outsideDatabase){
+    public Body<String> addDatabase(@RequestBody OutsideDatabase outsideDatabase) {
         return databaseService.addDatabase(outsideDatabase);
     }
 
     @PostMapping("/getDatabase")
-    public Body<List<OutsideDatabase>> getDatabase(){
+    public Body<List<OutsideDatabase>> getDatabase() {
         return databaseService.getDatabase();
     }
 
     @PostMapping("/getTable")
-    public Body<List<OutsideDatabaseTable>> getTable(@RequestParam("databaseId") Long databaseId)
-    {
-        return  databaseService.getTable(databaseId);
+    public Body<List<OutsideDatabaseTable>> getTable(@RequestParam("databaseId") Long databaseId) {
+        return databaseService.getTable(databaseId);
     }
 
     @PostMapping("/locateQuery")
     public Body<byte[]> executeQuery(@RequestBody QueryRequest request,
-                                            @RequestParam("databaseId")Long databaseId) {
-        return databaseService.executeQuery(request,databaseId);
+            @RequestParam("databaseId") Long databaseId) {
+        return databaseService.executeQuery(request, databaseId);
     }
 
     @PostMapping("/query2Agent")
     public Body<String> query2Agent(@RequestBody QueryRequest request,
-                                    @RequestParam("applicationId") Long applicationId,
-                                    @RequestParam("agentId") Long agentId,
-                                    @RequestParam("databaseId")Long databaseId){
-        return databaseService.query2Agent(request,applicationId,agentId,databaseId);
+            @RequestParam("applicationId") String applicationId,
+            @RequestParam("agentId") String agentId,
+            @RequestParam("databaseId") Long databaseId) {
+        return databaseService.query2Agent(request, applicationId, agentId, databaseId);
     }
 
 }

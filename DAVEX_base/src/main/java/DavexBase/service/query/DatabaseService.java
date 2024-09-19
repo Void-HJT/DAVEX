@@ -1,6 +1,5 @@
 package DavexBase.service.query;
 
-
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.math.BigInteger;
@@ -19,9 +18,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import DavexBase.common.R;
-import DavexBase.mapper.AgentMapper;
-import DavexBase.service.auth.CenterWebClientService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.MediaType;
@@ -30,6 +26,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.reactive.function.BodyInserters;
 
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
@@ -37,24 +34,22 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import DavexBase.common.ExternalDatabaseProperties;
-import DavexBase.service.auth.AgentWebClientService;
 import DavexBase.common.Body;
+import DavexBase.common.ExternalDatabaseProperties;
+import DavexBase.common.R;
 import DavexBase.entity.OutsideDatabase;
 import DavexBase.entity.OutsideDatabaseTable;
 import DavexBase.info.QueryRequest;
 import DavexBase.mapper.DatabaseMapper;
 import DavexBase.mapper.DatabaseTableMapper;
-import org.springframework.web.reactive.function.BodyInserters;
+import DavexBase.service.auth.AgentWebClientService;
+import DavexBase.service.auth.CenterWebClientService;
 
 @Service
 public class DatabaseService {
 
     @Autowired
     private DatabaseMapper databaseMapper;
-
-    @Autowired
-    private AgentMapper agentMapper;
 
     @Autowired
     private DatabaseTableMapper databaseTableMapper;
@@ -68,12 +63,11 @@ public class DatabaseService {
     @Autowired
     private ExternalDatabaseProperties externalDatabasePropertiesBean;
 
-
     public Body<String> addDatabase(OutsideDatabase database) {
 
         databaseMapper.insert(database);
         populateDatabaseTables(database);
-        return Body.success("","test");
+        return Body.success("", "test");
     }
 
     public void populateDatabaseTables(OutsideDatabase database) {
@@ -90,7 +84,7 @@ public class DatabaseService {
                 System.out.println(catalog);
 
                 // 获取所有表
-                ResultSet tables = metaData.getTables(catalog, null, "%", new String[]{"TABLE"});
+                ResultSet tables = metaData.getTables(catalog, null, "%", new String[] { "TABLE" });
                 while (tables.next()) {
                     String tableName = tables.getString("TABLE_NAME");
                     String tableDescription = tables.getString("REMARKS");
@@ -137,24 +131,24 @@ public class DatabaseService {
 
     public Body<List<OutsideDatabaseTable>> getTable(Long databaseId) {
         LambdaQueryWrapper<OutsideDatabaseTable> queryWrapper = Wrappers.<OutsideDatabaseTable>lambdaQuery()
-                .eq(OutsideDatabaseTable::getOutsideDatabaseId,databaseId);
+                .eq(OutsideDatabaseTable::getOutsideDatabaseId, databaseId);
         List<OutsideDatabaseTable> outsideDatabaseTables = databaseTableMapper.selectList(queryWrapper);
-        return Body.success(outsideDatabaseTables,"返回成功");
+        return Body.success(outsideDatabaseTables, "返回成功");
     }
 
     public Body<byte[]> executeQuery(QueryRequest request, Long databaseId) {
         String sql = buildSqlFromRequest(request);
         System.out.println(sql);
         LambdaQueryWrapper<OutsideDatabase> queryWrapper = Wrappers.<OutsideDatabase>lambdaQuery()
-                .eq(OutsideDatabase::getUid,databaseId);
+                .eq(OutsideDatabase::getUid, databaseId);
         OutsideDatabase database = databaseMapper.selectOne(queryWrapper);
 
         Optional<ExternalDatabaseProperties.DatabaseConfig> dbConfig = getExternalDatabaseConfig(database.getName());
         if (dbConfig.isPresent()) {
             try (Connection connection = DriverManager.getConnection(
                     dbConfig.get().getUrl(), dbConfig.get().getUsername(), dbConfig.get().getPassword());
-                 Statement statement = connection.createStatement();
-                 ResultSet resultSet = statement.executeQuery(sql)) {
+                    Statement statement = connection.createStatement();
+                    ResultSet resultSet = statement.executeQuery(sql)) {
 
                 // 获取结果集的元数据
                 ResultSetMetaData metaData = resultSet.getMetaData();
@@ -171,7 +165,7 @@ public class DatabaseService {
                     results.add(row);
                 }
 
-                //将结果序列化为JSON
+                // 将结果序列化为JSON
                 ObjectMapper mapper = new ObjectMapper();
                 ByteArrayOutputStream out = new ByteArrayOutputStream();
                 try {
@@ -183,14 +177,13 @@ public class DatabaseService {
                 byte[] jsonData = out.toByteArray();
 
                 // 返回查询文件
-                return Body.success(jsonData,"查询成功");
+                return Body.success(jsonData, "查询成功");
 
             } catch (SQLException e) {
                 e.printStackTrace();
                 return Body.error("Error executing query: " + e.getMessage());
             }
-        }
-        else{
+        } else {
             return Body.error("External database configuration not found");
         }
     }
@@ -202,16 +195,18 @@ public class DatabaseService {
                     .uri(uriBuilder -> uriBuilder.path("/query/database/locateQuery")
                             .queryParam("databaseId", databaseId)
                             .build())
-                    .bodyValue(request)  // 将请求体设置为QueryRequest
-                    .retrieve()  // 准备接收响应
-                    .bodyToMono(new ParameterizedTypeReference<Body<byte[]>>() {})  // 指定返回类型
-                    .block();  // 阻塞等待响应并获取结果
+                    .bodyValue(request) // 将请求体设置为QueryRequest
+                    .retrieve() // 准备接收响应
+                    .bodyToMono(new ParameterizedTypeReference<Body<byte[]>>() {
+                    }) // 指定返回类型
+                    .block(); // 阻塞等待响应并获取结果
 
             // 从Body对象中提取data
             byte[] jsonData = response.getData();
 
-            //构建文件名
-            String fileName = "application_"+applicationId+"_"+"database_"+databaseId+"_"+"table_"+request.getTableName()+"_query_results.json";
+            // 构建文件名
+            String fileName = "application_" + applicationId + "_" + "database_" + databaseId + "_" + "table_"
+                    + request.getTableName() + "_query_results.json";
             MultipartFile multipartFile = new MockMultipartFile("file", fileName, "application/json", jsonData);
 
             String hash;
@@ -230,8 +225,9 @@ public class DatabaseService {
                 MultiValueMap<String, Object> multipartBody = new LinkedMultiValueMap<>();
                 multipartBody.add("file", multipartFile.getResource()); // 这里的 "file" 是服务端期望的文件字段名
 
-                agentWebClientService.agent2CenterWebClient(1).post()
-                        .uri(UriBuilder -> UriBuilder.path("/queryFile/saveQuery").queryParam("hash", hash).queryParam("applicationId",applicationId).build())
+                agentWebClientService.agent2CenterWebClient("1").post()
+                        .uri(UriBuilder -> UriBuilder.path("/queryFile/saveQuery").queryParam("hash", hash)
+                                .queryParam("applicationId", applicationId).build())
                         .contentType(MediaType.MULTIPART_FORM_DATA).body(BodyInserters.fromMultipartData(multipartBody))
                         .retrieve().bodyToMono(new ParameterizedTypeReference<R<String>>() {
                         }).block();
@@ -241,7 +237,7 @@ public class DatabaseService {
             }
             // 返回封装的结果
             String result = new String(multipartFile.getBytes(), StandardCharsets.UTF_8);
-            return Body.success("发送成功"+result);
+            return Body.success("发送成功" + result);
         } catch (Exception e) {
             e.printStackTrace();
             return Body.error("Query failed due to exception: " + e.getMessage());
@@ -304,8 +300,6 @@ public class DatabaseService {
 
     public Body<List<OutsideDatabase>> getDatabase() {
         List<OutsideDatabase> outsideDatabases = databaseMapper.selectList(null);
-        return Body.success(outsideDatabases,"");
+        return Body.success(outsideDatabases, "");
     }
 }
-
-
