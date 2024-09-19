@@ -26,8 +26,13 @@ public class ABACService {
 
     private My my;
 
-    private void loadRules() throws IOException {
-        rules = Files.readAllLines(Paths.get(my.getRules_path()));
+    private void loadRules() {
+        try {
+            rules = Files.readAllLines(Paths.get(my.getRules_path()));
+        } catch (IOException e) {
+            logger.error("文件不存在，读取失败，{}", e.getMessage());
+            rules = new ArrayList<>();
+        }
     }
 
     public ABACService(My my) throws IOException {
