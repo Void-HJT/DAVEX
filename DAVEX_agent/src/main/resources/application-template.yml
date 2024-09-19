@@ -1,0 +1,58 @@
+version: '1.0'
+
+my:
+  id: ${MY_ID:DAVEX-CX-GXX1}
+  ip: ${MY_IP:10.176.34.171}
+  name: ${MY_NAME:'171!'}
+  description: ${MY_DESCRIPTION:'DAVEX Agent 171'}
+  garnet_path: ${MY_GARNET_PATH:/home/user/Garnet}
+  base_path: ${MY_BASE_PATH:/home/user/DVE}
+  rules_path: ${MY_RULES_PATH:/home/user/DAVEX/rules}
+  davex_type: ${MY_DAVEX_TYPE:DAVEX_AGENT}
+  
+server:
+  port: ${SERVER_PORT:8080}
+
+ssl:
+  client-auth: ${SSL_CLIENT_AUTH:false}
+  key-store-password: ${SSL_KEY_STORE_PASSWORD:agopkljsfoi}
+  key-store-type: ${SSL_KEY_STORE_TYPE:JKS}
+  keystore-path: ${SSL_KEYSTORE_PATH:jwt.jks}
+  trust-store-password: ${SSL_TRUST_STORE_PASSWORD:dfjlkghalgd}
+  truststore-path: ${SSL_TRUSTSTORE_PATH:truststore.jks}
+
+spring:
+  application:
+    name: ${SPRING_APPLICATION_NAME:DveAgent}
+  servlet:
+    multipart:
+      max-file-size: ${SPRING_SERVLET_MULTIPART_MAX_FILE_SIZE:10MB}
+      max-request-size: ${SPRING_SERVLET_MULTIPART_MAX_REQUEST_SIZE:10MB}
+  datasource:
+    druid:
+      driver-class-name: ${SPRING_DATASOURCE_DRUID_DRIVER_CLASS_NAME:com.mysql.cj.jdbc.Driver}
+      url: ${SPRING_DATASOURCE_DRUID_URL:jdbc:mysql://localhost:3306/agent}
+      username: ${SPRING_DATASOURCE_DRUID_USERNAME:root}
+      password: ${SPRING_DATASOURCE_DRUID_PASSWORD:password}
+
+  jackson:
+    serialization:
+      write-dates-as-timestamps: ${SPRING_JACKSON_SERIALIZATION_WRITE_DATES_AS_TIMESTAMPS:false}
+  mvc:
+    pathmatch:
+      matching-strategy: ${SPRING_MVC_PATHMATCH_MATCHING_STRATEGY:ANT_PATH_MATCHER}
+
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: ${MYBATIS_PLUS_CONFIGURATION_MAP_UNDERSCORE_TO_CAMEL_CASE:true}
+  global-config:
+    db-config:
+      id-type: ${MYBATIS_PLUS_GLOBAL_CONFIG_DB_CONFIG_ID_TYPE:ASSIGN_ID}
+
+threadpool:
+  corePoolSize: ${THREADPOOL_CORE_POOL_SIZE:5}
+  maxPoolSize: ${THREADPOOL_MAX_POOL_SIZE:10}
+  queueCapacity: ${THREADPOOL_QUEUE_CAPACITY:100}
+  keepAliveSeconds: ${THREADPOOL_KEEP_ALIVE_SECONDS:60}
+  awaitTerminationSeconds: ${THREADPOOL_AWAIT_TERMINATION_SECONDS:6000}
+  threadNamePrefix: ${THREADPOOL_THREAD_NAME_PREFIX:DVE-Agent-}

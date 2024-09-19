@@ -1,17 +1,17 @@
 version: '0.0.1'
 
 my:
-  id: !!
-  ip: !!
-  name: !!
-  description: !!
-  garnet_path: !!
-  base_path: !!
-  rules_path: !!
-  davex_type: !!
+  id: DAVEX-C1
+  ip: 10.176.34.171
+  name: DAVEX_CENTER
+  description: 开发环境
+  garnet_path: /home/nhy/Garnet
+  base_path: /home/nhy/DAVEX/base
+  rules_path: "/home/nhy/DAVEX/rules"
+  davex_type: DAVEX_CENTER
 
 server:
-  port: !!
+  port: 9999
 
 
 
@@ -25,9 +25,9 @@ spring:
   datasource:
     druid:
       driver-class-name: com.mysql.cj.jdbc.Driver
-      url: !!
-      username: !!
-      password: !!
+      url: jdbc:mysql://10.176.34.171:3306/center
+      username: nhy
+      password: makeMPLgreat*2
 
   jackson:
     serialization:
@@ -36,10 +36,10 @@ spring:
     pathmatch:
       matching-strategy: ANT_PATH_MATCHER
   rabbitmq:
-    host: !!
-    port: !!
-    username: !!
-    password: !!
+    host: 10.176.34.171
+    port: 8898
+    username: "!!"
+    password: ""
 
 mybatis-plus:
   configuration:
@@ -64,8 +64,8 @@ threadpool:
   threadNamePrefix: 'DAVEX-Center-'
 
 file:
-  upload-base-dir: !!
-  download-base-dir: !!
+  upload-base-dir: "/home/nhy/DAVEX/Files/"
+  download-base-dir: "/home/nhy/DAVEX/ApplicationFiles/"
 
 # ssl:
 #   client-auth: true

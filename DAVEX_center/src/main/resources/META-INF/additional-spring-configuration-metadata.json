@@ -1,118 +1,122 @@
-{
-  "properties": [
-    {
-      "name": "version",
-      "type": "java.lang.String",
-      "description": "A description for 'version'"
-    },
-    {
-      "name": "my.id",
-      "type": "java.lang.Int",
-      "description": "A description for 'my.id'"
-    },
-    {
-      "name": "my.ip",
-      "type": "java.lang.String",
-      "description": "A description for 'my.ip'"
-    },
-    {
-      "name": "ssl.key-store-type",
-      "type": "java.lang.String",
-      "description": "A description for 'ssl.key-store-type'"
-    },
-    {
-      "name": "ssl.keystore-path",
-      "type": "java.lang.String",
-      "description": "A description for 'ssl.keystore-path'"
-    },
-    {
-      "name": "ssl.key-store-password",
-      "type": "java.lang.String",
-      "description": "A description for 'ssl.key-store-password'"
-    },
-    {
-      "name": "ssl.truststore-path",
-      "type": "java.lang.String",
-      "description": "A description for 'ssl.truststore-path'"
-    },
-    {
-      "name": "ssl.trust-store-password",
-      "type": "java.lang.String",
-      "description": "A description for 'ssl.trust-store-password'"
-    },
-    {
-      "name": "ssl.client-auth",
-      "type": "java.lang.String",
-      "description": "A description for 'ssl.client-auth'"
-    },
-    {
-      "name": "my.name",
-      "type": "java.lang.String",
-      "description": "A description for 'my.name'"
-    },
-    {
-      "name": "my.description",
-      "type": "java.lang.String",
-      "description": "A description for 'my.description'"
-    },
-    {
-      "name": "my.garnet_path",
-      "type": "java.lang.String",
-      "description": "A description for 'my.garnet_path'"
-    },
-    {
-      "name": "threadpool.core-pool-size",
-      "type": "java.lang.String",
-      "description": "A description for 'threadpool.core-pool-size'"
-    },
-    {
-      "name": "threadpool.max-pool-size",
-      "type": "java.lang.String",
-      "description": "A description for 'threadpool.max-pool-size'"
-    },
-    {
-      "name": "threadpool.keep-alive-seconds",
-      "type": "java.lang.String",
-      "description": "A description for 'threadpool.keep-alive-seconds'"
-    },
-    {
-      "name": "threadpool.queue-capacity",
-      "type": "java.lang.String",
-      "description": "A description for 'threadpool.queue-capacity'"
-    },
-    {
-      "name": "threadpool.thread-name-prefix",
-      "type": "java.lang.String",
-      "description": "A description for 'threadpool.thread-name-prefix'"
-    },
-    {
-      "name": "threadpool.awaitTerminationSeconds",
-      "type": "java.lang.String",
-      "description": "A description for 'threadpool.awaitTerminationSeconds'"
-    },
-    {
-      "name": "my.base_path",
-      "type": "java.lang.String",
-      "description": "A description for 'my.base_path'"
-    },
-    {
-      "name": "my.davex_type",
-      "type": "java.lang.enum",
-      "description": "A description for 'my.davex_type'"
-    },
-    {
-      "name": "file.upload-base-dir",
-      "type": "java.lang.String",
-      "description": "A description for 'file.upload-base-dir'"
-    },
-    {
-      "name": "file.download-base-dir",
-      "type": "java.lang.String",
-      "description": "A description for 'file.download-base-dir'"
-    },
-    {
-      "name": "service.id",
-      "type": "java.lang.String",
-      "description": "Description for service.id."
+{"properties": [
+  {
+    "name": "version",
+    "type": "java.lang.String",
+    "description": "A description for 'version'"
+  },
+  {
+    "name": "my.id",
+    "type": "java.lang.Int",
+    "description": "A description for 'my.id'"
+  },
+  {
+    "name": "my.ip",
+    "type": "java.lang.String",
+    "description": "A description for 'my.ip'"
+  },
+  {
+    "name": "ssl.key-store-type",
+    "type": "java.lang.String",
+    "description": "A description for 'ssl.key-store-type'"
+  },
+  {
+    "name": "ssl.keystore-path",
+    "type": "java.lang.String",
+    "description": "A description for 'ssl.keystore-path'"
+  },
+  {
+    "name": "ssl.key-store-password",
+    "type": "java.lang.String",
+    "description": "A description for 'ssl.key-store-password'"
+  },
+  {
+    "name": "ssl.truststore-path",
+    "type": "java.lang.String",
+    "description": "A description for 'ssl.truststore-path'"
+  },
+  {
+    "name": "ssl.trust-store-password",
+    "type": "java.lang.String",
+    "description": "A description for 'ssl.trust-store-password'"
+  },
+  {
+    "name": "ssl.client-auth",
+    "type": "java.lang.String",
+    "description": "A description for 'ssl.client-auth'"
+  },
+  {
+    "name": "my.name",
+    "type": "java.lang.String",
+    "description": "A description for 'my.name'"
+  },
+  {
+    "name": "my.description",
+    "type": "java.lang.String",
+    "description": "A description for 'my.description'"
+  },
+  {
+    "name": "my.garnet_path",
+    "type": "java.lang.String",
+    "description": "A description for 'my.garnet_path'"
+  },
+  {
+    "name": "threadpool.core-pool-size",
+    "type": "java.lang.String",
+    "description": "A description for 'threadpool.core-pool-size'"
+  },
+  {
+    "name": "threadpool.max-pool-size",
+    "type": "java.lang.String",
+    "description": "A description for 'threadpool.max-pool-size'"
+  },
+  {
+    "name": "threadpool.keep-alive-seconds",
+    "type": "java.lang.String",
+    "description": "A description for 'threadpool.keep-alive-seconds'"
+  },
+  {
+    "name": "threadpool.queue-capacity",
+    "type": "java.lang.String",
+    "description": "A description for 'threadpool.queue-capacity'"
+  },
+  {
+    "name": "threadpool.thread-name-prefix",
+    "type": "java.lang.String",
+    "description": "A description for 'threadpool.thread-name-prefix'"
+  },
+  {
+    "name": "threadpool.awaitTerminationSeconds",
+    "type": "java.lang.String",
+    "description": "A description for 'threadpool.awaitTerminationSeconds'"
+  },
+  {
+    "name": "my.base_path",
+    "type": "java.lang.String",
+    "description": "A description for 'my.base_path'"
+  },
+  {
+    "name": "my.davex_type",
+    "type": "java.lang.enum",
+    "description": "A description for 'my.davex_type'"
+  },
+  {
+    "name": "file.upload-base-dir",
+    "type": "java.lang.String",
+    "description": "A description for 'file.upload-base-dir'"
+  },
+  {
+    "name": "file.download-base-dir",
+    "type": "java.lang.String",
+    "description": "A description for 'file.download-base-dir'"
+  },
+  {
+    "name": "service.id",
+    "type": "java.lang.String",
+    "description": "Description for service.id."
+  },
+  {
+    "name": "my.rules_path",
+    "type": "java.lang.String",
+    "description": "A description for 'my.rules_path'"
   }
 ]}

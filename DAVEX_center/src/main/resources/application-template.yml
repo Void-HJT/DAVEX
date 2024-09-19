@@ -1,0 +1,59 @@
+version: '0.0.1'
+
+my:
+  id: ${MY_ID:DAVEX-C1}
+  ip: ${MY_IP:10.176.34.171}
+  name: ${MY_NAME:DAVEX_CENTER}
+  description: ${MY_DESCRIPTION:开发环境}
+  garnet_path: ${MY_GARNET_PATH:/home/user/Garnet}
+  base_path: ${MY_BASE_PATH:/home/user/DAVEX/base}
+  rules_path: ${MY_RULES_PATH:/home/user/DAVEX/rules}
+  davex_type: ${MY_DAVEX_TYPE:DAVEX_CENTER}
+
+server:
+  port: ${SERVER_PORT:9999}
+
+spring:
+  application:
+    name: ${SPRING_APPLICATION_NAME:DavexCenter}
+  servlet:
+    multipart:
+      max-file-size: ${SPRING_SERVLET_MULTIPART_MAX_FILE_SIZE:10MB}
+      max-request-size: ${SPRING_SERVLET_MULTIPART_MAX_REQUEST_SIZE:10MB}
+  datasource:
+    druid:
+      driver-class-name: ${SPRING_DATASOURCE_DRUID_DRIVER_CLASS_NAME:com.mysql.cj.jdbc.Driver}
+      url: ${SPRING_DATASOURCE_DRUID_URL:jdbc:mysql://localhost:3306/center}
+      username: ${SPRING_DATASOURCE_DRUID_USERNAME:root}
+      password: ${SPRING_DATASOURCE_DRUID_PASSWORD:password}
+
+  jackson:
+    serialization:
+      write-dates-as-timestamps: ${SPRING_JACKSON_SERIALIZATION_WRITE_DATES_AS_TIMESTAMPS:false}
+  mvc:
+    pathmatch:
+      matching-strategy: ${SPRING_MVC_PATHMATCH_MATCHING_STRATEGY:ANT_PATH_MATCHER}
+  rabbitmq:
+    host: ${SPRING_RABBITMQ_HOST:localhost}
+    port: ${SPRING_RABBITMQ_PORT:5672}
+    username: ${SPRING_RABBITMQ_USERNAME:guest}
+    password: ${SPRING_RABBITMQ_PASSWORD:guest}
+
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: ${MYBATIS_PLUS_CONFIGURATION_MAP_UNDERSCORE_TO_CAMEL_CASE:true}
+  global-config:
+    db-config:
+      id-type: ${MYBATIS_PLUS_GLOBAL_CONFIG_DB_CONFIG_ID_TYPE:ASSIGN_ID}
+
+threadpool:
+  corePoolSize: ${THREADPOOL_CORE_POOL_SIZE:5}
+  maxPoolSize: ${THREADPOOL_MAX_POOL_SIZE:10}
+  queueCapacity: ${THREADPOOL_QUEUE_CAPACITY:100}
+  keepAliveSeconds: ${THREADPOOL_KEEP_ALIVE_SECONDS:60}
+  awaitTerminationSeconds: ${THREADPOOL_AWAIT_TERMINATION_SECONDS:6000}
+  threadNamePrefix: ${THREADPOOL_THREAD_NAME_PREFIX:DAVEX-Center-}
+
+file:
+  upload-base-dir: ${FILE_UPLOAD_BASE_DIR:/home/user/DAVEX/Files/}
+  download-base-dir: ${FILE_DOWNLOAD_BASE_DIR:/home/user/DAVEX/ApplicationFiles/}
