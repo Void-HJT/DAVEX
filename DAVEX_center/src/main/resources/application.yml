@@ -7,6 +7,7 @@ my:
   description: !!
   garnet_path: !!
   base_path: !!
+  rules_path: !!
   davex_type: !!
 
 server:

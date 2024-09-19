@@ -1,0 +1,3 @@
+(#object.name.startsWith("公开")) ? true : null
+(#object.name.endsWith(".csv") and #action == "PSI") ? true : null
+(#subjectAttribute["等级"]=="市级" and #action == "PSI") ? true : null
