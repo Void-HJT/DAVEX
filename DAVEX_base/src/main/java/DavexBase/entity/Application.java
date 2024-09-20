@@ -5,7 +5,6 @@ import java.time.LocalDateTime;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 
 import com.alibaba.fastjson.JSONObject;
-import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
@@ -23,7 +22,7 @@ public class Application {
 
   private String centerId;
   private String name;
-  private byte[] crt;
+  private byte[] cert;
   private LocalDateTime lastUpdated;
   private String description;
   @TableField(typeHandler = FastjsonTypeHandler.class)
