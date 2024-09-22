@@ -2,9 +2,9 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
 <mapper namespace="DavexBase.mapper.FolderMapper">
-    <select id="selectByParentId" parameterType="long" resultType="DavexBase.entity.Folder"> SELECT
+    <select id="selectByParentId" parameterType="String" resultType="DavexBase.entity.Folder"> SELECT
         * FROM folder WHERE parent_id = #{parentId} </select>
 
-    <select id="select" parameterType="Long" resultType="DavexBase.entity.Folder"> SELECT * FROM
+    <select id="select" parameterType="String" resultType="DavexBase.entity.Folder"> SELECT * FROM
         folder WHERE uid = #{id} </select>
 </mapper>

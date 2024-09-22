@@ -30,7 +30,7 @@
         FROM file f LEFT JOIN file_rule fr ON f.uid = fr.file_id LEFT JOIN rule r ON fr.rule_id =
         r.uid WHERE f.uid = #{fileId} AND f.agent_id = #{agentId} AND f.folder_id = #{folderId} </select>
 
-    <select id="selectByFolderId" parameterType="long" resultType="DavexBase.entity.File"> SELECT *
+    <select id="selectByFolderId" parameterType="String" resultType="DavexBase.entity.File"> SELECT *
         FROM file WHERE folder_id = #{folderId} </select>
 
 </mapper>

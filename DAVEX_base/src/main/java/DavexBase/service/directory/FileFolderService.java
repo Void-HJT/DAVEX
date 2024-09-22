@@ -19,6 +19,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import DavexBase.common.GetMaxUid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.core.io.Resource;
@@ -152,6 +153,11 @@ public class FileFolderService {
 
         // 3.新文件夹插入
         Folder new_folder = new Folder();
+        GetMaxUid getMaxUid = new GetMaxUid();
+        //
+        int maxTailNumber = getMaxUid.getFolderMaxUid(agent_id,folderMapper);
+        String uid = agent_id.substring(0,agent_id.lastIndexOf('-'))+"-FXX"+(maxTailNumber+1);
+        new_folder.setUid(uid);
         new_folder.setName(name);
         new_folder.setAgentId(agent_id);
         new_folder.setParentId(parent_id);
@@ -407,6 +413,12 @@ public class FileFolderService {
         }
 
         String fileName = file.getOriginalFilename();
+        //
+        GetMaxUid getMaxUid = new GetMaxUid();
+        //
+        int maxTailNumber = getMaxUid.getFileMaxUid(agentId,fileMapper);
+        String uid = agentId.substring(0,agentId.lastIndexOf('-'))+"-DXX"+(maxTailNumber+1);
+        fileRecord.setUid(uid);
         fileRecord.setType(file.getOriginalFilename().substring(file.getOriginalFilename().lastIndexOf(".")));
         fileRecord.setAgentId(agentId);
         fileRecord.setFolderId(folderId);

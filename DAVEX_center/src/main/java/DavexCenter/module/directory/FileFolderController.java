@@ -41,6 +41,7 @@ public class FileFolderController {
         return fileFolderService.getFileByRuleOrNot(agentId, applicationID, fileId, method);
     }
 
+    //
     @PostMapping("/createFolder")
     public Body<String> createFolder(@RequestParam("name") String name,
                                      @RequestParam("agentId") String agentId,
@@ -63,6 +64,7 @@ public class FileFolderController {
         return fileFolderService.setFolderInvisible(agentId, groupId, folderId);
     }
 
+    //
     @PostMapping("/setFolderName")
     public Body<String> setFolderName(@RequestParam("agentId") String agentId,
             @RequestParam("folderId") String folderId,
@@ -71,12 +73,14 @@ public class FileFolderController {
         return fileFolderService.setFolderName(agentId, folderId, name, my.getBase_path());
     }
 
+    //
     @PostMapping("/deleteFolder")
     public Body<String> deleteFolder(@RequestParam("agentId") String agentId,
             @RequestParam("folderId") String folderId) {
         return fileFolderService.deleteFolder(agentId, folderId, my.getBase_path());
     }
 
+    //
     @PostMapping("/getFolderPath")
     public Body<String> getFolderPath(@RequestParam("agentId") String agentId,
             @RequestParam("folderId") String folderId) {
@@ -84,7 +88,6 @@ public class FileFolderController {
     }
 
     // 文件
-
     @PostMapping("/getFileInfo")
     public Body<FileInfo> getFileInfo(@RequestParam("uid") String uid,
             @RequestParam("agentId") String agentId,
@@ -92,6 +95,7 @@ public class FileFolderController {
         return fileFolderService.getFileInfo(uid, agentId, folderId);
     }
 
+    //
     @PostMapping("/uploadFile")
     public Body<String> uploadFile(@RequestParam("agentId") String agentId,
             @RequestParam("folderId") String folderId,
@@ -103,6 +107,7 @@ public class FileFolderController {
         return fileFolderService.uploadFile(agentId, folderId, file, my.getBase_path());
     }
 
+    //
     @PostMapping("/updateFile")
     public Body<String> updateFile(@RequestBody File file) {
         return fileFolderService.updateFile(file);
@@ -126,6 +131,7 @@ public class FileFolderController {
         return fileFolderService.deleteFileRule(fileId, agentId, folderId, groupId,allowedMethod);
     }
 
+    //
     @PostMapping("/deleteFile")
     public Body<String> deleteFile(@RequestParam("fileId") String fileId,
             @RequestParam("agentId") String agentId,
@@ -141,6 +147,7 @@ public class FileFolderController {
         return fileFolderService.sendFile(fileId, agentId, folderId, my.getBase_path());
     }
 
+    //
     @PostMapping("/getDirectory")
     public Body<DirectoryInfo> getDirectory(@RequestParam("rootId") String rootFolderId) {
         DirectoryInfo directory = fileFolderService.getDirectoryStructure(rootFolderId);

@@ -7,9 +7,6 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.LinkedList;
-import java.util.List;
-
 @Service
 public class MessageService {
     @Autowired
@@ -31,6 +28,7 @@ public class MessageService {
             String jsonPart = parts[1];
 
             try {
+
                 // 将 JSON 部分反序列化为 Application 对象
                 Application application = objectMapper.readValue(jsonPart, Application.class);
 

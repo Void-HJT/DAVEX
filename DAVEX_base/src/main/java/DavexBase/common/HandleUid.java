@@ -1,4 +1,4 @@
-package DavexCenter.common;
+package DavexBase.common;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -28,6 +28,10 @@ public class HandleUid {
             return "application"; // 格式为 DAVEX-Cn-AXXn 的类型
         } else if (uid.matches("^DAVEX-C\\d+-GXX\\d+$")) {
             return "agent"; // 格式为 DAVEX-Cn-GXXn 的类型
+        } else if (uid.matches("^DAVEX-C\\d+-FXX\\d+$")) {
+            return "folder"; // 格式为 DAVEX-Cn-FXXn 的类型
+        } else if (uid.matches("^DAVEX-C\\d+-DXX\\d+$")) {
+            return "file"; // 格式为 DAVEX-Cn-DXXn 的类型
         }
 
         // 其他扩展类型可以在这里添加

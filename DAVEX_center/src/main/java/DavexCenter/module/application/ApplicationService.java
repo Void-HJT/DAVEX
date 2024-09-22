@@ -2,9 +2,10 @@ package DavexCenter.module.application;
 
 
 import DavexBase.common.Body;
+import DavexBase.common.GetMaxUid;
 import DavexBase.entity.Application;
 import DavexBase.mapper.ApplicationMapper;
-import DavexCenter.common.HandleUid;
+import DavexBase.common.HandleUid;
 import DavexCenter.module.MQ.CenterPublishService;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -38,27 +39,8 @@ public class ApplicationService {
 
     public Body<String> addApplication(Application application) {
         //设置application
-        List<Object> uidList = applicationMapper.selectObjs(new QueryWrapper<Application>().select("uid")
-                .eq("center_id",uid));
-        // 遍历uidList中的每个uid
-        int maxTailNumber = 0; // 初始化最大尾部数字
-        for (Object obj : uidList) {
-            if (obj instanceof String) {
-                String uid = (String) obj;
-                // 利用UidParser解析uid并获取数字
-                HandleUid parser = new HandleUid(uid);
-                int[] numbers = parser.getNumbers();
-
-                // 获取最后一个数字（尾部数字）
-                if (numbers.length > 0) {
-                    int tailNumber = numbers[numbers.length - 1];  // 尾部的数字
-                    // 比较更新最大尾部数字
-                    if (tailNumber > maxTailNumber) {
-                        maxTailNumber = tailNumber;
-                    }
-                }
-            }
-        }
+        GetMaxUid getMaxUid = new GetMaxUid();
+        int maxTailNumber = getMaxUid.getApplicationMaxUid(uid,applicationMapper);
         application.setCenterId(uid);
         application.setUid(uid+"-AXX"+(maxTailNumber+1));
         application.setLastUpdated(LocalDateTime.now());
