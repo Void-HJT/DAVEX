@@ -3,7 +3,6 @@ package DavexBase.entity;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 
 import com.alibaba.fastjson.JSONObject;
-import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;

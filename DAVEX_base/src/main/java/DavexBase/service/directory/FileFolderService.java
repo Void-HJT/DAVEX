@@ -15,11 +15,9 @@ import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import DavexBase.common.GetMaxUid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.core.io.Resource;
@@ -37,14 +35,12 @@ import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 
 import DavexBase.common.Body;
+import DavexBase.common.GetMaxUid;
 import DavexBase.entity.Agent;
 import DavexBase.entity.ApplicationGroup;
 import DavexBase.entity.File;
-import DavexBase.entity.FileRule;
 import DavexBase.entity.Folder;
 import DavexBase.entity.FolderVisibility;
-import DavexBase.entity.Group;
-import DavexBase.entity.Rule;
 import DavexBase.info.DirectoryInfo;
 import DavexBase.info.FileInfo;
 import DavexBase.mapper.AgentMapper;
@@ -53,15 +49,12 @@ import DavexBase.mapper.FileMapper;
 import DavexBase.mapper.FileRuleMapper;
 import DavexBase.mapper.FolderMapper;
 import DavexBase.mapper.FolderVisibilityMapper;
-import DavexBase.mapper.GroupMapper;
 import DavexBase.mapper.RuleMapper;
 import DavexBase.service.auth.CenterWebClientService;
 
 @Service
 public class FileFolderService {
 
-    @Autowired
-    private GroupMapper groupMapper;
     @Autowired
     private FolderMapper folderMapper;
 
@@ -85,43 +78,6 @@ public class FileFolderService {
 
     @Autowired
     private CenterWebClientService centerWebClientService;
-
-    public Body<?> getFileByRuleOrNot(String agentId, String applicationId, String fileId, String method) {
-
-        boolean isAllowed = false;
-
-        List<ApplicationGroup> applicationGroups = applicationGroupMapper.selectList(
-                new QueryWrapper<ApplicationGroup>()
-                        .eq("agent_id", agentId)
-                        .eq("application_id", applicationId));
-
-        List<FileRule> fileRules = fileRuleMapper.selectList(
-                new QueryWrapper<FileRule>()
-                        .eq("agent_id", agentId)
-                        .eq("file_id", fileId));
-        List<Long> ruleIds = new LinkedList<>();
-
-        for (FileRule fileRule : fileRules) {
-            if (!ruleIds.contains(fileRule.getRuleId())) {
-                ruleIds.add(fileRule.getRuleId());
-            }
-        }
-
-        List<Rule> rules = ruleMapper.selectBatchIds(ruleIds);
-
-        for (Rule rule : rules) {
-
-            boolean groupMatch = applicationGroups.stream()
-                    .anyMatch(group -> group.getGroupId().equals(rule.getGroupId()));
-
-            if (groupMatch && method.equals(rule.getAllowedMethod())) {
-                isAllowed = true;
-                break;
-            }
-        }
-
-        return Body.success(isAllowed, "");
-    }
 
     // 创建文件夹
     public Body<String> createFolder(String name, String path, String agent_id, String parent_id) {
@@ -155,8 +111,8 @@ public class FileFolderService {
         Folder new_folder = new Folder();
         GetMaxUid getMaxUid = new GetMaxUid();
         //
-        int maxTailNumber = getMaxUid.getFolderMaxUid(agent_id,folderMapper);
-        String uid = agent_id.substring(0,agent_id.lastIndexOf('-'))+"-FXX"+(maxTailNumber+1);
+        int maxTailNumber = getMaxUid.getFolderMaxUid(agent_id, folderMapper);
+        String uid = agent_id.substring(0, agent_id.lastIndexOf('-')) + "-FXX" + (maxTailNumber + 1);
         new_folder.setUid(uid);
         new_folder.setName(name);
         new_folder.setAgentId(agent_id);
@@ -166,79 +122,6 @@ public class FileFolderService {
         folderMapper.insert(new_folder);
 
         return Body.success("插入新文件夹成功");
-    }
-
-    // 设置文件夹可见或不可见
-    public Body<String> setFolderVisible(String agentId, Long groupId, String folderId) {
-        // 1.判断用户组 文件夹是否存在
-        LambdaQueryWrapper<Group> queryGroupWrapper = Wrappers.<Group>lambdaQuery()
-                .eq(Group::getUid, groupId)
-                .eq(Group::getAgentId, agentId);
-        if (groupMapper.selectList(queryGroupWrapper).isEmpty()) {
-            return Body.error("该用户组不存在");
-        }
-        LambdaQueryWrapper<Folder> queryFolderWrapper = Wrappers.<Folder>lambdaQuery()
-                .eq(Folder::getUid, folderId)
-                .eq(Folder::getAgentId, agentId);
-        if (folderMapper.selectList(queryFolderWrapper).isEmpty()) {
-            return Body.error("该文件夹不存在");
-        }
-        // 2.寻找其所有父文件夹，如果有一个父文件夹对该用户不可见，那么返回错误（当父文件不可见，子文件夹可见不合理）
-        List<String> parentFolderIds = new ArrayList<>();
-        List<String> path = new ArrayList<>();
-        findAllParentFolders(folderId, agentId, parentFolderIds, path);
-
-        for (String parentId : parentFolderIds) {
-            LambdaQueryWrapper<FolderVisibility> queryVisibilityWrapper = Wrappers.<FolderVisibility>lambdaQuery()
-                    .eq(FolderVisibility::getFolderId, parentId)
-                    .eq(FolderVisibility::getGroupId, groupId)
-                    .eq(FolderVisibility::getAgentId, agentId);
-            if (folderVisibilityMapper.selectList(queryVisibilityWrapper).isEmpty()) {
-                return Body.error("父文件夹中存在对该用户组不可见的文件夹，设置失败");
-            }
-        }
-        // 3. 将当前文件夹设置为可见
-        FolderVisibility folderVisibility = new FolderVisibility();
-        folderVisibility.setAgentId(agentId);
-        folderVisibility.setFolderId(folderId);
-        folderVisibility.setGroupId(groupId);
-        folderVisibilityMapper.insert(folderVisibility);
-        return Body.success("设置成功");
-
-    }
-
-    public Body<String> setFolderInvisible(String agentId, Long groupId, String folderId) {
-        // 1. 查表判断用户组与文件夹可见性是否存在
-        LambdaQueryWrapper<FolderVisibility> queryVisibilityWrapper = Wrappers.<FolderVisibility>lambdaQuery()
-                .eq(FolderVisibility::getFolderId, folderId)
-                .eq(FolderVisibility::getGroupId, groupId)
-                .eq(FolderVisibility::getAgentId, agentId);
-        if (folderVisibilityMapper.selectList(queryVisibilityWrapper).isEmpty()) {
-            return Body.error("该文件夹对该用户组本来就是不可见的");
-        }
-
-        // 2. 寻找其所有子文件夹，如果子文件夹对该用户组可见，将其设为不可见
-        List<String> childFolderIds = new ArrayList<>();
-        findAllChildFolders(folderId, agentId, childFolderIds);
-
-        for (String childId : childFolderIds) {
-            LambdaQueryWrapper<FolderVisibility> queryChildVisibilityWrapper = Wrappers.<FolderVisibility>lambdaQuery()
-                    .eq(FolderVisibility::getFolderId, childId)
-                    .eq(FolderVisibility::getGroupId, groupId)
-                    .eq(FolderVisibility::getAgentId, agentId);
-            List<FolderVisibility> childVisibilities = folderVisibilityMapper.selectList(queryChildVisibilityWrapper);
-            for (FolderVisibility childVisibility : childVisibilities) {
-                folderVisibilityMapper.delete(new QueryWrapper<FolderVisibility>().eq("uid", childVisibility.getUid()));
-            }
-        }
-
-        // 3. 将该文件夹设为不可见
-        FolderVisibility folderVisibility = folderVisibilityMapper.selectOne(queryVisibilityWrapper);
-        if (folderVisibility != null) {
-            folderVisibilityMapper.delete(new QueryWrapper<FolderVisibility>().eq("uid", folderVisibility.getUid()));
-        }
-
-        return Body.success("设置成功");
     }
 
     // 修改文件夹名
@@ -416,8 +299,8 @@ public class FileFolderService {
         //
         GetMaxUid getMaxUid = new GetMaxUid();
         //
-        int maxTailNumber = getMaxUid.getFileMaxUid(agentId,fileMapper);
-        String uid = agentId.substring(0,agentId.lastIndexOf('-'))+"-DXX"+(maxTailNumber+1);
+        int maxTailNumber = getMaxUid.getFileMaxUid(agentId, fileMapper);
+        String uid = agentId.substring(0, agentId.lastIndexOf('-')) + "-DXX" + (maxTailNumber + 1);
         fileRecord.setUid(uid);
         fileRecord.setType(file.getOriginalFilename().substring(file.getOriginalFilename().lastIndexOf(".")));
         fileRecord.setAgentId(agentId);
@@ -456,66 +339,6 @@ public class FileFolderService {
                 .eq("uid", file.getUid());
         fileMapper.update(new_file, updateWrapper);
         return Body.success("更新成功");
-    }
-
-    // 设置文件规则
-    public Body<String> setFileRule(String fileId, String agentId, String folderId, Long groupId, String allowMethod) {
-        LambdaQueryWrapper<File> queryFileWrapper = Wrappers.<File>lambdaQuery()
-                .eq(File::getUid, fileId)
-                .eq(File::getAgentId, agentId)
-                .eq(File::getFolderId, folderId);
-        if (fileMapper.selectOne(queryFileWrapper) == null) {
-            return Body.error("该文件不存在");
-        }
-
-        LambdaQueryWrapper<Rule> queryRuleWrapper = Wrappers.<Rule>lambdaQuery()
-                .eq(Rule::getGroupId, groupId)
-                .eq(Rule::getAgentId, agentId)
-                .eq(Rule::getAllowedMethod, allowMethod);
-        Rule rule = ruleMapper.selectOne(queryRuleWrapper);
-        if (rule == null) {
-            return Body.error("该规则不存在");
-        }
-
-        LambdaQueryWrapper<FileRule> queryFileRuleWrapper = Wrappers.<FileRule>lambdaQuery()
-                .eq(FileRule::getAgentId, agentId)
-                .eq(FileRule::getFileId, fileId)
-                .eq(FileRule::getRuleId, rule.getUid());
-        if (fileRuleMapper.selectOne(queryFileRuleWrapper) != null) {
-            return Body.error("该关系已存在");
-        }
-        FileRule fileRule = new FileRule();
-        fileRule.setFileId(fileId);
-        fileRule.setRuleId(rule.getUid());
-        fileRule.setAgentId(agentId);
-        fileRuleMapper.insert(fileRule);
-        return Body.success("成功插入");
-    }
-
-    // 删除文件规则
-    public Body<String> deleteFileRule(String fileId, String agentId, String folderId, Long groupId, String allowMethod) {
-
-        LambdaQueryWrapper<File> queryFileWrapper = Wrappers.<File>lambdaQuery()
-                .eq(File::getUid, fileId)
-                .eq(File::getAgentId, agentId)
-                .eq(File::getFolderId, folderId);
-        if (fileMapper.selectOne(queryFileWrapper) == null) {
-            return Body.error("该文件不存在");
-        }
-
-        LambdaQueryWrapper<Rule> queryRuleWrapper = Wrappers.<Rule>lambdaQuery()
-                .eq(Rule::getGroupId, groupId)
-                .eq(Rule::getAgentId, agentId)
-                .eq(Rule::getAllowedMethod, allowMethod);
-        Rule rule = ruleMapper.selectOne(queryRuleWrapper);
-
-        LambdaQueryWrapper<FileRule> queryFileRuleWrapper = Wrappers.<FileRule>lambdaQuery()
-                .eq(FileRule::getAgentId, agentId)
-                .eq(FileRule::getFileId, fileId)
-                .eq(FileRule::getRuleId, rule.getUid());
-
-        fileRuleMapper.delete(queryFileRuleWrapper);
-        return Body.success("删除成功");
     }
 
     // 删除文件
@@ -560,7 +383,8 @@ public class FileFolderService {
         agentMapper.insert(agent);
     }
 
-    private void findAllParentFolders(String folderId, String agentId, List<String> parentFolderIds, List<String> path) {
+    private void findAllParentFolders(String folderId, String agentId, List<String> parentFolderIds,
+            List<String> path) {
         LambdaQueryWrapper<Folder> queryWrapper = Wrappers.<Folder>lambdaQuery()
                 .eq(Folder::getUid, folderId)
                 .eq(Folder::getAgentId, agentId);
@@ -670,18 +494,8 @@ public class FileFolderService {
     }
 
     //
-    public DirectoryInfo filterFilesByRule(Long groupId, String agentId, DirectoryInfo directoryFiltered) {
-        return filterFilesRecursive(groupId, agentId, directoryFiltered);
-    }
-
-    //
     public DirectoryInfo filterFolders(List<Long> groupIds, String agentId, DirectoryInfo directory) {
         return filterFoldersRecursive(groupIds, agentId, directory);
-    }
-
-    //
-    public DirectoryInfo filterFiles(List<Long> groupIds, String agentId, DirectoryInfo directory) {
-        return filterFilesRecursive(groupIds, agentId, directory);
     }
 
     //
@@ -723,69 +537,6 @@ public class FileFolderService {
             }
         }
         directory.setChildren(visibleChildren);
-        return directory;
-    }
-
-    //
-    private DirectoryInfo filterFilesRecursive(Long groupId, String agentId, DirectoryInfo directory) {
-        List<DirectoryInfo> allowedChildren = new ArrayList<>();
-        for (DirectoryInfo child : directory.getChildren()) {
-            if ("folder".equals(child.getType())) {
-                allowedChildren.add(filterFilesRecursive(groupId, agentId, child));
-            } else {
-                // 检查文件与用户组的关系
-                List<FileRule> fileRules = fileRuleMapper.selectList(
-                        new QueryWrapper<FileRule>()
-                                .eq("agent_id", agentId)
-                                .eq("file_id", child.getUid()));
-                boolean isAllowed = false;
-                for (FileRule fileRule : fileRules) {
-                    Rule rule = ruleMapper.selectOne(
-                            new QueryWrapper<Rule>()
-                                    .eq("uid", fileRule.getRuleId())
-                                    .eq("group_id", groupId));
-                    if (rule != null) {
-                        isAllowed = true;
-                        child.getRuleList().add(rule.getAllowedMethod());
-                    }
-                }
-                if (isAllowed) {
-                    allowedChildren.add(child);
-                }
-            }
-        }
-        directory.setChildren(allowedChildren);
-        return directory;
-    }
-
-    //
-    private DirectoryInfo filterFilesRecursive(List<Long> groupIds, String agentId, DirectoryInfo directory) {
-        List<DirectoryInfo> allowedChildren = new ArrayList<>();
-        for (DirectoryInfo child : directory.getChildren()) {
-            if ("folder".equals(child.getType())) {
-                allowedChildren.add(filterFilesRecursive(groupIds, agentId, child));
-            } else {
-                // 检查文件与用户组的关系
-                List<FileRule> fileRules = fileRuleMapper.selectList(
-                        new QueryWrapper<FileRule>()
-                                .eq("agent_id", agentId)
-                                .eq("file_id", child.getUid()));
-                List<String> allowedMethods = new ArrayList<>();
-                for (FileRule fileRule : fileRules) {
-                    List<Rule> rules = ruleMapper.selectList(
-                            new QueryWrapper<Rule>()
-                                    .eq("uid", fileRule.getRuleId())
-                                    .in("group_id", groupIds));
-                    allowedMethods.addAll(rules.stream().map(Rule::getAllowedMethod).collect(Collectors.toList()));
-                }
-                if (!allowedMethods.isEmpty()) {
-                    allowedMethods = allowedMethods.stream().distinct().collect(Collectors.toList());
-                    child.setRuleList(allowedMethods);
-                    allowedChildren.add(child);
-                }
-            }
-        }
-        directory.setChildren(allowedChildren);
         return directory;
     }
 
