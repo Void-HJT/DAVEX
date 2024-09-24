@@ -1,4 +1,4 @@
-package DavexAgent.module.MQ;
+package DavexBase.service.MQ;
 
 import DavexBase.entity.Application;
 import DavexBase.mapper.ApplicationMapper;

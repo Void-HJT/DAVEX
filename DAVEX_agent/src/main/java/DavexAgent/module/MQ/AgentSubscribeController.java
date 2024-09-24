@@ -2,6 +2,7 @@ package DavexAgent.module.MQ;
 
 
 import DavexBase.common.Body;
+import DavexBase.service.MQ.MessageService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
