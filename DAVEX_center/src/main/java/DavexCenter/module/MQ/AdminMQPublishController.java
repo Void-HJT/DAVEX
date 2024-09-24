@@ -11,10 +11,10 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 @RestController
-@RequestMapping("/center/rabbitMQ")
-public class CenterPublishController {
+@RequestMapping("/admin/rabbitMQ")
+public class AdminMQPublishController {
     @Autowired
-    CenterPublishService centerPublishService;
+    AdminMQPublishService adminMQPublishService;
 
     /**
      * 创建 application-queue 并绑定到 application-exchange
@@ -24,7 +24,7 @@ public class CenterPublishController {
                               @RequestParam("exchangeName") String exchangeName) {
 
         // 创建队列并绑定到交换机
-       return centerPublishService.addQueueAndBindToFanout(queueName, exchangeName);
+       return adminMQPublishService.addQueueAndBindToFanout(queueName, exchangeName);
     }
 
     @PostMapping("/createDirectQueue")
@@ -32,7 +32,7 @@ public class CenterPublishController {
                                 @RequestParam("exchangeName") String exchangeName,
                               @RequestParam("routingKey") String routingKey) {
         // 创建队列并绑定到交换机
-        return centerPublishService.addQueueAndBindToDirect(queueName,exchangeName,routingKey);
+        return adminMQPublishService.addQueueAndBindToDirect(queueName,exchangeName,routingKey);
     }
 
     @PostMapping("/createTopicQueue")
@@ -41,7 +41,7 @@ public class CenterPublishController {
                                     @RequestParam("routingKey") String routingKey) {
 
         // 创建队列并绑定到交换机
-        return  centerPublishService.addQueueAndBindToTopic(queueName,exchangeName,routingKey);
+        return  adminMQPublishService.addQueueAndBindToTopic(queueName,exchangeName,routingKey);
     }
 
     /**
@@ -51,7 +51,7 @@ public class CenterPublishController {
     public Body<String> publishMessageToFanout(@RequestParam("exchangeName")String exchangeName,
                                                @RequestParam("message") String message) {
         // 发布消息到指定交换机和路由键
-        Body<String> response = centerPublishService.publishMessageToFanout(exchangeName, message);
+        Body<String> response = adminMQPublishService.publishMessageToFanout(exchangeName, message);
         return response;
     }
 
@@ -60,7 +60,7 @@ public class CenterPublishController {
                                                @RequestParam("routingKey")String routingKey,
                                                @RequestParam("message") String message) {
         // 发布消息到指定交换机和路由键
-        Body<String> response = centerPublishService.publishMessageToDirect(exchangeName,routingKey,message);
+        Body<String> response = adminMQPublishService.publishMessageToDirect(exchangeName,routingKey,message);
         return response;
     }
 
@@ -69,18 +69,18 @@ public class CenterPublishController {
                                               @RequestParam("routingKey")String routingKey,
                                               @RequestParam("message") String message) {
         // 发布消息到指定交换机和路由键
-        Body<String> response = centerPublishService.publishMessageToTopic(exchangeName,routingKey,message);
+        Body<String> response = adminMQPublishService.publishMessageToTopic(exchangeName,routingKey,message);
         return response;
     }
 
     @PostMapping("/getExchangeList")
     public Body<List<String>> getExchangeList(){
-        return centerPublishService.listExchanges();
+        return adminMQPublishService.listExchanges();
     }
 
     @PostMapping("/getQueue")
     public Body<List<String>> getQueue(@RequestParam("exchangeName") String exchangeName){
-        return centerPublishService.listExchangeQueues(exchangeName);
+        return adminMQPublishService.listExchangeQueues(exchangeName);
     }
 
 }

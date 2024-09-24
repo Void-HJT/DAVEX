@@ -48,7 +48,7 @@ public class HandleUid {
         Pattern pattern = Pattern.compile("\\d+");
         Matcher matcher = pattern.matcher(uid);
 
-        // 数字数组，最多可以存两个数字
+        // 数字数组，最多可以存三个数字
         int[] numbers = new int[3];
         int index = 0;
         if(this.getUidType()!="UNKNOWN"){

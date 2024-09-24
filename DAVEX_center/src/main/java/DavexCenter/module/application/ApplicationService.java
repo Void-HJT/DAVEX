@@ -5,9 +5,7 @@ import DavexBase.common.Body;
 import DavexBase.common.GetMaxUid;
 import DavexBase.entity.Application;
 import DavexBase.mapper.ApplicationMapper;
-import DavexBase.common.HandleUid;
-import DavexCenter.module.MQ.CenterPublishService;
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import DavexCenter.module.MQ.AdminMQPublishService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
@@ -24,7 +22,7 @@ public class ApplicationService {
     ApplicationMapper applicationMapper;
 
     @Autowired
-    CenterPublishService centerPublishService;
+    AdminMQPublishService adminMQPublishService;
 
     @Value("${my.id}")
     private String uid;
@@ -53,7 +51,7 @@ public class ApplicationService {
         } catch (JsonProcessingException e) {
             return Body.error("message 生成失败 "+e);
         }
-        centerPublishService.publishMessageToFanout(exchange,message);
+        adminMQPublishService.publishMessageToFanout(exchange,message);
         return Body.success("插入application成功");
     }
 
@@ -72,7 +70,7 @@ public class ApplicationService {
         } catch (JsonProcessingException e) {
             return Body.error("message 生成失败"+e);
         }
-        centerPublishService.publishMessageToFanout(exchange,message);
+        adminMQPublishService.publishMessageToFanout(exchange,message);
         return Body.success("删除application成功");
     }
 
@@ -88,7 +86,7 @@ public class ApplicationService {
         } catch (JsonProcessingException e) {
             return Body.error("message 生成失败"+e);
         }
-        centerPublishService.publishMessageToFanout(exchange,message);
+        adminMQPublishService.publishMessageToFanout(exchange,message);
         return Body.success("更新application成功");
     }
 

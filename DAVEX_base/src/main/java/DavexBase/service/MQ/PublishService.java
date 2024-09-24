@@ -1,4 +1,4 @@
-package DavexAgent.module.MQ;
+package DavexBase.service.MQ;
 
 import DavexBase.common.Body;
 import DavexBase.entity.RabbitmqConnection;
@@ -15,7 +15,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Service
-public class AgentPublishService {
+public class PublishService {
 
     // 存储每个队列的连接工厂，确保连接不会重复创建
     private final Map<String, CachingConnectionFactory> connectionFactories;
@@ -24,7 +24,7 @@ public class AgentPublishService {
     RabbitmqConnectionMapper rabbitMQConnectionMapper;
 
     @Autowired
-    public AgentPublishService() {
+    public PublishService() {
         this.connectionFactories = new HashMap<>();
     }
 
@@ -74,8 +74,9 @@ public class AgentPublishService {
      * 创建并绑定交换机和队列
      */
     private Body<String> createAndBindExchange(String centerId, String exchangeName, String queueName, String routingKey, ExchangeType exchangeType) {
+        String queueKey = centerId+'_'+queueName;
         // 检查是否已有连接
-        CachingConnectionFactory factory = connectionFactories.get(queueName);
+        CachingConnectionFactory factory = connectionFactories.get(queueKey);
 
         // 如果没有已存在的连接工厂，创建新的
         if (factory == null) {
@@ -92,7 +93,7 @@ public class AgentPublishService {
                 factory.setVirtualHost(connectionInfo.getVirtualHost());
 
                 // 将新创建的连接工厂保存到 Map 中
-                connectionFactories.put(queueName, factory);
+                connectionFactories.put(queueKey, factory);
 
             } catch (Exception e) {
                 return Body.error("Failed to create connection factory for center: " + e.getMessage());
@@ -145,8 +146,9 @@ public class AgentPublishService {
      * 发送消息
      */
     private Body<String> sendMessage(String centerId, String exchangeName, String routingKey, String message) {
+        String exchangeKey = centerId+'_'+exchangeName;
         // 检查是否已有连接工厂
-        CachingConnectionFactory factory = connectionFactories.get(exchangeName);
+        CachingConnectionFactory factory = connectionFactories.get(exchangeKey);
 
         if (factory == null) {
             RabbitmqConnection connectionInfo = rabbitMQConnectionMapper.selectById(centerId);
@@ -162,7 +164,7 @@ public class AgentPublishService {
                 factory.setVirtualHost(connectionInfo.getVirtualHost());
 
                 // 保存连接工厂到 Map 中
-                connectionFactories.put(exchangeName, factory);
+                connectionFactories.put(exchangeKey, factory);
             } catch (Exception e) {
                 return Body.error("Failed to create connection factory: " + e.getMessage());
             }
