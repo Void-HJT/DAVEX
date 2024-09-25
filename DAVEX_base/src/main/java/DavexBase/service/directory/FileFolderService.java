@@ -20,6 +20,12 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import DavexBase.common.GetMaxUid;
+import DavexBase.entity.*;
+import DavexBase.mapper.*;
+import DavexBase.service.MQ.PublishService;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.core.io.Resource;
@@ -37,24 +43,8 @@ import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 
 import DavexBase.common.Body;
-import DavexBase.entity.Agent;
-import DavexBase.entity.ApplicationGroup;
-import DavexBase.entity.File;
-import DavexBase.entity.FileRule;
-import DavexBase.entity.Folder;
-import DavexBase.entity.FolderVisibility;
-import DavexBase.entity.Group;
-import DavexBase.entity.Rule;
 import DavexBase.info.DirectoryInfo;
 import DavexBase.info.FileInfo;
-import DavexBase.mapper.AgentMapper;
-import DavexBase.mapper.ApplicationGroupMapper;
-import DavexBase.mapper.FileMapper;
-import DavexBase.mapper.FileRuleMapper;
-import DavexBase.mapper.FolderMapper;
-import DavexBase.mapper.FolderVisibilityMapper;
-import DavexBase.mapper.GroupMapper;
-import DavexBase.mapper.RuleMapper;
 import DavexBase.service.auth.CenterWebClientService;
 
 @Service
@@ -81,10 +71,25 @@ public class FileFolderService {
     private AgentMapper agentMapper;
 
     @Autowired
+    private RabbitmqConnectionMapper rabbitmqConnectionMapper;
+
+    @Autowired
     private FolderVisibilityMapper folderVisibilityMapper;
 
     @Autowired
     private CenterWebClientService centerWebClientService;
+
+    @Autowired
+    PublishService publishService;
+
+    // 使用 Jackson ObjectMapper
+    private final ObjectMapper objectMapper = new ObjectMapper();
+
+    @Autowired
+    public FileFolderService() {
+        this.objectMapper.registerModule(new JavaTimeModule());
+    }
+
 
     public Body<?> getFileByRuleOrNot(String agentId, String applicationId, String fileId, String method) {
 
@@ -165,6 +170,22 @@ public class FileFolderService {
         new_folder.setLastUpdate(Timestamp.valueOf(LocalDateTime.now()));
         folderMapper.insert(new_folder);
 
+        //通信
+        String exchange = "FileExchange";
+        String message = null;
+        try {
+            message = "Create folder:" + objectMapper.writeValueAsString(new_folder);
+        } catch (JsonProcessingException e) {
+            return Body.error("message 生成失败 "+e);
+        }
+        //
+        List<Object> uidList = rabbitmqConnectionMapper.selectObjs(new QueryWrapper<RabbitmqConnection>().select("uid"));
+        for(Object obj : uidList){
+            if (obj instanceof String){
+                String targetId = (String) obj;
+                publishService.sendMessageToFanoutExchange(targetId,exchange,message);
+            }
+        }
         return Body.success("插入新文件夹成功");
     }
 
@@ -271,6 +292,8 @@ public class FileFolderService {
 
         // 3. 修改数据库 folder 表
         folder.setName(name);
+        folder.setAgentId(agentId);
+        folder.setUid(folderId);
         UpdateWrapper<Folder> updateWrapper = new UpdateWrapper<>();
         updateWrapper.eq("agent_id", agentId)
                 .eq("uid", folderId);
@@ -286,6 +309,23 @@ public class FileFolderService {
             }
         } else {
             return Body.error("本地文件夹不存在或不是一个目录");
+        }
+
+        //通信
+        String exchange = "FileExchange";
+        String message = null;
+        try {
+            message = "Update folder:" + objectMapper.writeValueAsString(folder);
+        } catch (JsonProcessingException e) {
+            return Body.error("message 生成失败 "+e);
+        }
+        //
+        List<Object> uidList = rabbitmqConnectionMapper.selectObjs(new QueryWrapper<RabbitmqConnection>().select("uid"));
+        for(Object obj : uidList){
+            if (obj instanceof String){
+                String targetId = (String) obj;
+                publishService.sendMessageToFanoutExchange(targetId,exchange,message);
+            }
         }
 
         return Body.success("文件夹名称更新成功");
@@ -340,6 +380,24 @@ public class FileFolderService {
         } else {
             return Body.error("本地文件夹不存在或不是一个目录");
         }
+
+        //通信
+        String exchange = "FileExchange";
+        String message = null;
+        try {
+            message = "Delete folder:" + objectMapper.writeValueAsString(folder);
+        } catch (JsonProcessingException e) {
+            return Body.error("message 生成失败 "+e);
+        }
+        //
+        List<Object> uidList = rabbitmqConnectionMapper.selectObjs(new QueryWrapper<RabbitmqConnection>().select("uid"));
+        for(Object obj : uidList){
+            if (obj instanceof String){
+                String targetId = (String) obj;
+                publishService.sendMessageToFanoutExchange(targetId,exchange,message);
+            }
+        }
+
         return Body.success("文件夹删除成功");
     }
 
@@ -430,6 +488,23 @@ public class FileFolderService {
         // 其他元数据设置
         fileMapper.insert(fileRecord);
 
+        //通信
+        String exchange = "FileExchange";
+        String message = null;
+        try {
+            message = "Create file:" + objectMapper.writeValueAsString(fileRecord);
+        } catch (JsonProcessingException e) {
+            return Body.error("message 生成失败 "+e);
+        }
+        //
+        List<Object> uidList = rabbitmqConnectionMapper.selectObjs(new QueryWrapper<RabbitmqConnection>().select("uid"));
+        for(Object obj : uidList){
+            if (obj instanceof String){
+                String targetId = (String) obj;
+                publishService.sendMessageToFanoutExchange(targetId,exchange,message);
+            }
+        }
+
         // 结果
         return Body.success("文件上传成功");
     }
@@ -450,11 +525,31 @@ public class FileFolderService {
         new_file.setExpiredTime(file.getExpiredTime());
         new_file.setExample(file.getExample());
         new_file.setLastUpdate(new Timestamp(System.currentTimeMillis()));
+        new_file.setUid(file.getUid());
+        new_file.setAgentId(file.getAgentId());
+        new_file.setFolderId(file.getFolderId());
         UpdateWrapper<File> updateWrapper = new UpdateWrapper<>();
         updateWrapper.eq("agent_id", file.getAgentId())
                 .eq("folder_id", file.getFolderId())
                 .eq("uid", file.getUid());
         fileMapper.update(new_file, updateWrapper);
+
+        //通信
+        String exchange = "FileExchange";
+        String message = null;
+        try {
+            message = "Update file:" + objectMapper.writeValueAsString(new_file);
+        } catch (JsonProcessingException e) {
+            return Body.error("message 生成失败 "+e);
+        }
+        //
+        List<Object> uidList = rabbitmqConnectionMapper.selectObjs(new QueryWrapper<RabbitmqConnection>().select("uid"));
+        for(Object obj : uidList){
+            if (obj instanceof String){
+                String targetId = (String) obj;
+                publishService.sendMessageToFanoutExchange(targetId,exchange,message);
+            }
+        }
         return Body.success("更新成功");
     }
 
@@ -551,6 +646,25 @@ public class FileFolderService {
         } else {
             return Body.error("本地文件不存在或不是一个目录");
         }
+
+
+        //通信
+        String exchange = "FileExchange";
+        String message = null;
+        try {
+            message = "Delete file:" + objectMapper.writeValueAsString(file);
+        } catch (JsonProcessingException e) {
+            return Body.error("message 生成失败 "+e);
+        }
+        //
+        List<Object> uidList = rabbitmqConnectionMapper.selectObjs(new QueryWrapper<RabbitmqConnection>().select("uid"));
+        for(Object obj : uidList){
+            if (obj instanceof String){
+                String targetId = (String) obj;
+                publishService.sendMessageToFanoutExchange(targetId,exchange,message);
+            }
+        }
+
         return Body.success("文件删除成功");
 
     }

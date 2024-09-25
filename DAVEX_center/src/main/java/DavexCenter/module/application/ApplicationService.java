@@ -47,7 +47,7 @@ public class ApplicationService {
         String exchange = "applicationExchange";
         String message = null;
         try {
-            message = "Create:" + objectMapper.writeValueAsString(application);
+            message = "Create application:" + objectMapper.writeValueAsString(application);
         } catch (JsonProcessingException e) {
             return Body.error("message 生成失败 "+e);
         }
@@ -66,7 +66,7 @@ public class ApplicationService {
         String exchange = "applicationExchange";
         String message = null;
         try {
-            message = "Delete:" + objectMapper.writeValueAsString(application);
+            message = "Delete application:" + objectMapper.writeValueAsString(application);
         } catch (JsonProcessingException e) {
             return Body.error("message 生成失败"+e);
         }
@@ -82,7 +82,7 @@ public class ApplicationService {
         String exchange = "applicationExchange";
         String message = null;
         try {
-            message = "Update:" + objectMapper.writeValueAsString(application);
+            message = "Update application:" + objectMapper.writeValueAsString(application);
         } catch (JsonProcessingException e) {
             return Body.error("message 生成失败"+e);
         }
