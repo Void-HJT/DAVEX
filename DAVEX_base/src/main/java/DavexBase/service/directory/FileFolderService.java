@@ -33,6 +33,9 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
 import DavexBase.common.Body;
 import DavexBase.common.GetMaxUid;
@@ -41,6 +44,7 @@ import DavexBase.entity.ApplicationGroup;
 import DavexBase.entity.File;
 import DavexBase.entity.Folder;
 import DavexBase.entity.FolderVisibility;
+import DavexBase.entity.RabbitmqConnection;
 import DavexBase.info.DirectoryInfo;
 import DavexBase.info.FileInfo;
 import DavexBase.mapper.AgentMapper;
@@ -48,6 +52,8 @@ import DavexBase.mapper.ApplicationGroupMapper;
 import DavexBase.mapper.FileMapper;
 import DavexBase.mapper.FolderMapper;
 import DavexBase.mapper.FolderVisibilityMapper;
+import DavexBase.mapper.RabbitmqConnectionMapper;
+import DavexBase.service.MQ.PublishService;
 import DavexBase.service.auth.CenterWebClientService;
 
 @Service
@@ -66,10 +72,24 @@ public class FileFolderService {
     private AgentMapper agentMapper;
 
     @Autowired
+    private RabbitmqConnectionMapper rabbitmqConnectionMapper;
+
+    @Autowired
     private FolderVisibilityMapper folderVisibilityMapper;
 
     @Autowired
     private CenterWebClientService centerWebClientService;
+
+    @Autowired
+    PublishService publishService;
+
+    // 使用 Jackson ObjectMapper
+    private final ObjectMapper objectMapper = new ObjectMapper();
+
+    @Autowired
+    public FileFolderService() {
+        this.objectMapper.registerModule(new JavaTimeModule());
+    }
 
     // 创建文件夹
     public Body<String> createFolder(String name, String path, String agent_id, String parent_id) {
@@ -103,7 +123,7 @@ public class FileFolderService {
         GetMaxUid getMaxUid = new GetMaxUid();
         //
         int maxTailNumber = getMaxUid.getFolderMaxUid(agent_id, folderMapper);
-        String uid = agent_id.substring(0, agent_id.lastIndexOf('-')) + "-FXX" + (maxTailNumber + 1);
+        String uid = agent_id + "-F" + (maxTailNumber + 1);
         new_folder.setUid(uid);
         new_folder.setName(name);
         new_folder.setParentId(parent_id);
@@ -111,6 +131,23 @@ public class FileFolderService {
         new_folder.setLastUpdate(Timestamp.valueOf(LocalDateTime.now()));
         folderMapper.insert(new_folder);
 
+        // 通信
+        String exchange = "FileExchange";
+        String message = null;
+        try {
+            message = "Create folder:" + objectMapper.writeValueAsString(new_folder);
+        } catch (JsonProcessingException e) {
+            return Body.error("message 生成失败 " + e);
+        }
+        //
+        List<Object> uidList = rabbitmqConnectionMapper
+                .selectObjs(new QueryWrapper<RabbitmqConnection>().select("uid"));
+        for (Object obj : uidList) {
+            if (obj instanceof String) {
+                String targetId = (String) obj;
+                publishService.sendMessageToFanoutExchange(targetId, exchange, message);
+            }
+        }
         return Body.success("插入新文件夹成功");
     }
 
@@ -143,6 +180,8 @@ public class FileFolderService {
 
         // 3. 修改数据库 folder 表
         folder.setName(name);
+        folder.setAgentId(agentId);
+        folder.setUid(folderId);
         UpdateWrapper<Folder> updateWrapper = new UpdateWrapper<>();
         updateWrapper.eq("agent_id", agentId)
                 .eq("uid", folderId);
@@ -158,6 +197,24 @@ public class FileFolderService {
             }
         } else {
             return Body.error("本地文件夹不存在或不是一个目录");
+        }
+
+        // 通信
+        String exchange = "FileExchange";
+        String message = null;
+        try {
+            message = "Update folder:" + objectMapper.writeValueAsString(folder);
+        } catch (JsonProcessingException e) {
+            return Body.error("message 生成失败 " + e);
+        }
+        //
+        List<Object> uidList = rabbitmqConnectionMapper
+                .selectObjs(new QueryWrapper<RabbitmqConnection>().select("uid"));
+        for (Object obj : uidList) {
+            if (obj instanceof String) {
+                String targetId = (String) obj;
+                publishService.sendMessageToFanoutExchange(targetId, exchange, message);
+            }
         }
 
         return Body.success("文件夹名称更新成功");
@@ -210,6 +267,25 @@ public class FileFolderService {
         } else {
             return Body.error("本地文件夹不存在或不是一个目录");
         }
+
+        // 通信
+        String exchange = "FileExchange";
+        String message = null;
+        try {
+            message = "Delete folder:" + objectMapper.writeValueAsString(folder);
+        } catch (JsonProcessingException e) {
+            return Body.error("message 生成失败 " + e);
+        }
+        //
+        List<Object> uidList = rabbitmqConnectionMapper
+                .selectObjs(new QueryWrapper<RabbitmqConnection>().select("uid"));
+        for (Object obj : uidList) {
+            if (obj instanceof String) {
+                String targetId = (String) obj;
+                publishService.sendMessageToFanoutExchange(targetId, exchange, message);
+            }
+        }
+
         return Body.success("文件夹删除成功");
     }
 
@@ -284,7 +360,7 @@ public class FileFolderService {
         GetMaxUid getMaxUid = new GetMaxUid();
         //
         int maxTailNumber = getMaxUid.getFileMaxUid(agentId, fileMapper);
-        String uid = agentId.substring(0, agentId.lastIndexOf('-')) + "-DXX" + (maxTailNumber + 1);
+        String uid = agentId + "-D" + (maxTailNumber + 1);
         fileRecord.setUid(uid);
         fileRecord.setType(file.getOriginalFilename().substring(file.getOriginalFilename().lastIndexOf(".")));
         fileRecord.setFolderId(folderId);
@@ -295,6 +371,24 @@ public class FileFolderService {
         fileRecord.setLastUpdate(new Timestamp(System.currentTimeMillis()));
         // 其他元数据设置
         fileMapper.insert(fileRecord);
+
+        // 通信
+        String exchange = "FileExchange";
+        String message = null;
+        try {
+            message = "Create file:" + objectMapper.writeValueAsString(fileRecord);
+        } catch (JsonProcessingException e) {
+            return Body.error("message 生成失败 " + e);
+        }
+        //
+        List<Object> uidList = rabbitmqConnectionMapper
+                .selectObjs(new QueryWrapper<RabbitmqConnection>().select("uid"));
+        for (Object obj : uidList) {
+            if (obj instanceof String) {
+                String targetId = (String) obj;
+                publishService.sendMessageToFanoutExchange(targetId, exchange, message);
+            }
+        }
 
         // 结果
         return Body.success("文件上传成功");
@@ -315,10 +409,31 @@ public class FileFolderService {
         new_file.setExpiredTime(file.getExpiredTime());
         new_file.setExample(file.getExample());
         new_file.setLastUpdate(new Timestamp(System.currentTimeMillis()));
+        new_file.setUid(file.getUid());
+        new_file.setAgentId(file.getAgentId());
+        new_file.setFolderId(file.getFolderId());
         UpdateWrapper<File> updateWrapper = new UpdateWrapper<>();
         updateWrapper.eq("folder_id", file.getFolderId())
                 .eq("uid", file.getUid());
         fileMapper.update(new_file, updateWrapper);
+
+        // 通信
+        String exchange = "FileExchange";
+        String message = null;
+        try {
+            message = "Update file:" + objectMapper.writeValueAsString(new_file);
+        } catch (JsonProcessingException e) {
+            return Body.error("message 生成失败 " + e);
+        }
+        //
+        List<Object> uidList = rabbitmqConnectionMapper
+                .selectObjs(new QueryWrapper<RabbitmqConnection>().select("uid"));
+        for (Object obj : uidList) {
+            if (obj instanceof String) {
+                String targetId = (String) obj;
+                publishService.sendMessageToFanoutExchange(targetId, exchange, message);
+            }
+        }
         return Body.success("更新成功");
     }
 
@@ -354,6 +469,25 @@ public class FileFolderService {
         } else {
             return Body.error("本地文件不存在或不是一个目录");
         }
+
+        // 通信
+        String exchange = "FileExchange";
+        String message = null;
+        try {
+            message = "Delete file:" + objectMapper.writeValueAsString(file);
+        } catch (JsonProcessingException e) {
+            return Body.error("message 生成失败 " + e);
+        }
+        //
+        List<Object> uidList = rabbitmqConnectionMapper
+                .selectObjs(new QueryWrapper<RabbitmqConnection>().select("uid"));
+        for (Object obj : uidList) {
+            if (obj instanceof String) {
+                String targetId = (String) obj;
+                publishService.sendMessageToFanoutExchange(targetId, exchange, message);
+            }
+        }
+
         return Body.success("文件删除成功");
 
     }

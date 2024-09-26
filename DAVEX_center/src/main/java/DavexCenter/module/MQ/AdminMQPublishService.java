@@ -21,13 +21,13 @@ import java.util.Map;
 
 
 @Service
-public class CenterPublishService {
+public class AdminMQPublishService {
 
     private final RabbitTemplate rabbitTemplate;
     private final RabbitAdmin rabbitAdmin;
 
     @Autowired
-    public CenterPublishService(CachingConnectionFactory connectionFactory) {
+    public AdminMQPublishService(CachingConnectionFactory connectionFactory) {
         this.rabbitTemplate = new RabbitTemplate(connectionFactory);
         this.rabbitAdmin = new RabbitAdmin(connectionFactory);
     }

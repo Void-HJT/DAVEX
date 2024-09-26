@@ -1,4 +1,4 @@
-package DavexAgent.module.MQ;
+package DavexBase.service.MQ;
 
 import DavexBase.common.Body;
 import DavexBase.entity.RabbitmqConnection;
@@ -14,7 +14,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Service
-public class AgentSubscribeService {
+public class SubscribeService {
 
     private final Map<String, SimpleMessageListenerContainer> subscriptionContainers;
     private final Map<String, CachingConnectionFactory> connectionFactories;  // 用于存储每个队列的连接工厂
@@ -23,7 +23,7 @@ public class AgentSubscribeService {
     RabbitmqConnectionMapper rabbitMQConnectionMapper;
 
     @Autowired
-    public AgentSubscribeService() {
+    public SubscribeService() {
         this.subscriptionContainers = new HashMap<>();
         this.connectionFactories = new HashMap<>();
     }

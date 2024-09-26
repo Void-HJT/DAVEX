@@ -1,5 +1,6 @@
 package DavexBase.common;
 
+import java.util.ArrayList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -22,16 +23,16 @@ public class HandleUid {
         }
 
         // 检查是否有 "-C" 的部分
-        if (uid.matches("^DAVEX-C\\d+$")) {
-            return "center"; // 格式为 DAVEX-Cn 的类型
-        } else if (uid.matches("^DAVEX-C\\d+-AXX\\d+$")) {
-            return "application"; // 格式为 DAVEX-Cn-AXXn 的类型
-        } else if (uid.matches("^DAVEX-C\\d+-GXX\\d+$")) {
-            return "agent"; // 格式为 DAVEX-Cn-GXXn 的类型
-        } else if (uid.matches("^DAVEX-C\\d+-FXX\\d+$")) {
-            return "folder"; // 格式为 DAVEX-Cn-FXXn 的类型
-        } else if (uid.matches("^DAVEX-C\\d+-DXX\\d+$")) {
-            return "file"; // 格式为 DAVEX-Cn-DXXn 的类型
+        if (uid.matches("^DAVEX-CXX\\d+$")) {
+            return "center"; // 格式为 DAVEX-CXXn 的类型
+        } else if (uid.matches("^DAVEX-CXX\\d+-AXX\\d+$")) {
+            return "application"; // 格式为 DAVEX-CXXn-AXXn 的类型
+        } else if (uid.matches("^DAVEX-CXX\\d+-GXX\\d+$")) {
+            return "agent"; // 格式为 DAVEX-CXXn-GXXn 的类型
+        } else if (uid.matches("^DAVEX-CXX\\d+-GXX\\d+-F\\d+$")) {
+            return "folder"; // 格式为 DAVEX-CXXn-GXXn-Fn 的类型
+        } else if (uid.matches("^DAVEX-CXX\\d+-GXX\\d-D\\d+$")) {
+            return "file"; // 格式为 DAVEX-CXXn-GXXn-Dn 的类型
         }
 
         // 其他扩展类型可以在这里添加
@@ -48,23 +49,23 @@ public class HandleUid {
         Pattern pattern = Pattern.compile("\\d+");
         Matcher matcher = pattern.matcher(uid);
 
-        // 数字数组，最多可以存两个数字
-        int[] numbers = new int[2];
-        int index = 0;
-        if(this.getUidType()!="UNKNOWN"){
+        // 使用 ArrayList 动态存储数字
+        ArrayList<Integer> numbers = new ArrayList<>();
+
+        if (!this.getUidType().equals("UNKNOWN")) {
             // 找到所有的数字
             while (matcher.find()) {
-                if (index < numbers.length) {
-                    numbers[index] = Integer.parseInt(matcher.group());
-                    index++;
-                }
+                // 将找到的数字添加到动态数组中
+                numbers.add(Integer.parseInt(matcher.group()));
             }
 
-            // 只找到一个数字时，返回单个数字
-            if (index == 1) {
-                return new int[] { numbers[0] };
+            // 只找到一个数字时，返回单个数字数组
+            if (numbers.size() == 1) {
+                return new int[] { numbers.get(0) };
             }
         }
-        return numbers;
+
+        // 将 ArrayList 转换为 int[]
+        return numbers.stream().mapToInt(i -> i).toArray();
     }
 }
