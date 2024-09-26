@@ -34,7 +34,7 @@ CREATE TABLE `application` (
     `cert` blob,
     `last_updated` timestamp NULL DEFAULT NULL,
     `description` varchar(255) DEFAULT NULL,
-    `attrubute` JSON DEFAULT NULL,
+    `attribute` JSON DEFAULT NULL,
     PRIMARY KEY (`uid`) USING BTREE
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci;
 
@@ -114,7 +114,7 @@ CREATE TABLE `file` (
     `name` varchar(255) DEFAULT NULL,
     `create_date` timestamp NULL DEFAULT NULL,
     `last_update` timestamp NULL DEFAULT NULL,
-    `attrubute` JSON DEFAULT NULL,
+    `attribute` JSON DEFAULT NULL,
     `size` bigint DEFAULT NULL,
     `description` varchar(255) DEFAULT NULL,
     `expired_time` timestamp NULL DEFAULT NULL,

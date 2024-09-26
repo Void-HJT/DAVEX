@@ -33,7 +33,8 @@ CREATE TABLE `application` (
     `name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
     `cert` blob,
     `last_updated` timestamp NULL DEFAULT NULL,
-    `description` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
+    `description` varchar(255) DEFAULT NULL,
+    `attribute` JSON DEFAULT NULL,
     PRIMARY KEY (`uid`) USING BTREE
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci;
 
@@ -79,7 +80,7 @@ CREATE TABLE `file` (
     `name` varchar(255) DEFAULT NULL,
     `create_date` timestamp NULL DEFAULT NULL,
     `last_update` timestamp NULL DEFAULT NULL,
-    `tag` varchar(255) DEFAULT NULL,
+    `attribute` JSON DEFAULT NULL,
     `size` bigint DEFAULT NULL,
     `description` varchar(255) DEFAULT NULL,
     `expired_time` timestamp NULL DEFAULT NULL,
@@ -251,5 +252,8 @@ CREATE TABLE `folder_visibility` (
     `visibility_id` varchar(255) NOT NULL,
     PRIMARY KEY (`uid`) USING BTREE
 ) ENGINE = InnoDB AUTO_INCREMENT = 23 DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci;
+
+
+SELECT r.expression FROM file_rule fr JOIN rule r ON fr.rule_id = r.uid WHERE fr.file_id = 'DAVEX-C1-GXX2-F1'
 
 SET FOREIGN_KEY_CHECKS = 1;

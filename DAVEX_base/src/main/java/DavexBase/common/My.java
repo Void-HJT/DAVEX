@@ -42,9 +42,6 @@ public class My {
     @Value("${server.port}")
     protected int port;
 
-    @Value("${my.rules_path}")
-    protected String rules_path;
-
     // @Value("${ssl.keystore-path}")
     // protected String keyStorePath;
 
@@ -59,10 +56,6 @@ public class My {
 
     // @Value("${ssl.key-store-type}")
     // protected String keyStoreType;
-
-    public String getRules_path() {
-        return rules_path;
-    }
 
     @Value("${my.garnet_path}")
     protected String garnet_path;
@@ -218,43 +211,43 @@ public class My {
     }
 
     // public String getKeyStorePath() {
-    //     return keyStorePath;
+    // return keyStorePath;
     // }
 
     // public void setKeyStorePath(String keyStorePath) {
-    //     this.keyStorePath = keyStorePath;
+    // this.keyStorePath = keyStorePath;
     // }
 
     // public String getKeyStorePassword() {
-    //     return keyStorePassword;
+    // return keyStorePassword;
     // }
 
     // public void setKeyStorePassword(String keyStorePassword) {
-    //     this.keyStorePassword = keyStorePassword;
+    // this.keyStorePassword = keyStorePassword;
     // }
 
     // public String getTrustStorePath() {
-    //     return trustStorePath;
+    // return trustStorePath;
     // }
 
     // public void setTrustStorePath(String trustStorePath) {
-    //     this.trustStorePath = trustStorePath;
+    // this.trustStorePath = trustStorePath;
     // }
 
     // public String getTrustStorePassword() {
-    //     return trustStorePassword;
+    // return trustStorePassword;
     // }
 
     // public void setTrustStorePassword(String trustStorePassword) {
-    //     this.trustStorePassword = trustStorePassword;
+    // this.trustStorePassword = trustStorePassword;
     // }
 
     // public String getKeyStoreType() {
-    //     return keyStoreType;
+    // return keyStoreType;
     // }
 
     // public void setKeyStoreType(String keyStoreType) {
-    //     this.keyStoreType = keyStoreType;
+    // this.keyStoreType = keyStoreType;
     // }
 
     public String getGarnet_path() {

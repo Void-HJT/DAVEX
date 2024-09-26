@@ -7,7 +7,6 @@ my:
   description: ${MY_DESCRIPTION:开发环境}
   garnet_path: ${MY_GARNET_PATH:/home/user/Garnet}
   base_path: ${MY_BASE_PATH:/home/user/DAVEX/base}
-  rules_path: ${MY_RULES_PATH:/home/user/DAVEX/rules}
   davex_type: ${MY_DAVEX_TYPE:DAVEX_CENTER}
 
 server:
