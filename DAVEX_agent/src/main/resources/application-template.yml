@@ -7,7 +7,6 @@ my:
   description: ${MY_DESCRIPTION:'DAVEX Agent 171'}
   garnet_path: ${MY_GARNET_PATH:/home/user/Garnet}
   base_path: ${MY_BASE_PATH:/home/user/DVE}
-  rules_path: ${MY_RULES_PATH:/home/user/DAVEX/rules}
   davex_type: ${MY_DAVEX_TYPE:DAVEX_AGENT}
   
 server:
