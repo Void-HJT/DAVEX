@@ -5,6 +5,7 @@ import DavexBase.common.Body;
 import DavexBase.common.GetMaxUid;
 import DavexBase.entity.Application;
 import DavexBase.mapper.ApplicationMapper;
+import DavexBase.service.MQ.MessageService;
 import DavexCenter.module.MQ.AdminMQPublishService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -23,6 +24,9 @@ public class ApplicationService {
 
     @Autowired
     AdminMQPublishService adminMQPublishService;
+
+    @Autowired
+    MessageService messageService;
 
     @Value("${my.id}")
     private String uid;
@@ -46,11 +50,9 @@ public class ApplicationService {
         //通信
         String exchange = "applicationExchange";
         String message = null;
-        try {
-            message = "Create application:" + objectMapper.writeValueAsString(application);
-        } catch (JsonProcessingException e) {
-            return Body.error("message 生成失败 "+e);
-        }
+        String operation = "Create";
+        String entity = "application";
+        message = messageService.getMessage(operation,entity,objectMapper,application);
         adminMQPublishService.publishMessageToFanout(exchange,message);
         return Body.success("插入application成功");
     }
@@ -58,34 +60,30 @@ public class ApplicationService {
 
     public Body<String> deleteApplication(String applicationId) {
         Application application1 = applicationMapper.selectById(applicationId);
-        if(application1.getUid()!=uid){return Body.error("uid不正确");}
+        if(!uid.equals(application1.getCenterId())){return Body.error("uid不正确");}
         applicationMapper.deleteById(applicationId);
         Application application = new Application();
         application.setUid(applicationId);
         //通信
         String exchange = "applicationExchange";
         String message = null;
-        try {
-            message = "Delete application:" + objectMapper.writeValueAsString(application);
-        } catch (JsonProcessingException e) {
-            return Body.error("message 生成失败"+e);
-        }
+        String operation = "Delete";
+        String entity = "application";
+        message = messageService.getMessage(operation,entity,objectMapper,application);
         adminMQPublishService.publishMessageToFanout(exchange,message);
         return Body.success("删除application成功");
     }
 
 
     public Body<String> updateApplication(Application application) {
-        if (application.getCenterId()!=uid){return Body.error("uid不正确");}
+        if (!uid.equals(application.getCenterId())){return Body.error("uid不正确");}
         applicationMapper.updateById(application);
         //通信
         String exchange = "applicationExchange";
         String message = null;
-        try {
-            message = "Update application:" + objectMapper.writeValueAsString(application);
-        } catch (JsonProcessingException e) {
-            return Body.error("message 生成失败"+e);
-        }
+        String operation = "Update";
+        String entity = "application";
+        message = messageService.getMessage(operation,entity,objectMapper,application);
         adminMQPublishService.publishMessageToFanout(exchange,message);
         return Body.success("更新application成功");
     }

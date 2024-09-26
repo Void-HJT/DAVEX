@@ -1,12 +1,18 @@
 package DavexBase.entity;
 
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableId;
+
 import lombok.Data;
 
 @Data
 public class FolderVisibility {
 
-  private String uid;
+  @TableId(type = IdType.AUTO)
+  private Long uid;
+
+  private String agentId;
   private String folderId;
-  private String visibilityId;
+  private Long groupId;
 
 }

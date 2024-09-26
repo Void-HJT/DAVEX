@@ -15,9 +15,18 @@ import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import DavexBase.common.GetMaxUid;
+import DavexBase.entity.*;
+import DavexBase.mapper.*;
+import DavexBase.service.MQ.MessageService;
+import DavexBase.service.MQ.PublishService;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.core.io.Resource;
@@ -33,32 +42,17 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
 import DavexBase.common.Body;
-import DavexBase.common.GetMaxUid;
-import DavexBase.entity.Agent;
-import DavexBase.entity.ApplicationGroup;
-import DavexBase.entity.File;
-import DavexBase.entity.Folder;
-import DavexBase.entity.FolderVisibility;
-import DavexBase.entity.RabbitmqConnection;
 import DavexBase.info.DirectoryInfo;
 import DavexBase.info.FileInfo;
-import DavexBase.mapper.AgentMapper;
-import DavexBase.mapper.ApplicationGroupMapper;
-import DavexBase.mapper.FileMapper;
-import DavexBase.mapper.FolderMapper;
-import DavexBase.mapper.FolderVisibilityMapper;
-import DavexBase.mapper.RabbitmqConnectionMapper;
-import DavexBase.service.MQ.PublishService;
 import DavexBase.service.auth.CenterWebClientService;
 
 @Service
 public class FileFolderService {
 
+    @Autowired
+    private GroupMapper groupMapper;
     @Autowired
     private FolderMapper folderMapper;
 
@@ -66,7 +60,13 @@ public class FileFolderService {
     private ApplicationGroupMapper applicationGroupMapper;
 
     @Autowired
+    private RuleMapper ruleMapper;
+
+    @Autowired
     private FileMapper fileMapper;
+
+    @Autowired
+    private FileRuleMapper fileRuleMapper;
 
     @Autowired
     private AgentMapper agentMapper;
@@ -83,6 +83,9 @@ public class FileFolderService {
     @Autowired
     PublishService publishService;
 
+    @Autowired
+    MessageService messageService;
+
     // 使用 Jackson ObjectMapper
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -91,11 +94,50 @@ public class FileFolderService {
         this.objectMapper.registerModule(new JavaTimeModule());
     }
 
+
+    public Body<?> getFileByRuleOrNot(String agentId, String applicationId, String fileId, String method) {
+
+        boolean isAllowed = false;
+
+        List<ApplicationGroup> applicationGroups = applicationGroupMapper.selectList(
+                new QueryWrapper<ApplicationGroup>()
+                        .eq("agent_id", agentId)
+                        .eq("application_id", applicationId));
+
+        List<FileRule> fileRules = fileRuleMapper.selectList(
+                new QueryWrapper<FileRule>()
+                        .eq("agent_id", agentId)
+                        .eq("file_id", fileId));
+        List<Long> ruleIds = new LinkedList<>();
+
+        for (FileRule fileRule : fileRules) {
+            if (!ruleIds.contains(fileRule.getRuleId())) {
+                ruleIds.add(fileRule.getRuleId());
+            }
+        }
+
+        List<Rule> rules = ruleMapper.selectBatchIds(ruleIds);
+
+        for (Rule rule : rules) {
+
+            boolean groupMatch = applicationGroups.stream()
+                    .anyMatch(group -> group.getGroupId().equals(rule.getGroupId()));
+
+            if (groupMatch && method.equals(rule.getAllowedMethod())) {
+                isAllowed = true;
+                break;
+            }
+        }
+
+        return Body.success(isAllowed, "");
+    }
+
     // 创建文件夹
     public Body<String> createFolder(String name, String path, String agent_id, String parent_id) {
         // 1.检查是否父文件夹存在
         LambdaQueryWrapper<Folder> queryWrapper = Wrappers.<Folder>lambdaQuery()
-                .eq(Folder::getUid, parent_id);
+                .eq(Folder::getUid, parent_id)
+                .eq(Folder::getAgentId, agent_id);
         Folder fatherFolder = folderMapper.selectOne(queryWrapper);
         if (fatherFolder == null) {
             return Body.error("父文件夹不存在");
@@ -103,7 +145,7 @@ public class FileFolderService {
         queryWrapper.clear();
 
         // 2.查询数据库相同父文件夹下是否有同名文件夹
-        queryWrapper.eq(Folder::getParentId, parent_id).eq(Folder::getName, name);
+        queryWrapper.eq(Folder::getAgentId, agent_id).eq(Folder::getParentId, parent_id).eq(Folder::getName, name);
         List<Folder> folderList = folderMapper.selectList(queryWrapper);
         if (!folderList.isEmpty()) {
             return Body.error("重名文件夹");
@@ -122,40 +164,112 @@ public class FileFolderService {
         Folder new_folder = new Folder();
         GetMaxUid getMaxUid = new GetMaxUid();
         //
-        int maxTailNumber = getMaxUid.getFolderMaxUid(agent_id, folderMapper);
-        String uid = agent_id + "-F" + (maxTailNumber + 1);
+        int maxTailNumber = getMaxUid.getFolderMaxUid(agent_id,folderMapper);
+        String uid = agent_id+"-F"+(maxTailNumber+1);
         new_folder.setUid(uid);
         new_folder.setName(name);
+        new_folder.setAgentId(agent_id);
         new_folder.setParentId(parent_id);
         new_folder.setCreateDate(Timestamp.valueOf(LocalDateTime.now()));
         new_folder.setLastUpdate(Timestamp.valueOf(LocalDateTime.now()));
         folderMapper.insert(new_folder);
 
-        // 通信
+        //通信
         String exchange = "FileExchange";
         String message = null;
-        try {
-            message = "Create folder:" + objectMapper.writeValueAsString(new_folder);
-        } catch (JsonProcessingException e) {
-            return Body.error("message 生成失败 " + e);
-        }
+        String operation = "Create";
+        String entity = "folder";
+        message = messageService.getMessage(operation,entity,objectMapper,new_folder);
         //
-        List<Object> uidList = rabbitmqConnectionMapper
-                .selectObjs(new QueryWrapper<RabbitmqConnection>().select("uid"));
-        for (Object obj : uidList) {
-            if (obj instanceof String) {
+        List<Object> uidList = rabbitmqConnectionMapper.selectObjs(new QueryWrapper<RabbitmqConnection>().select("uid"));
+        for(Object obj : uidList){
+            if (obj instanceof String){
                 String targetId = (String) obj;
-                publishService.sendMessageToFanoutExchange(targetId, exchange, message);
+                publishService.sendMessageToFanoutExchange(targetId,exchange,message);
             }
         }
         return Body.success("插入新文件夹成功");
+    }
+
+    // 设置文件夹可见或不可见
+    public Body<String> setFolderVisible(String agentId, Long groupId, String folderId) {
+        // 1.判断用户组 文件夹是否存在
+        LambdaQueryWrapper<Group> queryGroupWrapper = Wrappers.<Group>lambdaQuery()
+                .eq(Group::getUid, groupId)
+                .eq(Group::getAgentId, agentId);
+        if (groupMapper.selectList(queryGroupWrapper).isEmpty()) {
+            return Body.error("该用户组不存在");
+        }
+        LambdaQueryWrapper<Folder> queryFolderWrapper = Wrappers.<Folder>lambdaQuery()
+                .eq(Folder::getUid, folderId)
+                .eq(Folder::getAgentId, agentId);
+        if (folderMapper.selectList(queryFolderWrapper).isEmpty()) {
+            return Body.error("该文件夹不存在");
+        }
+        // 2.寻找其所有父文件夹，如果有一个父文件夹对该用户不可见，那么返回错误（当父文件不可见，子文件夹可见不合理）
+        List<String> parentFolderIds = new ArrayList<>();
+        List<String> path = new ArrayList<>();
+        findAllParentFolders(folderId, agentId, parentFolderIds, path);
+
+        for (String parentId : parentFolderIds) {
+            LambdaQueryWrapper<FolderVisibility> queryVisibilityWrapper = Wrappers.<FolderVisibility>lambdaQuery()
+                    .eq(FolderVisibility::getFolderId, parentId)
+                    .eq(FolderVisibility::getGroupId, groupId)
+                    .eq(FolderVisibility::getAgentId, agentId);
+            if (folderVisibilityMapper.selectList(queryVisibilityWrapper).isEmpty()) {
+                return Body.error("父文件夹中存在对该用户组不可见的文件夹，设置失败");
+            }
+        }
+        // 3. 将当前文件夹设置为可见
+        FolderVisibility folderVisibility = new FolderVisibility();
+        folderVisibility.setAgentId(agentId);
+        folderVisibility.setFolderId(folderId);
+        folderVisibility.setGroupId(groupId);
+        folderVisibilityMapper.insert(folderVisibility);
+        return Body.success("设置成功");
+
+    }
+
+    public Body<String> setFolderInvisible(String agentId, Long groupId, String folderId) {
+        // 1. 查表判断用户组与文件夹可见性是否存在
+        LambdaQueryWrapper<FolderVisibility> queryVisibilityWrapper = Wrappers.<FolderVisibility>lambdaQuery()
+                .eq(FolderVisibility::getFolderId, folderId)
+                .eq(FolderVisibility::getGroupId, groupId)
+                .eq(FolderVisibility::getAgentId, agentId);
+        if (folderVisibilityMapper.selectList(queryVisibilityWrapper).isEmpty()) {
+            return Body.error("该文件夹对该用户组本来就是不可见的");
+        }
+
+        // 2. 寻找其所有子文件夹，如果子文件夹对该用户组可见，将其设为不可见
+        List<String> childFolderIds = new ArrayList<>();
+        findAllChildFolders(folderId, agentId, childFolderIds);
+
+        for (String childId : childFolderIds) {
+            LambdaQueryWrapper<FolderVisibility> queryChildVisibilityWrapper = Wrappers.<FolderVisibility>lambdaQuery()
+                    .eq(FolderVisibility::getFolderId, childId)
+                    .eq(FolderVisibility::getGroupId, groupId)
+                    .eq(FolderVisibility::getAgentId, agentId);
+            List<FolderVisibility> childVisibilities = folderVisibilityMapper.selectList(queryChildVisibilityWrapper);
+            for (FolderVisibility childVisibility : childVisibilities) {
+                folderVisibilityMapper.delete(new QueryWrapper<FolderVisibility>().eq("uid", childVisibility.getUid()));
+            }
+        }
+
+        // 3. 将该文件夹设为不可见
+        FolderVisibility folderVisibility = folderVisibilityMapper.selectOne(queryVisibilityWrapper);
+        if (folderVisibility != null) {
+            folderVisibilityMapper.delete(new QueryWrapper<FolderVisibility>().eq("uid", folderVisibility.getUid()));
+        }
+
+        return Body.success("设置成功");
     }
 
     // 修改文件夹名
     public Body<String> setFolderName(String agentId, String folderId, String name, String baseDirectory) {
         // 1. 首先查找该文件夹是否存在
         LambdaQueryWrapper<Folder> queryFolderWrapper = Wrappers.<Folder>lambdaQuery()
-                .eq(Folder::getUid, folderId);
+                .eq(Folder::getUid, folderId)
+                .eq(Folder::getAgentId, agentId);
         Folder folder = folderMapper.selectOne(queryFolderWrapper);
         if (folder == null) {
             return Body.error("该文件夹不存在");
@@ -164,7 +278,7 @@ public class FileFolderService {
         // 2. 得到父文件夹的 ID 列表，并构建本地绝对路径
         List<String> parentFolderIds = new ArrayList<>();
         List<String> path = new ArrayList<>();
-        findAllParentFolders(folderId, parentFolderIds, path);
+        findAllParentFolders(folderId, agentId, parentFolderIds, path);
 
         // 构建文件夹路径
         Collections.reverse(path); // 反转路径列表，确保路径顺序正确
@@ -199,21 +313,18 @@ public class FileFolderService {
             return Body.error("本地文件夹不存在或不是一个目录");
         }
 
-        // 通信
+        //通信
         String exchange = "FileExchange";
         String message = null;
-        try {
-            message = "Update folder:" + objectMapper.writeValueAsString(folder);
-        } catch (JsonProcessingException e) {
-            return Body.error("message 生成失败 " + e);
-        }
+        String operation = "Update";
+        String entity = "folder";
+        message = messageService.getMessage(operation,entity,objectMapper,folder);
         //
-        List<Object> uidList = rabbitmqConnectionMapper
-                .selectObjs(new QueryWrapper<RabbitmqConnection>().select("uid"));
-        for (Object obj : uidList) {
-            if (obj instanceof String) {
+        List<Object> uidList = rabbitmqConnectionMapper.selectObjs(new QueryWrapper<RabbitmqConnection>().select("uid"));
+        for(Object obj : uidList){
+            if (obj instanceof String){
                 String targetId = (String) obj;
-                publishService.sendMessageToFanoutExchange(targetId, exchange, message);
+                publishService.sendMessageToFanoutExchange(targetId,exchange,message);
             }
         }
 
@@ -225,7 +336,8 @@ public class FileFolderService {
     public Body<String> deleteFolder(String agentId, String folderId, String baseDirectory) {
         // 1.查找是否存在或者有子文件夹与文件，如果有则无法删除
         LambdaQueryWrapper<Folder> queryFolderWrapper = Wrappers.<Folder>lambdaQuery()
-                .eq(Folder::getUid, folderId);
+                .eq(Folder::getUid, folderId)
+                .eq(Folder::getAgentId, agentId);
         Folder folder = folderMapper.selectOne(queryFolderWrapper);
         if (folder == null) {
             return Body.error("该文件夹不存在");
@@ -239,7 +351,8 @@ public class FileFolderService {
 
         // 检查文件夹是否包含文件
         LambdaQueryWrapper<File> queryFileWrapper = Wrappers.<File>lambdaQuery()
-                .eq(File::getFolderId, folderId);
+                .eq(File::getFolderId, folderId)
+                .eq(File::getAgentId, agentId);
         if (fileMapper.selectCount(queryFileWrapper) > 0) {
             return Body.error("该文件夹包含文件，无法删除");
         }
@@ -247,7 +360,7 @@ public class FileFolderService {
         // 2.先得到文件夹路径，再从数据库中删除folder
         List<String> parentFolderIds = new ArrayList<>();
         List<String> path = new ArrayList<>();
-        findAllParentFolders(folderId, parentFolderIds, path);
+        findAllParentFolders(folderId, agentId, parentFolderIds, path);
         // 构建文件夹路径
         Collections.reverse(path); // 反转路径列表，确保路径顺序正确
         StringBuilder fullPathBuilder = new StringBuilder(baseDirectory);
@@ -268,21 +381,18 @@ public class FileFolderService {
             return Body.error("本地文件夹不存在或不是一个目录");
         }
 
-        // 通信
+        //通信
         String exchange = "FileExchange";
         String message = null;
-        try {
-            message = "Delete folder:" + objectMapper.writeValueAsString(folder);
-        } catch (JsonProcessingException e) {
-            return Body.error("message 生成失败 " + e);
-        }
+        String operation = "Delete";
+        String entity = "folder";
+        message = messageService.getMessage(operation,entity,objectMapper,folder);
         //
-        List<Object> uidList = rabbitmqConnectionMapper
-                .selectObjs(new QueryWrapper<RabbitmqConnection>().select("uid"));
-        for (Object obj : uidList) {
-            if (obj instanceof String) {
+        List<Object> uidList = rabbitmqConnectionMapper.selectObjs(new QueryWrapper<RabbitmqConnection>().select("uid"));
+        for(Object obj : uidList){
+            if (obj instanceof String){
                 String targetId = (String) obj;
-                publishService.sendMessageToFanoutExchange(targetId, exchange, message);
+                publishService.sendMessageToFanoutExchange(targetId,exchange,message);
             }
         }
 
@@ -293,7 +403,8 @@ public class FileFolderService {
     public Body<String> getFolderPath(String agentId, String folderId, String baseDirectory) {
         // 1.查找是否存在
         LambdaQueryWrapper<Folder> queryFolderWrapper = Wrappers.<Folder>lambdaQuery()
-                .eq(Folder::getUid, folderId);
+                .eq(Folder::getUid, folderId)
+                .eq(Folder::getAgentId, agentId);
         Folder folder = folderMapper.selectOne(queryFolderWrapper);
         if (folder == null) {
             return Body.error("该文件夹不存在");
@@ -311,7 +422,8 @@ public class FileFolderService {
     public Body<String> uploadFile(String agentId, String folderId, MultipartFile file, String baseDirectory) {
         // 查找是否存在该文件夹
         LambdaQueryWrapper<Folder> queryFolderWrapper = Wrappers.<Folder>lambdaQuery()
-                .eq(Folder::getUid, folderId);
+                .eq(Folder::getUid, folderId)
+                .eq(Folder::getAgentId, agentId);
         Folder folder = folderMapper.selectOne(queryFolderWrapper);
         if (folder == null) {
             return Body.error("该文件夹不存在");
@@ -319,6 +431,7 @@ public class FileFolderService {
         // 查找是否存在同名文件
         LambdaQueryWrapper<File> queryFileWrapper = Wrappers.<File>lambdaQuery()
                 .eq(File::getName, file.getOriginalFilename())
+                .eq(File::getAgentId, agentId)
                 .eq(File::getFolderId, folderId);
         if (fileMapper.selectOne(queryFileWrapper) != null) {
             return Body.error("有重名文件");
@@ -326,7 +439,7 @@ public class FileFolderService {
         // 构建文件夹路径
         List<String> parentFolderIds = new ArrayList<>();
         List<String> path = new ArrayList<>();
-        findAllParentFolders(folderId, parentFolderIds, path);
+        findAllParentFolders(folderId, agentId, parentFolderIds, path);
         Collections.reverse(path); // 反转路径列表，确保路径顺序正确
         StringBuilder fullPathBuilder = new StringBuilder(baseDirectory);
         for (String folderName : path) {
@@ -359,10 +472,11 @@ public class FileFolderService {
         //
         GetMaxUid getMaxUid = new GetMaxUid();
         //
-        int maxTailNumber = getMaxUid.getFileMaxUid(agentId, fileMapper);
-        String uid = agentId + "-D" + (maxTailNumber + 1);
+        int maxTailNumber = getMaxUid.getFileMaxUid(agentId,fileMapper);
+        String uid = agentId+"-D"+(maxTailNumber+1);
         fileRecord.setUid(uid);
         fileRecord.setType(file.getOriginalFilename().substring(file.getOriginalFilename().lastIndexOf(".")));
+        fileRecord.setAgentId(agentId);
         fileRecord.setFolderId(folderId);
         fileRecord.setName(fileName);
         fileRecord.setSize(file.getSize());
@@ -372,21 +486,18 @@ public class FileFolderService {
         // 其他元数据设置
         fileMapper.insert(fileRecord);
 
-        // 通信
+        //通信
         String exchange = "FileExchange";
         String message = null;
-        try {
-            message = "Create file:" + objectMapper.writeValueAsString(fileRecord);
-        } catch (JsonProcessingException e) {
-            return Body.error("message 生成失败 " + e);
-        }
+        String operation = "Create";
+        String entity = "file";
+        message = messageService.getMessage(operation,entity,objectMapper,fileRecord);
         //
-        List<Object> uidList = rabbitmqConnectionMapper
-                .selectObjs(new QueryWrapper<RabbitmqConnection>().select("uid"));
-        for (Object obj : uidList) {
-            if (obj instanceof String) {
+        List<Object> uidList = rabbitmqConnectionMapper.selectObjs(new QueryWrapper<RabbitmqConnection>().select("uid"));
+        for(Object obj : uidList){
+            if (obj instanceof String){
                 String targetId = (String) obj;
-                publishService.sendMessageToFanoutExchange(targetId, exchange, message);
+                publishService.sendMessageToFanoutExchange(targetId,exchange,message);
             }
         }
 
@@ -399,6 +510,7 @@ public class FileFolderService {
         //
         LambdaQueryWrapper<File> queryFileWrapper = Wrappers.<File>lambdaQuery()
                 .eq(File::getUid, file.getUid())
+                .eq(File::getAgentId, file.getAgentId())
                 .eq(File::getFolderId, file.getFolderId());
         File new_file = fileMapper.selectOne(queryFileWrapper);
         if (new_file == null) {
@@ -413,34 +525,93 @@ public class FileFolderService {
         new_file.setAgentId(file.getAgentId());
         new_file.setFolderId(file.getFolderId());
         UpdateWrapper<File> updateWrapper = new UpdateWrapper<>();
-        updateWrapper.eq("folder_id", file.getFolderId())
+        updateWrapper.eq("agent_id", file.getAgentId())
+                .eq("folder_id", file.getFolderId())
                 .eq("uid", file.getUid());
         fileMapper.update(new_file, updateWrapper);
 
-        // 通信
+        //通信
         String exchange = "FileExchange";
         String message = null;
-        try {
-            message = "Update file:" + objectMapper.writeValueAsString(new_file);
-        } catch (JsonProcessingException e) {
-            return Body.error("message 生成失败 " + e);
-        }
+        String operation = "Update";
+        String entity = "file";
+        message = messageService.getMessage(operation,entity,objectMapper,new_file);
         //
-        List<Object> uidList = rabbitmqConnectionMapper
-                .selectObjs(new QueryWrapper<RabbitmqConnection>().select("uid"));
-        for (Object obj : uidList) {
-            if (obj instanceof String) {
+        List<Object> uidList = rabbitmqConnectionMapper.selectObjs(new QueryWrapper<RabbitmqConnection>().select("uid"));
+        for(Object obj : uidList){
+            if (obj instanceof String){
                 String targetId = (String) obj;
-                publishService.sendMessageToFanoutExchange(targetId, exchange, message);
+                publishService.sendMessageToFanoutExchange(targetId,exchange,message);
             }
         }
         return Body.success("更新成功");
+    }
+
+    // 设置文件规则
+    public Body<String> setFileRule(String fileId, String agentId, String folderId, Long groupId, String allowMethod) {
+        LambdaQueryWrapper<File> queryFileWrapper = Wrappers.<File>lambdaQuery()
+                .eq(File::getUid, fileId)
+                .eq(File::getAgentId, agentId)
+                .eq(File::getFolderId, folderId);
+        if (fileMapper.selectOne(queryFileWrapper) == null) {
+            return Body.error("该文件不存在");
+        }
+
+        LambdaQueryWrapper<Rule> queryRuleWrapper = Wrappers.<Rule>lambdaQuery()
+                .eq(Rule::getGroupId, groupId)
+                .eq(Rule::getAgentId, agentId)
+                .eq(Rule::getAllowedMethod, allowMethod);
+        Rule rule = ruleMapper.selectOne(queryRuleWrapper);
+        if (rule == null) {
+            return Body.error("该规则不存在");
+        }
+
+        LambdaQueryWrapper<FileRule> queryFileRuleWrapper = Wrappers.<FileRule>lambdaQuery()
+                .eq(FileRule::getAgentId, agentId)
+                .eq(FileRule::getFileId, fileId)
+                .eq(FileRule::getRuleId, rule.getUid());
+        if (fileRuleMapper.selectOne(queryFileRuleWrapper) != null) {
+            return Body.error("该关系已存在");
+        }
+        FileRule fileRule = new FileRule();
+        fileRule.setFileId(fileId);
+        fileRule.setRuleId(rule.getUid());
+        fileRule.setAgentId(agentId);
+        fileRuleMapper.insert(fileRule);
+        return Body.success("成功插入");
+    }
+
+    // 删除文件规则
+    public Body<String> deleteFileRule(String fileId, String agentId, String folderId, Long groupId, String allowMethod) {
+
+        LambdaQueryWrapper<File> queryFileWrapper = Wrappers.<File>lambdaQuery()
+                .eq(File::getUid, fileId)
+                .eq(File::getAgentId, agentId)
+                .eq(File::getFolderId, folderId);
+        if (fileMapper.selectOne(queryFileWrapper) == null) {
+            return Body.error("该文件不存在");
+        }
+
+        LambdaQueryWrapper<Rule> queryRuleWrapper = Wrappers.<Rule>lambdaQuery()
+                .eq(Rule::getGroupId, groupId)
+                .eq(Rule::getAgentId, agentId)
+                .eq(Rule::getAllowedMethod, allowMethod);
+        Rule rule = ruleMapper.selectOne(queryRuleWrapper);
+
+        LambdaQueryWrapper<FileRule> queryFileRuleWrapper = Wrappers.<FileRule>lambdaQuery()
+                .eq(FileRule::getAgentId, agentId)
+                .eq(FileRule::getFileId, fileId)
+                .eq(FileRule::getRuleId, rule.getUid());
+
+        fileRuleMapper.delete(queryFileRuleWrapper);
+        return Body.success("删除成功");
     }
 
     // 删除文件
     public Body<String> deleteFile(String fileId, String agentId, String folderId, String baseDirectory) {
         LambdaQueryWrapper<File> queryFileWrapper = Wrappers.<File>lambdaQuery()
                 .eq(File::getUid, fileId)
+                .eq(File::getAgentId, agentId)
                 .eq(File::getFolderId, folderId);
         File file = fileMapper.selectOne(queryFileWrapper);
         if (file == null) {
@@ -449,7 +620,7 @@ public class FileFolderService {
         // 构建文件夹路径
         List<String> parentFolderIds = new ArrayList<>();
         List<String> path = new ArrayList<>();
-        findAllParentFolders(folderId, parentFolderIds, path);
+        findAllParentFolders(folderId, agentId, parentFolderIds, path);
         Collections.reverse(path); // 反转路径列表，确保路径顺序正确
         StringBuilder fullPathBuilder = new StringBuilder(baseDirectory);
         for (String folderName : path) {
@@ -470,21 +641,19 @@ public class FileFolderService {
             return Body.error("本地文件不存在或不是一个目录");
         }
 
-        // 通信
+
+        //通信
         String exchange = "FileExchange";
         String message = null;
-        try {
-            message = "Delete file:" + objectMapper.writeValueAsString(file);
-        } catch (JsonProcessingException e) {
-            return Body.error("message 生成失败 " + e);
-        }
+        String operation = "Delete";
+        String entity = "file";
+        message = messageService.getMessage(operation,entity,objectMapper,file);
         //
-        List<Object> uidList = rabbitmqConnectionMapper
-                .selectObjs(new QueryWrapper<RabbitmqConnection>().select("uid"));
-        for (Object obj : uidList) {
-            if (obj instanceof String) {
+        List<Object> uidList = rabbitmqConnectionMapper.selectObjs(new QueryWrapper<RabbitmqConnection>().select("uid"));
+        for(Object obj : uidList){
+            if (obj instanceof String){
                 String targetId = (String) obj;
-                publishService.sendMessageToFanoutExchange(targetId, exchange, message);
+                publishService.sendMessageToFanoutExchange(targetId,exchange,message);
             }
         }
 
@@ -497,23 +666,24 @@ public class FileFolderService {
         agentMapper.insert(agent);
     }
 
-    private void findAllParentFolders(String folderId, List<String> parentFolderIds,
-            List<String> path) {
+    private void findAllParentFolders(String folderId, String agentId, List<String> parentFolderIds, List<String> path) {
         LambdaQueryWrapper<Folder> queryWrapper = Wrappers.<Folder>lambdaQuery()
-                .eq(Folder::getUid, folderId);
+                .eq(Folder::getUid, folderId)
+                .eq(Folder::getAgentId, agentId);
         Folder folder = folderMapper.selectOne(queryWrapper);
         if (folder != null) {
             path.add(folder.getName());
             if (folder.getParentId() != "-1") {
                 parentFolderIds.add(folder.getParentId());
-                findAllParentFolders(folder.getParentId(), parentFolderIds, path);
+                findAllParentFolders(folder.getParentId(), agentId, parentFolderIds, path);
             }
         }
     }
 
     private void findAllChildFolders(String folderId, String agentId, List<String> childFolderIds) {
         LambdaQueryWrapper<Folder> queryWrapper = Wrappers.<Folder>lambdaQuery()
-                .eq(Folder::getParentId, folderId);
+                .eq(Folder::getParentId, folderId)
+                .eq(Folder::getAgentId, agentId);
         List<Folder> childFolders = folderMapper.selectList(queryWrapper);
         for (Folder folder : childFolders) {
             childFolderIds.add(folder.getUid());
@@ -524,7 +694,7 @@ public class FileFolderService {
     public String getFolderPath(Folder folder, String baseDirectory) {
         List<String> parentFolderIds = new ArrayList<>();
         List<String> path = new ArrayList<>();
-        findAllParentFolders(folder.getUid(), parentFolderIds, path);
+        findAllParentFolders(folder.getUid(), folder.getAgentId(), parentFolderIds, path);
         // 构建文件夹路径
         Collections.reverse(path); // 反转路径列表，确保路径顺序正确
         StringBuilder fullPathBuilder = new StringBuilder(baseDirectory);
@@ -538,7 +708,8 @@ public class FileFolderService {
     public String getFilePath(File file, String baseDirectory) {
 
         LambdaQueryWrapper<Folder> queryFolderWrapper = Wrappers.<Folder>lambdaQuery()
-                .eq(Folder::getUid, file.getFolderId());
+                .eq(Folder::getUid, file.getFolderId())
+                .eq(Folder::getAgentId, file.getAgentId());
         Folder folder = folderMapper.selectOne(queryFolderWrapper);
         String folderPath = getFolderPath(folder, baseDirectory);
         String filePath = folderPath + "/" + file.getName();
@@ -576,6 +747,7 @@ public class FileFolderService {
     //
     private void mapFolderToDirectoryNode(Folder folder, DirectoryInfo node) {
         node.setUid(folder.getUid());
+        node.setAgentId(folder.getAgentId());
         node.setParentId(folder.getParentId());
         node.setName(folder.getName());
         node.setCreateDate(folder.getCreateDate());
@@ -585,6 +757,7 @@ public class FileFolderService {
     //
     private void mapFileToDirectoryNode(File file, DirectoryInfo node) {
         node.setUid(file.getUid());
+        node.setAgentId(file.getAgentId());
         node.setParentId(file.getFolderId());
         node.setName(file.getName());
         node.setCreateDate(file.getCreateDate());
@@ -603,8 +776,18 @@ public class FileFolderService {
     }
 
     //
+    public DirectoryInfo filterFilesByRule(Long groupId, String agentId, DirectoryInfo directoryFiltered) {
+        return filterFilesRecursive(groupId, agentId, directoryFiltered);
+    }
+
+    //
     public DirectoryInfo filterFolders(List<Long> groupIds, String agentId, DirectoryInfo directory) {
         return filterFoldersRecursive(groupIds, agentId, directory);
+    }
+
+    //
+    public DirectoryInfo filterFiles(List<Long> groupIds, String agentId, DirectoryInfo directory) {
+        return filterFilesRecursive(groupIds, agentId, directory);
     }
 
     //
@@ -650,6 +833,69 @@ public class FileFolderService {
     }
 
     //
+    private DirectoryInfo filterFilesRecursive(Long groupId, String agentId, DirectoryInfo directory) {
+        List<DirectoryInfo> allowedChildren = new ArrayList<>();
+        for (DirectoryInfo child : directory.getChildren()) {
+            if ("folder".equals(child.getType())) {
+                allowedChildren.add(filterFilesRecursive(groupId, agentId, child));
+            } else {
+                // 检查文件与用户组的关系
+                List<FileRule> fileRules = fileRuleMapper.selectList(
+                        new QueryWrapper<FileRule>()
+                                .eq("agent_id", agentId)
+                                .eq("file_id", child.getUid()));
+                boolean isAllowed = false;
+                for (FileRule fileRule : fileRules) {
+                    Rule rule = ruleMapper.selectOne(
+                            new QueryWrapper<Rule>()
+                                    .eq("uid", fileRule.getRuleId())
+                                    .eq("group_id", groupId));
+                    if (rule != null) {
+                        isAllowed = true;
+                        child.getRuleList().add(rule.getAllowedMethod());
+                    }
+                }
+                if (isAllowed) {
+                    allowedChildren.add(child);
+                }
+            }
+        }
+        directory.setChildren(allowedChildren);
+        return directory;
+    }
+
+    //
+    private DirectoryInfo filterFilesRecursive(List<Long> groupIds, String agentId, DirectoryInfo directory) {
+        List<DirectoryInfo> allowedChildren = new ArrayList<>();
+        for (DirectoryInfo child : directory.getChildren()) {
+            if ("folder".equals(child.getType())) {
+                allowedChildren.add(filterFilesRecursive(groupIds, agentId, child));
+            } else {
+                // 检查文件与用户组的关系
+                List<FileRule> fileRules = fileRuleMapper.selectList(
+                        new QueryWrapper<FileRule>()
+                                .eq("agent_id", agentId)
+                                .eq("file_id", child.getUid()));
+                List<String> allowedMethods = new ArrayList<>();
+                for (FileRule fileRule : fileRules) {
+                    List<Rule> rules = ruleMapper.selectList(
+                            new QueryWrapper<Rule>()
+                                    .eq("uid", fileRule.getRuleId())
+                                    .in("group_id", groupIds));
+                    allowedMethods.addAll(rules.stream().map(Rule::getAllowedMethod).collect(Collectors.toList()));
+                }
+                if (!allowedMethods.isEmpty()) {
+                    allowedMethods = allowedMethods.stream().distinct().collect(Collectors.toList());
+                    child.setRuleList(allowedMethods);
+                    allowedChildren.add(child);
+                }
+            }
+        }
+        directory.setChildren(allowedChildren);
+        return directory;
+    }
+
+    //
     public List<Long> getGroupIdsByApplication(String applicationId, String agentId) {
         return applicationGroupMapper.selectList(
                 new QueryWrapper<ApplicationGroup>()
@@ -663,6 +909,7 @@ public class FileFolderService {
 
         LambdaQueryWrapper<File> queryFolderWrapper = Wrappers.<File>lambdaQuery()
                 .eq(File::getUid, fileId)
+                .eq(File::getAgentId, agentId)
                 .eq(File::getFolderId, folderId);
         File file = fileMapper.selectOne(queryFolderWrapper);
         String filePath = getFilePath(file, baseDirectory);
@@ -700,7 +947,8 @@ public class FileFolderService {
 
     public Body<File> getFile(String fileId, String agentId) {
 
-        LambdaQueryWrapper<File> queryWrapper = Wrappers.<File>lambdaQuery().eq(File::getUid, fileId);
+        LambdaQueryWrapper<File> queryWrapper = Wrappers.<File>lambdaQuery().eq(File::getUid, fileId)
+                .eq(File::getAgentId, agentId);
         File file = fileMapper.selectOne(queryWrapper);
         return Body.success(file, "查询成功");
     }
@@ -710,7 +958,7 @@ public class FileFolderService {
     }
 
     public Body<Long> getRowCount(String fileId, String agentId, String baseDirectory) {
-        LambdaQueryWrapper<File> queryWrapper = Wrappers.<File>lambdaQuery()
+        LambdaQueryWrapper<File> queryWrapper = Wrappers.<File>lambdaQuery().eq(File::getAgentId, agentId)
                 .eq(File::getUid, fileId);
         File file = fileMapper.selectOne(queryWrapper);
         if (file == null) {
@@ -733,7 +981,8 @@ public class FileFolderService {
     }
 
     public Body<Folder> getFolder(String folderId, String agentId) {
-        LambdaQueryWrapper<Folder> queryWrapper = Wrappers.<Folder>lambdaQuery().eq(Folder::getUid, folderId);
+        LambdaQueryWrapper<Folder> queryWrapper = Wrappers.<Folder>lambdaQuery().eq(Folder::getUid, folderId)
+                .eq(Folder::getAgentId, agentId);
         Folder folder = folderMapper.selectOne(queryWrapper);
         return Body.success(folder, "查询成功");
     }

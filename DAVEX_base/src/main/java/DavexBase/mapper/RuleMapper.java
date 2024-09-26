@@ -8,5 +8,5 @@ import DavexBase.entity.Rule;
 
 @Mapper
 public interface RuleMapper extends BaseMapper<Rule> {
-    
+
 }

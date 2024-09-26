@@ -1,8 +1,10 @@
 package DavexBase.service.MQ;
 
 
+import DavexBase.common.Body;
 import DavexBase.mapper.ApplicationMapper;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,6 +26,17 @@ public class MessageService {
     public MessageService(MapperFactory mapperFactory) {
         this.objectMapper.registerModule(new JavaTimeModule());
         this.mapperFactory = mapperFactory;
+    }
+
+    public String getMessage(String operation,String entity,ObjectMapper objectMapper,Object obj){
+
+        String message = null;
+        try {
+            message = operation+" "+entity+":" + objectMapper.writeValueAsString(obj);
+        } catch (JsonProcessingException e) {
+            return "error: create message fail +" +e;
+        }
+        return message;
     }
 
     public <T> void handleMessage(String message) {

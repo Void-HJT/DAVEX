@@ -33,8 +33,7 @@ CREATE TABLE `application` (
     `name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
     `cert` blob,
     `last_updated` timestamp NULL DEFAULT NULL,
-    `description` varchar(255) DEFAULT NULL,
-    `attribute` JSON DEFAULT NULL,
+    `description` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
     PRIMARY KEY (`uid`) USING BTREE
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci;
 
@@ -80,7 +79,7 @@ CREATE TABLE `file` (
     `name` varchar(255) DEFAULT NULL,
     `create_date` timestamp NULL DEFAULT NULL,
     `last_update` timestamp NULL DEFAULT NULL,
-    `attribute` JSON DEFAULT NULL,
+    `tag` varchar(255) DEFAULT NULL,
     `size` bigint DEFAULT NULL,
     `description` varchar(255) DEFAULT NULL,
     `expired_time` timestamp NULL DEFAULT NULL,
@@ -89,6 +88,19 @@ CREATE TABLE `file` (
     `type` varchar(255) DEFAULT NULL,
     PRIMARY KEY (`uid`)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci;
+
+-- ----------------------------
+-- Table structure for file_rule
+-- ----------------------------
+DROP TABLE IF EXISTS `file_rule`;
+
+CREATE TABLE `file_rule` (
+    `uid` bigint NOT NULL AUTO_INCREMENT,
+    `agent_id` varchar(255) NOT NULL,
+    `file_id` varchar(255) NOT NULL,
+    `rule_id` bigint NOT NULL,
+    PRIMARY KEY (`uid`) USING BTREE
+) ENGINE = InnoDB AUTO_INCREMENT = 25 DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci;
 
 -- ----------------------------
 -- Table structure for folder
@@ -104,6 +116,32 @@ CREATE TABLE `folder` (
     `last_update` timestamp NULL DEFAULT NULL,
     PRIMARY KEY (`uid`) USING BTREE
 ) ENGINE = InnoDB AUTO_INCREMENT = 18 DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci;
+
+-- ----------------------------
+-- Table structure for folder_visibility
+-- ----------------------------
+DROP TABLE IF EXISTS `folder_visibility`;
+
+CREATE TABLE `folder_visibility` (
+    `uid` bigint NOT NULL AUTO_INCREMENT,
+    `agent_id` varchar(255) NOT NULL,
+    `folder_id` varchar(255) NOT NULL,
+    `group_id` bigint NOT NULL,
+    PRIMARY KEY (`uid`) USING BTREE
+) ENGINE = InnoDB AUTO_INCREMENT = 15 DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci;
+
+-- ----------------------------
+-- Table structure for group
+-- ----------------------------
+DROP TABLE IF EXISTS `group`;
+
+CREATE TABLE `group` (
+    `uid` bigint NOT NULL AUTO_INCREMENT,
+    `agent_id` varchar(255) NOT NULL,
+    `center_id` varchar(255) NOT NULL,
+    `name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
+    PRIMARY KEY (`uid`) USING BTREE
+) ENGINE = InnoDB AUTO_INCREMENT = 38 DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci;
 
 -- ----------------------------
 -- Table structure for mpc
@@ -210,50 +248,17 @@ CREATE TABLE `rabbitmq_connection` (
 DROP TABLE IF EXISTS `rule`;
 
 CREATE TABLE `rule` (
-    `uid` varchar(255) NOT NULL,
-    `expression` varchar(1023) NOT NULL,
-    `description` varchar(255) DEFAULT NULL,
+    `uid` bigint NOT NULL AUTO_INCREMENT,
+    `agent_id` varchar(255) NOT NULL,
+    `group_id` bigint NOT NULL,
+    `allowed_method` enum(
+        'psi',
+        'comparison',
+        'direct',
+        'mpc',
+        'query'
+    ) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
     PRIMARY KEY (`uid`) USING BTREE
 ) ENGINE = InnoDB AUTO_INCREMENT = 23 DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci;
-
-
--- ----------------------------
--- Table structure for file_rule
--- ----------------------------
-DROP TABLE IF EXISTS `file_rule`;
-
-CREATE TABLE `file_rule` (
-    `uid` varchar(255) NOT NULL,
-    `file_id` varchar(255) NOT NULL,
-    `rule_id` varchar(255) NOT NULL,
-    PRIMARY KEY (`uid`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 25 DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci;
-
--- ----------------------------
--- Table structure for visibility
--- ----------------------------
-DROP TABLE IF EXISTS `visibility`;
-
-CREATE TABLE `visibility` (
-    `uid` varchar(255) NOT NULL,
-    `expression` varchar(1023) NOT NULL,
-    `description` varchar(255) NULL,
-    PRIMARY KEY (`uid`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 23 DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci;
-
--- ----------------------------
--- Table structure for folder_visibility
--- ----------------------------
-DROP TABLE IF EXISTS `folder_visibility`;
-
-CREATE TABLE `folder_visibility` (
-    `uid` varchar(255) NOT NULL ,
-    `folder_id` varchar(255) NOT NULL,
-    `visibility_id` varchar(255) NOT NULL,
-    PRIMARY KEY (`uid`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 23 DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci;
-
-
-SELECT r.expression FROM file_rule fr JOIN rule r ON fr.rule_id = r.uid WHERE fr.file_id = 'DAVEX-C1-GXX2-F1'
 
 SET FOREIGN_KEY_CHECKS = 1;
