@@ -19,54 +19,54 @@ import lombok.Data;
 @TableName(value = "mpcTask", autoResultMap = true)
 public class MpcTask {
 
-  public enum TaskType {
-    GARNET_MPC, GARNET_PSI
-  }
+    public enum TaskType {
+        GARNET_MPC, GARNET_PSI
+    }
 
-  public enum Status {
-    INIT, COMPILING, READY, RUNNING, FINISHED, FAILED
-  }
+    public enum Status {
+        INIT, COMPILING, READY, RUNNING, FINISHED, FAILED
+    }
 
-  @TableId(type = IdType.ASSIGN_UUID)
-  private String uid;
-  private String applicationId;
-  private String centerId;
-  private String mpcId;
-  @TableField(typeHandler = FastjsonTypeHandler.class)
-  private JSONObject compileParameters;
-  @TableField(typeHandler = FastjsonTypeHandler.class)
-  private JSONObject runtimeParameters;
-  private Integer N;
-  private Long part;
-  private String host;
-  private Integer port;
-  @JsonInclude(Include.NON_NULL)
-  private String dataId;
-  @JsonIgnore
-  private String mpcName;
-  private TaskType taskType;
-  private Status status;
-  @JsonIgnore
-  private String message = "";
+    @TableId(type = IdType.ASSIGN_UUID)
+    private String uid;
+    private String applicationId;
+    private String centerId;
+    private String mpcId;
+    @TableField(typeHandler = FastjsonTypeHandler.class)
+    private JSONObject compileParameters;
+    @TableField(typeHandler = FastjsonTypeHandler.class)
+    private JSONObject runtimeParameters;
+    private Integer N;
+    private Long part;
+    private String host;
+    private Integer port;
+    @JsonInclude(Include.NON_NULL)
+    private String dataId;
+    @JsonIgnore
+    private String mpcName;
+    private TaskType taskType;
+    private Status status;
+    @JsonIgnore
+    private String message = "";
 
-  public MpcTask(MpcTask other) {
-    this.uid = other.uid;
-    this.applicationId = other.applicationId;
-    this.centerId = other.centerId;
-    this.mpcId = other.mpcId;
-    this.compileParameters = other.compileParameters;
-    this.runtimeParameters = other.runtimeParameters;
-    this.N = other.N;
-    this.part = other.part;
-    this.host = other.host;
-    this.port = other.port;
-    this.dataId = other.dataId;
-    this.mpcName = other.mpcName;
-    this.taskType = other.taskType;
-    this.status = other.status;
-    this.message = other.message;
-  }
+    public MpcTask(MpcTask other) {
+        this.uid = other.uid;
+        this.applicationId = other.applicationId;
+        this.centerId = other.centerId;
+        this.mpcId = other.mpcId;
+        this.compileParameters = other.compileParameters;
+        this.runtimeParameters = other.runtimeParameters;
+        this.N = other.N;
+        this.part = other.part;
+        this.host = other.host;
+        this.port = other.port;
+        this.dataId = other.dataId;
+        this.mpcName = other.mpcName;
+        this.taskType = other.taskType;
+        this.status = other.status;
+        this.message = other.message;
+    }
 
-  public MpcTask() {
-  }
+    public MpcTask() {
+    }
 }

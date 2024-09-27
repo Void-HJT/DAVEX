@@ -15,22 +15,22 @@ import lombok.Data;
 @TableName(value = "file", autoResultMap = true)
 public class File {
 
-  @TableId
-  private String uid;
+    @TableId
+    private String uid;
 
-  private String agentId;
-  private String folderId;
+    private String agentId;
+    private String folderId;
 
-  private String name;
-  private java.sql.Timestamp createDate;
-  private java.sql.Timestamp lastUpdate;
-  @TableField(typeHandler = FastjsonTypeHandler.class)
-  private JSONObject attribute;
-  private Long size;
-  private String description;
-  private java.sql.Timestamp expiredTime;
-  private String hash;
-  private String example;
-  private String type;
+    private String name;
+    private java.sql.Timestamp createDate;
+    private java.sql.Timestamp lastUpdate;
+    @TableField(typeHandler = FastjsonTypeHandler.class)
+    private JSONObject attribute;
+    private Long size;
+    private String description;
+    private java.sql.Timestamp expiredTime;
+    private String hash;
+    private String example;
+    private String type;
 
 }

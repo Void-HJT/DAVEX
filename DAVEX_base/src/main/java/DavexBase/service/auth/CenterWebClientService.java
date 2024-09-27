@@ -19,32 +19,32 @@ import reactor.netty.http.client.HttpClient;
 @Service
 public class CenterWebClientService {
 
-        private AgentMapper agentMapper;
+    private AgentMapper agentMapper;
 
-        private ExchangeStrategies strategies;
+    private ExchangeStrategies strategies;
 
-        public CenterWebClientService(ObjectMapper objectMapper, AgentMapper agentMapper) {
-                this.agentMapper = agentMapper;
-                strategies = ExchangeStrategies
-                                .builder()
-                                .codecs(clientDefaultCodecsConfigurer -> {
-                                        clientDefaultCodecsConfigurer.defaultCodecs()
-                                                        .jackson2JsonEncoder(new Jackson2JsonEncoder(objectMapper,
-                                                                        MediaType.APPLICATION_JSON));
-                                        clientDefaultCodecsConfigurer.defaultCodecs()
-                                                        .jackson2JsonDecoder(new Jackson2JsonDecoder(objectMapper,
-                                                                        MediaType.APPLICATION_JSON));
+    public CenterWebClientService(ObjectMapper objectMapper, AgentMapper agentMapper) {
+        this.agentMapper = agentMapper;
+        strategies = ExchangeStrategies
+                .builder()
+                .codecs(clientDefaultCodecsConfigurer -> {
+                    clientDefaultCodecsConfigurer.defaultCodecs()
+                            .jackson2JsonEncoder(new Jackson2JsonEncoder(objectMapper,
+                                    MediaType.APPLICATION_JSON));
+                    clientDefaultCodecsConfigurer.defaultCodecs()
+                            .jackson2JsonDecoder(new Jackson2JsonDecoder(objectMapper,
+                                    MediaType.APPLICATION_JSON));
 
-                                }).build();
-        }
+                }).build();
+    }
 
-        public WebClient center2AgentWebClient(String agent_id) throws Exception {
-                LambdaQueryWrapper<Agent> queryWrapper = Wrappers.<Agent>lambdaQuery().eq(Agent::getUid, agent_id);
-                Agent agent = agentMapper.selectOne(queryWrapper);
-                HttpClient httpClient = HttpClient.create();
-                return WebClient.builder().clientConnector(new ReactorClientHttpConnector(httpClient))
-                                .baseUrl("http://" + agent.getIp() + ":" + agent.getPort())
-                                .exchangeStrategies(strategies)
-                                .build();
-        }
+    public WebClient center2AgentWebClient(String agent_id) throws Exception {
+        LambdaQueryWrapper<Agent> queryWrapper = Wrappers.<Agent>lambdaQuery().eq(Agent::getUid, agent_id);
+        Agent agent = agentMapper.selectOne(queryWrapper);
+        HttpClient httpClient = HttpClient.create();
+        return WebClient.builder().clientConnector(new ReactorClientHttpConnector(httpClient))
+                .baseUrl("http://" + agent.getIp() + ":" + agent.getPort())
+                .exchangeStrategies(strategies)
+                .build();
+    }
 }

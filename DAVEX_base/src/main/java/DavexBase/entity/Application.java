@@ -17,15 +17,15 @@ import lombok.Data;
 @TableName(value = "application", autoResultMap = true)
 public class Application {
 
-  @TableId
-  private String uid;
+    @TableId
+    private String uid;
 
-  private String centerId;
-  private String name;
-  private byte[] cert;
-  private LocalDateTime lastUpdated;
-  private String description;
-  @TableField(typeHandler = FastjsonTypeHandler.class)
-  private JSONObject attribute;
+    private String centerId;
+    private String name;
+    private byte[] cert;
+    private LocalDateTime lastUpdated;
+    private String description;
+    @TableField(typeHandler = FastjsonTypeHandler.class)
+    private JSONObject attribute;
 
 }

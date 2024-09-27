@@ -7,11 +7,11 @@ import lombok.Data;
 @Data
 public class Folder {
 
-  @TableId
-  private String uid;
-  private String agentId;
-  private String parentId;
-  private String name;
-  private java.sql.Timestamp createDate;
-  private java.sql.Timestamp lastUpdate;
+    @TableId
+    private String uid;
+    private String agentId;
+    private String parentId;
+    private String name;
+    private java.sql.Timestamp createDate;
+    private java.sql.Timestamp lastUpdate;
 }

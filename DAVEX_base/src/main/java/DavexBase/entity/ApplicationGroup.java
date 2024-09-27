@@ -8,11 +8,11 @@ import lombok.Data;
 @Data
 public class ApplicationGroup {
 
-  @TableId(type = IdType.AUTO)
-  private Long uid;
-  private String agentId;
-  private String centerId;
-  private String applicationId;
-  private Long groupId;
+    @TableId(type = IdType.AUTO)
+    private Long uid;
+    private String agentId;
+    private String centerId;
+    private String applicationId;
+    private Long groupId;
 
 }

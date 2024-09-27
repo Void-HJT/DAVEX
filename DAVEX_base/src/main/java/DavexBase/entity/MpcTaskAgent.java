@@ -11,12 +11,12 @@ import lombok.Data;
 @TableName("mpcTask_agent")
 public class MpcTaskAgent {
 
-  @TableId(type = IdType.AUTO)
-  private Long uid;
-  @TableField("mpcTask_id")
-  private String mpcTaskId;
-  private String centerId;
-  private String agentId;
-  private Long part;
+    @TableId(type = IdType.AUTO)
+    private Long uid;
+    @TableField("mpcTask_id")
+    private String mpcTaskId;
+    private String centerId;
+    private String agentId;
+    private Long part;
 
 }
