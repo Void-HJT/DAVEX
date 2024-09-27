@@ -18,7 +18,8 @@ public class MapperFactory {
 
     @Autowired
     public MapperFactory(ApplicationMapper applicationMapper, CenterMapper centerMapper, AgentMapper agentMapper,
-                         FileMapper fileMapper, FolderMapper folderMapper) {
+                         FileMapper fileMapper, FolderMapper folderMapper,RuleMapper ruleMapper,FileRuleMapper fileRuleMapper,
+                         VisibilityMapper visibilityMapper,FolderVisibilityMapper folderVisibilityMapper) {
         // 注册不同的 Mapper 实现类
         mapperMap.put("application", applicationMapper);
         entityTypeMap.put("application", Application.class);
@@ -34,6 +35,18 @@ public class MapperFactory {
 
         mapperMap.put("folder", folderMapper);
         entityTypeMap.put("folder", Folder.class);
+
+        mapperMap.put("rule", ruleMapper);
+        entityTypeMap.put("rule", Rule.class);
+
+        mapperMap.put("fileRule", fileRuleMapper);
+        entityTypeMap.put("fileRule", FileRule.class);
+
+        mapperMap.put("visibility", visibilityMapper);
+        entityTypeMap.put("visibility", Visibility.class);
+
+        mapperMap.put("folderVisibility", folderVisibilityMapper);
+        entityTypeMap.put("folderVisibility", FolderVisibility.class);
     }
 
     // 根据类名获取相应的 Mapper 实例
