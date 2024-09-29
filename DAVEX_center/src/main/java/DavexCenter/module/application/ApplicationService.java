@@ -46,9 +46,10 @@ public class ApplicationService {
         application.setCenterId(uid);
         application.setUid(uid+"-AXX"+(maxTailNumber+1));
         application.setLastUpdated(LocalDateTime.now());
+        application.setPassword(uid);
         applicationMapper.insert(application);
         //通信
-        String exchange = "applicationExchange";
+        String exchange = "ApplicationExchange";
         String message = null;
         String operation = "Create";
         String entity = "application";
@@ -65,7 +66,7 @@ public class ApplicationService {
         Application application = new Application();
         application.setUid(applicationId);
         //通信
-        String exchange = "applicationExchange";
+        String exchange = "ApplicationExchange";
         String message = null;
         String operation = "Delete";
         String entity = "application";
@@ -79,7 +80,7 @@ public class ApplicationService {
         if (!uid.equals(application.getCenterId())){return Body.error("uid不正确");}
         applicationMapper.updateById(application);
         //通信
-        String exchange = "applicationExchange";
+        String exchange = "ApplicationExchange";
         String message = null;
         String operation = "Update";
         String entity = "application";

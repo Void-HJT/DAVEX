@@ -16,7 +16,7 @@ public class Center {
     private String name;
     private String ip;
     private int port;
-    private byte[] cert;
+    private String password;
     private LocalDateTime lastUpdated;
     private String description;
 
@@ -46,7 +46,7 @@ public class Center {
             return false;
         if (port != other.port)
             return false;
-        if (!Arrays.equals(cert, other.cert))
+        if (!password.equals(other.password))
             return false;
         if (description == null) {
             if (other.description != null)
@@ -64,7 +64,7 @@ public class Center {
         result = prime * result + ((name == null) ? 0 : name.hashCode());
         result = prime * result + ((ip == null) ? 0 : ip.hashCode());
         result = prime * result + port;
-        result = prime * result + Arrays.hashCode(cert);
+        result = prime * result + ((password == null) ? 0 : password.hashCode());
         result = prime * result + ((description == null) ? 0 : description.hashCode());
         return result;
     }

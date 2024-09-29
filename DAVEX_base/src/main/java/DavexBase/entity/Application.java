@@ -22,7 +22,7 @@ public class Application {
 
     private String centerId;
     private String name;
-    private byte[] cert;
+    private String password;
     private LocalDateTime lastUpdated;
     private String description;
     @TableField(typeHandler = FastjsonTypeHandler.class)

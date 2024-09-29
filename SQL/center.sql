@@ -16,7 +16,7 @@ CREATE TABLE `agent` (
     `name` varchar(255) DEFAULT NULL,
     `ip` varchar(255) DEFAULT NULL,
     `port` int DEFAULT NULL,
-    `cert` blob,
+    `password` varchar(255),
     `last_updated` timestamp NULL DEFAULT NULL,
     `description` varchar(255) DEFAULT NULL,
     PRIMARY KEY (`uid`)
@@ -31,7 +31,7 @@ CREATE TABLE `application` (
     `uid` varchar(255) NOT NULL,
     `center_id` varchar(255) NOT NULL,
     `name` varchar(255) DEFAULT NULL,
-    `cert` blob,
+    `password` varchar(255),
     `last_updated` timestamp NULL DEFAULT NULL,
     `description` varchar(255) DEFAULT NULL,
     `attribute` JSON DEFAULT NULL,
@@ -62,7 +62,7 @@ CREATE TABLE `center` (
     `name` varchar(255) DEFAULT NULL,
     `ip` varchar(255) DEFAULT NULL,
     `port` int DEFAULT NULL,
-    `cert` blob,
+    `password` varchar(255),
     `last_updated` timestamp NULL DEFAULT NULL,
     `description` varchar(255) DEFAULT NULL,
     PRIMARY KEY (`uid`)

@@ -16,7 +16,7 @@ CREATE TABLE `agent` (
     `name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
     `ip` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
     `port` int DEFAULT NULL,
-    `cert` blob,
+    `password` varchar(255),
     `last_updated` timestamp NULL DEFAULT NULL,
     `description` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
     PRIMARY KEY (`uid`) USING BTREE
@@ -31,7 +31,7 @@ CREATE TABLE `application` (
     `uid` varchar(255) NOT NULL,
     `center_id` varchar(255) NOT NULL,
     `name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
-    `cert` blob,
+    `password` varchar(255),
     `last_updated` timestamp NULL DEFAULT NULL,
     `description` varchar(255) DEFAULT NULL,
     `attribute` JSON DEFAULT NULL,
@@ -62,7 +62,7 @@ CREATE TABLE `center` (
     `name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
     `ip` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
     `port` bigint DEFAULT NULL,
-    `cert` blob,
+    `password` varchar(255),
     `last_updated` timestamp NULL DEFAULT NULL,
     `description` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
     PRIMARY KEY (`uid`) USING BTREE
