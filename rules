@@ -1,6 +1,8 @@
-(#subject.uid == "DAVEX-C1-AXX1" and #object.uid == "DAVEX-C1-GXX2-F3") ? true : null
-(#object.name.startsWith("公开")) ? true : null
-(#object.size > 10485760 and #subjectAttribute["角色"] == "管理员") ? true : null
-(#object.name.endsWith(".csv") and #action == "PSI") ? true : null
-(#subjectAttribute["等级"] == "市级" and #action == "PSI") ? true : null
-(#object.name.endsWith(".csv") and #action == "PSI") ? true : ((#subjectAttribute["等级"] == "市级" and #action == "PSI") ? true : false)
+// Rules
+(#subject.uid == "DAVEX-C1-AXX1") ? true : null
+(#subjectAttribute["角色"] == "管理员") ? true : null
+((#subjectAttribute["等级"] == "市级" and #subjectAttribute["角色"] == "管理员") and #action == "PSI") ? true : null
+
+// Visibility
+(#subject.uid == "DAVEX-C1-AXX1") ? true : null
+(#subjectAttribute["角色"] == "管理员") ? true : null

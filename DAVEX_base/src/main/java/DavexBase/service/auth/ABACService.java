@@ -53,7 +53,6 @@ public class ABACService {
     // 使用 Jackson ObjectMapper
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    @Autowired
     public ABACService() {
         this.objectMapper.registerModule(new JavaTimeModule());
     }
@@ -84,8 +83,8 @@ public class ABACService {
         return hasNonNull ? true : false;
     }
 
-    private List<String> getFileRules(File file) {
-        return fileRuleMapper.getRuleExpressions(file.getUid());
+    private List<String> getFileRules(String fid) {
+        return fileRuleMapper.getRuleExpressions(fid);
     }
 
     private List<String> getFolderRules(Folder folder) {
@@ -108,7 +107,7 @@ public class ABACService {
         }
         // context.setVariable("object", file);
         // context.setVariable("objectAttribute", file.getAttribute().getInnerMap());
-        return check(getFileRules(file), context);
+        return check(getFileRules(file.getUid()), context);
 
     }
 
@@ -141,7 +140,7 @@ public class ABACService {
             logger.error(e.getMessage());
             throw e;
         }
-        for (String rule : getFileRules(file)) {
+        for (String rule : getFileRules(file.getUid())) {
             try {
                 logger.info(rule);
                 Boolean b = parser.parseExpression(rule).getValue(context, Boolean.class);
@@ -204,7 +203,7 @@ public class ABACService {
         return Body.success(rules, "成功");
     }
 
-    public Body<String> createRule(String expression, String description) throws Exception {
+    public Body<String> createRule(String expression, String description) {
         Rule rule = new Rule();
         rule.setExpression(expression);
         rule.setDescription(description);
@@ -214,20 +213,20 @@ public class ABACService {
         } catch (Exception e) {
             return Body.error("创建规则失败：{}", e.getMessage());
         }
-        // TODO: MQ
 
-        //通信
+        // 通信
         String exchange = "RuleExchange";
         String message = null;
         String operation = "Create";
         String entity = "rule";
-        message = messageService.getMessage(operation,entity,objectMapper,rule);
+        message = messageService.getMessage(operation, entity, objectMapper, rule);
         //
-        List<Object> uidList = rabbitmqConnectionMapper.selectObjs(new QueryWrapper<RabbitmqConnection>().select("uid"));
-        for(Object obj : uidList){
-            if (obj instanceof String){
+        List<Object> uidList = rabbitmqConnectionMapper
+                .selectObjs(new QueryWrapper<RabbitmqConnection>().select("uid"));
+        for (Object obj : uidList) {
+            if (obj instanceof String) {
                 String targetId = (String) obj;
-                publishService.sendMessageToFanoutExchange(targetId,exchange,message);
+                publishService.sendMessageToFanoutExchange(targetId, exchange, message);
             }
         }
         return Body.success("创建规则成功");
@@ -243,19 +242,19 @@ public class ABACService {
         } catch (Exception e) {
             return Body.error("删除规则失败：{}", e.getMessage());
         }
-        // TODO: MQ
-        //通信
+        // 通信
         String exchange = "RuleExchange";
         String message = null;
         String operation = "Delete";
         String entity = "rule";
-        message = messageService.getMessage(operation,entity,objectMapper,rule);
+        message = messageService.getMessage(operation, entity, objectMapper, rule);
         //
-        List<Object> uidList = rabbitmqConnectionMapper.selectObjs(new QueryWrapper<RabbitmqConnection>().select("uid"));
-        for(Object obj : uidList){
-            if (obj instanceof String){
+        List<Object> uidList = rabbitmqConnectionMapper
+                .selectObjs(new QueryWrapper<RabbitmqConnection>().select("uid"));
+        for (Object obj : uidList) {
+            if (obj instanceof String) {
                 String targetId = (String) obj;
-                publishService.sendMessageToFanoutExchange(targetId,exchange,message);
+                publishService.sendMessageToFanoutExchange(targetId, exchange, message);
             }
         }
         return Body.success("删除规则成功");
@@ -273,19 +272,19 @@ public class ABACService {
         } catch (Exception e) {
             return Body.error("更新规则失败：{}", e.getMessage());
         }
-        // TODO: MQ
-        //通信
+        // 通信
         String exchange = "RuleExchange";
         String message = null;
         String operation = "Update";
         String entity = "rule";
-        message = messageService.getMessage(operation,entity,objectMapper,rule);
+        message = messageService.getMessage(operation, entity, objectMapper, rule);
         //
-        List<Object> uidList = rabbitmqConnectionMapper.selectObjs(new QueryWrapper<RabbitmqConnection>().select("uid"));
-        for(Object obj : uidList){
-            if (obj instanceof String){
+        List<Object> uidList = rabbitmqConnectionMapper
+                .selectObjs(new QueryWrapper<RabbitmqConnection>().select("uid"));
+        for (Object obj : uidList) {
+            if (obj instanceof String) {
                 String targetId = (String) obj;
-                publishService.sendMessageToFanoutExchange(targetId,exchange,message);
+                publishService.sendMessageToFanoutExchange(targetId, exchange, message);
             }
         }
         return Body.success("更新规则成功");
@@ -316,19 +315,19 @@ public class ABACService {
         } catch (Exception e) {
             return Body.error("创建文件规则失败：{}", e.getMessage());
         }
-        // TODO: MQ
-        //通信
+        // 通信
         String exchange = "RuleExchange";
         String message = null;
         String operation = "Create";
         String entity = "fileRule";
-        message = messageService.getMessage(operation,entity,objectMapper,fileRule);
+        message = messageService.getMessage(operation, entity, objectMapper, fileRule);
         //
-        List<Object> uidList = rabbitmqConnectionMapper.selectObjs(new QueryWrapper<RabbitmqConnection>().select("uid"));
-        for(Object obj : uidList){
-            if (obj instanceof String){
+        List<Object> uidList = rabbitmqConnectionMapper
+                .selectObjs(new QueryWrapper<RabbitmqConnection>().select("uid"));
+        for (Object obj : uidList) {
+            if (obj instanceof String) {
                 String targetId = (String) obj;
-                publishService.sendMessageToFanoutExchange(targetId,exchange,message);
+                publishService.sendMessageToFanoutExchange(targetId, exchange, message);
             }
         }
 
@@ -345,19 +344,19 @@ public class ABACService {
         } catch (Exception e) {
             return Body.error("删除文件规则失败：{}", e.getMessage());
         }
-        // TODO: MQ
-        //通信
+        // 通信
         String exchange = "RuleExchange";
         String message = null;
         String operation = "Delete";
         String entity = "fileRule";
-        message = messageService.getMessage(operation,entity,objectMapper,fileRule);
+        message = messageService.getMessage(operation, entity, objectMapper, fileRule);
         //
-        List<Object> uidList = rabbitmqConnectionMapper.selectObjs(new QueryWrapper<RabbitmqConnection>().select("uid"));
-        for(Object obj : uidList){
-            if (obj instanceof String){
+        List<Object> uidList = rabbitmqConnectionMapper
+                .selectObjs(new QueryWrapper<RabbitmqConnection>().select("uid"));
+        for (Object obj : uidList) {
+            if (obj instanceof String) {
                 String targetId = (String) obj;
-                publishService.sendMessageToFanoutExchange(targetId,exchange,message);
+                publishService.sendMessageToFanoutExchange(targetId, exchange, message);
             }
         }
         return Body.success("删除文件规则成功");
@@ -381,19 +380,19 @@ public class ABACService {
         } catch (Exception e) {
             return Body.error("更新文件规则失败：{}", e.getMessage());
         }
-        // TODO: MQ
-        //通信
+        // 通信
         String exchange = "RuleExchange";
         String message = null;
         String operation = "Update";
         String entity = "fileRule";
-        message = messageService.getMessage(operation,entity,objectMapper,fileRule);
+        message = messageService.getMessage(operation, entity, objectMapper, fileRule);
         //
-        List<Object> uidList = rabbitmqConnectionMapper.selectObjs(new QueryWrapper<RabbitmqConnection>().select("uid"));
-        for(Object obj : uidList){
-            if (obj instanceof String){
+        List<Object> uidList = rabbitmqConnectionMapper
+                .selectObjs(new QueryWrapper<RabbitmqConnection>().select("uid"));
+        for (Object obj : uidList) {
+            if (obj instanceof String) {
                 String targetId = (String) obj;
-                publishService.sendMessageToFanoutExchange(targetId,exchange,message);
+                publishService.sendMessageToFanoutExchange(targetId, exchange, message);
             }
         }
         return Body.success("更新文件规则成功");
@@ -425,18 +424,18 @@ public class ABACService {
         } catch (Exception e) {
             return Body.error("创建可见性失败：{}", e.getMessage());
         }
-        // TODO: MQ
         String exchange = "RuleExchange";
         String message = null;
         String operation = "Create";
         String entity = "visibility";
-        message = messageService.getMessage(operation,entity,objectMapper,visibility);
+        message = messageService.getMessage(operation, entity, objectMapper, visibility);
         //
-        List<Object> uidList = rabbitmqConnectionMapper.selectObjs(new QueryWrapper<RabbitmqConnection>().select("uid"));
-        for(Object obj : uidList){
-            if (obj instanceof String){
+        List<Object> uidList = rabbitmqConnectionMapper
+                .selectObjs(new QueryWrapper<RabbitmqConnection>().select("uid"));
+        for (Object obj : uidList) {
+            if (obj instanceof String) {
                 String targetId = (String) obj;
-                publishService.sendMessageToFanoutExchange(targetId,exchange,message);
+                publishService.sendMessageToFanoutExchange(targetId, exchange, message);
             }
         }
         return Body.success("创建可见性成功");
@@ -452,18 +451,18 @@ public class ABACService {
         } catch (Exception e) {
             return Body.error("删除可见性失败：{}", e.getMessage());
         }
-        // TODO: MQ
         String exchange = "RuleExchange";
         String message = null;
         String operation = "Delete";
         String entity = "visibility";
-        message = messageService.getMessage(operation,entity,objectMapper,visibility);
+        message = messageService.getMessage(operation, entity, objectMapper, visibility);
         //
-        List<Object> uidList = rabbitmqConnectionMapper.selectObjs(new QueryWrapper<RabbitmqConnection>().select("uid"));
-        for(Object obj : uidList){
-            if (obj instanceof String){
+        List<Object> uidList = rabbitmqConnectionMapper
+                .selectObjs(new QueryWrapper<RabbitmqConnection>().select("uid"));
+        for (Object obj : uidList) {
+            if (obj instanceof String) {
                 String targetId = (String) obj;
-                publishService.sendMessageToFanoutExchange(targetId,exchange,message);
+                publishService.sendMessageToFanoutExchange(targetId, exchange, message);
             }
         }
         return Body.success("删除可见性成功");
@@ -481,18 +480,18 @@ public class ABACService {
         } catch (Exception e) {
             return Body.error("更新可见性失败：{}", e.getMessage());
         }
-        // TODO: MQ
         String exchange = "RuleExchange";
         String message = null;
         String operation = "Update";
         String entity = "visibility";
-        message = messageService.getMessage(operation,entity,objectMapper,visibility);
+        message = messageService.getMessage(operation, entity, objectMapper, visibility);
         //
-        List<Object> uidList = rabbitmqConnectionMapper.selectObjs(new QueryWrapper<RabbitmqConnection>().select("uid"));
-        for(Object obj : uidList){
-            if (obj instanceof String){
+        List<Object> uidList = rabbitmqConnectionMapper
+                .selectObjs(new QueryWrapper<RabbitmqConnection>().select("uid"));
+        for (Object obj : uidList) {
+            if (obj instanceof String) {
                 String targetId = (String) obj;
-                publishService.sendMessageToFanoutExchange(targetId,exchange,message);
+                publishService.sendMessageToFanoutExchange(targetId, exchange, message);
             }
         }
         return Body.success("更新可见性成功");
@@ -524,18 +523,18 @@ public class ABACService {
         } catch (Exception e) {
             return Body.error("创建文件夹可见性失败：{}", e.getMessage());
         }
-        // TODO: MQ
         String exchange = "RuleExchange";
         String message = null;
         String operation = "Create";
         String entity = "folderVisibility";
-        message = messageService.getMessage(operation,entity,objectMapper,folderVisibility);
+        message = messageService.getMessage(operation, entity, objectMapper, folderVisibility);
         //
-        List<Object> uidList = rabbitmqConnectionMapper.selectObjs(new QueryWrapper<RabbitmqConnection>().select("uid"));
-        for(Object obj : uidList){
-            if (obj instanceof String){
+        List<Object> uidList = rabbitmqConnectionMapper
+                .selectObjs(new QueryWrapper<RabbitmqConnection>().select("uid"));
+        for (Object obj : uidList) {
+            if (obj instanceof String) {
                 String targetId = (String) obj;
-                publishService.sendMessageToFanoutExchange(targetId,exchange,message);
+                publishService.sendMessageToFanoutExchange(targetId, exchange, message);
             }
         }
         return Body.success("创建文件夹可见性成功");
@@ -551,18 +550,18 @@ public class ABACService {
         } catch (Exception e) {
             return Body.error("删除文件夹可见性失败：{}", e.getMessage());
         }
-        // TODO: MQ
         String exchange = "RuleExchange";
         String message = null;
         String operation = "Delete";
         String entity = "folderVisibility";
-        message = messageService.getMessage(operation,entity,objectMapper,folderVisibility);
+        message = messageService.getMessage(operation, entity, objectMapper, folderVisibility);
         //
-        List<Object> uidList = rabbitmqConnectionMapper.selectObjs(new QueryWrapper<RabbitmqConnection>().select("uid"));
-        for(Object obj : uidList){
-            if (obj instanceof String){
+        List<Object> uidList = rabbitmqConnectionMapper
+                .selectObjs(new QueryWrapper<RabbitmqConnection>().select("uid"));
+        for (Object obj : uidList) {
+            if (obj instanceof String) {
                 String targetId = (String) obj;
-                publishService.sendMessageToFanoutExchange(targetId,exchange,message);
+                publishService.sendMessageToFanoutExchange(targetId, exchange, message);
             }
         }
         return Body.success("删除文件夹可见性成功");
@@ -586,18 +585,18 @@ public class ABACService {
         } catch (Exception e) {
             return Body.error("更新文件夹可见性失败：{}", e.getMessage());
         }
-        // TODO: MQ
         String exchange = "RuleExchange";
         String message = null;
         String operation = "Update";
         String entity = "folderVisibility";
-        message = messageService.getMessage(operation,entity,objectMapper,folderVisibility);
+        message = messageService.getMessage(operation, entity, objectMapper, folderVisibility);
         //
-        List<Object> uidList = rabbitmqConnectionMapper.selectObjs(new QueryWrapper<RabbitmqConnection>().select("uid"));
-        for(Object obj : uidList){
-            if (obj instanceof String){
+        List<Object> uidList = rabbitmqConnectionMapper
+                .selectObjs(new QueryWrapper<RabbitmqConnection>().select("uid"));
+        for (Object obj : uidList) {
+            if (obj instanceof String) {
                 String targetId = (String) obj;
-                publishService.sendMessageToFanoutExchange(targetId,exchange,message);
+                publishService.sendMessageToFanoutExchange(targetId, exchange, message);
             }
         }
         return Body.success("更新文件夹可见性成功");
