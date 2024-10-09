@@ -288,7 +288,7 @@
             <template #default="scope">
               <el-button
                 type="danger"
-                @click="removeCompileParameter(scope.$index)"
+                @click="removeRuntimeParameter(scope.$index)"
               >
                 删除
               </el-button>
@@ -630,6 +630,11 @@ const removeCompileParameter = (index) => {
   updatePosParameters() // 删除后更新位置参数
 }
 
+const removeRuntimeParameter = (index) => {
+  mpcTaskInfo.value.runtimeParameters.splice(index, 1)
+  updatePosParameters() // 删除后更新位置参数
+}
+
 const handleParameterTypeChange = (row) => {
   if (row.parameterType === 'POS') {
     updatePosParameters() // 当选择位置参数时，更新位置参数的值
@@ -641,10 +646,16 @@ const handleParameterTypeChange = (row) => {
 
 // 更新所有位置参数的自增值
 const updatePosParameters = () => {
-  let posIndex = 0
+  let posIndex1 = 0
   mpcTaskInfo.value.compileParameters.forEach((param) => {
     if (param.parameterType === 'POS') {
-      param.posORflag = posIndex++
+      param.posORflag = posIndex1++
+    }
+  })
+  let posIndex2 = 0
+  mpcTaskInfo.value.runtimeParameters.forEach((param) => {
+    if (param.parameterType === 'POS') {
+      param.posORflag = posIndex2++
     }
   })
 }
