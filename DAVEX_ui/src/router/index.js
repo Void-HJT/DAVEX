@@ -70,6 +70,10 @@ const router = createRouter({
           component: () => import('@/views/datashare/quEry.vue'),
         },
         {
+          path: 'datashare/simpleMpc',
+          component: () => import('@/views/datashare/simpleMpc.vue'),
+        },
+        {
           path: 'result/fileTrans',
           component: () => import('@/views/result/fileTrans.vue'),
         },
