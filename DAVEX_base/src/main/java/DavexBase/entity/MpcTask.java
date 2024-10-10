@@ -20,7 +20,7 @@ import lombok.Data;
 public class MpcTask {
 
     public enum TaskType {
-        GARNET_MPC, GARNET_PSI
+        GARNET_MPC, GARNET_PSI, GARNET_INFERENCE
     }
 
     public enum Status {

@@ -91,7 +91,7 @@ public class MpcTaskService {
     }
 
     @Async("customExecutor")
-    private void preprocess(UploadAgentTaskInfo mpcTask) throws Exception {
+    public void preprocess(UploadAgentTaskInfo mpcTask) throws Exception {
         garnetService.compile(mpcTask);
         garnetService.link(fileFolderService.getFilePath(fileMapper.selectById(mpcTask.getDataId()), my.getBase_path()),
                 mpcTask.getUid(),
