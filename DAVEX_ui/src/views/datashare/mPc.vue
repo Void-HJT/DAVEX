@@ -1,5 +1,40 @@
 <template>
   <div>
+    <div style="text-align: center; margin-bottom: 20px;">
+      <el-button type="primary" @click="simpleSetDialogVisible = true">简化导入配置参数</el-button>
+    </div>
+
+    <el-dialog v-model="simpleSetDialogVisible" title="简化导入配置参数" width="30%">
+      <el-form
+        :model="mpcTaskInfo"
+        label-width="auto"
+        style="max-width: 90%"
+        class="styled-form"
+      >
+        <el-form-item label="mpc任务名">
+          <el-input v-model="mpcTaskInfo.name" />
+        </el-form-item>
+        <el-form-item label="参与方数量">
+          <el-input v-model="partyNumberLimit.defaultValue" />
+        </el-form-item>
+        <el-form-item label="特征数量">
+          <el-input v-model="featureNumberLimit.defaultValue" />
+        </el-form-item>
+        <p>偏好选择</p>
+        <el-radio-group v-model="preferenceRadio">
+          <el-radio label="0">速度优先</el-radio>
+          <el-radio label="1">均衡模式</el-radio>
+          <el-radio label="2">精度优先</el-radio>
+        </el-radio-group>
+        <p v-if="preferenceRadio == '0'">此模式会选取较小的树高与线程，计算速度较快但可能会损失一定的准确度。</p>
+        <p v-if="preferenceRadio == '1'">此模式在计算速度与准确度之间作了权衡，消耗相对短的时间得到准确度相对高的结果。</p>
+        <p v-if="preferenceRadio == '2'">此模式会选取较大的树高与线程，准确度较高但需要更多的时间来进行计算。</p>
+      </el-form>
+      <div style="text-align: center; margin-top: 20px;">
+        <el-button type="primary" @click="addDefaultParameters">一键导入</el-button>
+      </div>
+    </el-dialog>
+
     <div class="form-container">
       <el-form
         :model="mpcTaskInfo"
@@ -588,6 +623,115 @@ function createParameter() {
   }
 }
 
+const partyNumberLimit = ref({ min: 1, max: 3, defaultValue: 2 })
+const featureNumberLimit = ref({ min: 1, max: 10, defaultValue: 5 })
+const treeHeightLimit = ref({ min: 1, max: 8, defaultValue: 4 })
+const nThreadsLimit = ref({ min: 1, max: 8, defaultValue: 4 })
+const preferenceRadio = ref('0')
+
+function defaultCompileParameters() {
+    return [{
+      name: 'party_number',
+      limit: {min: partyNumberLimit.value.min, max: partyNumberLimit.value.max, defaultValue: partyNumberLimit.value.defaultValue},
+      required: true,
+      auto: false,
+      limitType: 'NUM',
+      posORflag: 0,
+      description: '共有几方参与',
+      parameterType: 'POS'
+    },
+    {
+      name: 'feature_number',
+      limit: {min: featureNumberLimit.value.min, max: featureNumberLimit.value.max, defaultValue: featureNumberLimit.value.defaultValue},
+      required: true,
+      auto: false,
+      limitType: 'NUM',
+      posORflag: 1,
+      description: '特征数',
+      parameterType: 'POS'
+    },
+    {
+      name: 'ents_tree_h',
+      limit: {min: treeHeightLimit.value.min, max: treeHeightLimit.value.max, defaultValue: treeHeightLimit.value.defaultValue},
+      required: true,
+      auto: false,
+      limitType: 'NUM',
+      posORflag: 2,
+      description: '树高',
+      parameterType: 'POS'
+    },
+    {
+      name: 'ents_n_threads',
+      limit: {min: nThreadsLimit.value.min, max: nThreadsLimit.value.max, defaultValue: nThreadsLimit.value.defaultValue},
+      required: true,
+      auto: false,
+      limitType: 'NUM',
+      posORflag: 3,
+      description: '使用的线程数',
+      parameterType: 'POS'
+    },
+    {
+      name: 'sample_number_from_party_0',
+      limit: {min: 1, max: 8, defaultValue: 4},
+      required: true,
+      auto: false,
+      limitType: 'NUM',
+      posORflag: 4,
+      description: '第0方数据',
+      parameterType: 'POS'
+    },
+    {
+      name: 'sample_number_from_party_1',
+      limit: {min: 1, max: 8, defaultValue: 4},
+      required: true,
+      auto: false,
+      limitType: 'NUM',
+      posORflag: 5,
+      description: '第1方数据',
+      parameterType: 'POS'
+    }]
+  }
+
+  function defaultRuntimeParameters() {
+    return [{
+      name: 'protocol',
+      limit: {defaultValue: 'semi2k-with-conversion-party'},
+      required: true,
+      auto: false,
+      limitType: 'STRING',
+      posORflag: 0,
+      description: '协议',
+      parameterType: 'POS'
+    }]
+  }
+
+const addDefaultParameters = () => {
+  mpcTaskInfo.value.compileParameters = []
+  mpcTaskInfo.value.runtimeParameters = []
+  if (preferenceRadio.value == '0') {
+    treeHeightLimit.value.defaultValue = 4
+    nThreadsLimit.value.defaultValue = 4
+  }
+  else if (preferenceRadio.value == '1') {
+    treeHeightLimit.value.defaultValue = 6
+    nThreadsLimit.value.defaultValue = 6
+  }
+  else {
+    treeHeightLimit.value.defaultValue = 8
+    nThreadsLimit.value.defaultValue = 8
+  }
+  partyNumberLimit.value.max = partyNumberLimit.value.defaultValue * 2
+  featureNumberLimit.value.max = featureNumberLimit.value.defaultValue * 2
+  treeHeightLimit.value.max = treeHeightLimit.value.defaultValue * 2
+  nThreadsLimit.value.max = nThreadsLimit.value.defaultValue * 2
+  const defaultCParams = defaultCompileParameters()
+  const defaultRParams = defaultRuntimeParameters()
+  mpcTaskInfo.value.compileParameters.push(...defaultCParams)
+  mpcTaskInfo.value.runtimeParameters.push(...defaultRParams)
+  console.log(mpcTaskInfo.value)
+  simpleSetDialogVisible.value = false
+}
+
 const compileParameter = reactive({
   name: '',
   limit: {},
@@ -862,6 +1006,8 @@ const saveRuntimeParameters = () => {
 const infoDialogVisible = ref(false)
 const infoDialogText = ref('')
 // 信息提示框
+
+const simpleSetDialogVisible = ref(false)
 </script>
 
 <style scoped>

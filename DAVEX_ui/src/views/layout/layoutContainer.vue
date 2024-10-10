@@ -128,10 +128,6 @@ const handleCommand = (key) => {
             <el-icon><EditPen /></el-icon>
             <span class="centered-text">比对</span>
           </el-menu-item>
-          <el-menu-item index="/datashare/simpleMpc">
-            <el-icon><EditPen /></el-icon>
-            <span class="centered-text">SIMPLEMPC</span>
-          </el-menu-item>
         </el-sub-menu>
         <el-sub-menu index="/result">
           <template #title>
