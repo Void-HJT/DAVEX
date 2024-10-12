@@ -24,13 +24,13 @@ public class SecureInferenceController {
     @Autowired
     private FileMapper fileMapper;
 
-    @PostMapping("/getMpc")
-    public R<Mpc> getMpc(@RequestBody String FileID) {
+    @GetMapping("/getMpc")
+    public R<Mpc> getMpc(@RequestParam String FileID) {
         File file = fileMapper.selectById(FileID);
         if (file == null) {
             return R.error("File not found");
         }
-        if (file.getType() != "model") {
+        if (!"model".equals(file.getType())) {
             return R.error("File is not a model");
         }
         try {
@@ -46,7 +46,7 @@ public class SecureInferenceController {
         if (file == null) {
             return Body.error("File not found");
         }
-        if (file.getType() != "model") {
+        if (!"model".equals(file.getType())) {
             return Body.error("File is not a model");
         }
         return secureInferenceService.setMpc(file, mpcID);

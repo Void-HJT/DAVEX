@@ -184,7 +184,11 @@ CREATE TABLE `mpcTask` (
     `port` int DEFAULT NULL,
     `data_id` varchar(255) DEFAULT NULL,
     `mpc_name` varchar(255) DEFAULT NULL,
-    `task_type` enum('GARNET_PSI', 'GARNET_MPC') DEFAULT NULL,
+    `task_type` enum(
+        'GARNET_PSI',
+        'GARNET_MPC',
+        'GARNET_INFERENCE'
+    ) DEFAULT NULL,
     `status` varchar(255) DEFAULT NULL,
     `message` varchar(255) DEFAULT NULL,
     PRIMARY KEY (`uid`)

@@ -46,7 +46,9 @@ public class Center {
             return false;
         if (port != other.port)
             return false;
-        if (!password.equals(other.password))
+        if (password == null && other.password != null)
+            return false;
+        if (password != null && !password.equals(other.password))
             return false;
         if (description == null) {
             if (other.description != null)

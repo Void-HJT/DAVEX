@@ -3,8 +3,10 @@ package DavexBase.info;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.alibaba.fastjson.JSONObject;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
+import DavexBase.entity.Mpc;
 import DavexBase.entity.MpcTask;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -79,5 +81,23 @@ public class UploadAgentTaskInfo extends MpcTask {
     }
 
     public UploadAgentTaskInfo() {
+    }
+
+    public void useDefault(Mpc mpc) throws Exception {
+        if (mpc == null) {
+            throw new Exception("Mpc is null");
+        }
+        List<Parameter> compileParameters = mpc.getCompileParameters();
+        List<Parameter> runtimeParameters = mpc.getRuntimeParameters();
+        JSONObject compileParametersJson = new JSONObject();
+        JSONObject runtimeParametersJson = new JSONObject();
+        for (Parameter parameter : compileParameters) {
+            compileParametersJson.put(parameter.getName(), parameter.getDefaultValue());
+        }
+        for (Parameter parameter : runtimeParameters) {
+            runtimeParametersJson.put(parameter.getName(), parameter.getDefaultValue());
+        }
+        this.setCompileParameters(compileParametersJson);
+        this.setRuntimeParameters(runtimeParametersJson);
     }
 }

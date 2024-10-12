@@ -35,8 +35,8 @@ public class MpcService {
 
     private static final Logger logger = LoggerFactory.getLogger(GarnetService.class);
 
-    public void downloadMPC(String centerId, String MpcID) throws Exception {
-        WebClient webClient = centerWebClientService.center2AgentWebClient(centerId);
+    public void downloadMPC(String agentId, String MpcID) throws Exception {
+        WebClient webClient = centerWebClientService.center2AgentWebClient(agentId);
         Mpc mpc = webClient.get()
                 .uri(UriBuilder -> UriBuilder.path("/Mpc/select").queryParam("MpcID", MpcID).build()).retrieve()
                 .bodyToMono(new ParameterizedTypeReference<R<Mpc>>() {

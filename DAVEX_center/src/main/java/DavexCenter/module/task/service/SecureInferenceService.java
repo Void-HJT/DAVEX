@@ -111,9 +111,16 @@ public class SecureInferenceService {
         if (resource != null) {
             Path filePath = Paths.get(my.getBase_path()).resolve("programs").resolve(resource.getFilename());
             filePath = Utils.resolveFileNameConflict(filePath);
-            Files.copy(resource.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
-            mpc.setPath(Paths.get("programs").resolve(filePath.getFileName()).toString());
-            mpcMapper.insert(mpc);
+            try {
+                Files.createDirectories(filePath.getParent());
+                Files.copy(resource.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
+                mpc.setPath(Paths.get("programs").resolve(filePath.getFileName()).toString());
+                mpcMapper.insert(mpc);
+            } catch (Exception e) {
+                e.printStackTrace();
+                throw e;
+            }
+
         }
         return mpc;
     }
@@ -132,7 +139,7 @@ public class SecureInferenceService {
         mpcTaskInfo.setApplicationId(info.getApplicationId());
         mpcTaskInfo.setTaskType(TaskType.GARNET_INFERENCE);
         mpcTaskInfo.setCenterId(my.getId());
-        mpcTaskInfo.setPart(1L);
+        mpcTaskInfo.setPart(0L);
         List<PartInfo> partInfo = new ArrayList<>();
         partInfo.add(new PartInfo() {
             {
@@ -143,6 +150,8 @@ public class SecureInferenceService {
         });
         mpcTaskInfo.setPartInfo(partInfo);
         mpcTaskInfo.setMpcId(downloadMPC(info.getAgentId(), info.getFileId()).getUid());
+        // * 使用默认参数
+        mpcTaskInfo.useDefault(mpcMapper.selectById(mpcTaskInfo.getMpcId()));
         return mpcTaskInfo;
     }
 }

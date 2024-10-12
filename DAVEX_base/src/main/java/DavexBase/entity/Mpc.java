@@ -25,7 +25,7 @@ public class Mpc {
     private List<Parameter> compileParameters;
     @TableField(typeHandler = ParameterListTypeHandler.class)
     private List<Parameter> runtimeParameters;
-    private Long centerId;
+    private String centerId;
     @JsonIgnore
     private String path;
 

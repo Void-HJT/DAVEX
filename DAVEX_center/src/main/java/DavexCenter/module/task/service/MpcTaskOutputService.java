@@ -80,6 +80,7 @@ public class MpcTaskOutputService {
         mpcTaskOutput.setUploadDate(Timestamp.valueOf(LocalDateTime.now()));
         try {
             mpcTaskOutput.setHash(Utils.getFileHash(new FileSystemResource(outputPath), "SHA-256"));
+            Files.createDirectories(savePath.getParent());
             Files.move(outputPath, savePath, StandardCopyOption.REPLACE_EXISTING);
         } catch (Exception e) {
             throw e;

@@ -138,7 +138,11 @@ CREATE TABLE `mpcTask` (
     `port` int DEFAULT NULL,
     `data_id` varchar(255) DEFAULT NULL,
     `mpc_name` varchar(255) DEFAULT NULL,
-    `task_type` enum('GARNET_PSI', 'GARNET_MPC') DEFAULT NULL,
+    `task_type` enum(
+        'GARNET_PSI',
+        'GARNET_MPC',
+        'GARNET_INFERENCE'
+    ) DEFAULT NULL,
     `status` varchar(255) DEFAULT NULL,
     `message` varchar(255) DEFAULT NULL,
     PRIMARY KEY (`uid`)
@@ -216,7 +220,6 @@ CREATE TABLE `rule` (
     PRIMARY KEY (`uid`) USING BTREE
 ) ENGINE = InnoDB AUTO_INCREMENT = 23 DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci;
 
-
 -- ----------------------------
 -- Table structure for file_rule
 -- ----------------------------
@@ -247,13 +250,16 @@ CREATE TABLE `visibility` (
 DROP TABLE IF EXISTS `folder_visibility`;
 
 CREATE TABLE `folder_visibility` (
-    `uid` varchar(255) NOT NULL ,
+    `uid` varchar(255) NOT NULL,
     `folder_id` varchar(255) NOT NULL,
     `visibility_id` varchar(255) NOT NULL,
     PRIMARY KEY (`uid`) USING BTREE
 ) ENGINE = InnoDB AUTO_INCREMENT = 23 DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci;
 
-
-SELECT r.expression FROM file_rule fr JOIN rule r ON fr.rule_id = r.uid WHERE fr.file_id = 'DAVEX-C1-GXX2-F1'
+SELECT r.expression
+FROM file_rule fr
+    JOIN rule r ON fr.rule_id = r.uid
+WHERE
+    fr.file_id = 'DAVEX-C1-GXX2-F1'
 
 SET FOREIGN_KEY_CHECKS = 1;

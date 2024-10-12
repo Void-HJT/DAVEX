@@ -70,7 +70,7 @@ public class SecureInferenceService {
         if (file == null) {
             throw new Exception("文件不存在");
         }
-        if (file.getType() != "model") {
+        if (!"model".equals(file.getType())) {
             throw new Exception("文件不是模型");
         }
         for (UploadAgentTaskInfo.PartInfo partInfo : mpcTaskInfo.getPartInfo()) {

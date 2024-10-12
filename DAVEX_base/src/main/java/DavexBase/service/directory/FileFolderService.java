@@ -358,7 +358,7 @@ public class FileFolderService {
         int maxTailNumber = getMaxUid.getFileMaxUid(agentId, fileMapper);
         String uid = agentId + "-D" + (maxTailNumber + 1);
         fileRecord.setUid(uid);
-        fileRecord.setType(file.getOriginalFilename().substring(file.getOriginalFilename().lastIndexOf(".")));
+        // fileRecord.setType(file.getOriginalFilename().substring(file.getOriginalFilename().lastIndexOf(".")));
         fileRecord.setAgentId(agentId);
         fileRecord.setFolderId(folderId);
         fileRecord.setName(fileName);

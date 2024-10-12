@@ -227,3 +227,106 @@
   "uid": null
 }
 ```
+
+
+
+```json
+{
+  "uid": null, 
+  "centerId": "DAVEX-C1", 
+  "name": "决策树推理",  
+  "compileParameters": [
+    {
+      "name": "m", 
+      "limit": {
+        "max": 999, 
+        "min": 1, 
+        "defaultValue": 4
+      }, 
+      "required": true,
+      "auto": false, 
+      "limitType": "NUM", 
+      "posORflag": 0, 
+      "description": "特征维度", 
+      "parameterType": "POS"
+    }, 
+    {
+      "name": "test_samples", 
+      "limit": {
+        "max": 999, 
+        "min": 1, 
+        "defaultValue": 49
+      }, 
+      "required": true, 
+      "auto": false, 
+      "limitType": "NUM", 
+      "posORflag": 1, 
+      "description": "测试样本数", 
+      "parameterType": "POS"
+    },
+    {
+      "name": "label_number", 
+      "limit": {
+        "max": 999, 
+        "min": 1, 
+        "defaultValue": 3
+      }, 
+      "required": true, 
+      "auto": false, 
+      "limitType": "NUM", 
+      "posORflag": 2, 
+      "description": "标签种类数", 
+      "parameterType": "POS"
+    },
+    {
+      "name": "tree_h", 
+      "limit": {
+        "max": 9, 
+        "min": 3, 
+        "defaultValue": 4
+      }, 
+      "required": true, 
+      "auto": false, 
+      "limitType": "NUM", 
+      "posORflag": 3, 
+      "description": "树高", 
+      "parameterType": "POS"
+    },
+    {
+      "name": "Ring", 
+      "limit": {
+        "defaultValue": "64"
+      }, 
+      "required": false, 
+      "auto": true, 
+      "limitType": "STRING", 
+      "posORflag": "-R", 
+      "description": "所用环的大小", 
+      "parameterType": "FLAG"
+    }
+  ], 
+  "runtimeParameters": [
+    {
+      "name": "protocol", 
+      "limit": {
+        "defaultValue": "semi2k-party"
+      }, 
+      "required": true, 
+      "auto": false, 
+      "limitType": "STRING", 
+      "posORflag": null, 
+      "description": "运行虚拟机", 
+      "parameterType": "FLAG"
+    }
+  ]
+}
+```
+
+```json
+{
+    "agentId":"DAVEX-C1-GXX1",
+    "fileId":"DAVEX-C1-GXX1-F2",
+    "applicationId":"DAVEX-C1-AXX1"
+}
+
+```

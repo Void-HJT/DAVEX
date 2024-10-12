@@ -8,7 +8,7 @@ import lombok.Data;
 @Data
 public class Input {
 
-    @TableId(type = IdType.AUTO)
+    @TableId(type = IdType.ASSIGN_UUID)
     private String uid;
     private String applicationId;
     private String path;
