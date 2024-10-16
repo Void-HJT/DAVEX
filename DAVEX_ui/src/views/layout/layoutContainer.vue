@@ -128,6 +128,10 @@ const handleCommand = (key) => {
             <el-icon><EditPen /></el-icon>
             <span class="centered-text">比对</span>
           </el-menu-item>
+          <el-menu-item index="/datashare/inFer">
+            <el-icon><EditPen /></el-icon>
+            <span class="centered-text">安全推理</span>
+          </el-menu-item>
         </el-sub-menu>
         <el-sub-menu index="/result">
           <template #title>
@@ -149,6 +153,10 @@ const handleCommand = (key) => {
           <el-menu-item index="/result/comPare">
             <el-icon><EditPen /></el-icon>
             <span class="centered-text">比对</span>
+          </el-menu-item>
+          <el-menu-item index="/result/fL">
+            <el-icon><EditPen /></el-icon>
+            <span class="centered-text">联邦学习</span>
           </el-menu-item>
         </el-sub-menu>
       </el-menu>
