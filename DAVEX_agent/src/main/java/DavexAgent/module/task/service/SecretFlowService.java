@@ -1,33 +1,29 @@
-package DavexCenter.module.task.controller;
+package DavexAgent.module.task.service;
 
-
-
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.beans.factory.annotation.Autowired;
-import DavexCenter.module.task.service.SecretFlowService;
 import DavexBase.common.My;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 
-@RestController
-@RequestMapping("/SecretFlowTask")
-public class SecretFlowController {
+
+@Service
+public class SecretFlowService {
+
     @Autowired
     private SecretFlowService secretFlowService;
 
     @Autowired
     private My my;
-    @GetMapping("/execute-script")
-    public String executeScript() {
+    // 方法接受一个字符串参数作为命令，并执行它
+    public String executeCommand(String command) {
         try {
-            // 定义要执行的命令
-            String command = "source sfenv/bin/activate && python testFL.py";
             ProcessBuilder processBuilder = new ProcessBuilder();
             processBuilder.command("bash", "-c", command);
-            processBuilder.directory(new java.io.File("/home/zw/SFFL"));
+            processBuilder.directory(new java.io.File("/home/zw/SFFL"));  // 可根据需要更改目录
 
             // 启动进程并获取输出
             Process process = processBuilder.start();
@@ -50,9 +46,9 @@ public class SecretFlowController {
 
             int exitCode = process.waitFor();
             if (exitCode == 0) {
-                return "Script executed successfully: \n" + output.toString();
+                return "Command executed successfully: \n" + output.toString();
             } else {
-                return "Script execution failed with exit code: " + exitCode + "\nError Output: " + errorOutput.toString();
+                return "Command execution failed with exit code: " + exitCode + "\nError Output: " + errorOutput.toString();
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -60,24 +56,18 @@ public class SecretFlowController {
         }
     }
 
-
-
     @GetMapping("/activate-mainRay")
     public String activateMainRay(
-            @RequestParam String port        // 参数化端口
+            @RequestParam String ip,
+            @RequestParam String port,
+            @RequestParam String name
+            // 参数化端口
     ) {
         // 构造命令字符串
-        String command = String.format("source sfenv/bin/activate && ray start --head --node-ip-address=\"%s\" --port=\"%s\" --resources='{\"alice\": 16}' --include-dashboard=False --disable-usage-stats", my.getIp(), port);
+        String command = String.format("source sfenv/bin/activate && ray start --head --node-ip-address=\"%s\" --port=\"%s\" --resources='{\"%s\": 16}' --include-dashboard=False --disable-usage-stats", ip, port,name);
 
         // 调用 service 中的方法执行命令
         return secretFlowService.executeCommand(command);
     }
-
-    //需要优化一下 主节点stop连带着其他人也stop
-    @GetMapping("/stop-mainRay")
-    public String stopMainRay() {
-        // 调用 service 中的方法执行命令
-        return secretFlowService.executeCommand("source sfenv/bin/activate && ray stop");
-    }
-
 }
+
