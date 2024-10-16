@@ -70,6 +70,10 @@ const router = createRouter({
           component: () => import('@/views/datashare/quEry.vue'),
         },
         {
+          path: 'datashare/inFer',
+          component: () => import('@/views/datashare/inFer.vue'),
+        },
+        {
           path: 'result/fileTrans',
           component: () => import('@/views/result/fileTrans.vue'),
         },
@@ -84,6 +88,10 @@ const router = createRouter({
         {
           path: 'result/comPare',
           component: () => import('@/views/result/comPare.vue'),
+        },
+        {
+          path: 'result/fL',
+          component: () => import('@/views/result/fL.vue'),
         },
       ],
     }, //布局
