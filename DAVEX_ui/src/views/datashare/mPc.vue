@@ -26,9 +26,9 @@
           <el-radio label="1">均衡模式</el-radio>
           <el-radio label="2">精度优先</el-radio>
         </el-radio-group>
-        <p v-if="preferenceRadio == '0'">此模式会选取较小的树高与线程，计算速度较快但可能会损失一定的准确度。</p>
+        <p v-if="preferenceRadio == '0'">此模式会选取较小的树高与较多的线程，计算速度较快但可能会损失一定的准确度。</p>
         <p v-if="preferenceRadio == '1'">此模式在计算速度与准确度之间作了权衡，消耗相对短的时间得到准确度相对高的结果。</p>
-        <p v-if="preferenceRadio == '2'">此模式会选取较大的树高与线程，准确度较高但需要更多的时间来进行计算。</p>
+        <p v-if="preferenceRadio == '2'">此模式会选取较大的树高与较少的线程，准确度较高但需要更多的时间来进行计算。</p>
       </el-form>
       <div style="text-align: center; margin-top: 20px;">
         <el-button type="primary" @click="addDefaultParameters">一键导入</el-button>
@@ -710,7 +710,7 @@ const addDefaultParameters = () => {
   mpcTaskInfo.value.runtimeParameters = []
   if (preferenceRadio.value == '0') {
     treeHeightLimit.value.defaultValue = 4
-    nThreadsLimit.value.defaultValue = 4
+    nThreadsLimit.value.defaultValue = 8
   }
   else if (preferenceRadio.value == '1') {
     treeHeightLimit.value.defaultValue = 6
@@ -718,7 +718,7 @@ const addDefaultParameters = () => {
   }
   else {
     treeHeightLimit.value.defaultValue = 8
-    nThreadsLimit.value.defaultValue = 8
+    nThreadsLimit.value.defaultValue = 4
   }
   partyNumberLimit.value.max = partyNumberLimit.value.defaultValue * 2
   featureNumberLimit.value.max = featureNumberLimit.value.defaultValue * 2

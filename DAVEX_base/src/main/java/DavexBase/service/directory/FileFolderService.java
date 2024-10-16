@@ -584,6 +584,7 @@ public class FileFolderService {
         node.setHash(file.getHash());
         node.setExample(file.getExample());
         node.setExpiredTime(file.getExpiredTime());
+        node.setFileType(file.getType());
     }
     //
 

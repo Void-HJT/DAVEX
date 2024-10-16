@@ -25,6 +25,7 @@ public class DirectoryInfo {
     private String hash;
     private String example;
     private java.sql.Timestamp expiredTime;
+    private String fileType;
     // 规则
     private List<String> ruleList = new ArrayList<>();
 }
