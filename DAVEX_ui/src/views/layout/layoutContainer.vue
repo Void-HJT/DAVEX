@@ -128,7 +128,7 @@ const handleCommand = (key) => {
             <el-icon><EditPen /></el-icon>
             <span class="centered-text">比对</span>
           </el-menu-item>
-          <el-menu-item index="/datashare/inFer">
+          <el-menu-item index="/datashare/secureInfer">
             <el-icon><EditPen /></el-icon>
             <span class="centered-text">安全推理</span>
           </el-menu-item>
