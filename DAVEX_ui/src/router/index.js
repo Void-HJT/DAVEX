@@ -70,8 +70,8 @@ const router = createRouter({
           component: () => import('@/views/datashare/quEry.vue'),
         },
         {
-          path: 'datashare/inFer',
-          component: () => import('@/views/datashare/inFer.vue'),
+          path: 'datashare/secureInfer',
+          component: () => import('@/views/datashare/secureInfer.vue'),
         },
         {
           path: 'result/fileTrans',

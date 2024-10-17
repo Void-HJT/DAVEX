@@ -37,7 +37,6 @@
           >
             <el-table-column fixed label="" width="50" align="center">
               <template #default="scope">
-                <!-- 根据 scope.row.type 的值来决定显示哪个图标 -->
                 <el-icon>
                   <template v-if="scope.row.type === 'folder'">
                     <el-icon color="#409efc"><Folder /></el-icon>
@@ -100,10 +99,9 @@
                     link
                     type="primary"
                     @click="
-                    getTableHeaderMethod(
+                    chooseModelMethod(
                       scope.row.agentId,
                       scope.row.uid,
-                      scope.row.parentId,
                       scope.row.name
                     )
                   "
@@ -127,7 +125,7 @@
       </el-main>
     </el-container>
   
-    <el-container v-if="getTableHeaderBody.fileId">
+    <el-container>
       <el-header style="height: 50px">
         <div
             style="
@@ -146,31 +144,11 @@
               text-align: center;
             "
           >
-            文件表头信息
+            上传输入数据
           </p>
         </div>
       </el-header>
       <el-main>
-        <el-descriptions
-            class="margin-top"
-            :title="'当前选择文件：' + fileName"
-            :column="3"
-            :size="'default'"
-            border
-        >
-          <el-descriptions-item
-              v-for="(header, index) in tableHeaders"
-              :key="index"
-          >
-            <template #label>
-              <div class="cell-item">
-                {{ header.name }}
-              </div>
-            </template>
-            {{ header.example }}
-          </el-descriptions-item>
-        </el-descriptions>
-  
         <el-upload
             ref="upload"
             class="upload-demo"
@@ -182,10 +160,10 @@
             style="margin-top: 20px; margin-bottom: 20px;"
         >
           <template #trigger>
-            <el-button type="primary" style="margin-right: 10px;">上传csv文件</el-button>
+            <el-button type="primary" style="margin-right: 10px;">上传txt文件</el-button>
           </template>
-          <el-button class="ml-3" type="success" @click="submitUpload" style="margin-right: 10px;">
-            比对
+          <el-button class="ml-3" type="success" @click="submitUpload" style="margin-right: 10px;" :disabled="!getTableHeaderBody.fileId">
+            创建安全推理任务
           </el-button>
           <template #tip>
             <div class="el-upload__tip text-red">
@@ -193,69 +171,14 @@
             </div>
           </template>
         </el-upload>
-  
-        <el-button type="primary" @click="selectAttributesVisible = true">输入数据进行比对</el-button>
       </el-main>
     </el-container>
   
-    <el-dialog v-model="selectAttributesVisible" title="选择属性" width="30%">
-      <el-checkbox-group v-model="selectedAttributes" style="display: flex; flex-wrap: wrap;">
-        <el-checkbox
-            v-for="(header, index) in tableHeaders"
-            :label="header.name"
-            :key="index"
-            style="margin-bottom: 10px;"
-        >
-          {{ header.name }}
-        </el-checkbox>
-      </el-checkbox-group>
+    <el-dialog v-model="flSuccessVisible" title="创建完成" width="30%">
+      <span>{{ flSuccessMessage }}</span>
       <template #footer>
         <div class="dialog-footer">
-          <el-button @click="selectAttributesVisible = false" style="margin-right: 10px;">返回</el-button>
-          <el-button type="primary" @click="confirmAttributes">
-            确定
-          </el-button>
-        </div>
-      </template>
-    </el-dialog>
-  
-    <el-dialog v-model="inputDataVisible" title="输入数据" width="30%">
-      <div v-for="(rowData, rowIndex) in inputData"
-           :key="rowIndex"
-           class="input-row data-row"
-           style="margin-bottom: 10px; padding: 10px; border: 2px solid #dcdfe6; border-radius: 4px;">
-        <div v-for="(attribute, index) in selectedAttributes" :key="index" class="input-item" style="margin-bottom: 10px">
-          <el-form-item :label="attribute">
-            <el-input v-model="inputData[rowIndex][index]" placeholder="请输入数据"></el-input>
-          </el-form-item>
-        </div>
-        <el-button
-            type="danger"
-            size="small"
-            @click="removeDataRow(rowIndex)"
-            v-if="inputData.length > 1"
-        >
-          删除数据
-        </el-button>
-      </div>
-      <el-button type="primary" size="small" @click="addDataRow" style="margin-bottom: 10px;">
-        添加数据
-      </el-button>
-      <template #footer>
-        <div class="dialog-footer">
-          <el-button @click="resetAttributes" style="margin-right: 10px;">重新选择属性</el-button>
-          <el-button type="primary" @click="compareData">
-            比对
-          </el-button>
-        </div>
-      </template>
-    </el-dialog>
-  
-    <el-dialog v-model="compareSuccessVisible" title="比对完成" width="30%">
-      <span>{{ compareSuccessMessage }}</span>
-      <template #footer>
-        <div class="dialog-footer">
-          <el-button @click="compareSuccessVisible = false" style="margin-right: 10px;">返回</el-button>
+          <el-button @click="flSuccessVisible = false" style="margin-right: 10px;">返回</el-button>
           <router-link to="/result/comPare">
             <el-button type="primary">
               查看结果管理区
@@ -264,18 +187,19 @@
         </div>
       </template>
     </el-dialog>
-    <el-dialog v-model="compareFailedVisible" title="比对失败" width="30%">
-      <span>{{ compareFailedMessage }}</span>
+    <el-dialog v-model="flFailedVisible" title="创建失败" width="30%">
+      <span>{{ flFailedMessage }}</span>
       <template #footer>
         <div class="dialog-footer">
-          <el-button @click="compareFailedVisible = false">返回</el-button>
+          <el-button @click="flFailedVisible = false">返回</el-button>
         </div>
       </template>
     </el-dialog>
   </template>
   
   <script lang="ts" setup>
-  import {getDirectory, getTableHeader, compareFromCsv, compare} from "../../api/comparison.js";
+  import {getDirectory} from "../../api/comparison.js";
+  import {create} from "../../api/secureInfer.js";
   import {onMounted, ref} from "vue";
   import {genFileId, UploadInstance, UploadProps, UploadRawFile} from "element-plus";
   
@@ -284,11 +208,10 @@
   })
   
   // 对话框是否可见
-  const compareSuccessVisible = ref(false)
-  const compareFailedVisible = ref(false)
-  const compareSuccessMessage = ref('');
-  const compareFailedMessage = ref('');
-  const selectAttributesVisible = ref(false)
+  const flSuccessVisible = ref(false)
+  const flFailedVisible = ref(false)
+  const flSuccessMessage = ref('')
+  const flFailedMessage = ref('')
   const inputDataVisible = ref(false)
   
   const applicationId = 6
@@ -304,23 +227,14 @@
     fileId: '',
     folderId: ''
   })
-  const inputData = ref([[]])
-  const tableHeaders = ref([])
-  const selectedAttributes = ref([])
-  const compareFromCsvBody = ref({
-    applicationId: applicationId,
+  const inferenceInfo = ref({
     agentId: '',
     fileId: '',
-    folderId: '',
-    file: null as File | null
+    applicationId: applicationId,
   })
-  const compareBody = ref({
-    applicationId: applicationId,
-    agentId: '',
-    fileId: '',
-    folderId: '',
-    attributes: [],
-    valuesList: [[]]
+  const createBody = ref({
+    file: null as File | null,
+    inferenceInfo: inferenceInfo
   })
   const fileName = ref('')
   const upload = ref<UploadInstance>()
@@ -332,36 +246,18 @@
     folderRoute.value.pop()
     folderRoute.value.pop()
   }
-  function confirmAttributes() {
-    selectAttributesVisible.value = false
-    inputDataVisible.value = true
-  }
-  function resetAttributes() {
-    inputDataVisible.value = false
-    selectAttributesVisible.value = true
-    selectedAttributes.value = []
-    inputData.value = [[]]
-  }
-  function addDataRow() {
-    inputData.value.push(new Array(selectedAttributes.value.length).fill(''));
-  }
-  function removeDataRow(rowIndex) {
-    if (inputData.value.length > 1) {
-      inputData.value.splice(rowIndex, 1);
-    }
-  }
   
-  const compareFromCsvMethod = async () => {
+  const createMethod = async () => {
     try {
-      const res = await compareFromCsv(compareFromCsvBody.value)
+      const res = await create(createBody.value)
       console.log(res.data)
       if (res.data.code == 1) {
-        compareSuccessMessage.value = `比对完成，比对结果文件已存至结果管理区`
-        compareSuccessVisible.value = true
+        flSuccessMessage.value = `安全推理任务创建完成`
+        flSuccessVisible.value = true
       }
       else {
-        compareFailedMessage.value = res.data.message
-        compareFailedVisible.value = true
+        flFailedMessage.value = res.data.message
+        flFailedVisible.value = true
       }
     }
     catch (error) {
@@ -369,51 +265,14 @@
     }
   }
   
-  const compareMethod = async () => {
+  const chooseModelMethod = async (agentId, fileId, name) => {
     try {
-      compareBody.value.attributes = selectedAttributes.value
-      compareBody.value.valuesList = inputData.value
-      console.log(compareBody.value)
-      const res = await compare(compareBody.value)
-      console.log(res.data)
-      if (res.data.code == 1) {
-        const booleanArray = res.data.data
-        const resultList = booleanArray.map((result, index) => `${index + 1}. ${result ? 'yes' : 'no'}`).join('; ')
-        compareSuccessMessage.value = `比对结果依次为: ${resultList}`
-        compareSuccessVisible.value = true
-      }
-      else {
-        compareFailedMessage.value = res.data.message
-        compareFailedVisible.value = true
-      }
-    }
-    catch (error) {
-      console.error('Failed to compare:', error)
-    }
-  }
-  
-  const getTableHeaderMethod = async (agentId, fileId, folderId, name) => {
-    try {
-      getTableHeaderBody.value.agentId = agentId
-      getTableHeaderBody.value.fileId = fileId
-      getTableHeaderBody.value.folderId = folderId
-      compareFromCsvBody.value.agentId = agentId
-      compareFromCsvBody.value.fileId = fileId
-      compareFromCsvBody.value.folderId = folderId
-      compareBody.value.agentId = agentId
-      compareBody.value.fileId = fileId
-      compareBody.value.folderId = folderId
+      inferenceInfo.value.agentId = agentId
+      inferenceInfo.value.fileId = fileId
       fileName.value = name
-      const res = await getTableHeader(getTableHeaderBody.value)
-      console.log(res.data.data.name)
-      console.log(res.data.data.example)
-      tableHeaders.value = res.data.data.name.map((name, index) => ({
-        name: name,
-        example: res.data.data.example[index]
-      }))
     }
     catch (error) {
-      console.error('Failed to get table header:', error)
+      console.error('Failed to choose model file:', error)
     }
   }
   
@@ -485,16 +344,11 @@
   }
   
   const handleFileChange: UploadProps['onChange'] = (file, fileList) => {
-    compareFromCsvBody.value.file = file.raw
+    createBody.value.file = file.raw
   }
   
   const submitUpload = () => {
-    compareFromCsvMethod()
-  }
-  
-  const compareData = () => {
-    compareMethod()
-    inputDataVisible.value = false
+    createMethod()
   }
   
   const isAccessible = (ruleList) => {
