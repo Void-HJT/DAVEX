@@ -1,6 +1,8 @@
 package DavexAgent.module.test;
 
+import DavexBase.common.envelope.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -53,6 +55,35 @@ public class TestController {
 
         mpcMapper.insert(entity);
         return entity;
+    }
+
+    // 接收 Envelope 类型的请求
+    @PostMapping("/fileExchange")
+    public ResponseWrapper fileExchange(@RequestBody RequestWrapper requestWrapper) {
+        // 处理请求逻辑，以下为解析示例
+        RequestEnvelope requestEnvelope = requestWrapper.getEnvelope();
+        String sender = requestEnvelope.getHeader().getAuthentication().getSender();
+        String receiver = requestEnvelope.getHeader().getAuthentication().getReceiver();
+        String sharingType = requestEnvelope.getBody().getSharing().getType();
+        String fileId = (String) requestEnvelope.getBody().getSharing().getSetting().get("fileId");
+
+        // 打印输出，验证解析成功
+        System.out.println("Sender: " + sender);
+        System.out.println("Receiver: " + receiver);
+        System.out.println("Sharing Type: " + sharingType);
+        System.out.println("File ID: " + fileId);
+
+        ResponseWrapper responseWrapper = new ResponseWrapper();
+        ResponseEnvelope responseEnvelope = new ResponseEnvelope();
+        responseEnvelope.setHeader(requestEnvelope.getHeader());
+        ResponseBody responseBody = new ResponseBody();
+        responseBody.setData(requestEnvelope.getBody().getSharing().getSetting());
+        responseEnvelope.setBody(responseBody);
+        responseWrapper.setEnvelope(responseEnvelope);
+        // 业务逻辑处理，如文件交换操作
+
+        // 返回成功响应
+        return responseWrapper;
     }
 
 }
