@@ -51,6 +51,7 @@ public class MpcService {
             Path filePath = Paths.get(my.getBase_path()).resolve("programs").resolve(resource.getFilename());
             filePath = Utils.resolveFileNameConflict(filePath);
             try {
+                Files.createDirectories(filePath.getParent());
                 Files.copy(resource.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
                 mpc.setPath(Paths.get("programs").resolve(filePath.getFileName()).toString());
                 mpcMapper.insert(mpc);

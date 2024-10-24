@@ -1,7 +1,7 @@
 version: '1.0'
 
 my:
-  id: ${MY_ID:DAVEX-CX-GXX1}f
+  id: ${MY_ID:DAVEX-CX-GXX1}
   ip: ${MY_IP:10.176.34.171}
   name: ${MY_NAME:'171!'}
   description: ${MY_DESCRIPTION:'DAVEX Agent 171'}
