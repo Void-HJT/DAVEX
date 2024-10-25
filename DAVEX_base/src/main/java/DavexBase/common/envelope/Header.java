@@ -8,7 +8,8 @@ public class Header {
     private String version;
     private String timeStamp;
     private String hash;
-    private Authentication authentication;
-
+    private String requestId;
+    private String sender;
+    private String receiver;
     // Getters and Setters
 }
