@@ -1,5 +1,14 @@
 <template>
     <el-container>
+      <span style="display: block; margin-bottom: 8px;">选择代理</span>
+      <el-select v-model="agentId" placeholder="Select" style="width: 240px" @change="handleSelectAgent">
+        <el-option
+            v-for="item in agents"
+            :key="item.value"
+            :label="item.label"
+            :value="item.value"
+        />
+      </el-select>
       <el-header style="height: 50px">
         <div
             style="
@@ -149,6 +158,13 @@
         </div>
       </el-header>
       <el-main>
+        <el-descriptions
+            class="margin-top"
+            :title="'当前选择文件：' + fileName"
+            :column="3"
+            :size="'default'"
+            border
+        ></el-descriptions>
         <el-upload
             ref="upload"
             class="upload-demo"
@@ -198,12 +214,14 @@
   </template>
   
   <script lang="ts" setup>
-  import {getDirectory} from "../../api/comparison.js";
+  import {getAgent} from '../../api/testDve.js'
+  import {getDirectory, getRootByAgent} from '../../api/folderController.js'
   import {create} from "../../api/secureInfer.js";
   import {onMounted, ref} from "vue";
   import {genFileId, UploadInstance, UploadProps, UploadRawFile} from "element-plus";
   
   onMounted(() => {
+    getAgentMethod()
     getDirectoryMethod()
   })
   
@@ -213,13 +231,18 @@
   const flSuccessMessage = ref('')
   const flFailedMessage = ref('')
   const inputDataVisible = ref(false)
-  
+
+  const agents = ref([])
+  const agentId = ref('')
   const applicationId = 6
   const directoryData = ref([])
   const currentDirectoryData = ref([])
+  // const getDirectoryBody = ref({
+  //   applicationId: applicationId,
+  //   agentId: '5'
+  // })
   const getDirectoryBody = ref({
-    applicationId: applicationId,
-    agentId: '5'
+    rootId: '',
   })
   const folderRoute = ref([])
   const getTableHeaderBody = ref({
@@ -353,6 +376,25 @@
   
   const isAccessible = (ruleList) => {
     return ruleList.includes('comparison')
+  }
+
+  const getRootByAgentMethod = async (agentId) => {
+    const res = await getRootByAgent(agentId)
+    getDirectoryBody.value.rootId = res.data.data.uid
+  }
+
+  const getAgentMethod = async () => {
+    const res = await getAgent()
+    agents.value = res.data.body.data.map(item => ({
+      value: item.uid,
+      label: item.uid
+    }))
+  }
+
+  const handleSelectAgent = async (value) => {
+    agentId.value = value
+    await getRootByAgentMethod(agentId.value)
+    getDirectoryMethod()
   }
   </script>
   

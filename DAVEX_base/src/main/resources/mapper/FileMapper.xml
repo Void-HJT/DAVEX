@@ -24,9 +24,15 @@
         </collection>
     </resultMap>
 
+<!--    <select id="getFileInfo" resultMap="FileInfoMap"> SELECT f.uid, f.agent_id, f.folder_id, f.name,-->
+<!--        f.create_date, f.last_update, f.tag, f.size, f.description, f.expired_time, f.hash,-->
+<!--        f.example, f.type, r.uid as ruleId, r.agent_id as ruleAgentId, r.group_id, r.allowed_method-->
+<!--        FROM file f LEFT JOIN file_rule fr ON f.uid = fr.file_id LEFT JOIN rule r ON fr.rule_id =-->
+<!--        r.uid WHERE f.uid = #{fileId} AND f.agent_id = #{agentId} AND f.folder_id = #{folderId} </select>-->
+
     <select id="getFileInfo" resultMap="FileInfoMap"> SELECT f.uid, f.agent_id, f.folder_id, f.name,
-        f.create_date, f.last_update, f.tag, f.size, f.description, f.expired_time, f.hash,
-        f.example, f.type, r.uid as ruleId, r.agent_id as ruleAgentId, r.group_id, r.allowed_method
+        f.create_date, f.last_update, f.size, f.description, f.expired_time, f.hash,
+        f.example, f.type, r.uid as ruleId, r.expression as ruleExpression, r.description as ruleDescription
         FROM file f LEFT JOIN file_rule fr ON f.uid = fr.file_id LEFT JOIN rule r ON fr.rule_id =
         r.uid WHERE f.uid = #{fileId} AND f.agent_id = #{agentId} AND f.folder_id = #{folderId} </select>
 

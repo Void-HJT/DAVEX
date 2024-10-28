@@ -202,7 +202,7 @@ import {
   getAllFiles,
   userFileToTask,
 } from '../../api/locateCompute.js'
-import { getAlltask, getAllServers } from '../../api/mpC.js'
+// import { getAlltask, getAllServers } from '../../api/mpC.js'
 import { ref, onMounted, toRefs } from 'vue'
 import request from '../../utils/request'
 // import { getConnectedServer } from '../../api/user.js'

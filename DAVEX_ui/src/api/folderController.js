@@ -247,6 +247,16 @@ export const deleteFileRule = ({
   )
   return res
 }
+
+export const getRootByAgent = ( agentId ) => {
+  const params = new URLSearchParams()
+  params.append('agentId', agentId)
+  let res = request.post(
+      '/directory/fileFolder/getRootByAgent',
+      params.toString(),
+  )
+  return res
+}
 // export const uploadFile = ({
 //     agentId,
 //     folderId,

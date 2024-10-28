@@ -113,3 +113,8 @@ export const deleteApplicationGroup = ({
   )
   return res
 }
+
+export const getAgent = () => {
+  let res = request.get('/agents/list')
+  return res
+}
