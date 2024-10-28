@@ -1,5 +1,14 @@
 <template>
   <el-container>
+    <span style="display: block; margin-bottom: 8px;">选择代理</span>
+    <el-select v-model="agentId" placeholder="Select" style="width: 240px" @change="handleSelectAgent">
+      <el-option
+          v-for="item in agents"
+          :key="item.value"
+          :label="item.label"
+          :value="item.value"
+      />
+    </el-select>
     <el-header style="height: 50px">
       <div
           style="
@@ -96,7 +105,7 @@
           >
             <template v-slot="scope">
               <el-button
-                  v-if="scope.row.type === 'file' && isAccessible(scope.row.ruleList)"
+                  v-if="scope.row.type === 'file'"
                   link
                   type="primary"
                   @click="
@@ -110,15 +119,15 @@
               >
                 获取文件
               </el-button>
-              <el-button
-                  v-if="scope.row.type === 'file' && !isAccessible(scope.row.ruleList)"
-                  link
-                  type="danger"
-                  size="small"
-                  disabled
-              >
-                无权获取文件
-              </el-button>
+<!--              <el-button-->
+<!--                  v-if="scope.row.type === 'file' && !isAccessible(scope.row.ruleList)"-->
+<!--                  link-->
+<!--                  type="danger"-->
+<!--                  size="small"-->
+<!--                  disabled-->
+<!--              >-->
+<!--                无权获取文件-->
+<!--              </el-button>-->
             </template>
           </el-table-column>
         </el-table>
@@ -149,10 +158,13 @@
 </template>
 
 <script lang="ts" setup>
-import {getFile, getDirectory} from "../../api/direct.js";
+import {getAgent} from '../../api/testDve.js'
+import {getDirectory, getRootByAgent} from '../../api/folderController.js'
+import {getFile} from "../../api/direct.js";
 import {onMounted, ref} from "vue";
 
 onMounted(() => {
+  getAgentMethod()
   getDirectoryMethod()
 })
 
@@ -161,12 +173,17 @@ const transSuccessVisible = ref(false)
 const transFailedVisible = ref(false)
 const transFailedMessage = ref('');
 
+const agents = ref([])
+const agentId = ref('')
 const applicationId = 6
 const directoryData = ref([])
 const currentDirectoryData = ref([])
+// const getDirectoryBody = ref({
+//   applicationId: applicationId,
+//   agentId: '5'
+// })
 const getDirectoryBody = ref({
-  applicationId: applicationId,
-  agentId: '5'
+  rootId: '',
 })
 const folderRoute = ref([])
 const getFileBody = ref({
@@ -265,6 +282,25 @@ const formatDate = (row, column, cellValue) => {
 
 const isAccessible = (ruleList) => {
   return ruleList.includes('direct')
+}
+
+const getRootByAgentMethod = async (agentId) => {
+  const res = await getRootByAgent(agentId)
+  getDirectoryBody.value.rootId = res.data.data.uid
+}
+
+const getAgentMethod = async () => {
+  const res = await getAgent()
+  agents.value = res.data.body.data.map(item => ({
+    value: item.uid,
+    label: item.uid
+  }))
+}
+
+const handleSelectAgent = async (value) => {
+  agentId.value = value
+  await getRootByAgentMethod(agentId.value)
+  getDirectoryMethod()
 }
 </script>
 

@@ -1,5 +1,14 @@
 <template>
   <el-container>
+    <span style="display: block; margin-bottom: 8px;">选择代理</span>
+    <el-select v-model="agentId" placeholder="Select" style="width: 240px" @change="handleSelectAgent">
+      <el-option
+          v-for="item in agents"
+          :key="item.value"
+          :label="item.label"
+          :value="item.value"
+      />
+    </el-select>
     <el-header style="height: 50px">
       <div
         style="
@@ -563,13 +572,15 @@ import {
   getCenterInfoByCenterId,
   getGroupInfoByGroupId,
   getAgentInfoByAgentId,
+  getRootByAgent
 } from '../../api/folderController.js'
-import { getGroup, getRuleByGroup, getApplication } from '../../api/testDve.js'
+import { getGroup, getRuleByGroup, getApplication, getAgent } from '../../api/testDve.js'
 import { genFileId } from 'element-plus'
 import type { UploadInstance, UploadProps, UploadRawFile } from 'element-plus'
 import { nextTick, onMounted } from 'vue'
 
 onMounted(() => {
+  getAgentMethod()
   getDirectoryMethod()
   getGroups()
   getApplicationMethod()
@@ -585,6 +596,8 @@ const folderVisibleDialogClose = () => {
   folderVisibleBody.value.groupId = ''
 }
 
+const agents = ref([])
+const agentId = ref('')
 const selectedGroupUid = ref(null)
 const selectedAllowedMethod = ref(null)
 const directoryData = ref([])
@@ -951,7 +964,7 @@ const nextFileGroup = async (row) => {
 }
 
 const getDirectoryBody = ref({
-  rootId: '1',
+  rootId: '',
 })
 
 const getDirectoryByGroupBody = ref({
@@ -1067,6 +1080,25 @@ const updateGroupId = () => {
 // 更新 setFileRuleBody.allowedMethod
 const updateAllowedMethod = () => {
   setFileRuleBody.value.allowedMethod = selectedAllowedMethod.value
+}
+
+const getRootByAgentMethod = async (agentId) => {
+  const res = await getRootByAgent(agentId)
+  getDirectoryBody.value.rootId = res.data.data.uid
+}
+
+const getAgentMethod = async () => {
+  const res = await getAgent()
+  agents.value = res.data.body.data.map(item => ({
+    value: item.uid,
+    label: item.uid
+  }))
+}
+
+const handleSelectAgent = async (value) => {
+  agentId.value = value
+  await getRootByAgentMethod(agentId.value)
+  getDirectoryMethod()
 }
 </script>
 

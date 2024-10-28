@@ -159,7 +159,7 @@ import {
   userPostData,
   userFileToTask,
 } from '../../api/locateCompute.js'
-import { userCreateTask } from '../../api/mpC.js'
+// import { userCreateTask } from '../../api/mpC.js'
 
 onMounted(async () => {
   //加载页面时读取模型和协议
