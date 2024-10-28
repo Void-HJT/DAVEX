@@ -257,3 +257,10 @@ export const deleteFileRule = ({
 //     let res = request.post('/directory/fileFolder/uploadFile', params.toString(),formData)
 //     return res
 // }
+
+export const getRoot = () => {
+  let res = request.post(
+      '/directory/fileFolder/getRoot',
+  )
+  return res
+}

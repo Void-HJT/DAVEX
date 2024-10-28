@@ -159,4 +159,9 @@ public class FileFolderController {
             @RequestParam("agentId") String agentId) {
         return fileFolderService.getFolder(folderId, agentId);
     }
+
+    @PostMapping("/getRoot")
+    public Body<Folder> getRoot() {
+        return fileFolderService.getRoot();
+    }
 }

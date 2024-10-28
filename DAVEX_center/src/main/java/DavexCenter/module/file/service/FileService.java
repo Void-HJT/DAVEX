@@ -56,7 +56,7 @@ public class FileService {
         // 校验sha256
         String fileHash = getSha256(file);
         if (!fileHash.equals(fileInfo.getHash())) {
-            return Body.error(String.format("哈希校验失败，文件id: %d，代理id: %d",
+            return Body.error(String.format("哈希校验失败，文件id: %s，代理id: %s",
                     fileInfo.getUid(), fileInfo.getAgentId()));
         }
 
@@ -96,10 +96,10 @@ public class FileService {
             saveFileToPath(file, filePath);
         } catch (IOException e) {
             e.printStackTrace();
-            return Body.error(String.format("保存失败: 文件id %d，代理id: %d，文件名: %s，错误信息: %s",
+            return Body.error(String.format("保存失败: 文件id %s，代理id: %s，文件名: %s，错误信息: %s",
                     fileInfo.getUid(), fileInfo.getAgentId(), fileName, e.getMessage()));
         }
-        return Body.success(String.format("保存成功，文件id: %d，代理id: %d，文件名: %s",
+        return Body.success(String.format("保存成功，文件id: %s，代理id: %s，文件名: %s",
                 fileInfo.getUid(), fileInfo.getAgentId(), fileName));
     }
 
@@ -120,7 +120,7 @@ public class FileService {
             // 校验md5
             String fileHash = getSha256(file);
             if (!fileHash.equals(fileInfo.getHash())) {
-                results.add(String.format("哈希校验失败，文件id: %d，代理id: %d", fileInfo.getUid(), fileInfo.getAgentId()));
+                results.add(String.format("哈希校验失败，文件id: %s，代理id: %s", fileInfo.getUid(), fileInfo.getAgentId()));
                 flag = false;
                 continue;
             }
@@ -160,11 +160,11 @@ public class FileService {
             // 存储文件到结果管理区
             try {
                 saveFileToPath(file, filePath);
-                results.add(String.format("保存成功，文件id: %d，代理id: %d，文件名: %s",
+                results.add(String.format("保存成功，文件id: %s，代理id: %s，文件名: %s",
                         fileInfo.getUid(), fileInfo.getAgentId(), fileName));
             } catch (IOException e) {
                 e.printStackTrace();
-                results.add(String.format("保存失败: 文件id %d，代理id: %d，文件名: %s，错误信息: %s",
+                results.add(String.format("保存失败: 文件id %s，代理id: %s，文件名: %s，错误信息: %s",
                         fileInfo.getUid(), fileInfo.getAgentId(), fileName, e.getMessage()));
                 flag = false;
             }

@@ -168,4 +168,8 @@ public class FileFolderController {
         return fileFolderService.getDirectory2Agent(agentId, applicationId);
     }
 
+    @PostMapping("/getRootByAgent")
+    public Body<Folder> getRootByAgent(@RequestParam("agentId") String agentId) {
+        return fileFolderService.getRootByAgent(agentId);
+    }
 }

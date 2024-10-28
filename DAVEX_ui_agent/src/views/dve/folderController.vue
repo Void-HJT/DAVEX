@@ -563,13 +563,15 @@ import {
   getCenterInfoByCenterId,
   getGroupInfoByGroupId,
   getAgentInfoByAgentId,
+  getRoot
 } from '../../api/folderController.js'
 import { getGroup, getRuleByGroup, getApplication } from '../../api/testDve.js'
 import { genFileId } from 'element-plus'
 import type { UploadInstance, UploadProps, UploadRawFile } from 'element-plus'
 import { nextTick, onMounted } from 'vue'
 
-onMounted(() => {
+onMounted(async () => {
+  await getRootMethod()
   getDirectoryMethod()
   getGroups()
   getApplicationMethod()
@@ -585,6 +587,7 @@ const folderVisibleDialogClose = () => {
   folderVisibleBody.value.groupId = ''
 }
 
+const rootId = ref('')
 const selectedGroupUid = ref(null)
 const selectedAllowedMethod = ref(null)
 const directoryData = ref([])
@@ -951,17 +954,17 @@ const nextFileGroup = async (row) => {
 }
 
 const getDirectoryBody = ref({
-  rootId: '1',
+  rootId: rootId,
 })
 
 const getDirectoryByGroupBody = ref({
-  rootId: '1',
+  rootId: rootId,
   agentId: '5',
   groupId: '',
 })
 
 const getDirectoryByApplicationBody = ref({
-  rootId: '1',
+  rootId: rootId,
   agentId: '5',
   applicationId: '',
 })
@@ -1067,6 +1070,11 @@ const updateGroupId = () => {
 // 更新 setFileRuleBody.allowedMethod
 const updateAllowedMethod = () => {
   setFileRuleBody.value.allowedMethod = selectedAllowedMethod.value
+}
+
+const getRootMethod = async () => {
+  const res = await getRoot()
+  rootId.value = res.data.data.uid
 }
 </script>
 
