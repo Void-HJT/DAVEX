@@ -3,6 +3,7 @@ package DavexCenter.module.task.controller;
 
 
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -11,6 +12,22 @@ import DavexCenter.module.task.service.SecretFlowService;
 import DavexBase.common.My;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
+import java.io.File;
+import java.io.FileInputStream;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.mock.web.MockMultipartFile;
+import DavexBase.common.Body;
+import java.io.FileNotFoundException;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.mock.web.MockMultipartFile; // 导入 MockMultipartFile 的包
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 
 @RestController
 @RequestMapping("/SecretFlowTask")
@@ -78,6 +95,32 @@ public class SecretFlowController {
     public String stopMainRay() {
         // 调用 service 中的方法执行命令
         return secretFlowService.executeCommand("source sfenv/bin/activate && ray stop");
+    }
+
+    @PostMapping("/save/{fileName}")
+    public Body<String> saveFile(@PathVariable String fileName) {
+        String filePath = "/home/zw/SFFL/" + fileName;
+        File file = new File(filePath);
+
+        try (FileInputStream fileInputStream = new FileInputStream(file)) {
+            MultipartFile multipartFile = new MockMultipartFile(
+                    file.getName(),
+                    file.getName(),
+                    null,
+                    fileInputStream
+            );
+
+            // 调用服务保存文件
+            return secretFlowService.saveFile(multipartFile);
+        } catch (FileNotFoundException e) {
+            // 处理文件未找到的异常
+            e.printStackTrace();
+        } catch (IOException e) {
+            // 处理IO异常
+            e.printStackTrace();
+
+        }
+        return null;
     }
 
 }

@@ -565,6 +565,7 @@ public class FileFolderService {
     //
     private void mapFolderToDirectoryNode(Folder folder, DirectoryInfo node) {
         node.setUid(folder.getUid());
+        node.setAgentId(folder.getAgentId());
         node.setParentId(folder.getParentId());
         node.setName(folder.getName());
         node.setCreateDate(folder.getCreateDate());
@@ -574,6 +575,7 @@ public class FileFolderService {
     //
     private void mapFileToDirectoryNode(File file, DirectoryInfo node) {
         node.setUid(file.getUid());
+        node.setAgentId(file.getAgentId());
         node.setParentId(file.getFolderId());
         node.setName(file.getName());
         node.setCreateDate(file.getCreateDate());
@@ -744,5 +746,19 @@ public class FileFolderService {
         } catch (Exception e) {
             return Body.error(e.getMessage());
         }
+    }
+
+    public Body<Folder> getRoot() {
+        LambdaQueryWrapper<Folder> queryWrapper = Wrappers.<Folder>lambdaQuery().eq(Folder::getParentId, -1);
+        Folder folder = folderMapper.selectOne(queryWrapper);
+        return Body.success(folder, "查询成功");
+    }
+
+    public Body<Folder> getRootByAgent(String agentId) {
+        LambdaQueryWrapper<Folder> queryWrapper = Wrappers.<Folder>lambdaQuery()
+                .eq(Folder::getParentId, -1)
+                .eq(Folder::getAgentId, agentId);
+        Folder folder = folderMapper.selectOne(queryWrapper);
+        return Body.success(folder, "查询成功");
     }
 }

@@ -1,5 +1,14 @@
 <template>
   <el-container>
+    <span style="display: block; margin-bottom: 8px;">选择代理</span>
+    <el-select v-model="agentId" placeholder="Select" style="width: 240px" @change="handleSelectAgent">
+      <el-option
+          v-for="item in agents"
+          :key="item.value"
+          :label="item.label"
+          :value="item.value"
+      />
+    </el-select>
     <el-header style="height: 50px">
       <div
           style="
@@ -96,7 +105,7 @@
           >
             <template v-slot="scope">
               <el-button
-                  v-if="scope.row.type === 'file' && scope.row.name.endsWith('.csv') && isAccessible(scope.row.ruleList)"
+                  v-if="scope.row.type === 'file' && scope.row.name.endsWith('.csv')"
                   link
                   type="primary"
                   @click="
@@ -111,15 +120,15 @@
               >
                 查看表头信息
               </el-button>
-              <el-button
-                  v-if="scope.row.type === 'file' && scope.row.name.endsWith('.csv') && !isAccessible(scope.row.ruleList)"
-                  link
-                  type="danger"
-                  size="small"
-                  disabled
-              >
-                无权比对
-              </el-button>
+<!--              <el-button-->
+<!--                  v-if="scope.row.type === 'file' && scope.row.name.endsWith('.csv') && !isAccessible(scope.row.ruleList)"-->
+<!--                  link-->
+<!--                  type="danger"-->
+<!--                  size="small"-->
+<!--                  disabled-->
+<!--              >-->
+<!--                无权比对-->
+<!--              </el-button>-->
             </template>
           </el-table-column>
         </el-table>
@@ -275,11 +284,14 @@
 </template>
 
 <script lang="ts" setup>
-import {getDirectory, getTableHeader, compareFromCsv, compare} from "../../api/comparison.js";
+import {getAgent} from '../../api/testDve.js'
+import {getDirectory, getRootByAgent} from '../../api/folderController.js'
+import {getTableHeader, compareFromCsv, compare} from "../../api/comparison.js";
 import {onMounted, ref} from "vue";
 import {genFileId, UploadInstance, UploadProps, UploadRawFile} from "element-plus";
 
 onMounted(() => {
+  getAgentMethod()
   getDirectoryMethod()
 })
 
@@ -291,12 +303,17 @@ const compareFailedMessage = ref('');
 const selectAttributesVisible = ref(false)
 const inputDataVisible = ref(false)
 
+const agents = ref([])
+const agentId = ref('')
 const applicationId = 6
 const directoryData = ref([])
 const currentDirectoryData = ref([])
+// const getDirectoryBody = ref({
+//   applicationId: applicationId,
+//   agentId: '5'
+// })
 const getDirectoryBody = ref({
-  applicationId: applicationId,
-  agentId: '5'
+  rootId: '',
 })
 const folderRoute = ref([])
 const getTableHeaderBody = ref({
@@ -499,6 +516,25 @@ const compareData = () => {
 
 const isAccessible = (ruleList) => {
   return ruleList.includes('comparison')
+}
+
+const getRootByAgentMethod = async (agentId) => {
+  const res = await getRootByAgent(agentId)
+  getDirectoryBody.value.rootId = res.data.data.uid
+}
+
+const getAgentMethod = async () => {
+  const res = await getAgent()
+  agents.value = res.data.body.data.map(item => ({
+    value: item.uid,
+    label: item.uid
+  }))
+}
+
+const handleSelectAgent = async (value) => {
+  agentId.value = value
+  await getRootByAgentMethod(agentId.value)
+  getDirectoryMethod()
 }
 </script>
 
