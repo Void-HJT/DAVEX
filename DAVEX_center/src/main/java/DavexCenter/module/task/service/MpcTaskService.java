@@ -81,7 +81,7 @@ public class MpcTaskService {
     }
 
     public UploadAgentTaskInfo create(UploadAgentTaskInfo mpcTaskInfo) throws Exception {
-        if (mpcTaskInfo.getCenterId() != my.getId()) {
+        if (!my.getId().equals(mpcTaskInfo.getCenterId())) {
             throw new Exception("发送错误");
         }
 
