@@ -18,6 +18,9 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.mock.web.MockMultipartFile;
 import DavexBase.common.Body;
 import java.io.FileNotFoundException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -79,12 +82,25 @@ public class SecretFlowController {
 
 
 
-    @GetMapping("/activate-mainRay")
+    @GetMapping("/active-mainRay")
     public String activateMainRay(
             @RequestParam String port        // 参数化端口
     ) {
         // 构造命令字符串
         String command = String.format("source sfenv/bin/activate && ray start --head --node-ip-address=\"%s\" --port=\"%s\" --resources='{\"alice\": 16}' --include-dashboard=False --disable-usage-stats", my.getIp(), port);
+
+        // 调用 service 中的方法执行命令
+        return secretFlowService.executeCommand(command);
+    }
+
+    @GetMapping("/joinRay")
+    public String joinRay(
+            @RequestParam String ip,
+            @RequestParam String port,
+            @RequestParam String name
+    ) {
+        // 构造命令字符串
+        String command = String.format("source sfenv/bin/activate && ray start --address=\"%s:%s\"  --resources='{\"%s\": 16}' --disable-usage-stats", ip, port,name);
 
         // 调用 service 中的方法执行命令
         return secretFlowService.executeCommand(command);
@@ -99,7 +115,7 @@ public class SecretFlowController {
 
     @PostMapping("/save/{fileName}")
     public Body<String> saveFile(@PathVariable String fileName) {
-        String filePath = "/home/zw/SFFL/" + fileName;
+        String filePath = "/home/zw/SFFL/result/" + fileName;
         File file = new File(filePath);
 
         try (FileInputStream fileInputStream = new FileInputStream(file)) {
@@ -121,6 +137,36 @@ public class SecretFlowController {
 
         }
         return null;
+    }
+    private static final String UPLOAD_DIR = "/home/zw/SFFL/input/";
+
+    @PostMapping("/upload")
+    public String handleFileUpload(@RequestParam("file") MultipartFile file) {
+        if (file.isEmpty()) {
+            return "Please select a file to upload";
+        }
+
+        try {
+            // 确保目录存在
+            File uploadDir = new File(UPLOAD_DIR);
+            if (!uploadDir.exists()) {
+                uploadDir.mkdirs();
+            }
+
+            // 获取文件名
+            String fileName = file.getOriginalFilename();
+
+            // 构造文件的保存路径
+            Path filePath = Paths.get(UPLOAD_DIR + fileName);
+
+            // 将文件内容写入目标文件
+            Files.write(filePath, file.getBytes());
+
+            return "成功将 '" + fileName + "' 上传至 " + filePath;
+        } catch (IOException e) {
+            e.printStackTrace();
+            return "Failed to upload file: " + e.getMessage();
+        }
     }
 
 }
