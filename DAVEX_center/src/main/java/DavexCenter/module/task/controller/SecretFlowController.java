@@ -40,44 +40,15 @@ public class SecretFlowController {
 
     @Autowired
     private My my;
-    @GetMapping("/execute-script")
-    public String executeScript() {
-        try {
-            // 定义要执行的命令
-            String command = "source sfenv/bin/activate && python testFL.py";
-            ProcessBuilder processBuilder = new ProcessBuilder();
-            processBuilder.command("bash", "-c", command);
-            processBuilder.directory(new java.io.File("/home/zw/SFFL"));
+    @GetMapping("/executeTask")
+    public String executeScript(
+            @RequestParam String taskName,
+            @RequestParam String outputPath
+    ) {
+        String command = String.format("source sfenv/bin/activate && /home/zw/SFFL/sfenv/bin/python /home/zw/SFFL/%s.py --result_dir /home/zw/SFFL/%s",taskName,outputPath);
+        return secretFlowService.executeCommand(command);
 
-            // 启动进程并获取输出
-            Process process = processBuilder.start();
 
-            // 捕获标准输出
-            BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-            StringBuilder output = new StringBuilder();
-            String line;
-
-            while ((line = reader.readLine()) != null) {
-                output.append(line).append("\n");
-            }
-
-            // 捕获错误输出
-            BufferedReader errorReader = new BufferedReader(new InputStreamReader(process.getErrorStream()));
-            StringBuilder errorOutput = new StringBuilder();
-            while ((line = errorReader.readLine()) != null) {
-                errorOutput.append(line).append("\n");
-            }
-
-            int exitCode = process.waitFor();
-            if (exitCode == 0) {
-                return "Script executed successfully: \n" + output.toString();
-            } else {
-                return "Script execution failed with exit code: " + exitCode + "\nError Output: " + errorOutput.toString();
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-            return "Error occurred: " + e.getMessage();
-        }
     }
 
 
@@ -106,6 +77,20 @@ public class SecretFlowController {
         return secretFlowService.executeCommand(command);
     }
 
+    @GetMapping("/getRayStatus")
+    public String getRayStatus() {
+        String command = "source sfenv/bin/activate && ray status";
+        try {
+            // 执行命令并获取结果
+            String result = secretFlowService.executeCommand(command);
+            // 可以根据需要对结果进行处理，比如解析JSON等
+            return result;
+        } catch (Exception e) {
+            // 处理执行命令时发生的任何异常
+            // 记录日志、返回错误信息等
+            return "Error executing command: " + e.getMessage();
+        }
+    }
     //需要优化一下 主节点stop连带着其他人也stop
     @GetMapping("/stop-mainRay")
     public String stopMainRay() {
