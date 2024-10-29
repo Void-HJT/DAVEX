@@ -61,9 +61,9 @@ public class TestController {
     @PostMapping("/fileExchange")
     public ResponseWrapper fileExchange(@RequestBody RequestWrapper requestWrapper) {
         // 处理请求逻辑，以下为解析示例
-        RequestEnvelope requestEnvelope = requestWrapper.getEnvelope();
-        String sender = requestEnvelope.getHeader().getAuthentication().getSender();
-        String receiver = requestEnvelope.getHeader().getAuthentication().getReceiver();
+        RequestEnvelope requestEnvelope = requestWrapper.getRequestEnvelope();
+        String sender = requestEnvelope.getHeader().getSender();
+        String receiver = requestEnvelope.getHeader().getReceiver();
         String sharingType = requestEnvelope.getBody().getSharing().getType();
         String fileId = (String) requestEnvelope.getBody().getSharing().getSetting().get("fileId");
 
@@ -79,7 +79,7 @@ public class TestController {
         ResponseBody responseBody = new ResponseBody();
         responseBody.setData(requestEnvelope.getBody().getSharing().getSetting());
         responseEnvelope.setBody(responseBody);
-        responseWrapper.setEnvelope(responseEnvelope);
+        responseWrapper.setResponseEnvelope(responseEnvelope);
         // 业务逻辑处理，如文件交换操作
 
         // 返回成功响应
