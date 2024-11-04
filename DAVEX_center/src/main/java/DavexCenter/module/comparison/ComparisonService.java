@@ -1,5 +1,6 @@
 package DavexCenter.module.comparison;
 
+import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.nio.charset.Charset;
@@ -185,5 +186,99 @@ public class ComparisonService {
 
                 // 调用扩展后的 compare 方法进行多条数据的比对
                 return compare(applicationId, agentId, fileId, folderId, attributes, valuesList);
+        }
+
+        public Body<List<Boolean>> compareFromTXT(String applicationId, String agentId, String fileId, String folderId, MultipartFile file) throws Exception {
+
+                // 解析 txt 文件
+                List<List<String>> valuesList = new ArrayList<>();
+
+                try (BufferedReader reader = new BufferedReader(new InputStreamReader(file.getInputStream()))) {
+                        String line;
+
+                        // 逐行读取
+                        while ((line = reader.readLine()) != null) {
+                                // 根据空格分割每行的内容
+                                String[] values = line.trim().split("\\s+");
+                                List<String> row = new ArrayList<>();
+
+                                // 将分割后的内容添加到 List 中
+                                for (String value : values) {
+                                        row.add(value);
+                                }
+                                valuesList.add(row);
+                        }
+                }
+
+                System.out.println(valuesList);
+
+                WebClient webclient = centerWebClientService.center2AgentWebClient(agentId);
+                List<String> dataHash = webclient.post()
+                        .uri(uriBuilder -> uriBuilder.path("/comparison/getTXTHash")
+                                .queryParam("fileId", fileId)
+                                .queryParam("folderId", folderId)
+                                .queryParam("agentId", agentId).build())
+                        .retrieve()
+                        .bodyToMono(new ParameterizedTypeReference<Body<List<String>>>() {
+                        }).block().getData();
+                if (dataHash == null) {
+                        return Body.error("属性输入有误");
+                }
+
+                String fileName = webclient.post()
+                        .uri(uriBuilder -> uriBuilder.path("/comparison/getFileName")
+                                .queryParam("fileId", fileId)
+                                .queryParam("folderId", folderId)
+                                .queryParam("agentId", agentId).build())
+                        .retrieve()
+                        .bodyToMono(new ParameterizedTypeReference<Body<String>>() {
+                        }).block().getData();
+
+                // 存储每条数据的比对结果
+                List<Boolean> comparisonResults = new ArrayList<>();
+                List<Map<String, Object>> jsonResults = new ArrayList<>();
+
+                for (List<String> values : valuesList) {
+                        // 计算给定 values 的哈希值
+                        String delimiter = "|";  // 使用相同的分隔符
+                        StringBuilder sb = new StringBuilder();
+
+                        for (String value : values) {
+                                if (sb.length() > 0) {
+                                        sb.append(delimiter);  // 追加分隔符
+                                }
+                                sb.append(value);
+                        }
+
+                        String computedHash = DigestUtils.sha256Hex(sb.toString());
+
+                        // 检查计算出的哈希值是否在 dataHash 中
+                        boolean exists = dataHash.contains(computedHash);
+
+                        // 添加比对结果
+                        comparisonResults.add(exists);
+
+                        // 将每个比对的结果添加到 JSON 结果列表中
+                        Map<String, Object> result = new HashMap<>();
+                        result.put("exists", exists);
+                        result.put("computedHash", computedHash);
+                        result.put("values", values);
+
+                        jsonResults.add(result);
+                }
+
+                // 将所有比对结果存入一个 JSON 文件
+                ObjectMapper objectMapper = new ObjectMapper();
+                byte[] jsonBytes = objectMapper.writeValueAsBytes(jsonResults);
+
+                // 使用下划线拼接属性名生成文件名
+                String resultName = "agent_" + agentId + "_file_" + fileId + "_folder_" + folderId + "_dataNum_" + valuesList.size() + ".json";
+                MultipartFile ResultFile = new CustomMultipartFile(jsonBytes, resultName);
+
+                // 调用 saveComparisonFile 方法
+                comparisonFileService.saveComparison(ResultFile, fileService.getSha256(ResultFile), applicationId, agentId, fileId, folderId, fileName,
+                        uploadBaseDir, Timestamp.valueOf(LocalDateTime.now().plusWeeks(1)));
+
+                return Body.success(comparisonResults, "比对成功");
         }
 }

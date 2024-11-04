@@ -132,6 +132,47 @@ public class ComparisonService {
         return Body.success(hashResults, "获取哈希成功");
     }
 
+    public Body<List<String>> getTXTHash(String fileId, String folderId, String agentId) {
+
+        // 查找文件
+        LambdaQueryWrapper<File> queryWrapper = Wrappers.<File>lambdaQuery()
+                .eq(File::getUid, fileId)
+                .eq(File::getFolderId, folderId)
+                .eq(File::getAgentId, agentId);
+        File queryFile = fileMapper.selectOne(queryWrapper);
+        if (queryFile == null) {
+            return Body.error(String.format("找不到该文件，文件id: %d，文件夹id: %d", fileId, folderId));
+        }
+        String filePath = fileFolderService.getFilePath(queryFile, my.getBase_path());
+
+        List<String> hashResults = new ArrayList<>();
+        String delimiter = "|";  // 分隔符
+
+        try (BufferedReader reader = new BufferedReader(new FileReader(filePath))) {
+
+            String line;
+            while ((line = reader.readLine()) != null) {
+                String[] values = line.split(" ");
+                StringBuilder sb = new StringBuilder();
+
+                // 提取出每行的各个值，并用分隔符拼接成一个字符串
+                for (String value : values) {
+                    if (sb.length() > 0) {
+                        sb.append(delimiter);  // 追加分隔符
+                    }
+                    sb.append(value);
+                }
+
+                // 计算拼接字符串的SHA-256哈希值
+                String hash = DigestUtils.sha256Hex(sb.toString());
+                hashResults.add(hash);
+            }
+        } catch (IOException e) {
+            return Body.error("读取txt文件出错: " + e.getMessage());
+        }
+        return Body.success(hashResults, "获取哈希成功");
+    }
+
     public Body<String> getFileName(String fileId, String folderId, String agentId) {
         FileInfo fileInfo = fileFolderService.getFileInfo(fileId, agentId, folderId).getData();
         return Body.success(fileInfo.getName(), "获取成功");

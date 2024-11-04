@@ -83,4 +83,14 @@ public class ComparisonController {
 
         return comparisonService.compare(applicationId, agentId, fileId, folderId, attributes, valuesList);
     }
+
+    @PostMapping("/compareFromTXT")
+    public Body<List<Boolean>> compareFromTXT(@RequestParam("applicationId") String applicationId,
+                                              @RequestParam("agentId") String agentId,
+                                              @RequestParam("fileId") String fileId,
+                                              @RequestParam("folderId") String folderId,
+                                              @RequestPart("file") MultipartFile file) throws Exception {
+
+        return comparisonService.compareFromTXT(applicationId, agentId, fileId, folderId, file);
+    }
 }

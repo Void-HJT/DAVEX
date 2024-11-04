@@ -38,6 +38,15 @@ public class ComparisonController {
         return comparisonService.getHash(fileId, folderId, agentId, attributes);
     }
 
+    // agent计算txt文件的哈希
+    @PostMapping("/getTXTHash")
+    public Body<List<String>> getTXTHash(@RequestParam("fileId") String fileId,
+                                      @RequestParam("folderId") String folderId,
+                                      @RequestParam("agentId") String agentId) {
+
+        return comparisonService.getTXTHash(fileId, folderId, agentId);
+    }
+
     // 文件名
     @PostMapping("/getFileName")
     public Body<String> getFileName(@RequestParam("fileId") String fileId,
