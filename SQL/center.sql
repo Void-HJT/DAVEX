@@ -390,15 +390,28 @@ CREATE TABLE `folder_visibility` (
 -- Table structure for fl_output
 -- ----------------------------
 DROP TABLE IF EXISTS `fl_output`;
-CREATE TABLE `fl_output`  (
-  `uid` bigint NOT NULL AUTO_INCREMENT,
-  `hash` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
-  `path` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL,
-  `upload_date` timestamp NULL DEFAULT NULL,
-  `application_id` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL,
-  `expired_time` timestamp NULL DEFAULT NULL,
-  `name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL,
-  PRIMARY KEY (`uid`) USING BTREE
+
+CREATE TABLE `fl_output` (
+    `uid` bigint NOT NULL AUTO_INCREMENT,
+    `hash` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+    `path` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL,
+    `upload_date` timestamp NULL DEFAULT NULL,
+    `application_id` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL,
+    `expired_time` timestamp NULL DEFAULT NULL,
+    `name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL,
+    PRIMARY KEY (`uid`) USING BTREE
 ) ENGINE = InnoDB AUTO_INCREMENT = 83 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = DYNAMIC;
+
+DROP TABLE IF EXISTS `notification`;
+
+CREATE TABLE `notification` (
+    `uid` BIGINT NOT NULL AUTO_INCREMENT,
+    `appID` varchar(255) NOT NULL,
+    `title` varchar(255) NOT NULL,
+    `content` TEXT NOT NULL,
+    `time` TIMESTAMP NOT NULL,
+    `hasRead` BOOLEAN NOT NULL,
+    PRIMARY KEY (`uid`) USING BTREE
+) ENGINE = InnoDB AUTO_INCREMENT = 1 DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci;
 
 SET FOREIGN_KEY_CHECKS = 1;
