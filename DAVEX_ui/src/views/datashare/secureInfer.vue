@@ -178,7 +178,7 @@
           <template #trigger>
             <el-button type="primary" style="margin-right: 10px;">上传txt文件</el-button>
           </template>
-          <el-button class="ml-3" type="success" @click="submitUpload" style="margin-right: 10px;" :disabled="!getTableHeaderBody.fileId">
+          <el-button class="ml-3" type="success" @click="submitUpload" style="margin-right: 10px;">
             创建安全推理任务
           </el-button>
           <template #tip>
@@ -234,7 +234,7 @@
 
   const agents = ref([])
   const agentId = ref('')
-  const applicationId = 6
+  const applicationId = "DAVEX-C1-A1"
   const directoryData = ref([])
   const currentDirectoryData = ref([])
   // const getDirectoryBody = ref({

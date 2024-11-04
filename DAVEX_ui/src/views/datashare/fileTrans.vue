@@ -175,7 +175,7 @@ const transFailedMessage = ref('');
 
 const agents = ref([])
 const agentId = ref('')
-const applicationId = 6
+const applicationId = "DAVEX-C1-A1"
 const directoryData = ref([])
 const currentDirectoryData = ref([])
 // const getDirectoryBody = ref({

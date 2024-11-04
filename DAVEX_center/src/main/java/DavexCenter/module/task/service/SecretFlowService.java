@@ -64,7 +64,8 @@ public class SecretFlowService {
     }
     public Body<String> saveFile (MultipartFile file){
         String hash = fileService.getSha256(file);
-        return flFileController.saveFl(file,hash,my.getId(),null);
+        String applicationId = "Davex-C1-A1";
+        return flFileController.saveFl(file,hash,applicationId,null);
     }
 }
 
