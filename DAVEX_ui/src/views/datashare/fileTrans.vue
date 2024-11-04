@@ -218,6 +218,7 @@ const getFileMethod = async (uid, agentId, folderId) => {
     getFileBody.value.fileId = uid
     getFileBody.value.agentId = agentId
     getFileBody.value.folderId = folderId
+    console.log(getFileBody.value)
     const res = await getFile(getFileBody.value)
     if (res.data.code == 1) {
       transSuccessVisible.value = true

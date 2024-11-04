@@ -59,7 +59,7 @@ const router = createRouter({
         },
         {
           path: 'datashare/mPc',
-          component: () => import('@/views/datashare/mPc.vue'),
+          component: () => import('@/views/datashare/newMpc.vue'),
         },
         {
           path: 'datashare/pSi',

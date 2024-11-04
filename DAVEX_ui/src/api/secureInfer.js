@@ -5,7 +5,9 @@ export const create = ({ file, inferenceInfo }) => {
     // 使用 FormData 来处理文件上传
     const formData = new FormData()
     formData.append('file', file)
-    formData.append('inferenceInfo', inferenceInfo)
+    const inferenceInfoJson = JSON.stringify(inferenceInfo)
+    const inferenceInfoBlob = new Blob([inferenceInfoJson], { type: 'application/json' })
+    formData.append('inferenceInfo', inferenceInfoBlob)
     let res = request.post(
         'SecureInference/create',
         formData,  // 传递 FormData 对象
