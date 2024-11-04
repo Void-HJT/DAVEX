@@ -113,7 +113,7 @@
           >
             <template v-slot="scope">
               <el-button
-                  v-if="scope.row.type === 'file'"
+                  v-if="scope.row.type === 'file' && scope.row.fileType === 'mpc'"
                   link
                   type="primary"
                   @click="
@@ -129,7 +129,7 @@
                 选择第一方文件
               </el-button>
               <el-button
-                  v-if="scope.row.type === 'file'"
+                  v-if="scope.row.type === 'file' && scope.row.fileType === 'mpc'"
                   link
                   type="primary"
                   :disabled="partyNumber === 2"
@@ -183,17 +183,17 @@
           :size="'default'"
           border
       ></el-descriptions>
-      <div class="form-container">
-        <el-form
-            :model="createPsiTaskBody"
-            style="max-width: 60%"
-            class="styled-form"
-        >
-          <el-form-item label="主键">
-            <el-input v-model="createPsiTaskBody.runtimeParameters.PK"></el-input>
-          </el-form-item>
-        </el-form>
-      </div>
+      <!--      <div class="form-container">-->
+      <!--        <el-form-->
+      <!--            :model="createPsiTaskBody"-->
+      <!--            style="max-width: 60%"-->
+      <!--            class="styled-form"-->
+      <!--        >-->
+      <!--          <el-form-item label="主键">-->
+      <!--            <el-input v-model="createPsiTaskBody.runtimeParameters.PK"></el-input>-->
+      <!--          </el-form-item>-->
+      <!--        </el-form>-->
+      <!--      </div>-->
       <el-upload
           ref="upload"
           class="upload-demo"
@@ -208,7 +208,7 @@
           <el-button type="primary" style="margin-right: 10px;">上传输入文件</el-button>
         </template>
         <el-button class="ml-3" type="success" @click="submitUpload" style="margin-right: 10px;">
-          创建PSI任务
+          创建MPC任务
         </el-button>
         <template #tip>
           <div class="el-upload__tip text-red">
@@ -219,47 +219,47 @@
     </el-main>
   </el-container>
 
-<!--  <div>-->
-<!--    <div class="form-container">-->
-<!--      <el-form-->
-<!--        :model="createPsiTaskBody"-->
-<!--        style="max-width: 60%"-->
-<!--        class="styled-form"-->
-<!--      >-->
-<!--        <el-form-item label="主键">-->
-<!--          <el-input v-model="createPsiTaskBody.runtimeParameters.PK"></el-input>-->
-<!--        </el-form-item>-->
-<!--        <el-form-item label="AgentID">-->
-<!--          <el-input v-model="createPsiTaskBody.partInfo[0].agentID"></el-input>-->
-<!--        </el-form-item>-->
-<!--        <el-form-item label="文件ID">-->
-<!--          <el-input v-model="createPsiTaskBody.partInfo[0].fileID"></el-input>-->
-<!--        </el-form-item>-->
-<!--        <el-form-item label="选择协议">-->
-<!--          <el-input-->
-<!--            v-model="createPsiTaskBody.runtimeParameters.protocol"-->
-<!--          ></el-input>-->
-<!--        </el-form-item>-->
-<!--        <el-upload ref="photoRef" :auto-upload="false" :http-request="upload">-->
-<!--          <template #trigger>-->
-<!--            <el-button type="primary">选择文件</el-button>-->
-<!--          </template>-->
+  <!--  <div>-->
+  <!--    <div class="form-container">-->
+  <!--      <el-form-->
+  <!--        :model="createPsiTaskBody"-->
+  <!--        style="max-width: 60%"-->
+  <!--        class="styled-form"-->
+  <!--      >-->
+  <!--        <el-form-item label="主键">-->
+  <!--          <el-input v-model="createPsiTaskBody.runtimeParameters.PK"></el-input>-->
+  <!--        </el-form-item>-->
+  <!--        <el-form-item label="AgentID">-->
+  <!--          <el-input v-model="createPsiTaskBody.partInfo[0].agentID"></el-input>-->
+  <!--        </el-form-item>-->
+  <!--        <el-form-item label="文件ID">-->
+  <!--          <el-input v-model="createPsiTaskBody.partInfo[0].fileID"></el-input>-->
+  <!--        </el-form-item>-->
+  <!--        <el-form-item label="选择协议">-->
+  <!--          <el-input-->
+  <!--            v-model="createPsiTaskBody.runtimeParameters.protocol"-->
+  <!--          ></el-input>-->
+  <!--        </el-form-item>-->
+  <!--        <el-upload ref="photoRef" :auto-upload="false" :http-request="upload">-->
+  <!--          <template #trigger>-->
+  <!--            <el-button type="primary">选择文件</el-button>-->
+  <!--          </template>-->
 
-<!--          <el-button class="ml-3" type="success" @click="submitUpload">-->
-<!--            创建任务-->
-<!--          </el-button>-->
-<!--        </el-upload>-->
-<!--      </el-form>-->
-<!--    </div>-->
-<!--  </div>-->
-<!--  <el-dialog v-model="infoDialogVisible" title="提示信息" width="30%">-->
-<!--    <span>{{ infoDialogText }}</span>-->
-<!--    <template #footer>-->
-<!--      <span class="dialog-footer">-->
-<!--        <el-button @click="infoDialogVisible = false">关闭</el-button>-->
-<!--      </span>-->
-<!--    </template>-->
-<!--  </el-dialog>-->
+  <!--          <el-button class="ml-3" type="success" @click="submitUpload">-->
+  <!--            创建任务-->
+  <!--          </el-button>-->
+  <!--        </el-upload>-->
+  <!--      </el-form>-->
+  <!--    </div>-->
+  <!--  </div>-->
+  <!--  <el-dialog v-model="infoDialogVisible" title="提示信息" width="30%">-->
+  <!--    <span>{{ infoDialogText }}</span>-->
+  <!--    <template #footer>-->
+  <!--      <span class="dialog-footer">-->
+  <!--        <el-button @click="infoDialogVisible = false">关闭</el-button>-->
+  <!--      </span>-->
+  <!--    </template>-->
+  <!--  </el-dialog>-->
   <el-dialog v-model="psiSuccessVisible" title="创建完成" width="30%">
     <span>{{ psiSuccessMessage }}</span>
     <template #footer>
@@ -316,10 +316,10 @@ const partyNumbers = [
     value: 2,
     label: '2',
   },
-  // {
-  //   value: 3,
-  //   label: '3',
-  // }
+  {
+    value: 3,
+    label: '3',
+  }
 ]
 const partyNumber = ref(2)
 const directoryData = ref([])
@@ -330,29 +330,6 @@ const getDirectoryBody = ref({
 const folderRoute = ref([])
 const fileName = ref('')
 const secondFileName = ref('')
-const createPsiTaskBody = ref({
-  partInfo: [
-    {
-      agentID: "", //需要填写
-      part: 1, //默认
-      fileID: "", //需要填写
-    }
-  ],
-  applicationId: "DAVEX-C1-A1", //后台配置
-  centerId: "DAVEX-C1", //后台配置
-  compileParameters: {},
-  host: '10.176.34.171', //后台配置
-  mpcId: 'PSI_GARNET', //后台配置
-  n: 2, //目前只需要2方
-  part: 0, //发起方默认为第0方
-  port: 6000, //后台配置 无需用户在前端选择端口
-  runtimeParameters: {
-    PK: '', //需要手动输入，可能可以采用读取的方式
-    protocol: 'semi2k-party', //目前只支持一个协议 但是后续可能会有多个协议
-  },
-  status: 'INIT', //默认INIT
-  taskType: 'GARNET_PSI', //后台配置
-})
 // const createPsiTaskBody = ref({
 //   partInfo: [
 //     {
@@ -366,22 +343,50 @@ const createPsiTaskBody = ref({
 //       fileID: "", //需要填写
 //     }
 //   ],
-//   applicationId: "DAVEX-C1-AXX1", //后台配置
+//   applicationId: "DAVEX-C1-A1", //后台配置
 //   centerId: "DAVEX-C1", //后台配置
 //   compileParameters: {},
-//   host: '10.176.37.50', //后台配置
-//   mpcId: 'correction-supervision', //后台配置
-//   mpcName: "xxx",
+//   host: '10.176.34.171', //后台配置
+//   mpcId: 'PSI_GARNET', //后台配置
 //   n: 2, //目前只需要2方
 //   part: 0, //发起方默认为第0方
 //   port: 6000, //后台配置 无需用户在前端选择端口
 //   runtimeParameters: {
-//     protocol: 'replicated-ring-party', //目前只支持一个协议 但是后续可能会有多个协议
+//     PK: '', //需要手动输入，可能可以采用读取的方式
+//     protocol: 'semi2k-party', //目前只支持一个协议 但是后续可能会有多个协议
 //   },
 //   status: 'INIT', //默认INIT
-//   taskType: 'GARNET_MPC', //后台配置
-//   uid: null
+//   taskType: 'GARNET_PSI', //后台配置
 // })
+const createPsiTaskBody = ref({
+  partInfo: [
+    {
+      agentID: "", //需要填写
+      part: 1, //默认
+      fileID: "", //需要填写
+    },
+    {
+      agentID: "", //需要填写
+      part: 2, //默认
+      fileID: "", //需要填写
+    }
+  ],
+  applicationId: "DAVEX-C1-AXX1", //后台配置
+  centerId: "DAVEX-C1", //后台配置
+  compileParameters: {},
+  host: '10.176.37.50', //后台配置
+  mpcId: 'correction-supervision', //后台配置
+  mpcName: "xxx",
+  n: 2, //目前只需要2方
+  part: 0, //发起方默认为第0方
+  port: 6000, //后台配置 无需用户在前端选择端口
+  runtimeParameters: {
+    protocol: 'replicated-ring-party', //目前只支持一个协议 但是后续可能会有多个协议
+  },
+  status: 'INIT', //默认INIT
+  taskType: 'GARNET_MPC', //后台配置
+  uid: null
+})
 
 const createBody = ref({
   file: null as File | null,
@@ -424,16 +429,16 @@ const createMethod = async () => {
     const res = await createPsiTask(createBody.value)
     console.log(res.data)
     if (res.data.body.code == 1) {
-      psiSuccessMessage.value = `PSI任务创建完成`
+      psiSuccessMessage.value = `MPC任务创建完成`
       psiSuccessVisible.value = true
     }
     else {
-      psiFailedMessage.value = res.data.body.message
+      psiFailedMessage.value = res.data.message
       psiFailedVisible.value = true
     }
   }
   catch (error) {
-    console.error('Failed to create PSI task:', error)
+    console.error('Failed to create MPC task:', error)
   }
 }
 

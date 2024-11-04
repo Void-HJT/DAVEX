@@ -104,7 +104,7 @@
             >
               <template v-slot="scope">
                 <el-button
-                    v-if="scope.row.type === 'file' && scope.row.fileType === 'Model'"
+                    v-if="scope.row.type === 'file' && scope.row.fileType === 'model'"
                     link
                     type="primary"
                     @click="
@@ -272,19 +272,20 @@
   
   const createMethod = async () => {
     try {
+      console.log(createBody.value)
       const res = await create(createBody.value)
       console.log(res.data)
-      if (res.data.code == 1) {
+      if (res.data.body.code == 1) {
         flSuccessMessage.value = `安全推理任务创建完成`
         flSuccessVisible.value = true
       }
       else {
-        flFailedMessage.value = res.data.message
+        flFailedMessage.value = res.data.body.message
         flFailedVisible.value = true
       }
     }
     catch (error) {
-      console.error('Failed to compare:', error)
+      console.error('Failed to create secure inference task:', error)
     }
   }
   
