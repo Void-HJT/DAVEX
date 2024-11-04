@@ -330,3 +330,60 @@
 }
 
 ```
+
+
+```json
+{
+  "uid": "correction-supervision", 
+  "centerId": "DAVEX-CXX171", 
+  "name": "社区监督",  
+  "compileParameters": [
+  ], 
+  "runtimeParameters": [
+    {
+      "name": "protocol", 
+      "limit": {
+        "defaultValue": "replicated-ring-party"
+      }, 
+      "required": true, 
+      "auto": false, 
+      "limitType": "STRING", 
+      "posORflag": null, 
+      "description": "运行虚拟机", 
+      "parameterType": "FLAG"
+    }
+  ]
+}
+```
+
+
+```json
+{
+  "partInfo": [{
+    "agentID":"DAVEX-CXX171-GXX173",
+    "part":1,
+    "fileID":"DAVEX-CXX171-GXX173-D2"
+  },
+  {
+    "agentID":"DAVEX-CXX171-GXX50",
+    "part":2,
+    "fileID":"DAVEX-CXX171-GXX50-D1"
+  }],
+  "applicationId": "DAVEX-CXX171-AXX1",
+  "centerId": "DAVEX-CXX171",
+  "compileParameters": {
+  },
+  "host": "10.176.34.171",
+  "mpcId": "correction-supervision",
+  "mpcName": "xxx",
+  "n": 3,
+  "part": 0,
+  "port": 6000,
+  "runtimeParameters": {
+    "protocol": "replicated-ring-party" 
+  },
+  "status": "INIT",
+  "taskType": "GARNET_MPC",
+  "uid": null
+}
+```
