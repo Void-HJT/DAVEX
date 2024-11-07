@@ -15,6 +15,8 @@ import DavexBase.common.Body;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.beans.factory.annotation.Autowired;
+import java.io.IOException;
+
 
 
 @Service
@@ -26,7 +28,7 @@ public class SecretFlowService {
     @Autowired
     private My my;
     // 方法接受一个字符串参数作为命令，并执行它
-    public String executeCommand(String command) {
+    public Body<String> executeCommand(String command) {
         try {
             ProcessBuilder processBuilder = new ProcessBuilder();
             processBuilder.command("bash", "-c", command);
@@ -53,13 +55,16 @@ public class SecretFlowService {
 
             int exitCode = process.waitFor();
             if (exitCode == 0) {
-                return "Command executed successfully: \n" + output.toString();
+                return Body.success("Command executed successfully: \n" + output.toString());
             } else {
-                return "Command execution failed with exit code: " + exitCode + "\nError Output: " + errorOutput.toString();
+                return Body.error("Command execution failed with exit code: " + exitCode + "\nError Output: " + errorOutput.toString());
             }
-        } catch (Exception e) {
-            e.printStackTrace();
-            return "Error occurred: " + e.getMessage();
+            } catch (IOException e) {
+                e.printStackTrace();
+                return Body.error(String.format(e.getMessage()));
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt(); // 重新设置中断状态
+            return Body.error("The process was interrupted");
         }
     }
     public Body<String> saveFile (MultipartFile file){
