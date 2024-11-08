@@ -1,7 +1,7 @@
 import axios from 'axios'
 import { useUserStore } from '../stores'
 
-const useStore = useUserStore()
+// const useStore = useUserStore()
 
 // const baseURL = 'http://10.176.34.50:8080/'
 // const baseURL = 'http://10.176.34.171:9999/'
@@ -12,16 +12,26 @@ const instance = axios.create({
   timeout: 10000,
 })
 //请求拦截器
+// instance.interceptors.request.use(
+//   (config) => {
+//     // TODO 2. 携带token
+//
+//     if (useStore.token) {
+//       config.headers.token = useStore.token
+//     }
+//     return config
+//   },
+//   (err) => Promise.reject(err),
+// )
 instance.interceptors.request.use(
-  (config) => {
-    // TODO 2. 携带token
-
-    if (useStore.token) {
-      config.headers.token = useStore.token
-    }
-    return config
-  },
-  (err) => Promise.reject(err),
+    (config) => {
+        const token = localStorage.getItem('token') // 从 localStorage 获取 token
+        if (token) {
+            config.headers.token = token
+        }
+        return config
+    },
+    (err) => Promise.reject(err),
 )
 //响应拦截器
 instance.interceptors.response.use(

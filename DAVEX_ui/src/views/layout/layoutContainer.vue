@@ -89,6 +89,10 @@ const handleCommand = (key) => {
             <span class="centered-text">编写MPC代码</span>
           </el-menu-item>
         </el-sub-menu> -->
+        <el-menu-item index="/user/notification">
+          <el-icon><Message /></el-icon>
+          <span class="centered-text">消息</span>
+        </el-menu-item>
         <el-sub-menu index="/dve">
           <template #title>
             <el-icon><UserFilled /></el-icon>
