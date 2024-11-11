@@ -97,6 +97,10 @@ const router = createRouter({
           path: 'result/fL',
           component: () => import('@/views/result/fL.vue'),
         },
+        {
+          path: 'user/notification',
+          component: () => import('@/views/user/notification.vue'),
+        },
       ],
     }, //布局
   ],

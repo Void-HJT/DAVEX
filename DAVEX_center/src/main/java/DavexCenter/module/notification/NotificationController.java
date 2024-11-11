@@ -37,6 +37,11 @@ public class NotificationController {
         return "success";
     }
 
+    @GetMapping("/listUnread")
+    public Page<Notification> listUnread(@RequestParam String appID, @RequestParam Integer page, @RequestParam Integer size) {
+        return notificationService.getUnreadNotification(appID, page, size);
+    }
+
     // @GetMapping("test")
     // public void test(@RequestParam String param) {
     // notificationService.setMessage("DAVEX-C1-AXX1", param, param);

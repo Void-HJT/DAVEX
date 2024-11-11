@@ -341,7 +341,7 @@ const createPsiTaskBody = ref({
   applicationId: "DAVEX-C1-A1", //后台配置
   centerId: "DAVEX-C1", //后台配置
   compileParameters: {},
-  host: '10.176.34.171', //后台配置
+  host: '10.176.37.50', //后台配置
   mpcId: 'PSI_GARNET', //后台配置
   n: 2, //目前只需要2方
   part: 0, //发起方默认为第0方
