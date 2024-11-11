@@ -91,7 +91,7 @@ const handleCommand = (key) => {
         </el-sub-menu> -->
         <el-menu-item index="/user/notification">
           <el-icon><Message /></el-icon>
-          <span class="centered-text">消息</span>
+          <span class="centered-text">消息中心</span>
         </el-menu-item>
         <el-sub-menu index="/dve">
           <template #title>
