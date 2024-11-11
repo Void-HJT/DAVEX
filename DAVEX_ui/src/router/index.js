@@ -74,6 +74,10 @@ const router = createRouter({
           component: () => import('@/views/datashare/secureInfer.vue'),
         },
         {
+          path: 'datashare/fLearning',
+          component: () => import('@/views/datashare/fLearning.vue'),
+        },
+        {
           path: 'result/fileTrans',
           component: () => import('@/views/result/fileTrans.vue'),
         },
