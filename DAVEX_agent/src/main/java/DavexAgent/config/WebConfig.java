@@ -18,6 +18,7 @@ public class WebConfig implements WebMvcConfigurer {
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(authenticationInterceptor)
                 .addPathPatterns("/**")  // 对所有路径进行拦截
+                //更改下列用于测试！！！
                 .excludePathPatterns("/**"); // 对公开路径不做拦截
     }
 

@@ -1,6 +1,7 @@
 package DavexAgent.module.auth.controller;
 
 
+import DavexBase.common.AuthTokenCache;
 import DavexBase.service.auth.TokenValidationService;
 import DavexBase.info.TokenResult;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,6 +14,9 @@ public class AuthController {
 
     @Autowired
     TokenValidationService tokenValidationService;
+
+    @Autowired
+    AuthTokenCache authTokenCache;
 
     @PostMapping("/getToken")
     public TokenResult getToken(@RequestParam String username,
@@ -35,5 +39,19 @@ public class AuthController {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+
+    @PostMapping("/getTokenFromCache")
+    public TokenResult getTokenFromCache(@RequestParam String authId)
+    {
+        TokenResult tokenResult = authTokenCache.getToken(authId);
+        return tokenResult;
+    }
+
+    @PostMapping("/deleteCache")
+    public boolean deleteCache(){
+        authTokenCache.clearCache();
+        return true;
     }
 }

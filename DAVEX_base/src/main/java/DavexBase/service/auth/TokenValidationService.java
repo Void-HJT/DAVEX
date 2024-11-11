@@ -26,6 +26,8 @@ import org.springframework.web.client.RestTemplate;
 import java.security.KeyFactory;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Logger;
+
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 
@@ -80,7 +82,7 @@ public class TokenValidationService {
 //            System.err.println("TokenUsername: " + usernameInToken);
             
             if (!authenticationId.equalsIgnoreCase(usernameInToken)) {
-                throw new RuntimeException("Token parsing failed: " + usernameInToken);
+                throw new RuntimeException("TokenId does not match authId : " + " TokenId："+authenticationId+" authId："+usernameInToken);
                 //return false; // 用户ID不匹配的情况
             }
         } catch (Exception e) {
@@ -190,14 +192,15 @@ public class TokenValidationService {
 
     public void updatePublicKey(String username, String password, String targetId) throws Exception {
 
-        LambdaQueryWrapper<Keycloak> queryWrapper = Wrappers.<Keycloak>lambdaQuery().eq(Keycloak::getAuthenticationId, targetId);
+        LambdaQueryWrapper<Keycloak> queryWrapper = Wrappers.lambdaQuery(Keycloak.class).eq(Keycloak::getAuthenticationId, targetId);
         Keycloak keycloak = keycloakMapper.selectOne(queryWrapper);
-        if(keycloak==null){throw new RuntimeException("no authId");}
+        if (keycloak == null) {
+            throw new RuntimeException("no authId");
+        }
 
         // 获取Access Token
         TokenResult tokenResult = getToken(username, password, targetId);
         String accessToken = tokenResult.getAccessToken();
-        String refreshToken = tokenResult.getRefreshToken();
 
         // 请求JWKS端点
         String jwksUrl = keycloak.getServerUrl() + "/realms/" + keycloak.getRealm() + "/protocol/openid-connect/certs";
@@ -214,10 +217,13 @@ public class TokenValidationService {
             throw new RuntimeException("No keys found in JWKS");
         }
 
-        // 获取指定的key
-        Map<String, Object> key = keys.get(0); // 注意：这里我们假设只存在一个主key，实际应用中应按需要选择
-        List<String> x5cList = (List<String>) key.get("x5c"); // x5c 是证书链列表
+        // 筛选出`RS256`算法且`use`为`SIG`的密钥
+        Map<String, Object> signingKey = keys.stream()
+                .filter(key -> "RS256".equals(key.get("alg")) && "sig".equals(key.get("use")))
+                .findFirst()
+                .orElseThrow(() -> new RuntimeException("No RS256 signing key found in JWKS"));
 
+        List<String> x5cList = (List<String>) signingKey.get("x5c");
         if (x5cList == null || x5cList.isEmpty()) {
             throw new RuntimeException("No certificate chain (x5c) found in key");
         }
@@ -235,13 +241,12 @@ public class TokenValidationService {
         credentials.setTargetId(targetId);
         credentials.setPublicKey(Base64.getEncoder().encodeToString(publicKey.getEncoded()));
 
-        //credentials.setExpiredTime();
-
         keycloakCredentialsMapper.updateById(credentials);
 
         // 登出以销毁session
-        logout(keycloak.getServerUrl(), keycloak.getRealm(), keycloak.getClientId(), refreshToken,keycloak.getClientSecret());
+        logout(keycloak.getServerUrl(), keycloak.getRealm(), keycloak.getClientId(), tokenResult.getRefreshToken(), keycloak.getClientSecret());
     }
+
 
     private void logout(String keycloakServerUrl, String realm, String clientId, String refreshToken,String clientSecret) {
         String logoutUrl = keycloakServerUrl + "/realms/" + realm + "/protocol/openid-connect/logout";
