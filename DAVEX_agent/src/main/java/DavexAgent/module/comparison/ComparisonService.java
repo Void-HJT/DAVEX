@@ -73,6 +73,39 @@ public class ComparisonService {
         }
     }
 
+    public Body<List<String>> getTXTExample(String fileId, String folderId, String agentId){
+        // 查找文件
+        LambdaQueryWrapper<File> queryWrapper = Wrappers.<File>lambdaQuery()
+                .eq(File::getUid, fileId)
+                .eq(File::getFolderId, folderId)
+                .eq(File::getAgentId, agentId);
+        File queryFile = fileMapper.selectOne(queryWrapper);
+        if (queryFile == null) {
+            return Body.error(String.format("找不到该文件，文件id: %d，文件夹id: %d", fileId, folderId));
+        }
+        String filePath = fileFolderService.getFilePath(queryFile, my.getBase_path());
+
+        List<String> firstLine = new ArrayList<>();
+
+        try (BufferedReader br = new BufferedReader(new FileReader(filePath))) {
+            // 读取第一行
+            String line = br.readLine();
+
+            if (line != null) {
+                // 使用空格分隔第一行的内容，并将其添加到 firstLine 中
+                String[] dataArray = line.split("\\s+");  // "\\s+" 匹配一个或多个空格
+
+                // 将分割后的数据放入 List
+                for (String data : dataArray) {
+                    firstLine.add(data);
+                }
+            }
+            return Body.success(firstLine, "解析成功");
+        } catch (IOException e) {
+            return Body.error("解析txt文件时出错: " + e.getMessage());
+        }
+    }
+
     public Body<List<String>> getHash(String fileId, String folderId, String agentId,
                                          List<String> attributes) {
 

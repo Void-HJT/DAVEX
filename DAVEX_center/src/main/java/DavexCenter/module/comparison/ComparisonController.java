@@ -37,6 +37,15 @@ public class ComparisonController {
         return comparisonService.getTableHeader(agentId, fileId, folderId);
     }
 
+    // center请求txt第一行
+    @PostMapping("/getTXTExample")
+    public Body<List<String>> getTXTExample(@RequestParam("agentId") String agentId,
+                                            @RequestParam("fileId") String fileId,
+                                            @RequestParam("folderId") String folderId) throws Exception {
+
+        return comparisonService.getTXTExample(agentId, fileId, folderId);
+    }
+
     // center选择属性并获取agent所有数据相应属性的哈希,与己方哈希进行比对
     @PostMapping("/compare")
     public Body<List<Boolean>> compare(@RequestParam("applicationId") String applicationId,
@@ -93,4 +102,32 @@ public class ComparisonController {
 
         return comparisonService.compareFromTXT(applicationId, agentId, fileId, folderId, file);
     }
+
+    // 处理前端传值问题
+    @PostMapping("/compareTXTFromJson")
+    public Body<List<Boolean>> compareTXTFromJson(
+            @RequestParam("applicationId") String applicationId,
+            @RequestParam("agentId") String agentId,
+            @RequestParam("fileId") String fileId,
+            @RequestParam("folderId") String folderId,
+            @RequestParam("valuesList") String valuesListJson
+    ) throws Exception {
+        ObjectMapper objectMapper = new ObjectMapper();
+
+        // 将 JSON 字符串转换为 Java List
+        List<List<String>> valuesList = objectMapper.readValue(valuesListJson, new TypeReference<List<List<String>>>(){});
+        System.out.println("ApplicationId: " + applicationId);
+        System.out.println("AgentId: " + agentId);
+        System.out.println("FileId: " + fileId);
+        System.out.println("FolderId: " + folderId);
+        System.out.println("ValuesList: " + valuesList);
+
+        return comparisonService.compareTXT(applicationId, agentId, fileId, folderId, valuesList);
+    }
+
+//    @PostMapping("/test")
+//    public String test() throws Exception {
+//
+//        return comparisonService.test();
+//    }
 }

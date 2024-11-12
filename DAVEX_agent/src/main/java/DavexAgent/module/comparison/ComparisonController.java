@@ -28,6 +28,15 @@ public class ComparisonController {
         return comparisonService.getCsvHeader(fileId, folderId, agentId);
     }
 
+    // agent解析csv文件表头
+    @PostMapping("/getTXTExample")
+    public Body<List<String>> getTXTExample(@RequestParam("fileId") String fileId,
+                                          @RequestParam("folderId") String folderId,
+                                          @RequestParam("agentId") String agentId) {
+
+        return comparisonService.getTXTExample(fileId, folderId, agentId);
+    }
+
     // agent计算哈希
     @PostMapping("/getHash")
     public Body<List<String>> getHash(@RequestParam("fileId") String fileId,
