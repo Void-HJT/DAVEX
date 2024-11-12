@@ -1,10 +1,7 @@
 package DavexCenter.module.notification;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 
@@ -40,6 +37,16 @@ public class NotificationController {
     @GetMapping("/listUnread")
     public Page<Notification> listUnread(@RequestParam String appID, @RequestParam Integer page, @RequestParam Integer size) {
         return notificationService.getUnreadNotification(appID, page, size);
+    }
+
+    @PostMapping("/set")
+    public String set(@RequestParam String appID, @RequestParam String title, @RequestParam String content) {
+        try {
+            notificationService.setMessage(appID, title, content);
+        } catch (Exception e) {
+            return e.getMessage();
+        }
+        return "success";
     }
 
     // @GetMapping("test")

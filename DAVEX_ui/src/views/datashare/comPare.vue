@@ -292,7 +292,7 @@ import {genFileId, UploadInstance, UploadProps, UploadRawFile} from "element-plu
 
 onMounted(() => {
   getAgentMethod()
-  getDirectoryMethod()
+  // getDirectoryMethod()
 })
 
 // 对话框是否可见
