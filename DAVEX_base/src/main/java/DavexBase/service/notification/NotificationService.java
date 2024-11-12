@@ -48,4 +48,13 @@ public class NotificationService {
         notificationMapper.updateById(message);
     }
 
+    public Page<Notification> getUnreadNotification(String appID, Integer page, Integer size) {
+        Page<Notification> rowPage = new Page<>(page, size);
+        rowPage.addOrder(OrderItem.desc("time"));
+        LambdaQueryWrapper<Notification> queryWrapper = Wrappers.<Notification>lambdaQuery()
+                .eq(Notification::getAppID, appID)
+                .eq(Notification::getHasRead, false);
+        return notificationMapper.selectPage(rowPage, queryWrapper);
+    }
+
 }
