@@ -294,7 +294,7 @@ import axios from 'axios'
 
 onMounted(() => {
   getAgentMethod()
-  getDirectoryMethod()
+  // getDirectoryMethod()
 })
 
 const psiSuccessVisible = ref(false)
@@ -424,7 +424,7 @@ const createMethod = async () => {
     const res = await createPsiTask(createBody.value)
     console.log(res.data)
     if (res.data.body.code == 1) {
-      psiSuccessMessage.value = `PSI任务创建完成`
+      psiSuccessMessage.value = `PSI任务创建完成，执行完成后将通过消息中心提示`
       psiSuccessVisible.value = true
     }
     else {

@@ -222,7 +222,7 @@
   
   onMounted(() => {
     getAgentMethod()
-    getDirectoryMethod()
+    // getDirectoryMethod()
   })
   
   // 对话框是否可见

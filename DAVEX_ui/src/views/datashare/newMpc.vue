@@ -294,7 +294,7 @@ import axios from 'axios'
 
 onMounted(() => {
   getAgentMethod()
-  getDirectoryMethod()
+  // getDirectoryMethod()
 })
 
 const psiSuccessVisible = ref(false)

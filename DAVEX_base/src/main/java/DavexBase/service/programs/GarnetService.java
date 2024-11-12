@@ -217,7 +217,7 @@ public class GarnetService {
                 "-h", mpcTask.getHost(),
                 "-pn", mpcTask.getPort().toString(),
                 "-p", part.toString(),
-                "-u",
+//                "-u",
                 mpc_name));
         ProcessBuilder processBuilder = new ProcessBuilder(command).directory(garnet_directory);
         logger.info("运行命令：" + command.toString());
