@@ -6,7 +6,7 @@
   <el-button type="primary" @click="activeRayMethod">创建ray节点</el-button>
   <el-button type="primary" @click="stopRayMethod">关闭ray节点</el-button>
   <el-button type="primary" @click="getRayStatusMethod">查看节点状态</el-button>
-  <el-select v-model="agentId" placeholder="选择代理" style="width: 240px;margin-left: 15px;" @change="handleSelectAgent">
+  <el-select v-model="agentId" placeholder="选择代理" style="width: 240px;margin-left: 15px;margin-right: 15px" @change="handleSelectAgent">
         <el-option
             v-for="item in agents"
             :key="item.value"
@@ -14,15 +14,16 @@
             :value="item.value"
         />
       </el-select>
+      <el-button type="primary" @click="getRayStatusMethod">将该agent加入当前节点</el-button>
   </el-header>
   <!-- 创建一个下拉框 -->
-  <el-dialog v-model="rayStatusVisible" title="节点信息" width="50%">
+  <el-dialog v-model="alertMessageVisible" :title="alertTitle" width="50%">
   <span>
-      <pre>{{ windowMessage }}</pre>
+      <pre>{{ alertMessage }}</pre>
   </span>
 <template #footer>
   <div class="dialog-footer">
-    <el-button @click="rayStatusVisible = false">返回</el-button>
+    <el-button @click="alertMessageVisible = false">返回</el-button>
     
   </div>
 </template>
@@ -212,11 +213,11 @@
       </el-main>
     </el-container>
 
-    <el-dialog v-model="alertVisible" :title="alertTitle" width="30%">
-      <span>{{ alertMessage }}</span>
+    <el-dialog v-model="createFLTaskVisible" :title="createFLTaskTitle" width="30%">
+      <span>{{ createFLTaskMessage }}</span>
       <template #footer>
         <div class="dialog-footer">
-          <el-button @click="alertVisible = false" style="margin-right: 10px;">返回</el-button>
+          <el-button @click="createFLTaskVisible = false" style="margin-right: 10px;">返回</el-button>
           <router-link to="/result/fL">
             <el-button type="primary">
               查看结果管理区
@@ -229,10 +230,9 @@
 </template>
 
 <script lang="ts" setup>
-import {activeRay,stopRay,getRayStatus} from '../../api/fLearning.js'
+import {activeRay,stopRay,getRayStatus,executeTask} from '../../api/fLearning.js'
 import {getAgent} from '../../api/testDve.js'
 import {getDirectory, getRootByAgent} from '../../api/folderController.js'
-import {create} from "../../api/secureInfer.js";
 import {onMounted, ref} from "vue";
 import {genFileId, UploadInstance, UploadProps, UploadRawFile} from "element-plus";
 
@@ -243,10 +243,10 @@ onMounted(() => {
 
 
 // 对话框是否可见
-const alertVisible = ref(false)
-const alertTitle = ref('')
+const createFLTaskVisible = ref(false)
+const createFLTaskTitle = ref('')
 
-  const alertMessage = ref('')
+  const createFLTaskMessage = ref('')
 
 
   const agents = ref([])
@@ -276,6 +276,10 @@ const alertTitle = ref('')
     file: null as File | null,
     inferenceInfo: inferenceInfo
   })
+  const executeTaskBody = ref({
+    taskName: 'HFL',
+    outputPath: 'result',
+  })
   const fileName = ref('')
   const upload = ref<UploadInstance>()
   
@@ -287,21 +291,13 @@ const alertTitle = ref('')
     folderRoute.value.pop()
   }
   
+  
   const createMethod = async () => {
     try {
-      alertMessage.value = `联邦学习任务创建完成`
-      alertTitle.value = `创建成功`
-        alertVisible.value = true
-      // console.log(createBody.value)
-      // const res = await create(createBody.value)
-      // console.log(res.data)
-      // if (res.data.body.code == 1) {
-      //   alertMessage.value = `联邦学习任务创建完成`
-      //   alertVisible.value = true
-      // }
-      // else {
-
-      // }
+      createFLTaskMessage.value = `联邦学习任务创建完成`
+      createFLTaskTitle.value = `创建成功`
+      createFLTaskVisible.value = true
+      await executeTask(executeTaskBody.value)
     }
     catch (error) {
       console.error('Failed to create secure inference task:', error)
@@ -418,25 +414,37 @@ const alertTitle = ref('')
     getDirectoryMethod()
   }
 
-const rayStatusVisible = ref(false)
-const windowMessage = ref('')
+const alertMessageVisible = ref(false)
+const alertTitle = ref('')
+const alertMessage = ref('')
+const editAlertMeassageMethod =(title,message)=>{
+  alertTitle.value = title
+  alertMessage.value = message
+} 
 
 const activePort = ref({
     port: '9876'
   })
 const activeRayMethod = async () => {
     try {
-        console.log(activePort.value)
         const res = await activeRay(activePort.value)
+        if(res.data.code == 1){
+          editAlertMeassageMethod('创建ray节点成功',res.data.message)
+        }else{
+          editAlertMeassageMethod('警告','当前已存在ray节点,创建失败')
+        }
         
+        alertMessageVisible.value = true
     } catch (error) {
-        console.log(error)
+        createFLTaskVisible.value = true
+        editAlertMeassageMethod('创建ray节点失败',error)
     }
   }
 const stopRayMethod = async () => {
     try {
         const res = await stopRay()
-        console.log(res)
+        editAlertMeassageMethod('关闭ray节点','已关闭所有结点')
+        alertMessageVisible.value = true
     } catch (error) {
         console.log(error)
     }
@@ -445,14 +453,27 @@ const stopRayMethod = async () => {
   const getRayStatusMethod = async () => {
     try {
         const res = await getRayStatus()
-        windowMessage.value = res.data.message
-        rayStatusVisible.value = true
+        if(res.data.code == 1){
+          editAlertMeassageMethod('查看节点状态',res.data.message)
+        }else{
+        editAlertMeassageMethod('查看节点状态','当前无ray节点,请先进行创建')
+        }
+        alertMessageVisible.value = true
         console.log(res)
     } catch (error) {
         console.log(error)
     }
   }
 
+const joinRayMethod = async () => {
+    try {
+        const res = await joinRay()
+        editAlertMeassageMethod('加入ray节点','已加入ray节点')
+        alertMessageVisible.value = true
+    } catch (error) {
+        console.log(error)
+    }
+  }
 </script>
 
 
