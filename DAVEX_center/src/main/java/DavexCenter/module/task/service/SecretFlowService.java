@@ -55,7 +55,7 @@ public class SecretFlowService {
 
             int exitCode = process.waitFor();
             if (exitCode == 0) {
-                return Body.success("Command executed successfully: \n" + output.toString());
+                return Body.success(output.toString());
             } else {
                 return Body.error("Command execution failed with exit code: " + exitCode + "\nError Output: " + errorOutput.toString());
             }

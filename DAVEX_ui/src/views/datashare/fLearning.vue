@@ -227,13 +227,37 @@
       </template>
     </el-dialog>
 
+    <el-table
+              stripe
+              :data="nodesWithUsage"
+              style="width: 100%"
+              max-height="300"
+          >
+            <el-table-column
+                label="节点名称"
+                prop="userName"
+                width="80"
+                align="center"
+            ></el-table-column>
+            <el-table-column
+                label="节点ID"
+                prop="nodeId"
+                width="550"
+                align="center"></el-table-column>
+            <el-table-column
+                label="内存使用"
+                prop="memoryUsage"
+                width="180"
+                align="center"
+            ></el-table-column>
+          </el-table>
 </template>
 
 <script lang="ts" setup>
 import {activeRay,stopRay,getRayStatus,executeTask} from '../../api/fLearning.js'
 import {getAgent} from '../../api/testDve.js'
 import {getDirectory, getRootByAgent} from '../../api/folderController.js'
-import {onMounted, ref} from "vue";
+import {onMounted, ref,reactive,computed} from "vue";
 import {genFileId, UploadInstance, UploadProps, UploadRawFile} from "element-plus";
 
 onMounted(() => {
@@ -450,11 +474,80 @@ const stopRayMethod = async () => {
     }
   }
 
+  const state = reactive({
+  activeNodes: [],
+  usage: {},
+});
+const activeNodes = computed(() => state.activeNodes);
+const usage = computed(() => state.usage);
+  // 解析函数
+function parseNodeStatus(message) {
+  const activeNodes = [];
+  const usage = {};
+  // 解析 active 节点
+  const activePattern = /Active:\s+((?:\d+\s+[\w\d]+(?:\s+[\w\d]+)*\s*)+)/g;
+  const activeMatch = activePattern.exec(message);
+  if (activeMatch) {
+    const nodesString = activeMatch[1].trim();
+    const nodesArray = nodesString.split('\n');
+    
+    // 遍历每行提取节点信息
+    nodesArray.forEach(nodeLine => {
+      const parts = nodeLine.trim().split(' ');
+      if (parts.length === 2) {
+        const nodeId = parts[1];
+        activeNodes.push(nodeId);
+      }
+    });
+  }
+
+ // 解析 usage 部分的用户内存数据
+ const userMemoryPattern = /(\d+(\.\d+)?)\/(\d+(\.\d+)?)\s+([a-zA-Z]+)/g;
+  let match;
+  let skipFirstLines = true; // 用于跳过 CPU 和 GPU 行
+  let skipTwoLines = true; // 用于跳过 CPU 和 GPU 行
+
+  while ((match = userMemoryPattern.exec(message)) !== null) {
+    if (skipFirstLines) {
+      skipFirstLines = false; // 跳过前两行 CPU 和 GPU
+      continue;
+    }
+    if (skipTwoLines) {
+      skipTwoLines = false; // 跳过前两行 CPU 和 GPU
+      continue;
+    }
+    const memoryUsage = `${match[1]}/${match[3]}G`;  // 用户的内存使用格式：0/16.0
+    const userName = match[5];  // 用户名（如 alice、bob 等）
+    usage[userName] = memoryUsage;  // 将用户和内存使用量存入对象
+  }
+
+  // 更新 state 中的值
+  state.activeNodes = activeNodes;
+  state.usage = usage;
+}
+
+// 计算属性（如果需要动态响应）
+const nodesWithUsage = computed(() => {
+  // 创建一个新数组，组合节点信息和内存使用信息
+  return state.activeNodes.map((nodeId, index) => {
+    const userName = Object.keys(state.usage)[index]; // 获取对应用户的名称
+    const memoryUsage = state.usage[userName] || '0/16.0'; // 默认显示 '0/16.0' 如果没有找到
+    return {
+      userName,
+      nodeId,
+      memoryUsage,
+    };
+  });
+});
+
   const getRayStatusMethod = async () => {
     try {
         const res = await getRayStatus()
         if(res.data.code == 1){
           editAlertMeassageMethod('查看节点状态',res.data.message)
+          console.log(res.data.message)
+          parseNodeStatus(res.data.message);
+          
         }else{
         editAlertMeassageMethod('查看节点状态','当前无ray节点,请先进行创建')
         }
