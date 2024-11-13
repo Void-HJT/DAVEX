@@ -1,5 +1,10 @@
 package DavexBase.service.auth;
 
+import DavexBase.common.AuthTokenCache;
+import DavexBase.entity.Keycloak;
+import DavexBase.info.TokenResult;
+import DavexBase.mapper.KeycloakMapper;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.http.codec.json.Jackson2JsonDecoder;
@@ -23,6 +28,15 @@ public class CenterWebClientService {
 
     private ExchangeStrategies strategies;
 
+    @Autowired
+    AuthTokenCache authTokenCache;
+
+    @Autowired
+    TokenValidationService tokenValidationService;
+
+    @Autowired
+    KeycloakMapper keycloakMapper;
+
     public CenterWebClientService(ObjectMapper objectMapper, AgentMapper agentMapper) {
         this.agentMapper = agentMapper;
         strategies = ExchangeStrategies
@@ -44,6 +58,41 @@ public class CenterWebClientService {
         HttpClient httpClient = HttpClient.create();
         return WebClient.builder().clientConnector(new ReactorClientHttpConnector(httpClient))
                 .baseUrl("http://" + agent.getIp() + ":" + agent.getPort())
+                .exchangeStrategies(strategies)
+                .build();
+    }
+
+    public WebClient center2AgentWebClientInAuth(String agent_id,String username,String password,String authId) throws Exception {
+
+        //判断是否有token
+        LambdaQueryWrapper<Keycloak> queryWrapperKeycloak = Wrappers.lambdaQuery(Keycloak.class).eq(Keycloak::getAuthenticationId, agent_id);
+        Keycloak keycloak = keycloakMapper.selectOne(queryWrapperKeycloak);
+        if (keycloak == null) {
+            throw new RuntimeException("Invalid Authentication ID");
+        }
+
+        TokenResult tokenResult = authTokenCache.getToken(keycloak.getServerUrl());
+
+        if(tokenResult==null){
+            //没有token就申请token
+            tokenResult = tokenValidationService.getToken(username,password,agent_id);
+        }
+        else
+        {
+            //验证该token是否过期
+            if(tokenValidationService.isTokenExpired(agent_id)){
+                //如果过期重新申请
+                tokenResult = tokenValidationService.getToken(username,password,agent_id);
+            }
+        }
+        //这时token已存在并未过期
+        LambdaQueryWrapper<Agent> queryWrapper = Wrappers.<Agent>lambdaQuery().eq(Agent::getUid, agent_id);
+        Agent agent = agentMapper.selectOne(queryWrapper);
+        HttpClient httpClient = HttpClient.create();
+        return WebClient.builder().clientConnector(new ReactorClientHttpConnector(httpClient))
+                .baseUrl("http://" + agent.getIp() + ":" + agent.getPort())
+                .defaultHeader("Authentication-ID", authId)
+                .defaultHeader("Token", tokenResult.getAccessToken())
                 .exchangeStrategies(strategies)
                 .build();
     }

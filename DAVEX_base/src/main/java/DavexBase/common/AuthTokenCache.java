@@ -10,16 +10,16 @@ import java.util.concurrent.ConcurrentHashMap;
 public class AuthTokenCache {
     private final Map<String, TokenResult> authTokenMap = new ConcurrentHashMap<>();
 
-    public TokenResult getToken(String authId) {
-        return authTokenMap.get(authId);
+    public TokenResult getToken(String KeycloakUrl) {
+        return authTokenMap.get(KeycloakUrl);
     }
 
-    public void putToken(String authId, TokenResult tokenResult) {
-        authTokenMap.put(authId, tokenResult);
+    public void putToken(String KeycloakUrl, TokenResult tokenResult) {
+        authTokenMap.put(KeycloakUrl, tokenResult);
     }
 
-    public void removeToken(String authId) {
-        authTokenMap.remove(authId);
+    public void removeToken(String KeycloakUrl) {
+        authTokenMap.remove(KeycloakUrl);
     }
 
     // 可选：如果需要，可以添加清空缓存的方法

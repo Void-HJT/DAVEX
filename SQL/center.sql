@@ -420,7 +420,6 @@ SET FOREIGN_KEY_CHECKS = 1;
 -- Table structure for keycloak
 -- ----------------------------
 DROP TABLE IF EXISTS `keycloak`;
-
 CREATE TABLE `keycloak` (
                             `authentication_id` varchar(255) NOT NULL,
                             `server_url` varchar(255) DEFAULT NULL,
@@ -428,16 +427,18 @@ CREATE TABLE `keycloak` (
                             `client_id` varchar(255) DEFAULT NULL,
                             `client_secret` varchar(255) DEFAULT NULL,
                             PRIMARY KEY (`authentication_id`)
-) ENGINE = InnoDB AUTO_INCREMENT = 48 DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
+SET FOREIGN_KEY_CHECKS = 1;
 -- ----------------------------
 -- Table structure for keycloak_credentials
 -- ----------------------------
 DROP TABLE IF EXISTS `keycloak_credentials`;
+CREATE TABLE `keycloak_credentials` (
+                                        `target_id` varchar(255) NOT NULL,
+                                        `public_key` varchar(2000) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
+                                        `expired_time` timestamp NULL DEFAULT NULL,
+                                        PRIMARY KEY (`target_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
-CREATE TABLE `keycloak` (
-                            `target_id` varchar(255) NOT NULL,
-                            `public_key` varchar(1000) DEFAULT NULL,
-                            `expired_time` timestamp NULL DEFAULT NULL,
-                            PRIMARY KEY (`target_id`)
-) ENGINE = InnoDB AUTO_INCREMENT = 48 DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci;
+SET FOREIGN_KEY_CHECKS = 1;

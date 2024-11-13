@@ -140,7 +140,7 @@ public class TokenValidationService {
                 String accessToken = (String) responseBody.get("access_token");
                 String refreshToken = (String) responseBody.get("refresh_token");
                 TokenResult tokenResult = new TokenResult(accessToken, refreshToken);
-                authTokenCache.putToken(authenticationId,tokenResult);
+                authTokenCache.putToken(keycloak.getServerUrl(),tokenResult);
                 return tokenResult;
             }
         }
@@ -150,13 +150,6 @@ public class TokenValidationService {
 
 
     public boolean isTokenExpired(String authId) {
-        // 从缓存中获取 Token
-        TokenResult tokenResult = authTokenCache.getToken(authId);
-
-        // 如果缓存中没有 Token
-        if (tokenResult == null) {
-            throw new RuntimeException("No Token");
-        }
 
         // 查询数据库获取 Keycloak 信息
         LambdaQueryWrapper<Keycloak> queryWrapper = Wrappers.lambdaQuery(Keycloak.class).eq(Keycloak::getAuthenticationId, authId);
@@ -164,6 +157,14 @@ public class TokenValidationService {
 
         if (keycloak == null) {
             throw new RuntimeException("Invalid Authentication ID");
+        }
+
+        // 从缓存中获取 Token
+        TokenResult tokenResult = authTokenCache.getToken(keycloak.getServerUrl());
+
+        // 如果缓存中没有 Token
+        if (tokenResult == null) {
+            throw new RuntimeException("No Token");
         }
 
         // 使用 Introspection Endpoint 验证 Token 是否有效
