@@ -128,7 +128,22 @@ public class MpcTaskService {
 
     @Async("customExecutor")
     public void psiRun(MpcTask mpcTask) throws Exception {
-        garnetService.run(mpcTask);
+        try {
+            garnetService.run(mpcTask);
+        } catch (Exception e) {
+            // 任务执行失败的通知
+            String errorContent = String.format("PSI任务执行失败，任务ID: %s，任务类型: %s，错误信息: %s",
+                    mpcTask.getUid(), mpcTask.getTaskType(), e.getMessage());
+            agentWebClientService.agent2CenterWebClient(mpcTask.getCenterId()).post()
+                    .uri(uriBuilder -> uriBuilder.path("/notification/set")
+                            .queryParam("appID", mpcTask.getApplicationId())
+                            .queryParam("title", "PSI任务执行失败")
+                            .queryParam("content", errorContent).build())
+                    .retrieve()
+                    .bodyToMono(new ParameterizedTypeReference<String>() {
+                    }).block();
+            throw e;
+        }
         Path filePath = Paths.get(my.getBase_path()).resolve("mpctask").resolve(mpcTask.getUid() + ".csv");
         Files.createDirectories(filePath.getParent());
         garnetService.csvQuery(
@@ -162,7 +177,7 @@ public class MpcTaskService {
         agentWebClientService.agent2CenterWebClient(mpcTask.getCenterId()).post()
                 .uri(uriBuilder -> uriBuilder.path("/notification/set")
                         .queryParam("appID", mpcTask.getApplicationId())
-                        .queryParam("title", "PSI任务执行完成")
+                        .queryParam("title", "PSI任务执行结束")
                         .queryParam("content", content).build())
                 .retrieve()
                 .bodyToMono(new ParameterizedTypeReference<String>() {

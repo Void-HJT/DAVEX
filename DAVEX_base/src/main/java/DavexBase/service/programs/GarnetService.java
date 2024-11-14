@@ -251,6 +251,7 @@ public class GarnetService {
             mpcTaskMapper.updateById(mpcTask);
             logger.error(mpcTask.getUid() + ":运行失败");
             e.printStackTrace();
+            throw e;
         }
     }
 

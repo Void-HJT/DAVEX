@@ -6,6 +6,7 @@ import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import DavexCenter.entity.FlOutput;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
@@ -128,7 +129,8 @@ public class QueryFileService {
     public Body<List<QueryOutput>> queryQuery(String applicationId) {
 
         LambdaQueryWrapper<QueryOutput> queryWrapper = Wrappers.<QueryOutput>lambdaQuery()
-                .eq(QueryOutput::getApplicationId, applicationId);
+                .eq(QueryOutput::getApplicationId, applicationId)
+                .orderByDesc(QueryOutput::getUploadDate);
         List<QueryOutput> outputs = queryOutputMapper.selectList(queryWrapper);
         Integer fileNum = outputs.size();
         return Body.success(outputs, String.format("查询成功，共查询到%d个文件", fileNum));
@@ -138,7 +140,8 @@ public class QueryFileService {
 
         LambdaQueryWrapper<QueryOutput> queryWrapper = Wrappers.<QueryOutput>lambdaQuery()
                 .eq(QueryOutput::getApplicationId, applicationId)
-                .in(QueryOutput::getUid, outputIds);
+                .in(QueryOutput::getUid, outputIds)
+                .orderByDesc(QueryOutput::getUploadDate);
 
         List<QueryOutput> outputs = queryOutputMapper.selectList(queryWrapper);
         Integer fileNum = outputs.size();

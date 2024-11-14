@@ -6,6 +6,7 @@ import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import DavexBase.entity.MpcTaskOutput;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
@@ -123,7 +124,8 @@ public class ComparisonFileService {
     public Body<List<ComparisonOutput>> queryComparison(String applicationId) {
 
         LambdaQueryWrapper<ComparisonOutput> queryWrapper = Wrappers.<ComparisonOutput>lambdaQuery()
-                .eq(ComparisonOutput::getApplicationId, applicationId);
+                .eq(ComparisonOutput::getApplicationId, applicationId)
+                .orderByDesc(ComparisonOutput::getUploadDate);
         List<ComparisonOutput> outputs = comparisonOutputMapper.selectList(queryWrapper);
         Integer fileNum = outputs.size();
         return Body.success(outputs, String.format("查询成功，共查询到%d个文件", fileNum));
@@ -133,7 +135,8 @@ public class ComparisonFileService {
 
         LambdaQueryWrapper<ComparisonOutput> queryWrapper = Wrappers.<ComparisonOutput>lambdaQuery()
                 .eq(ComparisonOutput::getApplicationId, applicationId)
-                .in(ComparisonOutput::getUid, outputIds);
+                .in(ComparisonOutput::getUid, outputIds)
+                .orderByDesc(ComparisonOutput::getUploadDate);
 
         List<ComparisonOutput> outputs = comparisonOutputMapper.selectList(queryWrapper);
         Integer fileNum = outputs.size();
