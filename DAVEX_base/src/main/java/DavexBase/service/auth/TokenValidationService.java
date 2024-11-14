@@ -8,6 +8,7 @@ import java.security.spec.X509EncodedKeySpec;
 import java.util.Base64;
 
 import DavexBase.common.AuthTokenCache;
+import DavexBase.common.R;
 import DavexBase.entity.Keycloak;
 import DavexBase.entity.KeycloakCredentials;
 import DavexBase.info.TokenResult;
@@ -43,6 +44,7 @@ public class TokenValidationService {
 
     @Autowired
     private KeycloakCredentialsMapper keycloakCredentialsMapper;
+
 
     public boolean validateToken(String authenticationId, String token) {
 
@@ -241,8 +243,12 @@ public class TokenValidationService {
         KeycloakCredentials credentials = new KeycloakCredentials();
         credentials.setTargetId(targetId);
         credentials.setPublicKey(Base64.getEncoder().encodeToString(publicKey.getEncoded()));
-
-        keycloakCredentialsMapper.updateById(credentials);
+        if(keycloakCredentialsMapper.selectById(targetId)==null){
+            keycloakCredentialsMapper.insert(credentials);
+        }
+        else {
+            keycloakCredentialsMapper.updateById(credentials);
+        }
 
         // 登出以销毁session
         logout(keycloak.getServerUrl(), keycloak.getRealm(), keycloak.getClientId(), tokenResult.getRefreshToken(), keycloak.getClientSecret());
