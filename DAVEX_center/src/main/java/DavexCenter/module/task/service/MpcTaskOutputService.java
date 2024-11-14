@@ -63,6 +63,7 @@ public class MpcTaskOutputService {
         }
         mpcTaskOutput.setExpiredTime(java.sql.Timestamp
                 .from(Instant.now().plus(7, ChronoUnit.DAYS)));
+        mpcTaskOutput.setPath(path.toString());
         mpcTaskOutputMapper.insert(mpcTaskOutput);
     }
 
@@ -115,9 +116,10 @@ public class MpcTaskOutputService {
         // 直接通过路径访问文件
         String filePath = queryMpcOutput.getPath();
         String fileName = queryMpcOutput.getName();
-        String downloadPath = Paths.get(my.getBase_path()).resolve("download").resolve("mpc").toString();
+        Path downloadPath = Paths.get(my.getBase_path()).resolve("download").resolve("mpc");
         try {
-            fileService.copyFile(filePath, fileName, downloadPath);
+            Files.createDirectories(downloadPath);
+            fileService.copyFile(filePath, fileName, downloadPath.toString());
         } catch (Exception e) {
             e.printStackTrace();
             return Body.error(String.format("获取失败: 结果id %d，文件名: %s，错误信息: %s", mpcOutputId, fileName, e.getMessage()));
@@ -125,27 +127,29 @@ public class MpcTaskOutputService {
         return Body.success(String.format("获取成功，结果id: %d，文件名: %s", mpcOutputId, fileName));
     }
 
-    public Body<List<MpcTaskOutput>> queryMpc(Long applicationId) {
-
-        LambdaQueryWrapper<MpcTaskOutput> queryWrapper = Wrappers.<MpcTaskOutput>lambdaQuery()
-                .eq(MpcTaskOutput::getApplicationId, applicationId);
-        List<MpcTaskOutput> outputs = mpcTaskOutputMapper.selectList(queryWrapper);
-        Integer fileNum = outputs.size();
-        return Body.success(outputs, String.format("查询成功，共查询到%d个文件", fileNum));
-    }
-
-    public Body<List<MpcTaskOutput>> queryMpcByIds(Long applicationId, List<Long> mpcOutputIds) {
+    public Body<List<MpcTaskOutput>> queryMpc(String applicationId) {
 
         LambdaQueryWrapper<MpcTaskOutput> queryWrapper = Wrappers.<MpcTaskOutput>lambdaQuery()
                 .eq(MpcTaskOutput::getApplicationId, applicationId)
-                .in(MpcTaskOutput::getUid, mpcOutputIds);
+                .orderByDesc(MpcTaskOutput::getUploadDate);
+        List<MpcTaskOutput> outputs = mpcTaskOutputMapper.selectList(queryWrapper);
+        Integer fileNum = outputs.size();
+        return Body.success(outputs, String.format("查询成功，共查询到%d个文件", fileNum));
+    }
+
+    public Body<List<MpcTaskOutput>> queryMpcByIds(String applicationId, List<Long> mpcOutputIds) {
+
+        LambdaQueryWrapper<MpcTaskOutput> queryWrapper = Wrappers.<MpcTaskOutput>lambdaQuery()
+                .eq(MpcTaskOutput::getApplicationId, applicationId)
+                .in(MpcTaskOutput::getUid, mpcOutputIds)
+                .orderByDesc(MpcTaskOutput::getUploadDate);
 
         List<MpcTaskOutput> outputs = mpcTaskOutputMapper.selectList(queryWrapper);
         Integer fileNum = outputs.size();
         return Body.success(outputs, String.format("查询成功，共查询到%d个文件", fileNum));
     }
 
-    public Body<String> deleteMpc(Long applicationId, Long mpcOutputId) {
+    public Body<String> deleteMpc(String applicationId, Long mpcOutputId) {
         // 根据文件id查找结果表
         LambdaQueryWrapper<MpcTaskOutput> queryWrapper = Wrappers.<MpcTaskOutput>lambdaQuery()
                 .eq(MpcTaskOutput::getApplicationId, applicationId)

@@ -95,7 +95,7 @@ DROP TABLE IF EXISTS `download_task`;
 
 CREATE TABLE `download_task` (
     `uid` int NOT NULL AUTO_INCREMENT,
-    `application_id` int DEFAULT NULL,
+    `application_id` varchar(255) DEFAULT NULL,
     `output_id` int DEFAULT NULL,
     `download_time` timestamp NULL DEFAULT NULL,
     `type` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
