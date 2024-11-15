@@ -43,11 +43,12 @@ public class SecretFlowController {
 
     @GetMapping("/joinRay")
     public String joinRay(
+            @RequestParam String ip,
             @RequestParam String port,
             @RequestParam String name
     ) {
         // 构造命令字符串
-        String command = String.format("source sfenv/bin/activate && ray start --address=\"%s:%s\"  --resources='{\"%s\": 16}' --disable-usage-stats", my.getIp(), port,name);
+        String command = String.format("source sfenv/bin/activate && ray start --address=\"%s:%s\"  --resources='{\"%s\": 16}' --disable-usage-stats", ip, port,name);
         // 调用 service 中的方法执行命令
         return secretFlowService.executeCommand(command);
     }

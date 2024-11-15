@@ -226,13 +226,14 @@
         </div>
       </template>
     </el-dialog>
-
-    <el-table
+    <el-dialog v-model="rayStatusDialogVisible" :title="rayStatusDialogTitle" width="30%">
+      <el-table
               stripe
               :data="nodesWithUsage"
               style="width: 100%"
               max-height="300"
           >
+          
             <el-table-column
                 label="节点名称"
                 prop="userName"
@@ -242,8 +243,17 @@
             <el-table-column
                 label="节点ID"
                 prop="nodeId"
-                width="550"
-                align="center"></el-table-column>
+                width="300"
+                align="center"><template #default="scope">
+              <el-popover effect="light" trigger="hover" placement="top" width="auto">
+                <template #default>
+                  <div>完整ID: {{ scope.row.nodeId }}</div>
+                </template>
+                <template #reference>
+                  <el-tag>{{ scope.row.nodeId }}</el-tag>
+                </template>
+              </el-popover>
+            </template></el-table-column>
             <el-table-column
                 label="内存使用"
                 prop="memoryUsage"
@@ -251,6 +261,12 @@
                 align="center"
             ></el-table-column>
           </el-table>
+      <template #footer>
+        <div class="dialog-footer">
+          <el-button @click="rayStatusDialogVisible = false" style="margin-right: 10px;">返回</el-button>
+        </div>
+      </template>
+    </el-dialog>
 </template>
 
 <script lang="ts" setup>
@@ -278,10 +294,6 @@ const createFLTaskTitle = ref('')
   const applicationId = "DAVEX-C1-A1"
   const directoryData = ref([])
   const currentDirectoryData = ref([])
-  // const getDirectoryBody = ref({
-  //   applicationId: applicationId,
-  //   agentId: '5'
-  // })
   const getDirectoryBody = ref({
     rootId: '',
   })
@@ -453,7 +465,7 @@ const activeRayMethod = async () => {
     try {
         const res = await activeRay(activePort.value)
         if(res.data.code == 1){
-          editAlertMeassageMethod('创建ray节点成功',res.data.message)
+          editAlertMeassageMethod('反馈信息','创建ray节点成功')
         }else{
           editAlertMeassageMethod('警告','当前已存在ray节点,创建失败')
         }
@@ -504,16 +516,12 @@ function parseNodeStatus(message) {
  // 解析 usage 部分的用户内存数据
  const userMemoryPattern = /(\d+(\.\d+)?)\/(\d+(\.\d+)?)\s+([a-zA-Z]+)/g;
   let match;
-  let skipFirstLines = true; // 用于跳过 CPU 和 GPU 行
-  let skipTwoLines = true; // 用于跳过 CPU 和 GPU 行
+  let skipLines = 2;
 
   while ((match = userMemoryPattern.exec(message)) !== null) {
-    if (skipFirstLines) {
-      skipFirstLines = false; // 跳过前两行 CPU 和 GPU
-      continue;
-    }
-    if (skipTwoLines) {
-      skipTwoLines = false; // 跳过前两行 CPU 和 GPU
+ 
+    if (skipLines > 0) {
+      skipLines -= 1;
       continue;
     }
     const memoryUsage = `${match[1]}/${match[3]}G`;  // 用户的内存使用格式：0/16.0
@@ -544,14 +552,14 @@ const nodesWithUsage = computed(() => {
     try {
         const res = await getRayStatus()
         if(res.data.code == 1){
-          editAlertMeassageMethod('查看节点状态',res.data.message)
-          console.log(res.data.message)
+
           parseNodeStatus(res.data.message);
-          
+          rayStatusDialogVisible.value = true
         }else{
         editAlertMeassageMethod('查看节点状态','当前无ray节点,请先进行创建')
-        }
         alertMessageVisible.value = true
+        }
+        
         console.log(res)
     } catch (error) {
         console.log(error)
@@ -567,6 +575,13 @@ const joinRayMethod = async () => {
         console.log(error)
     }
   }
+//dialog管理区 和dialog管理有关的变量声明 以及操作在这个区域
+const rayStatusDialogVisible = ref(false)
+const rayStatusDialogTitle = ref('节点状态')
+
+//dialog管理区 和dialog管理有关的变量声明 以及操作在这个区域
+
+
 </script>
 
 

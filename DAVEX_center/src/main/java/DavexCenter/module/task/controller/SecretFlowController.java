@@ -91,6 +91,12 @@ public class SecretFlowController {
         return secretFlowService.executeCommand("source sfenv/bin/activate && ray stop");
     }
 
+    @GetMapping("/getOtherRayStatus")
+    public Body<String> getOtherRayStatus(@RequestParam String agentId) {
+        // 调用 service 中的方法执行命令
+        return secretFlowService.sendCommandToAgent(agentId);
+    }
+
     @PostMapping("/save/{fileName}")
     public Body<String> saveFile(@PathVariable String fileName) {
         String filePath = "/home/zw/SFFL/result/" + fileName;
@@ -146,5 +152,9 @@ public class SecretFlowController {
             return Body.error(e.getMessage());
         }
     }
+
+
+
+    
 
 }

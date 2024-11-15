@@ -1,9 +1,7 @@
 package DavexCenter.module.task.service;
 
-import DavexCenter.mapper.OutputMapper;
-import DavexCenter.module.file.service.FlFileService;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.GetMapping;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -12,21 +10,30 @@ import DavexCenter.module.file.controller.FlFileController;
 import DavexCenter.module.file.service.FileService;
 import DavexBase.common.My;
 import DavexBase.common.Body;
-import org.springframework.web.bind.annotation.RequestPart;
+
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.beans.factory.annotation.Autowired;
 import java.io.IOException;
-
+import DavexBase.service.auth.CenterWebClientService;
+import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.publisher.Mono;
 
 
 @Service
 public class SecretFlowService {
+
     @Autowired
     private FileService fileService;
     @Autowired
     private FlFileController flFileController;
     @Autowired
     private My my;
+    @Autowired
+    private CenterWebClientService centerWebClientService;
+
+
+
+
     // 方法接受一个字符串参数作为命令，并执行它
     public Body<String> executeCommand(String command) {
         try {
@@ -72,5 +79,22 @@ public class SecretFlowService {
         String applicationId = "Davex-C1-A1";
         return flFileController.saveFl(file,hash,applicationId,null);
     }
+
+    public Body<String> sendCommandToAgent(String agentId) {
+        try {
+            Body<String> response = centerWebClientService.center2AgentWebClient(agentId).get()
+                    .uri(uriBuilder -> uriBuilder.path("/SecretFlowTask/getRayStatus")
+                            .build()).retrieve().bodyToMono(new ParameterizedTypeReference<Body<String>>() {
+                    })
+                    .block();
+            return response;
+        } catch (Exception e) {
+            return Body.error(e.getMessage());
+        }
+    }
+
+    //调用网络接口 配置 url
+
+
 }
 
