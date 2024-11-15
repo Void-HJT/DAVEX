@@ -42,7 +42,7 @@ public class SecretFlowController {
     private My my;
 
     @GetMapping("/joinRay")
-    public String joinRay(
+    public Body<String> joinRay(
             @RequestParam String ip,
             @RequestParam String port,
             @RequestParam String name
@@ -54,22 +54,22 @@ public class SecretFlowController {
     }
 
     @GetMapping("/getRayStatus")
-    public String getRayStatus() {
+    public Body<String> getRayStatus() {
         String command = "source sfenv/bin/activate && ray status";
         try {
             // 执行命令并获取结果
-            String result = secretFlowService.executeCommand(command);
+            Body<String> result = secretFlowService.executeCommand(command);
             // 可以根据需要对结果进行处理，比如解析JSON等
             return result;
         } catch (Exception e) {
             // 处理执行命令时发生的任何异常
             // 记录日志、返回错误信息等
-            return "Error executing command: " + e.getMessage();
+            return Body.error("Error executing command: " + e.getMessage());
         }
     }
     //需要优化一下 主节点stop连带着其他人也stop
     @GetMapping("/stop-mainRay")
-    public String stopMainRay() {
+    public Body<String> stopMainRay() {
         // 调用 service 中的方法执行命令
         return secretFlowService.executeCommand("source sfenv/bin/activate && ray stop");
     }
