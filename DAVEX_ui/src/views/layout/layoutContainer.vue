@@ -5,7 +5,7 @@ import {
   User,
   EditPen,
   SwitchButton,
-  CaretBottom,
+  CaretBottom, Message,
 } from '@element-plus/icons-vue' //crop
 import avatar from '@/assets/default.png'
 import { useUserStore } from '../../stores'
@@ -35,7 +35,10 @@ const handleCommand = (key) => {
         text-color="#fff"
         router
       >
-        
+        <el-menu-item index="/user/notification">
+          <el-icon><Message /></el-icon>
+          <span class="centered-text">消息中心</span>
+        </el-menu-item>
         <el-sub-menu index="/dve">
           <template #title>
             <el-icon><UserFilled /></el-icon>
