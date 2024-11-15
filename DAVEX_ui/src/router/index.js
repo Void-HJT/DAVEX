@@ -59,7 +59,7 @@ const router = createRouter({
         },
         {
           path: 'datashare/mPc',
-          component: () => import('@/views/datashare/mPc.vue'),
+          component: () => import('@/views/datashare/newMpc.vue'),
         },
         {
           path: 'datashare/pSi',
@@ -72,6 +72,10 @@ const router = createRouter({
         {
           path: 'datashare/secureInfer',
           component: () => import('@/views/datashare/secureInfer.vue'),
+        },
+        {
+          path: 'datashare/fLearning',
+          component: () => import('@/views/datashare/fLearning.vue'),
         },
         {
           path: 'result/fileTrans',
@@ -92,6 +96,10 @@ const router = createRouter({
         {
           path: 'result/fL',
           component: () => import('@/views/result/fL.vue'),
+        },
+        {
+          path: 'user/notification',
+          component: () => import('@/views/user/notification.vue'),
         },
       ],
     }, //布局

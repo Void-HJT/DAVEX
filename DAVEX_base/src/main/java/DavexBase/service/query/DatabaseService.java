@@ -5,18 +5,13 @@ import java.io.IOException;
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
-import java.sql.Connection;
-import java.sql.DatabaseMetaData;
-import java.sql.DriverManager;
-import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.regex.Pattern;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.ParameterizedTypeReference;
@@ -62,6 +57,10 @@ public class DatabaseService {
 
     @Autowired
     private ExternalDatabaseProperties externalDatabasePropertiesBean;
+
+    // 定义 SQL 注入关键词和模式
+    private static final String[] SQL_INJECTION_KEYWORDS = { "DROP", "DELETE", "UNION", "SLEEP", "--", "' OR '1'='1" };
+    private static final Pattern SQL_INJECTION_PATTERN = Pattern.compile("([';]+|(--)+)", Pattern.CASE_INSENSITIVE);
 
     public Body<String> addDatabase(OutsideDatabase database) {
 
@@ -137,8 +136,18 @@ public class DatabaseService {
     }
 
     public Body<byte[]> executeQuery(QueryRequest request, Long databaseId) {
-        String sql = buildSqlFromRequest(request);
-        System.out.println(sql);
+        // 遍历请求中的所有条件并检查是否存在 SQL 注入
+        for (Object condition : request.getConditions().values()) {
+            if (condition instanceof String && isSqlInjectionSuspected((String) condition)) {
+                return Body.error("查询指令存在不合法内容，可能包含注入攻击。");
+            }
+        }
+
+        List<Object> params = new ArrayList<>();
+        String sql = buildSqlFromRequest(request, params);  // 调用改进后的 buildSqlFromRequest 方法
+        System.out.println("Generated SQL: " + sql);  // 调试输出生成的 SQL 语句
+
+        // 获取数据库配置
         LambdaQueryWrapper<OutsideDatabase> queryWrapper = Wrappers.<OutsideDatabase>lambdaQuery()
                 .eq(OutsideDatabase::getUid, databaseId);
         OutsideDatabase database = databaseMapper.selectOne(queryWrapper);
@@ -147,42 +156,53 @@ public class DatabaseService {
         if (dbConfig.isPresent()) {
             try (Connection connection = DriverManager.getConnection(
                     dbConfig.get().getUrl(), dbConfig.get().getUsername(), dbConfig.get().getPassword());
-                    Statement statement = connection.createStatement();
-                    ResultSet resultSet = statement.executeQuery(sql)) {
+                 PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
 
-                // 获取结果集的元数据
-                ResultSetMetaData metaData = resultSet.getMetaData();
-                int columnCount = metaData.getColumnCount();
-
-                // 处理结果集，将查询结果存入List<Map<String, Object>>中
-                List<Map<String, Object>> results = new ArrayList<>();
-                while (resultSet.next()) {
-                    Map<String, Object> row = new HashMap<>();
-                    for (int i = 1; i <= columnCount; i++) {
-                        String columnName = metaData.getColumnName(i);
-                        row.put(columnName, resultSet.getObject(i));
-                    }
-                    results.add(row);
+                // 设置参数
+                for (int i = 0; i < params.size(); i++) {
+                    preparedStatement.setObject(i + 1, params.get(i));
                 }
 
-                // 将结果序列化为JSON
-                ObjectMapper mapper = new ObjectMapper();
-                ByteArrayOutputStream out = new ByteArrayOutputStream();
-                try {
+                try (ResultSet resultSet = preparedStatement.executeQuery()) {
+
+                    // 获取结果集的元数据
+                    ResultSetMetaData metaData = resultSet.getMetaData();
+                    int columnCount = metaData.getColumnCount();
+
+                    // 将查询结果存入 List<Map<String, Object>> 中
+                    List<Map<String, Object>> results = new ArrayList<>();
+                    while (resultSet.next()) {
+                        Map<String, Object> row = new HashMap<>();
+                        for (int i = 1; i <= columnCount; i++) {
+                            String columnName = metaData.getColumnName(i);
+                            row.put(columnName, resultSet.getObject(i));
+                        }
+                        results.add(row);
+                    }
+
+                    // 将结果序列化为 JSON
+                    ObjectMapper mapper = new ObjectMapper();
+                    ByteArrayOutputStream out = new ByteArrayOutputStream();
                     mapper.writeValue(out, results);
+                    byte[] jsonData = out.toByteArray();
+
+                    // 返回查询结果
+                    return Body.success(jsonData, "查询成功");
+
                 } catch (IOException e) {
                     e.printStackTrace();
+                    return Body.error("Error serializing results: " + e.getMessage());
                 }
 
-                byte[] jsonData = out.toByteArray();
-
-                // 返回查询文件
-                return Body.success(jsonData, "查询成功");
-
             } catch (SQLException e) {
-                e.printStackTrace();
-                return Body.error("Error executing query: " + e.getMessage());
+                if (isSqlInjectionError(e)) {
+                    return Body.error("查询指令存在不合法内容，可能包含注入攻击。");
+                } else {
+                    e.printStackTrace();
+                    return Body.error("Error executing query: " + e.getMessage());
+                }
             }
+
         } else {
             return Body.error("External database configuration not found");
         }
@@ -225,7 +245,7 @@ public class DatabaseService {
                 MultiValueMap<String, Object> multipartBody = new LinkedMultiValueMap<>();
                 multipartBody.add("file", multipartFile.getResource()); // 这里的 "file" 是服务端期望的文件字段名
 
-                agentWebClientService.agent2CenterWebClient("1").post()
+                agentWebClientService.agent2CenterWebClient("DAVEX-C2").post()
                         .uri(UriBuilder -> UriBuilder.path("/queryFile/saveQuery").queryParam("hash", hash)
                                 .queryParam("applicationId", applicationId).build())
                         .contentType(MediaType.MULTIPART_FORM_DATA).body(BodyInserters.fromMultipartData(multipartBody))
@@ -244,7 +264,8 @@ public class DatabaseService {
         }
     }
 
-    private String buildSqlFromRequest(QueryRequest request) {
+    //修改后避免直接拼接SQL语句
+    private String buildSqlFromRequest(QueryRequest request, List<Object> params) {
         StringBuilder sql = new StringBuilder("SELECT ");
 
         // 选择要查询的列
@@ -265,11 +286,11 @@ public class DatabaseService {
                     String operator = (String) conditionMap.get("operator");
                     Object conditionValue = conditionMap.get("value");
                     sql.append("`").append(column).append("` ")
-                            .append(operator).append(" '")
-                            .append(conditionValue).append("' AND ");
+                            .append(operator).append(" ? AND ");
+                    params.add(conditionValue); // 添加参数
                 } else {
-                    sql.append("`").append(column).append("` = '")
-                            .append(value).append("' AND ");
+                    sql.append("`").append(column).append("` = ? AND ");
+                    params.add(value); // 添加参数
                 }
             });
             // 移除最后一个 " AND "
@@ -288,14 +309,37 @@ public class DatabaseService {
 
         // 添加分页条件
         if (request.getLimit() != null) {
-            sql.append(" LIMIT ").append(request.getLimit());
+            sql.append(" LIMIT ?");
+            params.add(request.getLimit());
         }
 
         if (request.getOffset() != null) {
-            sql.append(" OFFSET ").append(request.getOffset());
+            sql.append(" OFFSET ?");
+            params.add(request.getOffset());
         }
 
         return sql.toString();
+    }
+
+    // 检查是否存在 SQL 注入的可疑内容
+    private boolean isSqlInjectionSuspected(String input) {
+        // 关键词检查
+        for (String keyword : SQL_INJECTION_KEYWORDS) {
+            if (input.toUpperCase().contains(keyword)) {
+                return true;
+            }
+        }
+        // 正则表达式检查
+        if (SQL_INJECTION_PATTERN.matcher(input).find()) {
+            return true;
+        }
+        return false;
+    }
+
+    // 检查 SQLException 是否可能由 SQL 注入引起
+    private boolean isSqlInjectionError(SQLException e) {
+        String message = e.getMessage().toLowerCase();
+        return message.contains("syntax error") || message.contains("you have an error in your sql syntax");
     }
 
     public Body<List<OutsideDatabase>> getDatabase() {

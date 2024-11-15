@@ -20,6 +20,7 @@ import java.util.Map;
 import javax.servlet.http.HttpServletResponse;
 import javax.xml.bind.DatatypeConverter;
 
+import DavexCenter.entity.ComparisonOutput;
 import org.apache.commons.io.FileUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -266,7 +267,8 @@ public class FileService {
     public Body<List<Output>> queryFile(String applicationId) {
 
         LambdaQueryWrapper<Output> queryWrapper = Wrappers.<Output>lambdaQuery()
-                .eq(Output::getApplicationId, applicationId);
+                .eq(Output::getApplicationId, applicationId)
+                .orderByDesc(Output::getUploadDate);
         List<Output> outputs = outputMapper.selectList(queryWrapper);
         Integer fileNum = outputs.size();
         return Body.success(outputs, String.format("查询成功，共查询到%d个文件", fileNum));
@@ -276,7 +278,8 @@ public class FileService {
 
         LambdaQueryWrapper<Output> queryWrapper = Wrappers.<Output>lambdaQuery()
                 .eq(Output::getApplicationId, applicationId)
-                .in(Output::getUid, outputIds);
+                .in(Output::getUid, outputIds)
+                .orderByDesc(Output::getUploadDate);
 
         List<Output> outputs = outputMapper.selectList(queryWrapper);
         Integer fileNum = outputs.size();

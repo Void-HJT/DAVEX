@@ -7,6 +7,8 @@ import java.nio.file.Paths;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 
+import DavexBase.common.Body;
+import DavexBase.entity.File;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.core.io.FileSystemResource;
@@ -126,7 +128,22 @@ public class MpcTaskService {
 
     @Async("customExecutor")
     public void psiRun(MpcTask mpcTask) throws Exception {
-        garnetService.run(mpcTask);
+        try {
+            garnetService.run(mpcTask);
+        } catch (Exception e) {
+            // 任务执行失败的通知
+            String errorContent = String.format("PSI任务执行失败，任务ID: %s，任务类型: %s，错误信息: %s",
+                    mpcTask.getUid(), mpcTask.getTaskType(), e.getMessage());
+            agentWebClientService.agent2CenterWebClient(mpcTask.getCenterId()).post()
+                    .uri(uriBuilder -> uriBuilder.path("/notification/set")
+                            .queryParam("appID", mpcTask.getApplicationId())
+                            .queryParam("title", "PSI任务执行失败")
+                            .queryParam("content", errorContent).build())
+                    .retrieve()
+                    .bodyToMono(new ParameterizedTypeReference<String>() {
+                    }).block();
+            throw e;
+        }
         Path filePath = Paths.get(my.getBase_path()).resolve("mpctask").resolve(mpcTask.getUid() + ".csv");
         Files.createDirectories(filePath.getParent());
         garnetService.csvQuery(
@@ -140,11 +157,30 @@ public class MpcTaskService {
         mpcTaskOutput.setApplicationId(mpcTask.getApplicationId());
         mpcTaskOutput.setUploadDate(Timestamp.valueOf(LocalDateTime.now()));
         mpcTaskOutput.setName(mpcTask.getUid() + ".csv");
-        agentWebClientService.agent2CenterWebClient(mpcTask.getCenterId()).post()
+        R<String> res = agentWebClientService.agent2CenterWebClient(mpcTask.getCenterId()).post()
                 .uri("/MpcTasksOutput/save")
                 .contentType(MediaType.MULTIPART_FORM_DATA).body(BodyInserters.fromMultipartData("file", fileResource)
                         .with("metadata", mpcTaskOutput))
                 .retrieve().bodyToMono(new ParameterizedTypeReference<R<String>>() {
+                }).block();
+        System.out.println(res);
+
+        //结果保存消息通知
+        String content;
+        if (res.getBody().getCode() == 1) {
+            content = String.format("PSI任务结果保存成功，任务ID: %s，任务类型: %s，执行结果: %s",
+                    mpcTask.getUid(), mpcTask.getTaskType(), mpcTask.getStatus());
+        } else {
+            content = String.format("PSI任务结果保存失败，任务ID: %s，任务类型: %s，执行结果: %s",
+                    mpcTask.getUid(), mpcTask.getTaskType(), mpcTask.getStatus());
+        }
+        agentWebClientService.agent2CenterWebClient(mpcTask.getCenterId()).post()
+                .uri(uriBuilder -> uriBuilder.path("/notification/set")
+                        .queryParam("appID", mpcTask.getApplicationId())
+                        .queryParam("title", "PSI任务执行结束")
+                        .queryParam("content", content).build())
+                .retrieve()
+                .bodyToMono(new ParameterizedTypeReference<String>() {
                 }).block();
 
     }

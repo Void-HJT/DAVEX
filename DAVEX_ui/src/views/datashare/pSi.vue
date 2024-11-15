@@ -1,5 +1,14 @@
 <template>
   <el-container>
+    <span style="display: block; margin-bottom: 8px;">选择参与方数量</span>
+    <el-select v-model="partyNumber" placeholder="Select" style="width: 240px" @change="handleSelectPartyNumber">
+      <el-option
+          v-for="item in partyNumbers"
+          :key="item.value"
+          :label="item.label"
+          :value="item.value"
+      />
+    </el-select>
     <span style="display: block; margin-bottom: 8px;">选择代理</span>
     <el-select v-model="agentId" placeholder="Select" style="width: 240px" @change="handleSelectAgent">
       <el-option
@@ -104,7 +113,7 @@
           >
             <template v-slot="scope">
               <el-button
-                  v-if="scope.row.type === 'file' && scope.row.fileType === 'psi'"
+                  v-if="scope.row.type === 'file'"
                   link
                   type="primary"
                   @click="
@@ -120,9 +129,10 @@
                 选择第一方文件
               </el-button>
               <el-button
-                  v-if="scope.row.type === 'file' && scope.row.fileType === 'psi'"
+                  v-if="scope.row.type === 'file'"
                   link
                   type="primary"
+                  :disabled="partyNumber === 2"
                   @click="
                     chooseFileMethod(
                       scope.row.agentId,
@@ -173,17 +183,17 @@
           :size="'default'"
           border
       ></el-descriptions>
-<!--      <div class="form-container">-->
-<!--        <el-form-->
-<!--            :model="createPsiTaskBody"-->
-<!--            style="max-width: 60%"-->
-<!--            class="styled-form"-->
-<!--        >-->
-<!--          <el-form-item label="主键">-->
-<!--            <el-input v-model="createPsiTaskBody.runtimeParameters.PK"></el-input>-->
-<!--          </el-form-item>-->
-<!--        </el-form>-->
-<!--      </div>-->
+      <div class="form-container">
+        <el-form
+            :model="createPsiTaskBody"
+            style="max-width: 60%"
+            class="styled-form"
+        >
+          <el-form-item label="主键">
+            <el-input v-model="createPsiTaskBody.runtimeParameters.PK"></el-input>
+          </el-form-item>
+        </el-form>
+      </div>
       <el-upload
           ref="upload"
           class="upload-demo"
@@ -198,7 +208,7 @@
           <el-button type="primary" style="margin-right: 10px;">上传输入文件</el-button>
         </template>
         <el-button class="ml-3" type="success" @click="submitUpload" style="margin-right: 10px;">
-          创建MPC任务
+          创建PSI任务
         </el-button>
         <template #tip>
           <div class="el-upload__tip text-red">
@@ -284,7 +294,7 @@ import axios from 'axios'
 
 onMounted(() => {
   getAgentMethod()
-  getDirectoryMethod()
+  // getDirectoryMethod()
 })
 
 const psiSuccessVisible = ref(false)
@@ -293,11 +303,25 @@ const psiSuccessMessage = ref('')
 const psiFailedMessage = ref('')
 
 const descriptionsTitle = computed(() => {
-  return `第一方文件：${fileName.value} \n第二方文件：${secondFileName.value}`;
-});
+  const firstFileText = fileName.value ? `第一方文件：${fileName.value}` : ''
+  const secondFileText = secondFileName.value ? `第二方文件：${secondFileName.value}` : ''
+
+  return [firstFileText, secondFileText].filter(Boolean).join(' \n')
+})
 const upload = ref<UploadInstance>()
 const agents = ref([])
 const agentId = ref('')
+const partyNumbers = [
+  {
+    value: 2,
+    label: '2',
+  },
+  // {
+  //   value: 3,
+  //   label: '3',
+  // }
+]
+const partyNumber = ref(2)
 const directoryData = ref([])
 const currentDirectoryData = ref([])
 const getDirectoryBody = ref({
@@ -306,6 +330,29 @@ const getDirectoryBody = ref({
 const folderRoute = ref([])
 const fileName = ref('')
 const secondFileName = ref('')
+const createPsiTaskBody = ref({
+  partInfo: [
+    {
+      agentID: "", //需要填写
+      part: 1, //默认
+      fileID: "", //需要填写
+    }
+  ],
+  applicationId: "DAVEX-C1-A1", //后台配置
+  centerId: "DAVEX-C1", //后台配置
+  compileParameters: {},
+  host: '10.176.37.50', //后台配置
+  mpcId: 'PSI_GARNET', //后台配置
+  n: 2, //目前只需要2方
+  part: 0, //发起方默认为第0方
+  port: 6000, //后台配置 无需用户在前端选择端口
+  runtimeParameters: {
+    PK: '', //需要手动输入，可能可以采用读取的方式
+    protocol: 'semi2k-party', //目前只支持一个协议 但是后续可能会有多个协议
+  },
+  status: 'INIT', //默认INIT
+  taskType: 'GARNET_PSI', //后台配置
+})
 // const createPsiTaskBody = ref({
 //   partInfo: [
 //     {
@@ -319,50 +366,22 @@ const secondFileName = ref('')
 //       fileID: "", //需要填写
 //     }
 //   ],
-//   applicationId: "DAVEX-C1-A1", //后台配置
+//   applicationId: "DAVEX-C1-AXX1", //后台配置
 //   centerId: "DAVEX-C1", //后台配置
 //   compileParameters: {},
-//   host: '10.176.34.171', //后台配置
-//   mpcId: 'PSI_GARNET', //后台配置
-//   n: 3, //目前只需要2方
+//   host: '10.176.37.50', //后台配置
+//   mpcId: 'correction-supervision', //后台配置
+//   mpcName: "xxx",
+//   n: 2, //目前只需要2方
 //   part: 0, //发起方默认为第0方
 //   port: 6000, //后台配置 无需用户在前端选择端口
 //   runtimeParameters: {
-//     PK: '', //需要手动输入，可能可以采用读取的方式
-//     protocol: 'semi2k-party', //目前只支持一个协议 但是后续可能会有多个协议
+//     protocol: 'replicated-ring-party', //目前只支持一个协议 但是后续可能会有多个协议
 //   },
 //   status: 'INIT', //默认INIT
-//   taskType: 'GARNET_PSI', //后台配置
+//   taskType: 'GARNET_MPC', //后台配置
+//   uid: null
 // })
-const createPsiTaskBody = ref({
-  partInfo: [
-    {
-      agentID: "", //需要填写
-      part: 1, //默认
-      fileID: "", //需要填写
-    },
-    {
-      agentID: "", //需要填写
-      part: 2, //默认
-      fileID: "", //需要填写
-    }
-  ],
-  applicationId: "DAVEX-C1-AXX1", //后台配置
-  centerId: "DAVEX-C1", //后台配置
-  compileParameters: {},
-  host: '10.176.37.50', //后台配置
-  mpcId: 'correction-supervision', //后台配置
-  mpcName: "xxx",
-  n: 3, //目前只需要2方
-  part: 0, //发起方默认为第0方
-  port: 6000, //后台配置 无需用户在前端选择端口
-  runtimeParameters: {
-    protocol: 'replicated-ring-party', //目前只支持一个协议 但是后续可能会有多个协议
-  },
-  status: 'INIT', //默认INIT
-  taskType: 'GARNET_MPC', //后台配置
-  uid: null
-})
 
 const createBody = ref({
   file: null as File | null,
@@ -405,11 +424,11 @@ const createMethod = async () => {
     const res = await createPsiTask(createBody.value)
     console.log(res.data)
     if (res.data.body.code == 1) {
-      psiSuccessMessage.value = `MPC任务创建完成`
+      psiSuccessMessage.value = `PSI任务创建完成，执行完成后将通过消息中心提示`
       psiSuccessVisible.value = true
     }
     else {
-      psiFailedMessage.value = res.data.message
+      psiFailedMessage.value = res.data.body.message
       psiFailedVisible.value = true
     }
   }
@@ -534,6 +553,11 @@ const handleSelectAgent = async (value) => {
   agentId.value = value
   await getRootByAgentMethod(agentId.value)
   getDirectoryMethod()
+}
+
+const handleSelectPartyNumber = async (value) => {
+  partyNumber.value = value
+  createPsiTaskBody.value.n = partyNumber.value
 }
 </script>
 

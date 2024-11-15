@@ -1,10 +1,13 @@
 import { createPinia } from 'pinia'
 import persist from 'pinia-plugin-persistedstate'
 
-const pinia = createPinia().use(persist)
+const pinia = createPinia()
 pinia.use(persist)
 
 export default pinia
 
 import { useUserStore } from './modules/user'
 export { useUserStore }
+
+import { useNotificationStore } from './modules/notificationStore'
+export { useNotificationStore }

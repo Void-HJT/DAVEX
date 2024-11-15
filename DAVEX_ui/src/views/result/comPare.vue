@@ -123,7 +123,7 @@ const deleteFailedVisible = ref(false)
 const deleteSuccessMessage = ref('');
 const deleteFailedMessage = ref('');
 
-const applicationId = 6
+const applicationId = "DAVEX-C1-A1"
 const resultData = ref([])
 const getResultBody = ref({
   applicationId: applicationId

@@ -28,6 +28,15 @@ public class ComparisonController {
         return comparisonService.getCsvHeader(fileId, folderId, agentId);
     }
 
+    // agent解析csv文件表头
+    @PostMapping("/getTXTExample")
+    public Body<List<String>> getTXTExample(@RequestParam("fileId") String fileId,
+                                          @RequestParam("folderId") String folderId,
+                                          @RequestParam("agentId") String agentId) {
+
+        return comparisonService.getTXTExample(fileId, folderId, agentId);
+    }
+
     // agent计算哈希
     @PostMapping("/getHash")
     public Body<List<String>> getHash(@RequestParam("fileId") String fileId,
@@ -36,6 +45,15 @@ public class ComparisonController {
                                       @RequestParam("attributes") List<String> attributes) {
 
         return comparisonService.getHash(fileId, folderId, agentId, attributes);
+    }
+
+    // agent计算txt文件的哈希
+    @PostMapping("/getTXTHash")
+    public Body<List<String>> getTXTHash(@RequestParam("fileId") String fileId,
+                                      @RequestParam("folderId") String folderId,
+                                      @RequestParam("agentId") String agentId) {
+
+        return comparisonService.getTXTHash(fileId, folderId, agentId);
     }
 
     // 文件名

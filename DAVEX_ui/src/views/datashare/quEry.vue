@@ -369,7 +369,7 @@ const currentExample = ref('')
 const schemaExample = ref('')
 const schemaTableData = ref([])
 const exampleTableData = ref([])
-let agentId = 0
+let agentId = "DAVEX-C1-G1"
 let applicationId = 6
 
 // 查询表单

@@ -40,39 +40,14 @@ public class SecretFlowController {
 
     @Autowired
     private My my;
-    @GetMapping("/executeTask")
-    public String executeScript(
-            @RequestParam String taskName,
-            @RequestParam String outputPath
-    ) {
-        String command = String.format("source sfenv/bin/activate && /home/zw/SFFL/sfenv/bin/python /home/zw/SFFL/%s.py --result_dir /home/zw/SFFL/%s",taskName,outputPath);
-        return secretFlowService.executeCommand(command);
-
-
-    }
-
-
-
-    @GetMapping("/active-mainRay")
-    public String activateMainRay(
-            @RequestParam String port        // 参数化端口
-    ) {
-        // 构造命令字符串
-        String command = String.format("source sfenv/bin/activate && ray start --head --node-ip-address=\"%s\" --port=\"%s\" --resources='{\"alice\": 16}' --include-dashboard=False --disable-usage-stats", my.getIp(), port);
-
-        // 调用 service 中的方法执行命令
-        return secretFlowService.executeCommand(command);
-    }
 
     @GetMapping("/joinRay")
     public String joinRay(
-            @RequestParam String ip,
             @RequestParam String port,
             @RequestParam String name
     ) {
         // 构造命令字符串
-        String command = String.format("source sfenv/bin/activate && ray start --address=\"%s:%s\"  --resources='{\"%s\": 16}' --disable-usage-stats", ip, port,name);
-
+        String command = String.format("source sfenv/bin/activate && ray start --address=\"%s:%s\"  --resources='{\"%s\": 16}' --disable-usage-stats", my.getIp(), port,name);
         // 调用 service 中的方法执行命令
         return secretFlowService.executeCommand(command);
     }
@@ -97,32 +72,6 @@ public class SecretFlowController {
         // 调用 service 中的方法执行命令
         return secretFlowService.executeCommand("source sfenv/bin/activate && ray stop");
     }
-
-//    @PostMapping("/save/{fileName}")
-//    public Body<String> saveFile(@PathVariable String fileName) {
-//        String filePath = "/home/zw/SFFL/result/" + fileName;
-//        File file = new File(filePath);
-//
-//        try (FileInputStream fileInputStream = new FileInputStream(file)) {
-//            MultipartFile multipartFile = new MockMultipartFile(
-//                    file.getName(),
-//                    file.getName(),
-//                    null,
-//                    fileInputStream
-//            );
-//
-//            // 调用服务保存文件
-//            return secretFlowService.saveFile(multipartFile);
-//        } catch (FileNotFoundException e) {
-//            // 处理文件未找到的异常
-//            e.printStackTrace();
-//        } catch (IOException e) {
-//            // 处理IO异常
-//            e.printStackTrace();
-//
-//        }
-//        return null;
-//    }
     private static final String UPLOAD_DIR = "/home/zw/SFFL/input/";
 
     @PostMapping("/upload")
