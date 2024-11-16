@@ -22,7 +22,8 @@ public class SecretFlowService {
         try {
             ProcessBuilder processBuilder = new ProcessBuilder();
             processBuilder.command("bash", "-c", command);
-            processBuilder.directory(new java.io.File("/home/zkx"));  // 可根据需要更改目录
+            processBuilder.directory(new java.io.File("/home/zkx"));  // 可根据需要更改目录 这个目录 选择配置里的路径吧
+
 
             // 启动进程并获取输出
             Process process = processBuilder.start();

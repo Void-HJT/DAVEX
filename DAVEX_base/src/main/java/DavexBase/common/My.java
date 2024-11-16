@@ -66,6 +66,9 @@ public class My {
     @Value("${my.davex_type}")
     protected DavexType davexType;
 
+    @Value("${my.env_path}")
+    protected String env_path;
+
     private Object myObject;
 
     protected KeyStore keyStore;
@@ -252,6 +255,10 @@ public class My {
 
     public String getGarnet_path() {
         return garnet_path;
+    }
+
+    public String getEnv_path() {
+        return env_path;
     }
 
     public void setGarnet_path(String garnet_path) {

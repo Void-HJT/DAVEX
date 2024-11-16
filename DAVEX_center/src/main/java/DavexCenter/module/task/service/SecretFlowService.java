@@ -39,9 +39,9 @@ public class SecretFlowService {
         try {
             ProcessBuilder processBuilder = new ProcessBuilder();
             processBuilder.command("bash", "-c", command);
-            processBuilder.directory(new java.io.File("/home/zw/SFFL"));  // 可根据需要更改目录
-
-            // 启动进程并获取输出
+//            processBuilder.directory(new java.io.File("/home/zw/SFFL"));  // 可根据需要更改目录
+            processBuilder.directory(new java.io.File(my.getEnv_path()));
+//             启动进程并获取输出
             Process process = processBuilder.start();
 
             // 捕获标准输出
@@ -62,9 +62,9 @@ public class SecretFlowService {
 
             int exitCode = process.waitFor();
             if (exitCode == 0) {
-                return Body.success(output.toString());
+                return Body.success(output.toString()+my.getEnv_path());
             } else {
-                return Body.error("Command execution failed with exit code: " + exitCode + "\nError Output: " + errorOutput.toString());
+                return Body.error("Command execution failed with exit code: " + exitCode + "\nError Output: " + errorOutput.toString()+my.getGarnet_path());
             }
             } catch (IOException e) {
                 e.printStackTrace();
