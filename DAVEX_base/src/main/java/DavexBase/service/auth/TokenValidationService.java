@@ -142,7 +142,12 @@ public class TokenValidationService {
                 String accessToken = (String) responseBody.get("access_token");
                 String refreshToken = (String) responseBody.get("refresh_token");
                 TokenResult tokenResult = new TokenResult(accessToken, refreshToken);
-                authTokenCache.putToken(keycloak.getServerUrl(),tokenResult);
+                if(authenticationId=="admin"){
+                    authTokenCache.putToken("admin",tokenResult);
+                }
+                else{
+                    authTokenCache.putToken(keycloak.getServerUrl(),tokenResult);
+                }
                 return tokenResult;
             }
         }
@@ -193,7 +198,7 @@ public class TokenValidationService {
         return true;
     }
 
-    public void updatePublicKey(String username, String password, String targetId) throws Exception {
+    public boolean updatePublicKey(String username, String password, String targetId) throws Exception {
 
         LambdaQueryWrapper<Keycloak> queryWrapper = Wrappers.lambdaQuery(Keycloak.class).eq(Keycloak::getAuthenticationId, targetId);
         Keycloak keycloak = keycloakMapper.selectOne(queryWrapper);
@@ -251,11 +256,33 @@ public class TokenValidationService {
         }
 
         // 登出以销毁session
-        logout(keycloak.getServerUrl(), keycloak.getRealm(), keycloak.getClientId(), tokenResult.getRefreshToken(), keycloak.getClientSecret());
+        if(logout(targetId)){
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+
     }
 
 
-    private void logout(String keycloakServerUrl, String realm, String clientId, String refreshToken,String clientSecret) {
+    public boolean logout(String authId) throws Exception{
+
+        LambdaQueryWrapper<Keycloak> queryWrapper = Wrappers.lambdaQuery(Keycloak.class).eq(Keycloak::getAuthenticationId, authId);
+        Keycloak keycloak = keycloakMapper.selectOne(queryWrapper);
+        if (keycloak == null) {
+            throw new RuntimeException("no authId");
+        }
+        String keycloakServerUrl = keycloak.getServerUrl();
+        String realm = keycloak.getRealm();
+        String clientId = keycloak.getClientId();
+        String clientSecret = keycloak.getClientSecret();
+        TokenResult tokenResult = authTokenCache.getToken(keycloakServerUrl);
+        if (tokenResult == null) {
+            throw new RuntimeException("no login");
+        }
+        String refreshToken = tokenResult.getRefreshToken();
         String logoutUrl = keycloakServerUrl + "/realms/" + realm + "/protocol/openid-connect/logout";
 
         RestTemplate restTemplate = new RestTemplate();
@@ -271,13 +298,15 @@ public class TokenValidationService {
         try {
             ResponseEntity<Void> response = restTemplate.exchange(logoutUrl, HttpMethod.POST, request, Void.class);
             if (response.getStatusCode() == HttpStatus.NO_CONTENT) {
-                System.out.println("Successfully logged out. No additional content returned.");
+                throw new RuntimeException("Successfully logged out. No additional content returned.");
             } else if (response.getStatusCode() != HttpStatus.OK) {
-                System.err.println("Unexpected response status: " + response.getStatusCode());
+                throw new RuntimeException("Unexpected response status: " + response.getStatusCode());
             }
         } catch (HttpClientErrorException e) {
-            System.err.println("Failed to log out session: " + e.getMessage());
+                throw new RuntimeException("Failed to log out session: " + e.getMessage());
             }
+
+        return true;
     }
 
 }

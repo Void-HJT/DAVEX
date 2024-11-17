@@ -26,32 +26,43 @@ public class AuthController {
     AuthTokenCache authTokenCache;
 
     @PostMapping("/getToken")
-    public TokenResult getToken(@RequestParam String username,
-                                @RequestParam String password,
-                                @RequestParam String authId){
+    public TokenResult getToken(@RequestParam("username") String username,
+                                @RequestParam("password") String password,
+                                @RequestParam("authId") String authId){
         return tokenValidationService.getToken(username,password,authId);
     }
 
     @PostMapping("/isTokenExpired")
-    public boolean isTokenExpired(@RequestParam String authId){
+    public boolean isTokenExpired(@RequestParam("authId") String authId){
         return tokenValidationService.isTokenExpired(authId);
     }
 
     @PostMapping("/updatePublicKey")
-    public void updatePublicKey(@RequestParam String username,
-                                @RequestParam String password,
-                                @RequestParam String authId){
+    public boolean updatePublicKey(@RequestParam("username") String username,
+                                   @RequestParam("password") String password,
+                                   @RequestParam("authId") String authId){
         try {
-            tokenValidationService.updatePublicKey(username,password,authId);
+            return tokenValidationService.updatePublicKey(username,password,authId);
         } catch (Exception e) {
             e.printStackTrace();
+            return false;
+        }
+    }
+
+    @PostMapping("/logout")
+    public boolean logout(@RequestParam("authId") String authId){
+        try {
+            return tokenValidationService.logout(authId);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
         }
     }
 
     @PostMapping("/getTokenFromCache")
-    public TokenResult getTokenFromCache(@RequestParam("KeycloakUrl") String KeycloakUrl)
+    public TokenResult getTokenFromCache(@RequestParam("keycloakUrl") String keycloakUrl)
     {
-        TokenResult tokenResult = authTokenCache.getToken(KeycloakUrl);
+        TokenResult tokenResult = authTokenCache.getToken(keycloakUrl);
         return tokenResult;
     }
 

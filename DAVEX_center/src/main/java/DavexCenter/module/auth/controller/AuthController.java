@@ -8,6 +8,7 @@ import DavexBase.entity.KeycloakCredentials;
 import DavexBase.info.TokenResult;
 import DavexBase.service.auth.KeycloakService;
 import DavexBase.service.auth.TokenValidationService;
+import DavexCenter.module.auth.service.KeycloakAdminService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -20,39 +21,52 @@ public class AuthController {
     TokenValidationService tokenValidationService;
 
     @Autowired
-    AuthTokenCache authTokenCache;
-
-    @Autowired
     KeycloakService keycloakService;
 
+    @Autowired
+    KeycloakAdminService keycloakAdminService;
+
+    @Autowired
+    AuthTokenCache authTokenCache;
+
     @PostMapping("/getToken")
-    public TokenResult getToken(@RequestParam String username,
-                                @RequestParam String password,
-                                @RequestParam String authId){
+    public TokenResult getToken(@RequestParam("username") String username,
+                                @RequestParam("password") String password,
+                                @RequestParam("authId") String authId){
         return tokenValidationService.getToken(username,password,authId);
     }
 
     @PostMapping("/isTokenExpired")
-    public boolean isTokenExpired(@RequestParam String authId){
+    public boolean isTokenExpired(@RequestParam("authId") String authId){
         return tokenValidationService.isTokenExpired(authId);
     }
 
     @PostMapping("/updatePublicKey")
-    public void updatePublicKey(@RequestParam String username,
-                                @RequestParam String password,
-                                @RequestParam String authId){
+    public boolean updatePublicKey(@RequestParam("username") String username,
+                                   @RequestParam("password") String password,
+                                   @RequestParam("authId") String authId){
         try {
-            tokenValidationService.updatePublicKey(username,password,authId);
+            return tokenValidationService.updatePublicKey(username,password,authId);
         } catch (Exception e) {
             e.printStackTrace();
+            return false;
         }
     }
 
+    @PostMapping("/logout")
+    public boolean logout(@RequestParam("authId") String authId){
+        try {
+            return tokenValidationService.logout(authId);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
 
     @PostMapping("/getTokenFromCache")
-    public TokenResult getTokenFromCache(@RequestParam("KeycloakUrl") String KeycloakUrl)
+    public TokenResult getTokenFromCache(@RequestParam("keycloakUrl") String keycloakUrl)
     {
-        TokenResult tokenResult = authTokenCache.getToken(KeycloakUrl);
+        TokenResult tokenResult = authTokenCache.getToken(keycloakUrl);
         return tokenResult;
     }
 
@@ -101,4 +115,30 @@ public class AuthController {
     public R<KeycloakCredentials> getKeycloakCredentials(@RequestParam("targetId") String targetId){
         return keycloakService.getKeycloakCredentials(targetId);
     }
+
+    @PostMapping("/addUser")
+    public boolean addUser(@RequestParam("username") String username,
+                           @RequestParam("password") String password){
+        try {
+            return keycloakAdminService.addUser(username,password);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    @PostMapping("/deleteUser")
+    public boolean deleteUser(@RequestParam("username")String username){
+        try {
+            return keycloakAdminService.deleteUser(username);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+
+
 }
+
+
