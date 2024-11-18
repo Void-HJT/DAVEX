@@ -134,7 +134,8 @@ public class SecureInferenceService {
         logger.info("接收安全推理任务：{}", info);
         UploadAgentTaskInfo mpcTaskInfo = new UploadAgentTaskInfo();
         mpcTaskInfo.setHost(my.getIp());
-        mpcTaskInfo.setPort(10099);
+//        mpcTaskInfo.setPort(10099);
+        mpcTaskInfo.setPort(6099);
         mpcTaskInfo.setN(2);
         mpcTaskInfo.setApplicationId(info.getApplicationId());
         mpcTaskInfo.setTaskType(TaskType.GARNET_INFERENCE);

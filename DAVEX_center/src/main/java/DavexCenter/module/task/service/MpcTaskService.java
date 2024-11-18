@@ -4,6 +4,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
+import DavexBase.service.notification.NotificationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.scheduling.annotation.Async;
@@ -55,6 +56,9 @@ public class MpcTaskService {
 
     @Autowired
     private CenterWebClientService centerWebClientService;
+
+    @Autowired
+    private NotificationService notificationService;
 
     public Input createInput(Input input) {
         inputMapper.insert(input);
@@ -119,7 +123,15 @@ public class MpcTaskService {
 
     @Async("customExecutor")
     public void mpcRun(UploadAgentTaskInfo mpcTask) throws Exception {
-        garnetService.compile(mpcTask);
+        try {
+            garnetService.compile(mpcTask);
+        } catch (Exception e) {
+            // 编译失败的通知
+            String errorContent = String.format("MPC任务编译失败\n任务ID: %s\n任务类型: %s\n错误信息: %s",
+                    mpcTask.getUid(), mpcTask.getTaskType(), e.getMessage());
+            notificationService.setMessage(mpcTask.getApplicationId(), "MPC任务编译失败", errorContent, mpcTask.getUid(), 0, "mpc");
+            throw e;
+        }
         garnetService.link(Paths.get(my.getBase_path())
                 .resolve(
                         inputMapper.selectById(mpcTask.getDataId()).getPath())
@@ -131,13 +143,29 @@ public class MpcTaskService {
         if (run(mpcTask.getUid()) == false) {
             throw new Exception("任务未就绪");
         }
-        garnetService.run(mpcTask);
+        try {
+            garnetService.run(mpcTask);
+        } catch (Exception e) {
+            // 运行失败的通知
+            String errorContent = String.format("MPC任务运行失败\n任务ID: %s\n任务类型: %s\n错误信息: %s",
+                    mpcTask.getUid(), mpcTask.getTaskType(), e.getMessage());
+            notificationService.setMessage(mpcTask.getApplicationId(), "MPC任务运行失败", errorContent, mpcTask.getUid(), 0, "mpc");
+            throw e;
+        }
         mpcTaskOutputService.saveOutputFromInner(mpcTaskMapper.selectById(mpcTask.getUid()));
     }
 
     @Async("customExecutor")
     public void psiRun(UploadAgentTaskInfo mpcTask) throws Exception {
-        garnetService.compile(mpcTask);
+        try {
+            garnetService.compile(mpcTask);
+        } catch (Exception e) {
+            // 编译失败的通知
+            String errorContent = String.format("PSI任务编译失败\n任务ID: %s\n任务类型: %s\n错误信息: %s",
+                    mpcTask.getUid(), mpcTask.getTaskType(), e.getMessage());
+            notificationService.setMessage(mpcTask.getApplicationId(), "PSI任务编译失败", errorContent, mpcTask.getUid(), 0, "psi");
+            throw e;
+        }
         garnetService.idExtract(inputMapper.selectById(mpcTask.getDataId()).getPath(), mpcTask.getUid(),
                 mpcTask.getPart());
         while (ready(mpcTask.getUid()) == false) {
@@ -146,7 +174,15 @@ public class MpcTaskService {
         if (run(mpcTask.getUid()) == false) {
             throw new Exception("任务未就绪");
         }
-        garnetService.run(mpcTask);
+        try {
+            garnetService.run(mpcTask);
+        } catch (Exception e) {
+            // 运行失败的通知
+            String errorContent = String.format("PSI任务运行失败\n任务ID: %s\n任务类型: %s\n错误信息: %s",
+                    mpcTask.getUid(), mpcTask.getTaskType(), e.getMessage());
+            notificationService.setMessage(mpcTask.getApplicationId(), "PSI任务运行失败", errorContent, mpcTask.getUid(), 0, "psi");
+            throw e;
+        }
         // * 什么也不做，结果由Agent返回
     }
 

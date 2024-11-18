@@ -276,7 +276,7 @@
       const res = await create(createBody.value)
       console.log(res.data)
       if (res.data.body.code == 1) {
-        flSuccessMessage.value = `安全推理任务创建完成`
+        flSuccessMessage.value = `安全推理任务创建完成，执行完成后将通过消息中心提示`
         flSuccessVisible.value = true
       }
       else {

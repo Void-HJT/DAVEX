@@ -17,4 +17,8 @@ public class Notification {
     private java.sql.Timestamp time;
     @TableField("hasRead")
     private Boolean hasRead;
+    @TableField("taskID")
+    private String taskID;
+    private Integer code;
+    private String type;
 }

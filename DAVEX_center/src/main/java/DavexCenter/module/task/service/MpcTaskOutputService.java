@@ -11,6 +11,7 @@ import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 
+import DavexBase.service.notification.NotificationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.stereotype.Service;
@@ -43,6 +44,9 @@ public class MpcTaskOutputService {
 
     @Autowired
     private FileService fileService;
+
+    @Autowired
+    private NotificationService notificationService;
 
     public void saveOutputFromAgent(MultipartFile file, MpcTaskOutput mpcTaskOutput) throws Exception {
         LambdaQueryWrapper<MpcTaskOutput> queryWrapper = Wrappers.<MpcTaskOutput>lambdaQuery()
@@ -84,9 +88,16 @@ public class MpcTaskOutputService {
             Files.createDirectories(savePath.getParent());
             Files.move(outputPath, savePath, StandardCopyOption.REPLACE_EXISTING);
         } catch (Exception e) {
+            String finishContent = String.format("MPC任务结果保存失败\n任务ID: %s\n任务类型: %s\n运行结果: %s",
+                    mpcTask.getUid(), mpcTask.getTaskType(), mpcTask.getStatus());
+            notificationService.setMessage(mpcTask.getApplicationId(), "MPC任务运行结束", finishContent, mpcTask.getUid(), 0, "mpc");
             throw e;
         }
         mpcTaskOutputMapper.insert(mpcTaskOutput);
+        // 运行结束的通知
+        String finishContent = String.format("MPC任务结果保存成功\n任务ID: %s\n任务类型: %s\n运行结果: %s",
+                mpcTask.getUid(), mpcTask.getTaskType(), mpcTask.getStatus());
+        notificationService.setMessage(mpcTask.getApplicationId(), "MPC任务运行结束", finishContent, mpcTask.getUid(), 1, "mpc");
     }
 
     public Body<String> fetchMpc(Long mpcOutputId, String applicationId) {
