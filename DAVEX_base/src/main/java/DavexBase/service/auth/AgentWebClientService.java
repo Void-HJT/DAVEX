@@ -94,9 +94,22 @@ public class AgentWebClientService {
         else
         {
             //验证该token是否过期
-            if(tokenValidationService.isTokenExpired(center_id)){
-                //如果过期重新申请
-                tokenResult = tokenValidationService.getToken(username,password,center_id);
+            String isExpired = tokenValidationService.checkTokenStatus(center_id);
+            if(!isExpired.equals("Token is valid")){
+                if (isExpired.equals("Token expired but Refresh Token is valid"))
+                {
+                    //如果refreshToken没过期则更新
+                    try {
+                        tokenValidationService.updateToken(center_id);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+                else if(isExpired.equals("Token expired and Refresh Token is invalid"))
+                {
+                    //如果过期重新申请
+                    tokenResult = tokenValidationService.getToken(username,password,center_id);
+                }
             }
         }
 

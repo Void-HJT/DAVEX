@@ -155,26 +155,24 @@ public class TokenValidationService {
         throw new RuntimeException("Failed to retrieve token from Keycloak");
     }
 
-
-    public boolean isTokenExpired(String authId) {
+    public String checkTokenStatus(String authId) {
 
         // 查询数据库获取 Keycloak 信息
         LambdaQueryWrapper<Keycloak> queryWrapper = Wrappers.lambdaQuery(Keycloak.class).eq(Keycloak::getAuthenticationId, authId);
         Keycloak keycloak = keycloakMapper.selectOne(queryWrapper);
 
         if (keycloak == null) {
-            throw new RuntimeException("Invalid Authentication ID");
+            return "Invalid Authentication ID";
         }
 
         // 从缓存中获取 Token
         TokenResult tokenResult = authTokenCache.getToken(keycloak.getServerUrl());
 
-        // 如果缓存中没有 Token
         if (tokenResult == null) {
-            throw new RuntimeException("No Token");
+            return "No Token available";
         }
 
-        // 使用 Introspection Endpoint 验证 Token 是否有效
+        // 使用 Introspection Endpoint 验证 Access Token 是否有效
         String introspectionUrl = keycloak.getServerUrl() + "/realms/" + keycloak.getRealm() + "/protocol/openid-connect/token/introspect";
 
         RestTemplate restTemplate = new RestTemplate();
@@ -191,11 +189,97 @@ public class TokenValidationService {
         if (response.getStatusCode() == HttpStatus.OK) {
             Map<String, Object> responseBody = response.getBody();
             Boolean active = (Boolean) responseBody.get("active");
-            return active == null || !active; // 返回 true 表示 Token 已过期或无效
+
+            if (active != null && active) {
+                return "Token is valid";
+            } else {
+                // Access Token 已过期或无效，检查 Refresh Token
+                return checkRefreshToken(keycloak, tokenResult.getRefreshToken());
+            }
         }
 
-        // 如果请求失败，视为 Token 无效
-        return true;
+        // 如果请求失败，返回错误信息
+        return "Failed to check Token status";
+    }
+
+    private String checkRefreshToken(Keycloak keycloak, String refreshToken) {
+        if (refreshToken == null || refreshToken.isEmpty()) {
+            return "Token expired and no Refresh Token available";
+        }
+
+        String tokenUrl = keycloak.getServerUrl() + "/realms/" + keycloak.getRealm() + "/protocol/openid-connect/token";
+
+        RestTemplate restTemplate = new RestTemplate();
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+
+        MultiValueMap<String, String> formData = new LinkedMultiValueMap<>();
+        formData.add("grant_type", "refresh_token");
+        formData.add("client_id", keycloak.getClientId());
+        formData.add("client_secret", keycloak.getClientSecret());
+        formData.add("refresh_token", refreshToken);
+
+        HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(formData, headers);
+        ResponseEntity<Map> response = restTemplate.postForEntity(tokenUrl, request, Map.class);
+
+        if (response.getStatusCode() == HttpStatus.OK) {
+            Map<String, Object> responseBody = response.getBody();
+            if (responseBody != null && responseBody.containsKey("access_token")) {
+                return "Token expired but Refresh Token is valid";
+            }
+        }
+
+        return "Token expired and Refresh Token is invalid";
+    }
+
+
+
+    public boolean updateToken(String authId) throws Exception{
+        // 查询数据库获取 Keycloak 信息
+        LambdaQueryWrapper<Keycloak> queryWrapper = Wrappers.lambdaQuery(Keycloak.class).eq(Keycloak::getAuthenticationId, authId);
+        Keycloak keycloak = keycloakMapper.selectOne(queryWrapper);
+
+        if (keycloak == null) {
+            throw new RuntimeException("Invalid Authentication ID");
+        }
+
+        // 从缓存中获取 Token
+        TokenResult tokenResult = authTokenCache.getToken(keycloak.getServerUrl());
+
+        if (tokenResult == null || tokenResult.getRefreshToken() == null) {
+            throw new RuntimeException("No Refresh Token available");
+        }
+
+        // 使用 RefreshToken 获取新的 AccessToken
+        String tokenUrl = keycloak.getServerUrl() + "/realms/" + keycloak.getRealm() + "/protocol/openid-connect/token";
+
+        RestTemplate restTemplate = new RestTemplate();
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+
+        MultiValueMap<String, String> formData = new LinkedMultiValueMap<>();
+        formData.add("grant_type", "refresh_token");
+        formData.add("client_id", keycloak.getClientId());
+        formData.add("client_secret", keycloak.getClientSecret());
+        formData.add("refresh_token", tokenResult.getRefreshToken());
+
+        HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(formData, headers);
+        ResponseEntity<Map> response = restTemplate.postForEntity(tokenUrl, request, Map.class);
+
+        if (response.getStatusCode() == HttpStatus.OK && response.getBody() != null) {
+            Map<String, Object> responseBody = response.getBody();
+            String newAccessToken = (String) responseBody.get("access_token");
+            String newRefreshToken = (String) responseBody.get("refresh_token");
+
+            // 更新缓存中的 Token
+            TokenResult newTokenResult = new TokenResult(newAccessToken, newRefreshToken);
+            authTokenCache.putToken(keycloak.getServerUrl(), newTokenResult);
+
+            return true; // 表示更新成功
+        }
+
+        // 如果刷新失败，抛出异常
+        throw new RuntimeException("Failed to refresh token");
     }
 
     public boolean updatePublicKey(String username, String password, String targetId) throws Exception {
@@ -261,7 +345,7 @@ public class TokenValidationService {
         }
         else
         {
-            return false;
+            throw new RuntimeException("logout failed");
         }
 
     }
@@ -298,7 +382,7 @@ public class TokenValidationService {
         try {
             ResponseEntity<Void> response = restTemplate.exchange(logoutUrl, HttpMethod.POST, request, Void.class);
             if (response.getStatusCode() == HttpStatus.NO_CONTENT) {
-                throw new RuntimeException("Successfully logged out. No additional content returned.");
+                return true;
             } else if (response.getStatusCode() != HttpStatus.OK) {
                 throw new RuntimeException("Unexpected response status: " + response.getStatusCode());
             }
@@ -306,7 +390,7 @@ public class TokenValidationService {
                 throw new RuntimeException("Failed to log out session: " + e.getMessage());
             }
 
-        return true;
+        return false;
     }
 
 }

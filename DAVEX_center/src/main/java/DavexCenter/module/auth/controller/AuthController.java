@@ -12,6 +12,10 @@ import DavexCenter.module.auth.service.KeycloakAdminService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
 
 @RestController
 @RequestMapping("/auth")
@@ -37,8 +41,8 @@ public class AuthController {
     }
 
     @PostMapping("/isTokenExpired")
-    public boolean isTokenExpired(@RequestParam("authId") String authId){
-        return tokenValidationService.isTokenExpired(authId);
+    public String isTokenExpired(@RequestParam("authId") String authId){
+        return tokenValidationService.checkTokenStatus(authId);
     }
 
     @PostMapping("/updatePublicKey")
@@ -47,6 +51,16 @@ public class AuthController {
                                    @RequestParam("authId") String authId){
         try {
             return tokenValidationService.updatePublicKey(username,password,authId);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    @PostMapping("/updateToken")
+    public boolean updateToken(@RequestParam("authId") String authId){
+        try {
+            return tokenValidationService.updateToken(authId);
         } catch (Exception e) {
             e.printStackTrace();
             return false;
@@ -68,6 +82,11 @@ public class AuthController {
     {
         TokenResult tokenResult = authTokenCache.getToken(keycloakUrl);
         return tokenResult;
+    }
+
+    @PostMapping("/getCache")
+    public Set<Map.Entry<String, TokenResult>> getCache(){
+        return authTokenCache.getAllEntries();
     }
 
     @PostMapping("/deleteCache")
