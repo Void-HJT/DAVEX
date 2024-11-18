@@ -35,14 +35,18 @@
         </el-table-column>
         <el-table-column label="标题" width="300">
           <template #default="scope">
-            <el-popover effect="light" trigger="hover" placement="top" width="auto">
-              <template #default>
-                <div>内容: {{ scope.row.content }}</div>
-              </template>
-              <template #reference>
-                <el-tag>{{ scope.row.title }}</el-tag>
-              </template>
-            </el-popover>
+            <div style="display: flex; align-items: center">
+              <el-icon v-if="scope.row.code === 1"><SuccessFilled /></el-icon>
+              <el-icon v-if="scope.row.code === 0"><WarningFilled /></el-icon>
+              <el-popover effect="light" trigger="hover" placement="top" width="auto">
+                <template #default>
+                  <div>内容: {{ scope.row.content }}</div>
+                </template>
+                <template #reference>
+                  <el-tag>{{ scope.row.title }}</el-tag>
+                </template>
+              </el-popover>
+            </div>
           </template>
         </el-table-column>
         <el-table-column label="状态" width="300">
@@ -56,7 +60,7 @@
         </el-table-column>
         <el-table-column label="操作">
           <template #default="scope">
-            <el-button size="small" @click="readMethod(scope.row.uid, scope.row.content);readNotificationVisible=true">
+            <el-button size="small" @click="readMethod(scope.row.uid, scope.row.content, scope.row.type);readNotificationVisible=true">
               查看
             </el-button>
             <el-button
@@ -84,10 +88,15 @@
   </el-container>
 
   <el-dialog v-model="readNotificationVisible" title="消息内容" width="30%">
-    <span>{{ notificationContent }}</span>
+    <span v-html="notificationContent"></span>
     <template #footer>
       <div class="dialog-footer">
-        <el-button type="primary" @click="readNotificationVisible=false;getNotificationMethod(1)">确定</el-button>
+        <router-link to="/result/mPc">
+          <el-button type="primary">
+            查看结果管理区
+          </el-button>
+        </router-link>
+        <el-button type="primary" @click="readNotificationVisible=false;getNotificationMethod(1)" style="margin-left: 10px;">确定</el-button>
       </div>
     </template>
   </el-dialog>
@@ -96,7 +105,7 @@
 <script lang="ts" setup>
 import {onMounted, ref, computed} from "vue";
 import {queryUnread, getNotification, read, getUnreadNotification} from "../../api/notification.js"
-import {MuteNotification} from "@element-plus/icons-vue";
+import {MuteNotification, SuccessFilled, WarningFilled} from "@element-plus/icons-vue";
 
 onMounted(() => {
   getNotificationMethod(currentPage.value)
@@ -123,6 +132,7 @@ const getNotificationBody = ref({
 const readBody = ref({
   notificationId: ''
 })
+const notificationType = ref('')
 
 const computedPage = computed(() => {
   return onlyUnread.value ? unreadCurrentPage.value : currentPage.value
@@ -177,12 +187,13 @@ const handleIgnore = (notificationId, content) => {
   });
 }
 
-const readMethod = async (notificationId, content) => {
+const readMethod = async (notificationId, content, type) => {
   try {
-    notificationContent.value = content
+    notificationContent.value = content.replace(/\n/g, '<br>')
     readBody.value.notificationId = notificationId
     const res = await read(readBody.value)
     console.log(res)
+    notificationType.value = type
   }
   catch (error) {
     console.error('Failed to read:', error)

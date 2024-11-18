@@ -113,7 +113,7 @@
           >
             <template v-slot="scope">
               <el-button
-                  v-if="scope.row.type === 'file'"
+                  v-if="scope.row.type === 'file' && scope.row.fileType?.includes('psi')"
                   link
                   type="primary"
                   @click="
@@ -129,7 +129,7 @@
                 选择第一方文件
               </el-button>
               <el-button
-                  v-if="scope.row.type === 'file'"
+                  v-if="scope.row.type === 'file' && scope.row.fileType?.includes('psi')"
                   link
                   type="primary"
                   :disabled="partyNumber === 2"
@@ -558,6 +558,12 @@ const handleSelectAgent = async (value) => {
 const handleSelectPartyNumber = async (value) => {
   partyNumber.value = value
   createPsiTaskBody.value.n = partyNumber.value
+  // 根据选择的参与方数量动态生成 partInfo
+  createPsiTaskBody.value.partInfo = Array.from({ length: partyNumber.value - 1 }, (_, index) => ({
+    agentID: "",
+    part: index + 1,
+    fileID: ""
+  }));
 }
 </script>
 

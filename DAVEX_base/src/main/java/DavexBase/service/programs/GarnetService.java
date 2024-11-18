@@ -200,6 +200,7 @@ public class GarnetService {
             mpcTaskMapper.updateById(mpcTask);
             logger.error(mpcTask.getUid() + ":编译失败");
             e.printStackTrace();
+            throw e;
         }
     }
 
