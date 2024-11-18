@@ -8,6 +8,7 @@ my:
   garnet_path: ${MY_GARNET_PATH:/home/user/Garnet}
   base_path: ${MY_BASE_PATH:/home/user/DVE}
   davex_type: ${MY_DAVEX_TYPE:DAVEX_AGENT}
+  env_path: ${MY_ENV_PATH:/home/drt/miniconda3/envs/sfenv}
   
 server:
   port: ${SERVER_PORT:8080}

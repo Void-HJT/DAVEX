@@ -8,6 +8,10 @@ my:
   garnet_path: ${MY_GARNET_PATH:/home/user/Garnet}
   base_path: ${MY_BASE_PATH:/home/user/DAVEX/base}
   davex_type: ${MY_DAVEX_TYPE:DAVEX_CENTER}
+  keycloak_username: ${MY_KEYCLOAK_USERNAME:DAVEX_ADMIN}
+  keycloak_password: ${MY_KEYCLOAK_PASSWORD:DAVEX_ADMIN}
+  keycloak_id: ${MY_KEYCLOAK_ID:DAVEX-CXX50}
+  env_path: ${MY_ENV_PATH:/home/drt/miniconda3/envs/sfenv}
 
 server:
   port: ${SERVER_PORT:9999}
