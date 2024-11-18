@@ -55,7 +55,7 @@ public class SecretFlowController {
 
     @GetMapping("/getRayStatus")
     public Body<String> getRayStatus() {
-        String command = "source sfenv/bin/activate && ray status";
+        String command = "conda activate sfenv && ray status";
         try {
             // 执行命令并获取结果
             Body<String> result = secretFlowService.executeCommand(command);
