@@ -3,7 +3,10 @@ package DavexBase.common;
 import DavexBase.info.TokenResult;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Component
@@ -20,6 +23,10 @@ public class AuthTokenCache {
 
     public void removeToken(String KeycloakUrl) {
         authTokenMap.remove(KeycloakUrl);
+    }
+
+    public Set<Map.Entry<String, TokenResult>> getAllEntries() {
+        return authTokenMap.entrySet();
     }
 
     // 可选：如果需要，可以添加清空缓存的方法

@@ -18,7 +18,11 @@ public class WebConfig implements WebMvcConfigurer {
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(authenticationInterceptor)
                 .addPathPatterns("/**")  // 对所有路径进行拦截
-                .excludePathPatterns("/**"); // 对公开路径不做拦截
+                .excludePathPatterns("/**")
+                .excludePathPatterns("/swagger-ui/**")           // Swagger UI 静态页面
+                .excludePathPatterns("/swagger-resources/**")    // Swagger 资源配置
+                .excludePathPatterns("/v3/api-docs/**")          // OpenAPI 3.0 文档路径
+                .excludePathPatterns("/webjars/**");             // Swagger UI 所需静态资源
     }
 
     @Override
