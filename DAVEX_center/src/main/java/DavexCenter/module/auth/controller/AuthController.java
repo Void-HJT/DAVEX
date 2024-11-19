@@ -6,11 +6,13 @@ import DavexBase.common.R;
 import DavexBase.entity.Keycloak;
 import DavexBase.entity.KeycloakCredentials;
 import DavexBase.info.TokenResult;
+import DavexBase.service.auth.CenterWebClientService;
 import DavexBase.service.auth.KeycloakService;
 import DavexBase.service.auth.TokenValidationService;
 import DavexCenter.module.auth.service.KeycloakAdminService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.reactive.function.client.WebClient;
 
 import java.util.List;
 import java.util.Map;
@@ -32,6 +34,9 @@ public class AuthController {
 
     @Autowired
     AuthTokenCache authTokenCache;
+
+    @Autowired
+    CenterWebClientService centerWebClientService;
 
     @PostMapping("/getToken")
     public TokenResult getToken(@RequestParam("username") String username,
@@ -156,7 +161,15 @@ public class AuthController {
         }
     }
 
-
+    @PostMapping("/getUser")
+    public List<Map<String, Object>> getUser(){
+        try {
+            return keycloakAdminService.getAllUsersWithRoles();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
 
 }
 

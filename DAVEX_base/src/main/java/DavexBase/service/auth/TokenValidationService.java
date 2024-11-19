@@ -232,8 +232,6 @@ public class TokenValidationService {
         return "Token expired and Refresh Token is invalid";
     }
 
-
-
     public boolean updateToken(String authId) throws Exception{
         // 查询数据库获取 Keycloak 信息
         LambdaQueryWrapper<Keycloak> queryWrapper = Wrappers.lambdaQuery(Keycloak.class).eq(Keycloak::getAuthenticationId, authId);
@@ -349,7 +347,6 @@ public class TokenValidationService {
         }
 
     }
-
 
     public boolean logout(String authId) throws Exception{
 

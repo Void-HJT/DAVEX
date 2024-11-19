@@ -12,6 +12,7 @@ import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -37,6 +38,7 @@ public class KeycloakAdminService {
     @Autowired
     private TokenValidationService tokenValidationService;
 
+    //添加用户
     public boolean addUser(String newUsername, String newPassword) throws Exception {
         Keycloak keycloak = keycloakMapper.selectById(keycloakId);
         if(keycloak==null){
@@ -69,6 +71,7 @@ public class KeycloakAdminService {
         }
     }
 
+    //删除用户
     public boolean deleteUser(String username) throws Exception {
         Keycloak keycloak = keycloakMapper.selectById(keycloakId);
         if (keycloak == null) {
@@ -109,6 +112,85 @@ public class KeycloakAdminService {
         } else {
             throw new RuntimeException("Failed to delete user: " + username);
         }
+    }
+
+    //列出用户
+    public List<Map<String, Object>> getAllUsersWithRoles() throws Exception {
+        Keycloak keycloak = keycloakMapper.selectById(keycloakId);
+        if (keycloak == null) {
+            throw new RuntimeException("Keycloak configuration not found");
+        }
+
+        // 获取管理员Token
+        TokenResult adminToken = authTokenCache.getToken("admin");
+        if (adminToken == null) {
+            adminToken = tokenValidationService.getToken(adminUsername, adminPassword, "admin");
+        }
+
+        RestTemplate restTemplate = new RestTemplate();
+
+        // 获取用户列表
+        String usersUrl = keycloak.getServerUrl() + "/admin/realms/" + keycloak.getRealm() + "/users";
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBearerAuth(adminToken.getAccessToken());
+
+        HttpEntity<Void> request = new HttpEntity<>(headers);
+        ResponseEntity<List> usersResponse = restTemplate.exchange(usersUrl, HttpMethod.GET, request, List.class);
+
+        if (usersResponse.getStatusCode() != HttpStatus.OK || usersResponse.getBody() == null) {
+            throw new RuntimeException("Failed to retrieve users list");
+        }
+
+        List<Map<String, Object>> users = usersResponse.getBody();
+        List<Map<String, Object>> usersWithRoles = new ArrayList<>();
+
+        // 遍历用户列表，获取每个用户的角色
+        for (Map<String, Object> user : users) {
+            String userId = (String) user.get("id");
+            String username = (String) user.get("username");
+
+            // 获取用户的所有角色（直接角色和客户端角色）
+            String roleMappingsUrl = keycloak.getServerUrl() + "/admin/realms/" + keycloak.getRealm() + "/users/" + userId + "/role-mappings";
+            ResponseEntity<Map> roleMappingsResponse = restTemplate.exchange(roleMappingsUrl, HttpMethod.GET, request, Map.class);
+
+            if (roleMappingsResponse.getStatusCode() != HttpStatus.OK || roleMappingsResponse.getBody() == null) {
+                throw new RuntimeException("Failed to retrieve role mappings for user: " + username);
+            }
+
+            Map<String, Object> roleMappings = roleMappingsResponse.getBody();
+
+            // 收集所有角色
+            List<String> roles = new ArrayList<>();
+
+            // Realm级角色
+            if (roleMappings.containsKey("realmMappings")) {
+                List<Map<String, Object>> realmMappings = (List<Map<String, Object>>) roleMappings.get("realmMappings");
+                for (Map<String, Object> realmRole : realmMappings) {
+                    roles.add((String) realmRole.get("name"));
+                }
+            }
+
+            // 客户端角色（如果需要，可以进一步处理）
+            if (roleMappings.containsKey("clientMappings")) {
+                Map<String, Map<String, Object>> clientMappings = (Map<String, Map<String, Object>>) roleMappings.get("clientMappings");
+                for (Map.Entry<String, Map<String, Object>> entry : clientMappings.entrySet()) {
+                    String clientId = entry.getKey();
+                    List<Map<String, Object>> clientRoles = (List<Map<String, Object>>) entry.getValue().get("mappings");
+                    for (Map<String, Object> clientRole : clientRoles) {
+                        roles.add(clientId + ":" + clientRole.get("name"));
+                    }
+                }
+            }
+
+            // 构造用户与角色的映射信息
+            Map<String, Object> userWithRoles = new HashMap<>();
+            userWithRoles.put("username", username);
+            userWithRoles.put("roles", roles);
+
+            usersWithRoles.add(userWithRoles);
+        }
+
+        return usersWithRoles;
     }
 
 
