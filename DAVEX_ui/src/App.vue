@@ -18,4 +18,8 @@ onUnmounted(() => {
 })
 </script>
 
-<style scoped></style>
+<style scoped>
+body {
+  font-family: "Microsoft YaHei", Arial, sans-serif;
+}
+</style>

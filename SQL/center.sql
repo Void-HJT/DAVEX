@@ -411,6 +411,9 @@ CREATE TABLE `notification` (
     `content` TEXT NOT NULL,
     `time` TIMESTAMP NOT NULL,
     `hasRead` BOOLEAN NOT NULL,
+    `taskID` varchar(255) NOT NULL,
+    `code` int NULL DEFAULT NULL,
+    `type` varchar(255) NOT NULL,
     PRIMARY KEY (`uid`) USING BTREE
 ) ENGINE = InnoDB AUTO_INCREMENT = 1 DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci;
 
