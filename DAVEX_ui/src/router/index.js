@@ -10,8 +10,8 @@ const router = createRouter({
     }, //登陆页
     {
       path: '/',
-      component: () => import('@/views/layout/layoutContainer.vue'),
-      redirect: '/login',
+      component: () => import('@/views/layout/newLayoutContainer.vue'),
+      redirect: '/datashare/fileTrans',
       children: [
         {
           path: 'locate/locateCompute',
