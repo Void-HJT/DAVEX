@@ -5,6 +5,7 @@ import java.security.PublicKey;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.security.spec.X509EncodedKeySpec;
+import java.sql.Timestamp;
 import java.util.Base64;
 
 import DavexBase.common.AuthTokenCache;
@@ -141,7 +142,7 @@ public class TokenValidationService {
             if (responseBody != null && responseBody.containsKey("access_token")) {
                 String accessToken = (String) responseBody.get("access_token");
                 String refreshToken = (String) responseBody.get("refresh_token");
-                TokenResult tokenResult = new TokenResult(accessToken, refreshToken);
+                TokenResult tokenResult = new TokenResult(authenticationId,accessToken, refreshToken,new Timestamp(System.currentTimeMillis()));
                 if(authenticationId=="admin"){
                     authTokenCache.putToken("admin",tokenResult);
                 }
@@ -270,7 +271,7 @@ public class TokenValidationService {
             String newRefreshToken = (String) responseBody.get("refresh_token");
 
             // 更新缓存中的 Token
-            TokenResult newTokenResult = new TokenResult(newAccessToken, newRefreshToken);
+            TokenResult newTokenResult = new TokenResult(tokenResult.getTargetId(),newAccessToken, newRefreshToken,tokenResult.getUpdateTime());
             authTokenCache.putToken(keycloak.getServerUrl(), newTokenResult);
 
             return true; // 表示更新成功
