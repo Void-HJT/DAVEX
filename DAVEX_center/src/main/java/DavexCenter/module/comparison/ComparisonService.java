@@ -15,6 +15,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import DavexBase.service.notification.NotificationService;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
@@ -54,6 +55,9 @@ public class ComparisonService {
 
         @Autowired
         private ComparisonFileService comparisonFileService;
+
+        @Autowired
+        private NotificationService notificationService;
 
         @Value("${file.upload-base-dir}")
         private String uploadBaseDir;
@@ -183,8 +187,17 @@ public class ComparisonService {
                 MultipartFile file = new CustomMultipartFile(jsonBytes, resultName);
 
                 // 调用 saveComparisonFile 方法
-                comparisonFileService.saveComparison(file, fileService.getSha256(file), applicationId, agentId, fileId, folderId, fileName,
+                Body<String> res = comparisonFileService.saveComparison(file, fileService.getSha256(file), applicationId, agentId, fileId, folderId, fileName,
                         uploadBaseDir, Timestamp.valueOf(LocalDateTime.now().plusWeeks(1)));
+                String content;
+                if (res.getCode() == 1) {
+                        content = String.format("比对任务完成\n代理: %s\n文件名: %s",
+                                agentId, fileName);
+                } else {
+                        content = String.format("比对任务失败\n代理: %s\n文件名: %s\n错误信息: %s",
+                                agentId, fileName, res.getMessage());
+                }
+                notificationService.setMessage(applicationId, "比对任务结束", content, null, res.getCode(), "comparison", true);
 
                 return Body.success(comparisonResults, "比对成功");
         }

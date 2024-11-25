@@ -41,9 +41,10 @@ public class NotificationController {
 
     @PostMapping("/set")
     public String set(@RequestParam String appID, @RequestParam String title, @RequestParam String content,
-                      @RequestParam String taskID, @RequestParam Integer code, @RequestParam String type) {
+                      @RequestParam String taskID, @RequestParam Integer code, @RequestParam String type,
+                      @RequestParam(defaultValue = "false") Boolean hasRead) {
         try {
-            notificationService.setMessage(appID, title, content, taskID, code, type);
+            notificationService.setMessage(appID, title, content, taskID, code, type, hasRead);
         } catch (Exception e) {
             return e.getMessage();
         }

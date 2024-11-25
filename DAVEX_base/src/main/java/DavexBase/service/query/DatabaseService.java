@@ -245,11 +245,31 @@ public class DatabaseService {
                 MultiValueMap<String, Object> multipartBody = new LinkedMultiValueMap<>();
                 multipartBody.add("file", multipartFile.getResource()); // 这里的 "file" 是服务端期望的文件字段名
 
-                agentWebClientService.agent2CenterWebClient("DAVEX-C2").post()
+                R<String> res = agentWebClientService.agent2CenterWebClient("DAVEX-C2").post()
                         .uri(UriBuilder -> UriBuilder.path("/queryFile/saveQuery").queryParam("hash", hash)
                                 .queryParam("applicationId", applicationId).build())
                         .contentType(MediaType.MULTIPART_FORM_DATA).body(BodyInserters.fromMultipartData(multipartBody))
                         .retrieve().bodyToMono(new ParameterizedTypeReference<R<String>>() {
+                        }).block();
+                // 记录结果消息
+                String content;
+                if (res.getBody().getCode() == 1) {
+                    content = String.format("查询任务完成\n代理: %s\n数据库id: %s\n表名: %s",
+                            agentId, databaseId, request.getTableName());
+                } else {
+                    content = String.format("查询任务完成\n代理: %s\n数据库id: %s\n表名: %s\n错误信息: %s",
+                            agentId, databaseId, request.getTableName(), res.getBody().getMessage());
+                }
+                agentWebClientService.agent2CenterWebClient("DAVEX-C2").post()
+                        .uri(uriBuilder -> uriBuilder.path("/notification/set")
+                                .queryParam("appID", applicationId)
+                                .queryParam("title", "查询任务结束")
+                                .queryParam("content", content)
+                                .queryParam("taskID", "")
+                                .queryParam("code", res.getBody().getCode())
+                                .queryParam("type", "query").build())
+                        .retrieve()
+                        .bodyToMono(new ParameterizedTypeReference<String>() {
                         }).block();
             } catch (Exception e) {
                 e.printStackTrace();
