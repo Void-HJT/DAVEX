@@ -23,6 +23,7 @@ public class AuthService {
     @Autowired
     private AgentMapper agentMapper;
     @Autowired
+    
     private CenterWebClientService webClientService;
 
     public void broacast(@NonNull Center me) {

@@ -15,9 +15,8 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.beans.factory.annotation.Autowired;
 import java.io.IOException;
 import DavexBase.service.auth.CenterWebClientService;
-import org.springframework.web.reactive.function.client.WebClient;
-import reactor.core.publisher.Mono;
-
+import DavexBase.mapper.AgentMapper;
+import DavexBase.entity.Agent;
 
 @Service
 public class SecretFlowService {
@@ -30,6 +29,8 @@ public class SecretFlowService {
     private My my;
     @Autowired
     private CenterWebClientService centerWebClientService;
+    @Autowired
+    private AgentMapper agentMapper;
 
 
 
@@ -80,7 +81,7 @@ public class SecretFlowService {
         return flFileController.saveFl(file,hash,applicationId,null);
     }
 
-    public Body<String> sendCommandToAgent(String agentId) {
+    public Body<String> getRayStatusFromAgent(String agentId) {
         try {
             Body<String> response = centerWebClientService.center2AgentWebClient(agentId).get()
                     .uri(uriBuilder -> uriBuilder.path("/SecretFlowTask/getRayStatus")
@@ -93,7 +94,38 @@ public class SecretFlowService {
         }
     }
 
+    public Body<String> chooseAgentJionRay(String agentId,String ip,String port,String name){
+        try {
+            Body<String> response = centerWebClientService.center2AgentWebClient(agentId).get()
+                    .uri(uriBuilder -> uriBuilder.path("/SecretFlowTask/joinRay")
+                            .queryParam("ip",ip)
+                            .queryParam("port",port)
+                            .queryParam("name",name)
+                            .build()).retrieve().bodyToMono(new ParameterizedTypeReference<Body<String>>() {
+                    })
+                    .block();
+            return response;
+        } catch (Exception e) {
+            return Body.error(e.getMessage());
+        }
+    }
+
     //调用网络接口 配置 url
+    //在数据库中插入一条agent信息
+    public Body<String> addAgent(String uid,String name,String ip,Integer port,String description){
+        try{
+            Agent agent = new Agent();
+agent.setUid(uid);
+agent.setName(name);
+agent.setIp(ip);
+agent.setPort(port);
+agent.setDescription(description);
+int result = agentMapper.insert(agent);
+return Body.success("成功");
+        }catch(Exception e){
+            return Body.error(e.getMessage());
+        }
+    }
 
 
 }

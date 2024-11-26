@@ -94,8 +94,20 @@ public class SecretFlowController {
     @GetMapping("/getOtherRayStatus")
     public Body<String> getOtherRayStatus(@RequestParam String agentId) {
         // 调用 service 中的方法执行命令
-        return secretFlowService.sendCommandToAgent(agentId);
+        return secretFlowService.getRayStatusFromAgent(agentId);
     }
+
+    @GetMapping("/chooseAgentJoinRay")
+    public Body<String> chooseAgentJionRay(@RequestParam String agentId,@RequestParam String ip,@RequestParam String port,@RequestParam String name) {
+        // 调用 service 中的方法执行命令
+        return secretFlowService.chooseAgentJionRay(agentId,ip,port,name);
+    }
+    @PostMapping("/addAgent")
+    public Body<String> addAgent(@RequestParam String uid,@RequestParam String name,@RequestParam String ip,@RequestParam Integer port,@RequestParam String description) {
+        // 调用 service 中的方法执行命令
+        return secretFlowService.addAgent( uid, name, ip, port,description);
+    }
+
 
     @PostMapping("/save/{fileName}")
     public Body<String> saveFile(@PathVariable String fileName) {
