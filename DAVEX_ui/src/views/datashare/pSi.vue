@@ -1,7 +1,7 @@
 <template>
   <el-container>
-    <span style="display: block; margin-bottom: 8px;">选择参与方数量</span>
-    <el-select v-model="partyNumber" placeholder="Select" style="width: 240px" @change="handleSelectPartyNumber">
+    <span style="display: block; margin-bottom: 10px;">选择参与方数量</span>
+    <el-select v-model="partyNumber" placeholder="Select" @change="handleSelectPartyNumber">
       <el-option
           v-for="item in partyNumbers"
           :key="item.value"
@@ -9,8 +9,8 @@
           :value="item.value"
       />
     </el-select>
-    <span style="display: block; margin-bottom: 8px;">选择代理</span>
-    <el-select v-model="agentId" placeholder="Select" style="width: 240px" @change="handleSelectAgent">
+    <span style="display: block; margin-bottom: 10px;">选择代理</span>
+    <el-select v-model="agentId" placeholder="Select" @change="handleSelectAgent">
       <el-option
           v-for="item in agents"
           :key="item.value"
@@ -18,32 +18,16 @@
           :value="item.value"
       />
     </el-select>
-    <el-header style="height: 50px">
-      <div
-          style="
-            background-color: antiquewhite;
-            height: 40px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-          "
-      >
-        <p
-            style="
-              font-size: 20px;
-              color: black;
-              opacity: 100%;
-              text-align: center;
-            "
-        >
-          文件列表
-        </p>
+    <el-header class="custom-header">
+      <div class="icon-text">
+        <el-icon style="margin-right: 10px"><Folder /></el-icon>
+        <span>文件列表</span>
       </div>
     </el-header>
     <el-main>
       <div>
-        <el-button @click="getDirectoryMethod">返回根目录</el-button>
-        <el-button @click="returnFrontDirectory">返回上一级目录</el-button>
+        <el-button class="default-button" @click="getDirectoryMethod">返回根目录</el-button>
+        <el-button class="default-button" @click="returnFrontDirectory">返回上一级目录</el-button>
       </div>
       <div>
         <el-table
@@ -113,9 +97,8 @@
           >
             <template v-slot="scope">
               <el-button
+                  class="small-default-button"
                   v-if="scope.row.type === 'file' && scope.row.fileType?.includes('psi')"
-                  link
-                  type="primary"
                   @click="
                     chooseFileMethod(
                       scope.row.agentId,
@@ -124,14 +107,15 @@
                       0
                     )
                   "
-                  size="small"
               >
-                选择第一方文件
+                <el-icon><Connection /></el-icon> 选择第一方文件
               </el-button>
               <el-button
+                  :class="[
+                    'small-default-button',
+                    { 'small-default-button-disabled': partyNumber === 2 }
+                  ]"
                   v-if="scope.row.type === 'file' && scope.row.fileType?.includes('psi')"
-                  link
-                  type="primary"
                   :disabled="partyNumber === 2"
                   @click="
                     chooseFileMethod(
@@ -141,9 +125,8 @@
                       1
                     )
                   "
-                  size="small"
               >
-                选择第二方文件
+                <el-icon><Connection /></el-icon> 选择第二方文件
               </el-button>
             </template>
           </el-table-column>
@@ -153,26 +136,10 @@
   </el-container>
 
   <el-container>
-    <el-header style="height: 50px">
-      <div
-          style="
-            background-color: antiquewhite;
-            height: 40px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-          "
-      >
-        <p
-            style="
-              font-size: 20px;
-              color: black;
-              opacity: 100%;
-              text-align: center;
-            "
-        >
-          上传输入数据
-        </p>
+    <el-header class="custom-header">
+      <div class="icon-text">
+        <el-icon style="margin-right: 10px"><Tickets /></el-icon>
+        <span>上传输入数据</span>
       </div>
     </el-header>
     <el-main>
@@ -205,14 +172,14 @@
           style="margin-top: 20px; margin-bottom: 20px;"
       >
         <template #trigger>
-          <el-button type="primary" style="margin-right: 10px;">上传输入文件</el-button>
+          <el-button class="default-button" style="margin-right: 10px;">上传输入文件</el-button>
         </template>
-        <el-button class="ml-3" type="success" @click="submitUpload" style="margin-right: 10px;">
+        <el-button class="start-button" @click="submitUpload">
           创建PSI任务
         </el-button>
         <template #tip>
           <div class="el-upload__tip text-red">
-            limit 1 file, new file will cover the old file
+            限制1个文件，新文件将覆盖旧文件
           </div>
         </template>
       </el-upload>
@@ -264,9 +231,9 @@
     <span>{{ psiSuccessMessage }}</span>
     <template #footer>
       <div class="dialog-footer">
-        <el-button @click="psiSuccessVisible = false" style="margin-right: 10px;">返回</el-button>
+        <el-button class="close-button" @click="psiSuccessVisible = false" style="margin-right: 10px;">返回</el-button>
         <router-link to="/result/mPc">
-          <el-button type="primary">
+          <el-button class="default-button">
             查看结果管理区
           </el-button>
         </router-link>
@@ -277,7 +244,7 @@
     <span>{{ psiFailedMessage }}</span>
     <template #footer>
       <div class="dialog-footer">
-        <el-button @click="psiFailedVisible = false">返回</el-button>
+        <el-button class="close-button" @click="psiFailedVisible = false">返回</el-button>
       </div>
     </template>
   </el-dialog>
@@ -291,6 +258,7 @@ import { createPsiTask } from '../../api/pSi.js'
 import {genFileId, UploadInstance, UploadProps, UploadRawFile} from 'element-plus'
 //导入axios
 import axios from 'axios'
+import {Connection} from "@element-plus/icons-vue";
 
 onMounted(() => {
   getAgentMethod()

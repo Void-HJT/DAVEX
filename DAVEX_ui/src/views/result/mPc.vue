@@ -1,25 +1,9 @@
 <template>
   <el-container>
-    <el-header style="height: 50px">
-      <div
-          style="
-          background-color: antiquewhite;
-          height: 40px;
-          display: flex;
-          justify-content: center;
-          align-items: center;
-        "
-      >
-        <p
-            style="
-            font-size: 20px;
-            color: black;
-            opacity: 100%;
-            text-align: center;
-          "
-        >
-          MPC/PSI结果列表
-        </p>
+    <el-header class="custom-header">
+      <div class="icon-text">
+        <el-icon style="margin-right: 10px"><Document /></el-icon>
+        <span>安全多方计算结果列表</span>
       </div>
     </el-header>
     <el-main>
@@ -54,15 +38,14 @@
         </el-table-column>
         <el-table-column label="操作">
           <template #default="scope">
-            <el-button size="small" @click="fetchMpcMethod(scope.row.uid)">
-              获取文件
+            <el-button class="small-default-button" @click="fetchMpcMethod(scope.row.uid)">
+              <el-icon><Download /></el-icon> 获取文件
             </el-button>
             <el-button
-                size="small"
-                type="danger"
+                class="small-delete-button"
                 @click="deleteMpcMethod(scope.row.uid)"
             >
-              删除文件
+              <el-icon><Delete /></el-icon> 删除文件
             </el-button>
           </template>
         </el-table-column>
@@ -74,7 +57,7 @@
     <span>{{ fetchSuccessMessage }}</span>
     <template #footer>
       <div class="dialog-footer">
-        <el-button type="primary" @click="fetchSuccessVisible = false">确定</el-button>
+        <el-button class="close-button" @click="fetchSuccessVisible = false">确定</el-button>
       </div>
     </template>
   </el-dialog>
@@ -82,7 +65,7 @@
     <span>{{ fetchFailedMessage }}</span>
     <template #footer>
       <div class="dialog-footer">
-        <el-button @click="fetchFailedVisible = false">返回</el-button>
+        <el-button class="close-button" @click="fetchFailedVisible = false">返回</el-button>
       </div>
     </template>
   </el-dialog>
@@ -90,7 +73,7 @@
     <span>{{ deleteSuccessMessage }}</span>
     <template #footer>
       <div class="dialog-footer">
-        <el-button type="primary" @click="deleteSuccessVisible = false">确定</el-button>
+        <el-button class="close-button" @click="deleteSuccessVisible = false">确定</el-button>
       </div>
     </template>
   </el-dialog>
@@ -98,7 +81,7 @@
     <span>{{ deleteFailedMessage }}</span>
     <template #footer>
       <div class="dialog-footer">
-        <el-button @click="deleteFailedVisible = false">返回</el-button>
+        <el-button class="close-button" @click="deleteFailedVisible = false">返回</el-button>
       </div>
     </template>
   </el-dialog>
@@ -107,6 +90,7 @@
 <script lang="ts" setup>
 import {onMounted, ref} from "vue";
 import {getMpcResult, fetchMpc, deleteMpc} from "../../api/mpcOutput.js"
+import {Delete, Document, Download} from "@element-plus/icons-vue";
 
 onMounted(() => {
   getMpcResultMethod()

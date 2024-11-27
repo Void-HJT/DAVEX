@@ -1,25 +1,9 @@
 <template>
   <el-container>
-    <el-header style="height: 50px">
-      <div
-        style="
-          background-color: antiquewhite;
-          height: 40px;
-          display: flex;
-          justify-content: center;
-          align-items: center;
-        "
-      >
-        <p
-          style="
-            font-size: 20px;
-            color: black;
-            opacity: 100%;
-            text-align: center;
-          "
-        >
-          接入数据库表
-        </p>
+    <el-header class="custom-header">
+      <div class="icon-text">
+        <el-icon style="margin-right: 10px"><DataBoard /></el-icon>
+        <span>接入数据库表</span>
       </div>
     </el-header>
     <el-table
@@ -81,12 +65,10 @@
             "
           >
             <el-button
-              link
-              type="primary"
+                class="small-default-button"
               @click="handleViewDatabaseTables(scope.row)"
-              size="small"
             >
-              查看数据库表
+              <el-icon><Memo /></el-icon> 查看数据库表
             </el-button>
           </div>
         </template>
@@ -139,20 +121,16 @@
               "
             >
               <el-button
-                link
-                type="primary"
+                  class="small-default-button"
                 @click="handleViewDatabaseTableSchemaExample(scope.row)"
-                size="small"
               >
-                表格式
+                <el-icon><Memo /></el-icon> 表格式
               </el-button>
               <el-button
-                link
-                type="primary"
+                  class="small-default-button"
                 @click="handleViewDatabaseTableExample(scope.row)"
-                size="small"
               >
-                样例
+                <el-icon><Memo /></el-icon> 样例
               </el-button>
             </div>
           </template>
@@ -173,12 +151,10 @@
               "
             >
               <el-button
-                link
-                type="primary"
+                  class="small-default-button"
                 @click="handleViewOpenQueryDialog(scope.row)"
-                size="small"
               >
-                查询
+                <el-icon><Search /></el-icon> 查询
               </el-button>
             </div>
           </template>
@@ -268,18 +244,16 @@
           <el-option label="LIKE" value="LIKE"></el-option>
           </el-select>
           <el-input v-model="condition.value" placeholder="输入值" style="flex: 2; margin-right: 10px;"></el-input>
-          <el-button 
-          @click="removeCondition(index)" 
-          type="danger"
-          style="margin-right: 0; padding: 2px 8px; font-size: 14px; line-height: 1.2;">
-          删除条件
+          <el-button
+              class="small-delete-button"
+              @click="removeCondition(index)" >
+            <el-icon><Delete /></el-icon> 删除条件
           </el-button>
           </div>
-          <el-button 
-          @click="addCondition" 
-          type="primary" 
-          style="padding: 2px 8px; font-size: 14px; line-height: 1.2;">
-          添加条件
+          <el-button
+              class="small-default-button"
+              @click="addCondition" >
+            <el-icon><Edit /></el-icon> 添加条件
           </el-button>
           </el-form-item>
 
@@ -308,7 +282,7 @@
       </el-form>
 
       <template #footer>
-        <el-button type="primary" @click="generateQuery">生成查询语句</el-button>
+        <el-button class="start-button" @click="generateQuery">生成查询语句</el-button>
       </template>
     </el-dialog>
 
@@ -316,9 +290,9 @@
     <span>{{ querySuccessMessage }}</span>
     <template #footer>
       <div class="dialog-footer">
-        <el-button @click="querySuccessVisible = false" style="margin-right: 10px;">返回</el-button>
+        <el-button class="close-button" @click="querySuccessVisible = false" style="margin-right: 10px">返回</el-button>
         <router-link to="/result/quEry">
-          <el-button type="primary">
+          <el-button class="default-button">
             查看结果管理区
           </el-button>
         </router-link>
@@ -329,7 +303,7 @@
     <span>{{ queryFailedMessage }}</span>
     <template #footer>
       <div class="dialog-footer">
-        <el-button @click="queryFailedVisible = false">返回</el-button>
+        <el-button class="close-button" @click="queryFailedVisible = false">返回</el-button>
       </div>
     </template>
   </el-dialog>
@@ -346,6 +320,7 @@ import {
   getDatabaseTable,
   query,
 } from '../../api/query.js'
+import {DataBoard, Delete, Download, Edit, Search} from "@element-plus/icons-vue";
 
 //初始化
 onMounted(() => {
