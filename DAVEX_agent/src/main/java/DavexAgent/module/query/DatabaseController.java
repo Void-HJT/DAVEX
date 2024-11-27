@@ -39,8 +39,11 @@ public class DatabaseController {
 
     @PostMapping("/locateQuery")
     public Body<byte[]> executeQuery(@RequestBody QueryRequest request,
-            @RequestParam("databaseId") Long databaseId) {
-        return databaseService.executeQuery(request, databaseId);
+            @RequestParam("databaseId") Long databaseId,
+            @RequestParam("chainMaker") boolean chainMaker,
+            @RequestParam("requestHash") String requestHash,
+            @RequestParam("requestId") String requestId) throws Exception {
+        return databaseService.executeQuery(request, databaseId,chainMaker,requestHash,requestId);
     }
 
     @PostMapping("/query2Agent")

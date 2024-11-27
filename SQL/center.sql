@@ -445,3 +445,13 @@ CREATE TABLE `keycloak_credentials` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 SET FOREIGN_KEY_CHECKS = 1;
+
+-- ----------------------------
+-- Table structure for keys_storage
+-- ----------------------------
+DROP TABLE IF EXISTS `keys_storage`;
+CREATE TABLE keys_storage (
+                              id INT AUTO_INCREMENT PRIMARY KEY,
+                              owner_name VARCHAR(255) NOT NULL, -- 唯一ID
+                              public_key TEXT NOT NULL       -- 公钥
+);
