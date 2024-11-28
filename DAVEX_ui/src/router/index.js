@@ -102,12 +102,12 @@ const router = createRouter({
           component: () => import('@/views/user/notification.vue'),
         },
         {
-          path: 'auth.js/tokens',
-          component: () => import('@/views/auth.js/tokens.vue'),
+          path: 'auth/tokens',
+          component: () => import('@/views/auth/tokens.vue'),
         },
         {
-          path: '/auth.js/userManagement',
-          component: () => import('@/views/auth.js/userManagement.vue'),
+          path: 'auth/userManagement',
+          component: () => import('@/views/auth/userManagement.vue'),
         }
       ],
     }, //布局
