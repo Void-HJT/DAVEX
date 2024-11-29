@@ -117,6 +117,7 @@ public class TokenValidationService {
     }
 
     public TokenResult getToken(String username, String password, String authenticationId) {
+        //ToDO 检查是否已存在
         LambdaQueryWrapper<Keycloak> queryWrapper = Wrappers.<Keycloak>lambdaQuery().eq(Keycloak::getAuthenticationId, authenticationId);
         Keycloak keycloak = keycloakMapper.selectOne(queryWrapper);
         if(keycloak==null){throw new RuntimeException("no authId");}
@@ -142,7 +143,7 @@ public class TokenValidationService {
             if (responseBody != null && responseBody.containsKey("access_token")) {
                 String accessToken = (String) responseBody.get("access_token");
                 String refreshToken = (String) responseBody.get("refresh_token");
-                TokenResult tokenResult = new TokenResult(authenticationId,accessToken, refreshToken,new Timestamp(System.currentTimeMillis()));
+                TokenResult tokenResult = new TokenResult(keycloak.getAuthenticationId(),keycloak.getClientId(),accessToken, refreshToken,new Timestamp(System.currentTimeMillis()));
                 if(authenticationId=="admin"){
                     authTokenCache.putToken("admin",tokenResult);
                 }
@@ -233,9 +234,9 @@ public class TokenValidationService {
         return "Token expired and Refresh Token is invalid";
     }
 
-    public boolean updateToken(String authId) throws Exception{
+    public boolean updateToken(String targetId) throws Exception{
         // 查询数据库获取 Keycloak 信息
-        LambdaQueryWrapper<Keycloak> queryWrapper = Wrappers.lambdaQuery(Keycloak.class).eq(Keycloak::getAuthenticationId, authId);
+        LambdaQueryWrapper<Keycloak> queryWrapper = Wrappers.lambdaQuery(Keycloak.class).eq(Keycloak::getAuthenticationId, targetId);
         Keycloak keycloak = keycloakMapper.selectOne(queryWrapper);
 
         if (keycloak == null) {
@@ -271,7 +272,7 @@ public class TokenValidationService {
             String newRefreshToken = (String) responseBody.get("refresh_token");
 
             // 更新缓存中的 Token
-            TokenResult newTokenResult = new TokenResult(tokenResult.getTargetId(),newAccessToken, newRefreshToken,tokenResult.getUpdateTime());
+            TokenResult newTokenResult = new TokenResult(tokenResult.getTargetId(),tokenResult.getClientId(),newAccessToken, newRefreshToken,new Timestamp(System.currentTimeMillis()));
             authTokenCache.putToken(keycloak.getServerUrl(), newTokenResult);
 
             return true; // 表示更新成功
@@ -380,6 +381,7 @@ public class TokenValidationService {
         try {
             ResponseEntity<Void> response = restTemplate.exchange(logoutUrl, HttpMethod.POST, request, Void.class);
             if (response.getStatusCode() == HttpStatus.NO_CONTENT) {
+                authTokenCache.removeToken(keycloakServerUrl);
                 return true;
             } else if (response.getStatusCode() != HttpStatus.OK) {
                 throw new RuntimeException("Unexpected response status: " + response.getStatusCode());

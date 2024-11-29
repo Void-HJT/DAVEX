@@ -7,6 +7,7 @@ import java.sql.Timestamp;
 @Data
 public class TokenResult {
     private String targetId;
+    private String clientId;
     private String accessToken;
     private String refreshToken;
     private java.sql.Timestamp updateTime;
@@ -16,8 +17,9 @@ public class TokenResult {
         this.refreshToken = refreshToken;
     }
 
-    public TokenResult(String targetId, String accessToken, String refreshToken, Timestamp updateTime) {
+    public TokenResult(String targetId,String clientId,String accessToken, String refreshToken, Timestamp updateTime) {
         this.targetId = targetId;
+        this.clientId = clientId;
         this.accessToken = accessToken;
         this.refreshToken = refreshToken;
         this.updateTime = updateTime;
