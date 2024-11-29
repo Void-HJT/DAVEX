@@ -2,12 +2,12 @@
   <el-container>
     <el-header class="custom-header">
       <div class="icon-text">
-        <el-icon style="margin-right: 10px"><Document /></el-icon>
+        <el-icon><Document /></el-icon>
         <span>查询结果列表</span>
       </div>
     </el-header>
     <el-main>
-      <el-table :data="resultData" style="width: 100%">
+      <el-table :data="resultData">
         <el-table-column label="上传时间" width="300">
           <template #default="scope">
             <div style="display: flex; align-items: center">

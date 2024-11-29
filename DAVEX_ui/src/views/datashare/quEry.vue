@@ -2,14 +2,12 @@
   <el-container>
     <el-header class="custom-header">
       <div class="icon-text">
-        <el-icon style="margin-right: 10px"><DataBoard /></el-icon>
+        <el-icon><DataBoard /></el-icon>
         <span>接入数据库表</span>
       </div>
     </el-header>
     <el-table
       :data="databaseData"
-      style="width: 100%"
-      stripe
       height="200"
       max-height="200"
     >

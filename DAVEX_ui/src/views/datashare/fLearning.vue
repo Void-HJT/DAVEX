@@ -34,7 +34,7 @@
       
       <el-header class="custom-header">
         <div class="icon-text">
-          <el-icon style="margin-right: 10px"><Folder /></el-icon>
+          <el-icon><Folder /></el-icon>
           <span>文件列表</span>
         </div>
       </el-header>
@@ -45,11 +45,9 @@
         </div>
         <div>
           <el-table
-              stripe
               :data="directoryData"
-              style="width: 100%"
               @row-dblclick="handleCellDoubleClick"
-              max-height="300"
+              max-height="400"
           >
             <el-table-column fixed label="" width="50" align="center">
               <template #default="scope">
@@ -66,7 +64,7 @@
             <el-table-column
                 label="文件ID"
                 prop="uid"
-                width="80"
+                width="200"
                 align="center"
             ></el-table-column>
             <el-table-column
@@ -78,7 +76,7 @@
             <el-table-column
                 label="所属代理"
                 prop="agentId"
-                width="80"
+                width="200"
                 align="center"
             ></el-table-column>
   
@@ -142,7 +140,7 @@
     <el-container>
       <el-header class="custom-header">
         <div class="icon-text">
-          <el-icon style="margin-right: 10px"><Tickets /></el-icon>
+          <el-icon><Tickets /></el-icon>
           <span>上传输入数据</span>
         </div>
       </el-header>

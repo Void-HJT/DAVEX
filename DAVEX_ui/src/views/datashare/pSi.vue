@@ -1,7 +1,7 @@
 <template>
   <el-container>
-    <span style="display: block; margin-bottom: 10px;">选择参与方数量</span>
-    <el-select v-model="partyNumber" placeholder="Select" @change="handleSelectPartyNumber">
+    <span style="display: block; margin-bottom: 10px;">参与方数量</span>
+    <el-select v-model="partyNumber" placeholder="选择参与方数量" @change="handleSelectPartyNumber">
       <el-option
           v-for="item in partyNumbers"
           :key="item.value"
@@ -9,8 +9,8 @@
           :value="item.value"
       />
     </el-select>
-    <span style="display: block; margin-bottom: 10px;">选择代理</span>
-    <el-select v-model="agentId" placeholder="Select" @change="handleSelectAgent">
+    <span style="display: block; margin-bottom: 10px;">代理</span>
+    <el-select v-model="agentId" placeholder="选择代理" @change="handleSelectAgent">
       <el-option
           v-for="item in agents"
           :key="item.value"
@@ -20,7 +20,7 @@
     </el-select>
     <el-header class="custom-header">
       <div class="icon-text">
-        <el-icon style="margin-right: 10px"><Folder /></el-icon>
+        <el-icon><Folder /></el-icon>
         <span>文件列表</span>
       </div>
     </el-header>
@@ -31,9 +31,7 @@
       </div>
       <div>
         <el-table
-            stripe
             :data="directoryData"
-            style="width: 100%"
             @row-dblclick="handleCellDoubleClick"
             max-height="300"
         >
@@ -52,7 +50,7 @@
           <el-table-column
               label="文件ID"
               prop="uid"
-              width="80"
+              width="200"
               align="center"
           ></el-table-column>
           <el-table-column
@@ -64,7 +62,7 @@
           <el-table-column
               label="所属代理"
               prop="agentId"
-              width="80"
+              width="200"
               align="center"
           ></el-table-column>
 
@@ -138,7 +136,7 @@
   <el-container>
     <el-header class="custom-header">
       <div class="icon-text">
-        <el-icon style="margin-right: 10px"><Tickets /></el-icon>
+        <el-icon><Tickets /></el-icon>
         <span>上传输入数据</span>
       </div>
     </el-header>
@@ -157,7 +155,7 @@
             class="styled-form"
         >
           <el-form-item label="主键">
-            <el-input v-model="createPsiTaskBody.runtimeParameters.PK"></el-input>
+            <el-input placeholder="输入主键" v-model="createPsiTaskBody.runtimeParameters.PK"></el-input>
           </el-form-item>
         </el-form>
       </div>
