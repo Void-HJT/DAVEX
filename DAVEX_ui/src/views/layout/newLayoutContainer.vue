@@ -106,7 +106,7 @@ import {Document, EditPen, Message, MessageBox, Promotion, User, UserFilled} fro
             </template>
             <el-menu-item index="/auth/tokens">
               <el-icon><EditPen /></el-icon>
-              <span class="centered-text">token管理</span>
+              <span class="centered-text">Token管理</span>
             </el-menu-item>
             <el-menu-item index="/auth/userManagement">
               <el-icon><EditPen /></el-icon>

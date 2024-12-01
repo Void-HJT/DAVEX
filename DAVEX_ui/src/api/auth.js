@@ -47,3 +47,31 @@ export const deleteToken = (authId) => {
     return res
 }
 
+export const getUser = () => {
+    let res = request.post('/auth/getUser')
+    return res
+}
+
+export const deleteUser = (username) => {
+    const params = new URLSearchParams()
+    params.append('username', username)
+    let res = request.post(
+        '/auth/deleteUser',
+        params.toString()
+    )
+    return res
+}
+
+export const addUser = (username,password) => {
+    const params = new URLSearchParams()
+    params.append('username', username)
+    params.append('password', password)
+    let res = request.post(
+        '/auth/addUser',
+        params.toString()
+    )
+    return res
+}
+
+
+

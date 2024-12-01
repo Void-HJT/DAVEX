@@ -28,6 +28,7 @@ import org.springframework.web.client.RestTemplate;
 import java.security.KeyFactory;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.logging.Logger;
 
 import io.jsonwebtoken.Claims;
@@ -144,7 +145,7 @@ public class TokenValidationService {
                 String accessToken = (String) responseBody.get("access_token");
                 String refreshToken = (String) responseBody.get("refresh_token");
                 TokenResult tokenResult = new TokenResult(keycloak.getAuthenticationId(),keycloak.getClientId(),accessToken, refreshToken,new Timestamp(System.currentTimeMillis()));
-                if(authenticationId=="admin"){
+                if(authenticationId.equals("admin")){
                     authTokenCache.putToken("admin",tokenResult);
                 }
                 else{
@@ -166,9 +167,15 @@ public class TokenValidationService {
         if (keycloak == null) {
             return "Invalid Authentication ID";
         }
+        TokenResult tokenResult;
 
         // 从缓存中获取 Token
-        TokenResult tokenResult = authTokenCache.getToken(keycloak.getServerUrl());
+        if(Objects.equals(authId, "admin")){
+            tokenResult = authTokenCache.getToken(authId);
+        }
+        else {
+            tokenResult = authTokenCache.getToken(keycloak.getServerUrl());
+        }
 
         if (tokenResult == null) {
             return "No Token available";
@@ -243,8 +250,14 @@ public class TokenValidationService {
             throw new RuntimeException("Invalid Authentication ID");
         }
 
+        TokenResult tokenResult;
         // 从缓存中获取 Token
-        TokenResult tokenResult = authTokenCache.getToken(keycloak.getServerUrl());
+        if(Objects.equals(targetId, "admin")){
+            tokenResult = authTokenCache.getToken(targetId);
+        }
+        else{
+            tokenResult = authTokenCache.getToken(keycloak.getServerUrl());
+        }
 
         if (tokenResult == null || tokenResult.getRefreshToken() == null) {
             throw new RuntimeException("No Refresh Token available");
@@ -273,7 +286,12 @@ public class TokenValidationService {
 
             // 更新缓存中的 Token
             TokenResult newTokenResult = new TokenResult(tokenResult.getTargetId(),tokenResult.getClientId(),newAccessToken, newRefreshToken,new Timestamp(System.currentTimeMillis()));
-            authTokenCache.putToken(keycloak.getServerUrl(), newTokenResult);
+            if(targetId=="admin"){
+                authTokenCache.putToken(targetId,newTokenResult);
+            }
+            else{
+                authTokenCache.putToken(keycloak.getServerUrl(), newTokenResult);
+            }
 
             return true; // 表示更新成功
         }
