@@ -126,6 +126,26 @@ public class KeycloakAdminService {
         if (adminToken == null) {
             adminToken = tokenValidationService.getToken(adminUsername, adminPassword, "admin");
         }
+        else {
+            //验证该token是否过期
+            String isExpired = tokenValidationService.checkTokenStatus("admin");
+            if(!isExpired.equals("Token is valid")){
+                if (isExpired.equals("Token expired but Refresh Token is valid"))
+                {
+                    //如果refreshToken没过期则更新
+                    try {
+                        tokenValidationService.updateToken("admin");
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+                else if(isExpired.equals("Token expired and Refresh Token is invalid"))
+                {
+                    //如果过期重新申请
+                    adminToken = tokenValidationService.getToken(adminUsername, adminPassword, "admin");
+                }
+            }
+        }
 
         RestTemplate restTemplate = new RestTemplate();
 

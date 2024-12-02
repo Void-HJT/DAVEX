@@ -12,6 +12,7 @@ import java.util.stream.Collectors;
 
 import javax.servlet.http.HttpServletResponse;
 
+import DavexBase.service.notification.NotificationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
@@ -45,6 +46,9 @@ public class FileController {
 
     @Autowired
     private CenterWebClientService centerWebClientService;
+
+    @Autowired
+    private NotificationService notificationService;
 
     // center结果管理区保存agent文件接口
     @PostMapping("/save")
@@ -163,11 +167,20 @@ public class FileController {
                 }
                 byte[] fileBytes = byteArrayOutputStream.toByteArray();
 
-                // 创建 CustomMultipartFile
+                // 创建 CustomMultipartFile，这里文件名随意
                 CustomMultipartFile multipartFile = new CustomMultipartFile(fileBytes, "1.pdf");
 
                 // 调用 save 方法
                 Body<String> result = save(multipartFile, fileInfo, applicationId, null);
+                String content;
+                if (result.getCode() == 1) {
+                    content = String.format("文件传输任务完成\n代理: %s\n文件名: %s",
+                            agentId, fileInfo.getName());
+                } else {
+                    content = String.format("文件传输任务失败\n代理: %s\n文件名: %s\n错误信息: %s",
+                            agentId, fileInfo.getName(), result.getMessage());
+                }
+                notificationService.setMessage(applicationId, "文件传输任务结束", content, null, result.getCode(), "fileTransfer", true);
                 future.complete(result);
             } catch (IOException e) {
                 future.completeExceptionally(e);

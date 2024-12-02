@@ -1,7 +1,7 @@
 <template>
   <el-container>
-    <span style="display: block; margin-bottom: 8px;">选择代理</span>
-    <el-select v-model="agentId" placeholder="Select" style="width: 240px" @change="handleSelectAgent">
+    <span style="display: block; margin-bottom: 10px;">代理</span>
+    <el-select v-model="agentId" placeholder="选择代理" @change="handleSelectAgent">
       <el-option
           v-for="item in agents"
           :key="item.value"
@@ -9,40 +9,22 @@
           :value="item.value"
       />
     </el-select>
-    <el-header style="height: 50px">
-      <div
-          style="
-          background-color: antiquewhite;
-          height: 40px;
-          display: flex;
-          justify-content: center;
-          align-items: center;
-        "
-      >
-        <p
-            style="
-            font-size: 20px;
-            color: black;
-            opacity: 100%;
-            text-align: center;
-          "
-        >
-          文件列表
-        </p>
+    <el-header class="custom-header">
+      <div class="icon-text">
+        <el-icon><Folder /></el-icon>
+        <span>文件列表</span>
       </div>
     </el-header>
     <el-main>
       <div>
-        <el-button @click="getDirectoryMethod">返回根目录</el-button>
-        <el-button @click="returnFrontDirectory">返回上一级目录</el-button>
+        <el-button class="default-button" @click="getDirectoryMethod">返回根目录</el-button>
+        <el-button class="default-button" @click="returnFrontDirectory">返回上一级目录</el-button>
       </div>
       <div>
         <el-table
-            stripe
             :data="directoryData"
-            style="width: 100%"
             @row-dblclick="handleCellDoubleClick"
-            max-height="300"
+            max-height="400"
         >
           <el-table-column fixed label="" width="50" align="center">
             <template #default="scope">
@@ -60,7 +42,7 @@
           <el-table-column
               label="文件ID"
               prop="uid"
-              width="80"
+              width="200"
               align="center"
           ></el-table-column>
           <el-table-column
@@ -72,7 +54,7 @@
           <el-table-column
               label="所属代理"
               prop="agentId"
-              width="80"
+              width="200"
               align="center"
           ></el-table-column>
 
@@ -105,9 +87,8 @@
           >
             <template v-slot="scope">
               <el-button
+                  class="small-default-button"
                   v-if="scope.row.type === 'file' && scope.row.name.endsWith('.csv')"
-                  link
-                  type="primary"
                   @click="
                   getTableHeaderMethod(
                     scope.row.agentId,
@@ -116,14 +97,12 @@
                     scope.row.name
                   )
                 "
-                  size="small"
               >
-                查看表头信息
+                <el-icon><Memo /></el-icon> 查看表头信息
               </el-button>
               <el-button
+                  class="small-default-button"
                   v-if="scope.row.type === 'file' && scope.row.name.endsWith('.txt')"
-                  link
-                  type="primary"
                   @click="
                   getTXTExampleMethod(
                     scope.row.agentId,
@@ -132,9 +111,8 @@
                     scope.row.name
                   )
                 "
-                  size="small"
               >
-                查看文件示例
+                <el-icon><Memo /></el-icon> 查看文件示例
               </el-button>
 <!--              <el-button-->
 <!--                  v-if="scope.row.type === 'file' && scope.row.name.endsWith('.csv') && !isAccessible(scope.row.ruleList)"-->
@@ -153,26 +131,10 @@
   </el-container>
 
   <el-container v-if="getTableHeaderBody.fileId">
-    <el-header style="height: 50px">
-      <div
-          style="
-          background-color: antiquewhite;
-          height: 40px;
-          display: flex;
-          justify-content: center;
-          align-items: center;
-        "
-      >
-        <p
-            style="
-            font-size: 20px;
-            color: black;
-            opacity: 100%;
-            text-align: center;
-          "
-        >
-          文件表头信息
-        </p>
+    <el-header class="custom-header">
+      <div class="icon-text">
+        <el-icon><Tickets /></el-icon>
+        <span>文件表头信息</span>
       </div>
     </el-header>
     <el-main>
@@ -207,19 +169,19 @@
           style="margin-top: 20px; margin-bottom: 20px;"
       >
         <template #trigger>
-          <el-button type="primary" style="margin-right: 10px;">上传csv文件</el-button>
+          <el-button class="default-button" style="margin-right: 10px;">上传csv文件</el-button>
         </template>
-        <el-button class="ml-3" type="success" @click="submitUpload" style="margin-right: 10px;">
+        <el-button class="start-button" @click="submitUpload">
           比对
         </el-button>
         <template #tip>
           <div class="el-upload__tip text-red">
-            limit 1 file, new file will cover the old file
+            限制1个文件，新文件将覆盖旧文件
           </div>
         </template>
       </el-upload>
 
-      <el-button type="primary" @click="selectAttributesVisible = true">输入数据进行比对</el-button>
+      <el-button class="start-button" @click="selectAttributesVisible = true">输入数据进行比对</el-button>
     </el-main>
   </el-container>
 
@@ -236,9 +198,9 @@
     </el-checkbox-group>
     <template #footer>
       <div class="dialog-footer">
-        <el-button @click="selectAttributesVisible = false" style="margin-right: 10px;">返回</el-button>
-        <el-button type="primary" @click="confirmAttributes">
-          确定
+        <el-button class="close-button" @click="selectAttributesVisible = false" style="margin-right: 10px;">返回</el-button>
+        <el-button class="next-button" @click="confirmAttributes">
+          下一步
         </el-button>
       </div>
     </template>
@@ -255,21 +217,20 @@
         </el-form-item>
       </div>
       <el-button
-          type="danger"
-          size="small"
+          class="small-delete-button"
           @click="removeDataRow(rowIndex)"
           v-if="inputData.length > 1"
       >
-        删除数据
+        <el-icon><Delete /></el-icon> 删除数据
       </el-button>
     </div>
-    <el-button type="primary" size="small" @click="addDataRow" style="margin-bottom: 10px;">
-      添加数据
+    <el-button class="small-default-button" @click="addDataRow" style="margin-bottom: 10px;">
+      <el-icon><Edit /></el-icon> 添加数据
     </el-button>
     <template #footer>
       <div class="dialog-footer">
-        <el-button @click="resetAttributes" style="margin-right: 10px;">重新选择属性</el-button>
-        <el-button type="primary" @click="compareData">
+        <el-button class="close-button" @click="resetAttributes" style="margin-right: 10px;">重新选择属性</el-button>
+        <el-button class="start-button" @click="compareData">
           比对
         </el-button>
       </div>
@@ -280,9 +241,9 @@
     <span>{{ compareSuccessMessage }}</span>
     <template #footer>
       <div class="dialog-footer">
-        <el-button @click="compareSuccessVisible = false" style="margin-right: 10px;">返回</el-button>
+        <el-button class="close-button" @click="compareSuccessVisible = false" style="margin-right: 10px;">返回</el-button>
         <router-link to="/result/comPare">
-          <el-button type="primary">
+          <el-button class="default-button">
             查看结果管理区
           </el-button>
         </router-link>
@@ -293,32 +254,16 @@
     <span>{{ compareFailedMessage }}</span>
     <template #footer>
       <div class="dialog-footer">
-        <el-button @click="compareFailedVisible = false">返回</el-button>
+        <el-button class="close-button" @click="compareFailedVisible = false">返回</el-button>
       </div>
     </template>
   </el-dialog>
 
   <el-container v-if="getTXTExampleBody.fileId">
-    <el-header style="height: 50px">
-      <div
-          style="
-          background-color: antiquewhite;
-          height: 40px;
-          display: flex;
-          justify-content: center;
-          align-items: center;
-        "
-      >
-        <p
-            style="
-            font-size: 20px;
-            color: black;
-            opacity: 100%;
-            text-align: center;
-          "
-        >
-          文本文件示例
-        </p>
+    <el-header class="custom-header">
+      <div class="icon-text">
+        <el-icon style="margin-right: 10px"><Tickets /></el-icon>
+        <span>文本文件示例</span>
       </div>
     </el-header>
     <el-main>
@@ -349,19 +294,19 @@
           style="margin-top: 20px; margin-bottom: 20px;"
       >
         <template #trigger>
-          <el-button type="primary" style="margin-right: 10px;">上传txt文件</el-button>
+          <el-button class="default-button" style="margin-right: 10px;">上传txt文件</el-button>
         </template>
-        <el-button class="ml-3" type="success" @click="submitUploadTXT" style="margin-right: 10px;">
+        <el-button class="start-button" @click="submitUploadTXT">
           比对
         </el-button>
         <template #tip>
           <div class="el-upload__tip text-red">
-            limit 1 file, new file will cover the old file
+            限制1个文件，新文件将覆盖旧文件
           </div>
         </template>
       </el-upload>
 
-      <el-button type="primary" @click="inputTextDataVisible = true">输入数据进行比对</el-button>
+      <el-button class="start-button" @click="inputTextDataVisible = true">输入数据进行比对</el-button>
     </el-main>
   </el-container>
 
@@ -374,20 +319,19 @@
         <el-input v-model="rowData.value" placeholder="请输入数据"></el-input>
       </el-form-item>
       <el-button
-          type="danger"
-          size="small"
+          class="small-delete-button"
           @click="removeTextDataRow(rowIndex)"
           v-if="inputTextData.length > 1"
       >
-        删除数据
+        <el-icon><Delete /></el-icon> 删除数据
       </el-button>
     </div>
-    <el-button type="primary" size="small" @click="addTextDataRow" style="margin-bottom: 10px;">
-      添加数据
+    <el-button class="small-default-button" @click="addTextDataRow" style="margin-bottom: 10px;">
+      <el-icon><Edit /></el-icon> 添加数据
     </el-button>
     <template #footer>
       <div class="dialog-footer">
-        <el-button type="primary" @click="compareTXTData">
+        <el-button class="start-button" @click="compareTXTData">
           比对
         </el-button>
       </div>
@@ -402,6 +346,7 @@ import {getDirectory, getRootByAgent} from '../../api/folderController.js'
 import {getTableHeader, compareFromCsv, compare, getTXTExample, compareFromTXT, compareTXT} from "../../api/comparison.js";
 import {onMounted, ref} from "vue";
 import {genFileId, UploadInstance, UploadProps, UploadRawFile} from "element-plus";
+import {Delete, Download, Tickets} from "@element-plus/icons-vue";
 
 onMounted(() => {
   getAgentMethod()

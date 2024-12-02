@@ -53,9 +53,9 @@ public class AuthController {
     }
 
     @PostMapping("/updateToken")
-    public boolean updateToken(@RequestParam("authId") String authId){
+    public boolean updateToken(@RequestParam("targetId") String targetId){
         try {
-            return tokenValidationService.updateToken(authId);
+            return tokenValidationService.updateToken(targetId);
         } catch (Exception e) {
             e.printStackTrace();
             return false;

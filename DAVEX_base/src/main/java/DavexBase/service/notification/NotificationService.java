@@ -32,6 +32,11 @@ public class NotificationService {
     }
 
     public void setMessage(String appID, String title, String content, String taskID, Integer code, String type) {
+        // 默认值重载方法
+        setMessage(appID, title, content, taskID, code, type, false);
+    }
+
+    public void setMessage(String appID, String title, String content, String taskID, Integer code, String type, Boolean hasRead) {
         LambdaQueryWrapper<Notification> queryWrapper = Wrappers.<Notification>lambdaQuery()
                 .eq(Notification::getTaskID, taskID)
                 .eq(Notification::getCode, code);
@@ -43,7 +48,7 @@ public class NotificationService {
         message.setAppID(appID);
         message.setTitle(title);
         message.setContent(content);
-        message.setHasRead(false);
+        message.setHasRead(hasRead);
         message.setTime(new java.sql.Timestamp(System.currentTimeMillis()));
         message.setTaskID(taskID);
         message.setCode(code);
