@@ -89,7 +89,7 @@
   <div>
     <el-button
       class="default-button"
-      style="margin-right: 10px;"
+      style="margin-top: 10px;"
       @click="handleViewAddToken"
   >
     添加Token
