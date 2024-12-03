@@ -1,126 +1,100 @@
 <template>
-
-  <el-header style="height: 50px">
-  <div
-      style="
-          background-color: antiquewhite;
-          height: 40px;
-          display: flex;
-          justify-content: center;
-          align-items: center;
-        "
-  >
-    <p
-        style="
-            font-size: 20px;
-            color: black;
-            opacity: 100%;
-            text-align: center;
-          "
-    >
-      当前服务已保存的Token
-    </p>
-  </div>
-</el-header>
-
-<el-table
-    :data="tokensData"
-    style="width: 100%"
-    stripe
-    height="200"
-    max-height="200"
->
-  <!-- 客户端ID -->
-  <el-table-column
-      label="认证服务"
-      prop="clientId"
-      width="250"
-      align="center"
-  ></el-table-column>
-
-  <!-- 认证服务地址 -->
-  <el-table-column
-      label="认证服务地址"
-      prop="keycloakUrl"
-      width="220"
-      align="center"
-  ></el-table-column>
-
-  <!-- 认证目标 -->
-  <el-table-column
-      label="认证目标"
-      prop="targetId"
-      width="200"
-      align="center"
-  ></el-table-column>
-
-  <!-- 当前 Token -->
-  <el-table-column
-      label="当前Token"
-      width="180"
-      align="center"
-  >
-    <template #default="scope">
-      <el-tooltip class="item" effect="dark" :content="scope.row.accessToken" placement="top">
-        <span>{{ scope.row.accessToken.length > 20
-            ? scope.row.accessToken.slice(0, 20) + '...'
-            : scope.row.accessToken }}</span>
-      </el-tooltip>
-    </template>
-  </el-table-column>
-
-  <!-- 更新时间 -->
-  <el-table-column
-      label="更新时间"
-      prop="updateTime"
-      width="180"
-      align="center"
-  ></el-table-column>
-
-  <el-table-column
-      fixed="right"
-      label="操作"
-      width="120"
-      mid-width="60"
-      header-align="center"
-      align="center"
-  >
-    <template v-slot="scope">
-      <div
-          style="
-              display: flex;
-              justify-content: center;
-              align-items: center;
-            "
-      >
-        <el-button
-            link
-            type="primary"
-            @click="handleViewTokenIsValid(scope.row)"
-            size="small"
-        >
-          检查有效性
-        </el-button>
-        <el-button
-            link
-            type="danger"
-            @click="handleDeleteToken(scope.row)"
-            size="small"
-        >
-          删除
-        </el-button>
+  <el-container>
+    <el-header class="custom-header">
+      <div class="icon-text">
+        <el-icon><DataBoard /></el-icon>
+        <span>当前服务已保存的Token</span>
       </div>
-    </template>
-  </el-table-column>
-</el-table>
-  <el-button
+    </el-header>
+    <el-table
+      :data="tokensData"
+      style="width: 100%"
+      stripe
+      height="200"
+      max-height="200"
+    >
+    <el-table-column
+        label="认证服务"
+        prop="clientId"
+        width="250"
+        align="center"
+    ></el-table-column>
+    <el-table-column
+        label="认证服务地址"
+        prop="keycloakUrl"
+        width="220"
+        align="center"
+    ></el-table-column>
+    <el-table-column
+        label="认证目标"
+        prop="targetId"
+        width="200"
+        align="center"
+    ></el-table-column>
+    <el-table-column
+        label="当前Token"
+        width="180"
+        align="center"
+    >
+      <template #default="scope">
+        <el-tooltip class="item" effect="dark" :content="scope.row.accessToken" placement="top">
+          <span>{{ scope.row.accessToken.length > 20
+              ? scope.row.accessToken.slice(0, 20) + '...'
+              : scope.row.accessToken }}</span>
+        </el-tooltip>
+      </template>
+    </el-table-column>
+    <el-table-column
+        label="更新时间"
+        prop="updateTime"
+        width="180"
+        align="center"
+    ></el-table-column>
+    <el-table-column
+        fixed="right"
+        label="操作"
+        width="120"
+        mid-width="60"
+        header-align="center"
+        align="center"
+    >
+      <template v-slot="scope">
+        <div
+            style="
+                display: flex;
+                justify-content: center;
+                align-items: center;
+              "
+        >
+          <el-button
+              link
+              type="primary"
+              @click="handleViewTokenIsValid(scope.row)"
+              size="small"
+          >
+            检查有效性
+          </el-button>
+          <el-button
+              link
+              type="danger"
+              @click="handleDeleteToken(scope.row)"
+              size="small"
+          >
+            删除
+          </el-button>
+        </div>
+      </template>
+    </el-table-column>
+    </el-table>
+  <div>
+    <el-button
       class="default-button"
       style="margin-right: 10px;"
       @click="handleViewAddToken"
   >
     添加Token
-  </el-button>
-
+  </el-button> 
+  </div>
   <el-dialog v-model="isTokenExpiredVisible" title="有效性检查" width="30%">
     <!-- 显示消息 -->
     <span>{{ isTokenExpiredMessage }}</span>
@@ -160,6 +134,7 @@
 
   </el-dialog>
 
+  </el-container>
 </template>
 
 
@@ -286,6 +261,7 @@ const getTokenCacheList = async () => {
     console.error('Failed to get cache list:', error);
   }
 };
+
 
 </script>
 <style scoped></style>

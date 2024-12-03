@@ -1,13 +1,13 @@
 <template>
 
-  <div class="user-table-container">
-    <!-- 表头 -->
-    <el-header style="height: 50px">
-      <div class="table-header">
-        <p class="table-title">当前认证服务用户</p>
+<el-container>
+ <!-- 表头 -->
+  <el-header class="custom-header">
+      <div class="icon-text">
+        <el-icon><DataBoard /></el-icon>
+        <span>当前服务用户</span>
       </div>
-    </el-header>
-
+  </el-header>
     <!-- 动态高度表格 -->
     <el-table
         :data="keycloakUserData"
@@ -22,7 +22,6 @@
           width="250"
           align="center"
       ></el-table-column>
-
       <!-- 认证服务地址 -->
       <el-table-column
           label="认证服务地址"
@@ -44,17 +43,14 @@
           label="用户权限"
           width="280"
           align="center"
-      >
-        <template #default="scope">
-          <el-tooltip class="item" effect="dark" :content="scope.row.roles.join('\n')" placement="top">
+        >
+          <template #default="scope">
             <div class="roles-cell">
-              <span v-for="(role, index) in scope.row.roles.slice(0, 3)" :key="index" class="role-item">
+              <span v-for="(role, index) in scope.row.roles" :key="index" class="role-item">
                 {{ role }}
               </span>
-              <span v-if="scope.row.roles.length > 3" class="role-ellipsis">...</span>
             </div>
-          </el-tooltip>
-        </template>
+          </template>
       </el-table-column>
 
       <!-- 操作列 -->
@@ -79,13 +75,16 @@
     </el-table>
 
     <!-- 底部按钮 -->
-    <div class="table-actions">
-      <el-button type="primary" @click="handleViewAddUser">添加用户</el-button>
+    <div>
+    <el-button
+      class="default-button"
+      style="margin-right: 10px;"
+      @click="handleViewAddUser"
+  >
+    添加认证用户
+    </el-button> 
     </div>
-  </div>
-
-
-  <el-dialog v-model="addUserVisible" title="获取目标所在认证服务Token" width="30%">
+  <el-dialog v-model="addUserVisible" title="在认证服务上添加新用户" width="30%">
     <el-form :model="addUserData" label-width="100px">
       <el-form-item label="用户名">
         <el-input v-model="addUserData.username" placeholder="请输入"></el-input>
@@ -98,8 +97,8 @@
       <el-button @click="addUserVisible = false">取消</el-button>
       <el-button type="primary" @click="handleAddUser(addUserData)">确定</el-button>
     </div>
-
   </el-dialog>
+</el-container>
 
 </template>
 
@@ -130,6 +129,8 @@ const addUserData = ref(
       password:'',
     }
 )
+const keycloak = "DAVEX-CXX50-KEYCLOAK"
+const url = "http://10.176.37.50:10001"
 
 // 点击按钮处理函数
 
@@ -192,8 +193,8 @@ const getKeycloakUserList = async () => {
       keycloakUserData.value = res.data.map(item => ({
         username: item.username,
         roles: item.roles,
-        clientId: '假设客户端ID',
-        keycloakUrl: '假设认证服务地址'
+        clientId: keycloak,
+        keycloakUrl: url
       }));
       tableHeight.value = `${Math.min(this.keycloakUserData.length * 50 + 60, 600)}px`; // 最大600px
     } else {
@@ -208,18 +209,12 @@ const getKeycloakUserList = async () => {
 <style scoped>
 .roles-cell {
   display: flex;
-  flex-direction: column;
-  max-height: 80px; /* 限制高度，控制显示行数 */
-  overflow: hidden;
+  flex-direction: column; /* 让子元素纵向排列 */
+  align-items: center; /* 左对齐 */
 }
 
 .role-item {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.role-ellipsis {
-  color: gray;
+  margin-bottom: 4px; /* 每行之间的间距 */
+  word-break: break-all; /* 自动换行，防止超出列宽 */
 }
 </style>

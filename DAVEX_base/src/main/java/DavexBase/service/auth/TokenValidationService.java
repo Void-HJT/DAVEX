@@ -286,7 +286,7 @@ public class TokenValidationService {
 
             // 更新缓存中的 Token
             TokenResult newTokenResult = new TokenResult(tokenResult.getTargetId(),tokenResult.getClientId(),newAccessToken, newRefreshToken,new Timestamp(System.currentTimeMillis()));
-            if(targetId=="admin"){
+            if(Objects.equals(targetId, "admin")){
                 authTokenCache.putToken(targetId,newTokenResult);
             }
             else{
@@ -379,7 +379,16 @@ public class TokenValidationService {
         String realm = keycloak.getRealm();
         String clientId = keycloak.getClientId();
         String clientSecret = keycloak.getClientSecret();
-        TokenResult tokenResult = authTokenCache.getToken(keycloakServerUrl);
+        //
+        TokenResult tokenResult;
+        if(Objects.equals(authId, "admin")){
+            tokenResult = authTokenCache.getToken(authId);
+        }
+        else
+        {
+            tokenResult = authTokenCache.getToken(keycloakServerUrl);
+        }
+
         if (tokenResult == null) {
             throw new RuntimeException("no login");
         }
@@ -399,7 +408,13 @@ public class TokenValidationService {
         try {
             ResponseEntity<Void> response = restTemplate.exchange(logoutUrl, HttpMethod.POST, request, Void.class);
             if (response.getStatusCode() == HttpStatus.NO_CONTENT) {
-                authTokenCache.removeToken(keycloakServerUrl);
+                //
+                if(Objects.equals(authId, "admin")){
+                    authTokenCache.removeToken(authId);
+                }
+                else {
+                    authTokenCache.removeToken(keycloakServerUrl);
+                }
                 return true;
             } else if (response.getStatusCode() != HttpStatus.OK) {
                 throw new RuntimeException("Unexpected response status: " + response.getStatusCode());
