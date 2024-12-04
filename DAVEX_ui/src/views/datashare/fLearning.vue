@@ -3,9 +3,9 @@
   <!-- <span style="display: block; margin-bottom: 8px;">选择代理</span> -->
   <!-- 创建一个button，点击代用创建ray节点的函数 -->
   <el-header style="height: 50px">
-  <el-button type="primary" @click="activeRayMethod">创建ray节点</el-button>
-  <el-button type="primary" @click="stopRayMethod">关闭ray节点</el-button>
-  <el-button type="primary" @click="getRayStatusMethod">查看节点状态</el-button>
+  <el-button class="default-button" @click="activeRayMethod">创建ray节点</el-button>
+  <el-button class="default-button" @click="stopRayMethod">关闭ray节点</el-button>
+  <el-button class="default-button" @click="getRayStatusMethod">查看节点状态</el-button>
   <el-select v-model="agentId" placeholder="选择代理" style="width: 240px;margin-left: 15px;margin-right: 15px" @change="handleSelectAgent">
         <el-option
             v-for="item in agents"
@@ -14,7 +14,7 @@
             :value="item.value"
         />
       </el-select>
-      <el-button type="primary" @click="getRayStatusMethod">将该agent加入当前节点</el-button>
+      <el-button class="default-button" @click="getRayStatusMethod">将该agent加入当前节点</el-button>
   </el-header>
   <!-- 创建一个下拉框 -->
   <el-dialog v-model="alertMessageVisible" :title="alertTitle" width="50%">
@@ -23,7 +23,7 @@
   </span>
 <template #footer>
   <div class="dialog-footer">
-    <el-button @click="alertMessageVisible = false">返回</el-button>
+    <el-button class="close-button" @click="alertMessageVisible = false">返回</el-button>
     
   </div>
 </template>
@@ -32,40 +32,22 @@
 </div>
     <el-container>
       
-      <el-header style="height: 50px">
-        <div
-            style="
-            background-color: antiquewhite;
-            height: 40px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-          "
-        >
-          <p
-              style="
-              font-size: 20px;
-              color: black;
-              opacity: 100%;
-              text-align: center;
-            "
-          >
-            文件列表
-          </p>
+      <el-header class="custom-header">
+        <div class="icon-text">
+          <el-icon><Folder /></el-icon>
+          <span>文件列表</span>
         </div>
       </el-header>
       <el-main>
         <div>
-          <el-button @click="getDirectoryMethod">返回根目录</el-button>
-          <el-button @click="returnFrontDirectory">返回上一级目录</el-button>
+          <el-button class="default-button" @click="getDirectoryMethod">返回根目录</el-button>
+          <el-button class="default-button" @click="returnFrontDirectory">返回上一级目录</el-button>
         </div>
         <div>
           <el-table
-              stripe
               :data="directoryData"
-              style="width: 100%"
               @row-dblclick="handleCellDoubleClick"
-              max-height="300"
+              max-height="400"
           >
             <el-table-column fixed label="" width="50" align="center">
               <template #default="scope">
@@ -82,7 +64,7 @@
             <el-table-column
                 label="文件ID"
                 prop="uid"
-                width="80"
+                width="200"
                 align="center"
             ></el-table-column>
             <el-table-column
@@ -94,7 +76,7 @@
             <el-table-column
                 label="所属代理"
                 prop="agentId"
-                width="80"
+                width="200"
                 align="center"
             ></el-table-column>
   
@@ -127,9 +109,8 @@
             >
               <template v-slot="scope">
                 <el-button
+                    class="small-default-button"
                     v-if="scope.row.type === 'file'"
-                    link
-                    type="primary"
                     @click="
                     chooseModelMethod(
                       scope.row.agentId,
@@ -137,9 +118,8 @@
                       scope.row.name
                     )
                   "
-                    size="small"
                 >
-                  选择该模型文件
+                  <el-icon><Connection /></el-icon> 选择该模型文件
                 </el-button>
                 <!-- <el-button
                     v-if="scope.row.type === 'file' && scope.row.name.endsWith('.csv') && !isAccessible(scope.row.ruleList)"
@@ -158,26 +138,10 @@
     </el-container>
 
     <el-container>
-      <el-header style="height: 50px">
-        <div
-            style="
-            background-color: antiquewhite;
-            height: 40px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-          "
-        >
-          <p
-              style="
-              font-size: 20px;
-              color: black;
-              opacity: 100%;
-              text-align: center;
-            "
-          >
-            上传输入数据
-          </p>
+      <el-header class="custom-header">
+        <div class="icon-text">
+          <el-icon><Tickets /></el-icon>
+          <span>上传输入数据</span>
         </div>
       </el-header>
       <el-main>
@@ -199,14 +163,14 @@
             style="margin-top: 20px; margin-bottom: 20px;"
         >
           <template #trigger>
-            <el-button type="primary" style="margin-right: 10px;">上传文件</el-button>
+            <el-button class="default-button" style="margin-right: 10px;">上传文件</el-button>
           </template>
-          <el-button class="ml-3" type="success" @click="submitUpload" style="margin-right: 10px;">
+          <el-button class="start-button" @click="submitUpload">
             创建联邦学习任务
           </el-button>
           <template #tip>
             <div class="el-upload__tip text-red">
-              你可以在此选择一个文件并上传
+              限制1个文件，新文件将覆盖旧文件
             </div>
           </template>
         </el-upload>
@@ -217,9 +181,9 @@
       <span>{{ createFLTaskMessage }}</span>
       <template #footer>
         <div class="dialog-footer">
-          <el-button @click="createFLTaskVisible = false" style="margin-right: 10px;">返回</el-button>
+          <el-button class="close-button" @click="createFLTaskVisible = false" style="margin-right: 10px;">返回</el-button>
           <router-link to="/result/fL">
-            <el-button type="primary">
+            <el-button class="default-button">
               查看结果管理区
             </el-button>
           </router-link>
@@ -263,7 +227,7 @@
           </el-table>
       <template #footer>
         <div class="dialog-footer">
-          <el-button @click="rayStatusDialogVisible = false" style="margin-right: 10px;">返回</el-button>
+          <el-button class="close-button" @click="rayStatusDialogVisible = false">返回</el-button>
         </div>
       </template>
     </el-dialog>
@@ -275,6 +239,7 @@ import {getAgent} from '../../api/testDve.js'
 import {getDirectory, getRootByAgent} from '../../api/folderController.js'
 import {onMounted, ref,reactive,computed} from "vue";
 import {genFileId, UploadInstance, UploadProps, UploadRawFile} from "element-plus";
+import {Connection} from "@element-plus/icons-vue";
 
 onMounted(() => {
     getAgentMethod()

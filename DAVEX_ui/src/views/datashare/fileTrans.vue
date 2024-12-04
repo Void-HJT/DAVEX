@@ -1,7 +1,7 @@
 <template>
   <el-container>
-    <span style="display: block; margin-bottom: 8px;">选择代理</span>
-    <el-select v-model="agentId" placeholder="Select" style="width: 240px" @change="handleSelectAgent">
+    <span style="display: block; margin-bottom: 10px;">代理</span>
+    <el-select v-model="agentId" placeholder="选择代理" @change="handleSelectAgent">
       <el-option
           v-for="item in agents"
           :key="item.value"
@@ -9,40 +9,42 @@
           :value="item.value"
       />
     </el-select>
-    <el-header style="height: 50px">
-      <div
-          style="
-          background-color: antiquewhite;
-          height: 40px;
-          display: flex;
-          justify-content: center;
-          align-items: center;
-        "
-      >
-        <p
-            style="
-            font-size: 20px;
-            color: black;
-            opacity: 100%;
-            text-align: center;
-          "
-        >
-          文件列表
-        </p>
+    <el-header class="custom-header">
+<!--      <div-->
+<!--          style="-->
+<!--          background-color: antiquewhite;-->
+<!--          height: 40px;-->
+<!--          display: flex;-->
+<!--          justify-content: center;-->
+<!--          align-items: center;-->
+<!--        "-->
+<!--      >-->
+<!--        <p-->
+<!--            style="-->
+<!--            font-size: 20px;-->
+<!--            color: black;-->
+<!--            opacity: 100%;-->
+<!--            text-align: center;-->
+<!--          "-->
+<!--        >-->
+<!--          文件列表-->
+<!--        </p>-->
+<!--      </div>-->
+      <div class="icon-text">
+        <el-icon><Folder /></el-icon>
+        <span>文件列表</span>
       </div>
     </el-header>
     <el-main>
       <div>
-        <el-button @click="getDirectoryMethod">返回根目录</el-button>
-        <el-button @click="returnFrontDirectory">返回上一级目录</el-button>
+        <el-button class="default-button" @click="getDirectoryMethod">返回根目录</el-button>
+        <el-button class="default-button" @click="returnFrontDirectory">返回上一级目录</el-button>
       </div>
       <div>
         <el-table
-            stripe
             :data="directoryData"
-            style="width: 100%"
             @row-dblclick="handleCellDoubleClick"
-            max-height="300"
+            max-height="400"
         >
           <el-table-column fixed label="" width="50" align="center">
             <template #default="scope">
@@ -60,7 +62,7 @@
           <el-table-column
               label="文件ID"
               prop="uid"
-              width="80"
+              width="200"
               align="center"
           ></el-table-column>
           <el-table-column
@@ -72,7 +74,7 @@
           <el-table-column
               label="所属代理"
               prop="agentId"
-              width="80"
+              width="200"
               align="center"
           ></el-table-column>
 
@@ -105,9 +107,8 @@
           >
             <template v-slot="scope">
               <el-button
+                  class="small-default-button"
                   v-if="scope.row.type === 'file'"
-                  link
-                  type="primary"
                   @click="
                   getFileMethod(
                     scope.row.uid,
@@ -115,9 +116,8 @@
                     scope.row.parentId
                   )
                 "
-                  size="small"
               >
-                获取文件
+                <el-icon><Download /></el-icon> 获取文件
               </el-button>
 <!--              <el-button-->
 <!--                  v-if="scope.row.type === 'file' && !isAccessible(scope.row.ruleList)"-->
@@ -132,13 +132,14 @@
           </el-table-column>
         </el-table>
       </div>
+
       <el-dialog v-model="transSuccessVisible" title="文件传输结果" width="30%">
         <span>文件传输完成</span>
         <template #footer>
           <div class="dialog-footer">
-            <el-button @click="transSuccessVisible = false" style="margin-right: 10px;">返回</el-button>
+            <el-button class="close-button" @click="transSuccessVisible = false" style="margin-right: 10px;">返回</el-button>
             <router-link to="/result/fileTrans">
-              <el-button type="primary">
+              <el-button class="default-button">
                   查看结果管理区
               </el-button>
             </router-link>
@@ -149,7 +150,7 @@
         <span>{{ transFailedMessage }}</span>
         <template #footer>
           <div class="dialog-footer">
-            <el-button @click="transFailedVisible = false">返回</el-button>
+            <el-button class="close-button" @click="transFailedVisible = false">返回</el-button>
           </div>
         </template>
       </el-dialog>
@@ -162,6 +163,7 @@ import {getAgent} from '../../api/testDve.js'
 import {getDirectory, getRootByAgent} from '../../api/folderController.js'
 import {getFile} from "../../api/direct.js";
 import {onMounted, ref} from "vue";
+import {Download} from "@element-plus/icons-vue";
 
 onMounted(() => {
   getAgentMethod()

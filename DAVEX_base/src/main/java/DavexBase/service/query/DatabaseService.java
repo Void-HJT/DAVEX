@@ -4,15 +4,13 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
+import java.security.*;
 import java.sql.*;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.regex.Pattern;
 
+import DavexBase.common.*;
+import DavexBase.service.blockchain.UpChainService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.MediaType;
@@ -40,6 +38,8 @@ import DavexBase.mapper.DatabaseTableMapper;
 import DavexBase.service.auth.AgentWebClientService;
 import DavexBase.service.auth.CenterWebClientService;
 
+import static DavexBase.common.UUIDGenerator.generateUUID;
+
 @Service
 public class DatabaseService {
 
@@ -57,6 +57,12 @@ public class DatabaseService {
 
     @Autowired
     private ExternalDatabaseProperties externalDatabasePropertiesBean;
+
+    @Autowired
+    private My my;
+
+    @Autowired
+    private UpChainService upChainService;
 
     // 定义 SQL 注入关键词和模式
     private static final String[] SQL_INJECTION_KEYWORDS = { "DROP", "DELETE", "UNION", "SLEEP", "--", "' OR '1'='1" };
@@ -135,7 +141,7 @@ public class DatabaseService {
         return Body.success(outsideDatabaseTables, "返回成功");
     }
 
-    public Body<byte[]> executeQuery(QueryRequest request, Long databaseId) {
+    public Body<byte[]> executeQuery(QueryRequest request, Long databaseId, Boolean chainMaker, String requestHash, String requestId) throws Exception {
         // 遍历请求中的所有条件并检查是否存在 SQL 注入
         for (Object condition : request.getConditions().values()) {
             if (condition instanceof String && isSqlInjectionSuspected((String) condition)) {
@@ -186,6 +192,15 @@ public class DatabaseService {
                     mapper.writeValue(out, results);
                     byte[] jsonData = out.toByteArray();
 
+                    if(chainMaker){
+                        String responseMsgJson = new String(jsonData, StandardCharsets.UTF_8);
+                        //生成responseID
+                        String responseId = generateUUID("response", "query", my.getId());
+                        //将响应进行上链操作
+                        ContractResponse responseResponse = upChainService.responseUpChain(requestHash,responseMsgJson,responseId,requestId,my.getId(),"agent");
+                        return Body.success(jsonData, "查询成功");
+                    }
+
                     // 返回查询结果
                     return Body.success(jsonData, "查询成功");
 
@@ -211,9 +226,28 @@ public class DatabaseService {
     public Body<String> query2Agent(QueryRequest request, String applicationId, String agentId, Long databaseId) {
 
         try {
+            //生成requestID
+            String centerId = my.getId();
+            String requestId = generateUUID("request", "query", centerId);
+            String requestMsg = "{" +
+                    "\"application\": \"" + applicationId + "\", " +
+                    "\"center\": \"" + centerId + "\", " +
+                    "\"database\": \"" + databaseId + "\", " +
+                    "\"agentId\": \"" + agentId + "\"" +
+                    "}";
+            String fileDescription = centerId + "has a query task related to the external database"+ databaseId + "that the " + agentId + "is connected to.";
+
+            //将请求进行上链操作
+            ContractResponse respectResponse = upChainService.requestUpChain(requestId,fileDescription,requestMsg,centerId,"center");
+            Map<String, Object> resultMap = (Map<String, Object>) respectResponse.getData();
+            String requestHash = resultMap.get("sharing_setting_hash").toString();
+
             Body<byte[]> response = centerWebClientService.center2AgentWebClient(agentId).post()
                     .uri(uriBuilder -> uriBuilder.path("/query/database/locateQuery")
                             .queryParam("databaseId", databaseId)
+                            .queryParam("chainMaker", true)
+                            .queryParam("requestHash", requestHash)
+                            .queryParam("requestId", requestId)
                             .build())
                     .bodyValue(request) // 将请求体设置为QueryRequest
                     .retrieve() // 准备接收响应

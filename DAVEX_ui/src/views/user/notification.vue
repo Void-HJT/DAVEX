@@ -1,25 +1,9 @@
 <template>
   <el-container>
-    <el-header style="height: 50px">
-      <div
-          style="
-          background-color: antiquewhite;
-          height: 40px;
-          display: flex;
-          justify-content: center;
-          align-items: center;
-        "
-      >
-        <p
-            style="
-            font-size: 20px;
-            color: black;
-            opacity: 100%;
-            text-align: center;
-          "
-        >
-          消息列表
-        </p>
+    <el-header class="custom-header">
+      <div class="icon-text">
+        <el-icon style="margin-right: 10px"><MessageBox /></el-icon>
+        <span>消息列表</span>
       </div>
     </el-header>
     <el-main>
@@ -60,15 +44,14 @@
         </el-table-column>
         <el-table-column label="操作">
           <template #default="scope">
-            <el-button size="small" @click="readMethod(scope.row.uid, scope.row.content, scope.row.type);readNotificationVisible=true">
-              查看
+            <el-button class="small-default-button" @click="readMethod(scope.row.uid, scope.row.content, scope.row.type);readNotificationVisible=true">
+              <el-icon><View /></el-icon> 查看
             </el-button>
             <el-button
-                size="small"
-                type="info"
+                class="small-default-button"
                 @click="handleIgnore(scope.row.uid, scope.row.content)"
             >
-              忽略
+              <el-icon><MuteNotification /></el-icon> 忽略
             </el-button>
           </template>
         </el-table-column>
@@ -92,11 +75,11 @@
     <template #footer>
       <div class="dialog-footer">
         <router-link to="/result/mPc">
-          <el-button type="primary">
+          <el-button class="default-button">
             查看结果管理区
           </el-button>
         </router-link>
-        <el-button type="primary" @click="readNotificationVisible=false;getNotificationMethod(1)" style="margin-left: 10px;">确定</el-button>
+        <el-button class="close-button" @click="readNotificationVisible=false;getNotificationMethod(1)" style="margin-left: 10px;">确定</el-button>
       </div>
     </template>
   </el-dialog>
@@ -105,7 +88,7 @@
 <script lang="ts" setup>
 import {onMounted, ref, computed} from "vue";
 import {queryUnread, getNotification, read, getUnreadNotification} from "../../api/notification.js"
-import {MuteNotification, SuccessFilled, WarningFilled} from "@element-plus/icons-vue";
+import {MessageBox, Mute, MuteNotification, SuccessFilled, View, WarningFilled} from "@element-plus/icons-vue";
 
 onMounted(() => {
   getNotificationMethod(currentPage.value)

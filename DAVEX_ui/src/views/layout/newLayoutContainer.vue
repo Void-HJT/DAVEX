@@ -106,7 +106,7 @@ import {Document, EditPen, Message, MessageBox, Promotion, User, UserFilled} fro
             </template>
             <el-menu-item index="/auth/tokens">
               <el-icon><EditPen /></el-icon>
-              <span class="centered-text">token管理</span>
+              <span class="centered-text">Token管理</span>
             </el-menu-item>
             <el-menu-item index="/auth/userManagement">
               <el-icon><EditPen /></el-icon>
@@ -131,13 +131,14 @@ import {Document, EditPen, Message, MessageBox, Promotion, User, UserFilled} fro
   background-color: #165ac6;
   display: flex;
   align-items: center;
+  margin-bottom: 10px;
 }
 .header-text {
   background-color: #165ac6;
   color: white;
-  font-family: 'Microsoft YaHei';
   font-size: 24px;
   padding: 10px;
+  font-weight: bold;
 }
 .logo-img {
   width: 120px;

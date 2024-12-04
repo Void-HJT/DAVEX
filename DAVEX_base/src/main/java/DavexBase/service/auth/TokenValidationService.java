@@ -28,6 +28,7 @@ import org.springframework.web.client.RestTemplate;
 import java.security.KeyFactory;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.logging.Logger;
 
 import io.jsonwebtoken.Claims;
@@ -117,6 +118,7 @@ public class TokenValidationService {
     }
 
     public TokenResult getToken(String username, String password, String authenticationId) {
+        //ToDO 检查是否已存在
         LambdaQueryWrapper<Keycloak> queryWrapper = Wrappers.<Keycloak>lambdaQuery().eq(Keycloak::getAuthenticationId, authenticationId);
         Keycloak keycloak = keycloakMapper.selectOne(queryWrapper);
         if(keycloak==null){throw new RuntimeException("no authId");}
@@ -142,8 +144,8 @@ public class TokenValidationService {
             if (responseBody != null && responseBody.containsKey("access_token")) {
                 String accessToken = (String) responseBody.get("access_token");
                 String refreshToken = (String) responseBody.get("refresh_token");
-                TokenResult tokenResult = new TokenResult(authenticationId,accessToken, refreshToken,new Timestamp(System.currentTimeMillis()));
-                if(authenticationId=="admin"){
+                TokenResult tokenResult = new TokenResult(keycloak.getAuthenticationId(),keycloak.getClientId(),accessToken, refreshToken,new Timestamp(System.currentTimeMillis()));
+                if(authenticationId.equals("admin")){
                     authTokenCache.putToken("admin",tokenResult);
                 }
                 else{
@@ -165,9 +167,15 @@ public class TokenValidationService {
         if (keycloak == null) {
             return "Invalid Authentication ID";
         }
+        TokenResult tokenResult;
 
         // 从缓存中获取 Token
-        TokenResult tokenResult = authTokenCache.getToken(keycloak.getServerUrl());
+        if(Objects.equals(authId, "admin")){
+            tokenResult = authTokenCache.getToken(authId);
+        }
+        else {
+            tokenResult = authTokenCache.getToken(keycloak.getServerUrl());
+        }
 
         if (tokenResult == null) {
             return "No Token available";
@@ -233,17 +241,23 @@ public class TokenValidationService {
         return "Token expired and Refresh Token is invalid";
     }
 
-    public boolean updateToken(String authId) throws Exception{
+    public boolean updateToken(String targetId) throws Exception{
         // 查询数据库获取 Keycloak 信息
-        LambdaQueryWrapper<Keycloak> queryWrapper = Wrappers.lambdaQuery(Keycloak.class).eq(Keycloak::getAuthenticationId, authId);
+        LambdaQueryWrapper<Keycloak> queryWrapper = Wrappers.lambdaQuery(Keycloak.class).eq(Keycloak::getAuthenticationId, targetId);
         Keycloak keycloak = keycloakMapper.selectOne(queryWrapper);
 
         if (keycloak == null) {
             throw new RuntimeException("Invalid Authentication ID");
         }
 
+        TokenResult tokenResult;
         // 从缓存中获取 Token
-        TokenResult tokenResult = authTokenCache.getToken(keycloak.getServerUrl());
+        if(Objects.equals(targetId, "admin")){
+            tokenResult = authTokenCache.getToken(targetId);
+        }
+        else{
+            tokenResult = authTokenCache.getToken(keycloak.getServerUrl());
+        }
 
         if (tokenResult == null || tokenResult.getRefreshToken() == null) {
             throw new RuntimeException("No Refresh Token available");
@@ -271,8 +285,13 @@ public class TokenValidationService {
             String newRefreshToken = (String) responseBody.get("refresh_token");
 
             // 更新缓存中的 Token
-            TokenResult newTokenResult = new TokenResult(tokenResult.getTargetId(),newAccessToken, newRefreshToken,tokenResult.getUpdateTime());
-            authTokenCache.putToken(keycloak.getServerUrl(), newTokenResult);
+            TokenResult newTokenResult = new TokenResult(tokenResult.getTargetId(),tokenResult.getClientId(),newAccessToken, newRefreshToken,new Timestamp(System.currentTimeMillis()));
+            if(Objects.equals(targetId, "admin")){
+                authTokenCache.putToken(targetId,newTokenResult);
+            }
+            else{
+                authTokenCache.putToken(keycloak.getServerUrl(), newTokenResult);
+            }
 
             return true; // 表示更新成功
         }
@@ -360,7 +379,16 @@ public class TokenValidationService {
         String realm = keycloak.getRealm();
         String clientId = keycloak.getClientId();
         String clientSecret = keycloak.getClientSecret();
-        TokenResult tokenResult = authTokenCache.getToken(keycloakServerUrl);
+        //
+        TokenResult tokenResult;
+        if(Objects.equals(authId, "admin")){
+            tokenResult = authTokenCache.getToken(authId);
+        }
+        else
+        {
+            tokenResult = authTokenCache.getToken(keycloakServerUrl);
+        }
+
         if (tokenResult == null) {
             throw new RuntimeException("no login");
         }
@@ -380,6 +408,13 @@ public class TokenValidationService {
         try {
             ResponseEntity<Void> response = restTemplate.exchange(logoutUrl, HttpMethod.POST, request, Void.class);
             if (response.getStatusCode() == HttpStatus.NO_CONTENT) {
+                //
+                if(Objects.equals(authId, "admin")){
+                    authTokenCache.removeToken(authId);
+                }
+                else {
+                    authTokenCache.removeToken(keycloakServerUrl);
+                }
                 return true;
             } else if (response.getStatusCode() != HttpStatus.OK) {
                 throw new RuntimeException("Unexpected response status: " + response.getStatusCode());

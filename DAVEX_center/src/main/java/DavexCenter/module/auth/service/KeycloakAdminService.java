@@ -2,7 +2,9 @@ package DavexCenter.module.auth.service;
 
 import DavexBase.common.AuthTokenCache;
 import DavexBase.entity.Keycloak;
+import DavexBase.entity.KeycloakCredentials;
 import DavexBase.info.TokenResult;
+import DavexBase.mapper.KeycloakCredentialsMapper;
 import DavexBase.mapper.KeycloakMapper;
 import DavexBase.service.auth.KeycloakService;
 import DavexBase.service.auth.TokenValidationService;
@@ -36,12 +38,16 @@ public class KeycloakAdminService {
     private KeycloakMapper keycloakMapper;
 
     @Autowired
+    private KeycloakCredentialsMapper keycloakCredentialsMapper;
+
+    @Autowired
     private TokenValidationService tokenValidationService;
 
     //添加用户
     public boolean addUser(String newUsername, String newPassword) throws Exception {
         Keycloak keycloak = keycloakMapper.selectById(keycloakId);
-        if(keycloak==null){
+        KeycloakCredentials keycloakCredentials = keycloakCredentialsMapper.selectById(keycloakId);
+        if(keycloak==null || keycloakCredentials ==null){
             throw new RuntimeException("keycloak no found");
         }
 
@@ -65,6 +71,10 @@ public class KeycloakAdminService {
         ResponseEntity<Void> response = restTemplate.postForEntity(addUserUrl, request, Void.class);
 
         if (response.getStatusCode() == HttpStatus.CREATED) {
+            keycloak.setAuthenticationId(newUsername);
+            keycloakCredentials.setTargetId(newUsername);
+            keycloakMapper.insert(keycloak);
+            keycloakCredentialsMapper.insert(keycloakCredentials);
             return true;
         } else {
             throw new RuntimeException("Failed to add user: " + response.getStatusCode());
@@ -74,7 +84,8 @@ public class KeycloakAdminService {
     //删除用户
     public boolean deleteUser(String username) throws Exception {
         Keycloak keycloak = keycloakMapper.selectById(keycloakId);
-        if (keycloak == null) {
+        KeycloakCredentials keycloakCredentials = keycloakCredentialsMapper.selectById(keycloakId);
+        if (keycloak == null && keycloakCredentials == null) {
             throw new RuntimeException("Keycloak configuration not found");
         }
 
@@ -108,6 +119,8 @@ public class KeycloakAdminService {
         ResponseEntity<Void> deleteUserResponse = restTemplate.exchange(deleteUserUrl, HttpMethod.DELETE, deleteUserRequest, Void.class);
 
         if (deleteUserResponse.getStatusCode() == HttpStatus.NO_CONTENT) {
+            keycloakMapper.deleteById(username);
+            keycloakCredentialsMapper.deleteById(username);
             return true;
         } else {
             throw new RuntimeException("Failed to delete user: " + username);
@@ -125,6 +138,26 @@ public class KeycloakAdminService {
         TokenResult adminToken = authTokenCache.getToken("admin");
         if (adminToken == null) {
             adminToken = tokenValidationService.getToken(adminUsername, adminPassword, "admin");
+        }
+        else {
+            //验证该token是否过期
+            String isExpired = tokenValidationService.checkTokenStatus("admin");
+            if(!isExpired.equals("Token is valid")){
+                if (isExpired.equals("Token expired but Refresh Token is valid"))
+                {
+                    //如果refreshToken没过期则更新
+                    try {
+                        tokenValidationService.updateToken("admin");
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+                else if(isExpired.equals("Token expired and Refresh Token is invalid"))
+                {
+                    //如果过期重新申请
+                    adminToken = tokenValidationService.getToken(adminUsername, adminPassword, "admin");
+                }
+            }
         }
 
         RestTemplate restTemplate = new RestTemplate();
