@@ -43,6 +43,9 @@ public class SecretFlowController {
     ) {
         String command = String.format("source sfenv/bin/activate && /home/zw/SFFL/sfenv/bin/python /home/zw/SFFL/%s.py --result_dir /home/zw/SFFL/%s",taskName,outputPath);
         secretFlowService.executeAsyncCommand(command);
+        saveFile("accuracy.png");
+        saveFile("global_metric.txt");
+        saveFile("loss.png");
         return Body.success("任务已开始执行");
 
 
