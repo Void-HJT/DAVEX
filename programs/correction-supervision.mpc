@@ -34,6 +34,15 @@ for i in range(procur_row):
     for j in reversed(range(id_length)):
         procur_table[i][0] = procur_ids[i][j] + procur_table[i][0] * 10
 
+# @for_range(procur_row)
+# def _(i):
+#     entry = procur_ids[i]
+#     plain_text = entry.reveal()
+#     id = (cchr)( plain_text[0:18])
+#     print_ln("%s",id)
+
+print_ln("====================================================")
+
 community_table = sint.Matrix(community_row, 1 + id_length + name_length + other_feature + label_length)
 for i in range(community_row):
     for j in range(1, 1 + id_length + name_length):
@@ -58,9 +67,10 @@ print_ln("证件号, 姓名, 判决时间, 矫正期限（天）, 入矫日期, 
 def _(i):
     entry = merge_table[i]
     plain_text = entry.reveal()
-    id = (cchr)( plain_text[1:id_length+1])
+    # print_ln("%s",(plain_text))
+    id = (cchr)( plain_text[2:id_length+2])
     name = (cchr) (plain_text[id_length+2:id_length+2+name_length])
     label = (cchr) (plain_text[-6:])
-    print_ln('%s, %s, %s, %s, %s, %s, %s',id, name, plain_text[1], plain_text[id_length+name_length+3], plain_text[id_length+name_length+4], plain_text[id_length+name_length+5],label) # 输出数据
+    print_ln('%s, %s, %s, %s, %s, %s, %s',id, name, plain_text[1], plain_text[id_length+name_length+2], plain_text[id_length+name_length+3], plain_text[id_length+name_length+4],label) # 输出数据
 
 print_ln("====================================================")
