@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.beans.factory.annotation.Autowired;
 import DavexCenter.module.task.service.SecretFlowService;
 import DavexBase.common.My;
+import DavexBase.entity.FlTask;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -33,13 +34,16 @@ public class SecretFlowController {
 
     @Autowired
     private My my;
+
+
     @GetMapping("/executeTask")
     public Body<String> executeScript(
             @RequestParam String taskName,
             @RequestParam String outputPath
     ) {
         String command = String.format("source sfenv/bin/activate && /home/zw/SFFL/sfenv/bin/python /home/zw/SFFL/%s.py --result_dir /home/zw/SFFL/%s",taskName,outputPath);
-        return secretFlowService.executeCommand(command);
+        secretFlowService.executeAsyncCommand(command);
+        return Body.success("任务已开始执行");
 
 
     }
@@ -106,6 +110,10 @@ public class SecretFlowController {
     public Body<String> addAgent(@RequestParam String uid,@RequestParam String name,@RequestParam String ip,@RequestParam Integer port,@RequestParam String description) {
         // 调用 service 中的方法执行命令
         return secretFlowService.addAgent( uid, name, ip, port,description);
+    }
+    @PostMapping("/createFlTask")
+    public Body<FlTask> createFlTask(@RequestBody FlTask flTask){
+        return secretFlowService.createFlTask(flTask);
     }
 
 
