@@ -1,5 +1,6 @@
 package DavexCenter.module.file.controller;
 
+import java.io.IOException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
@@ -75,5 +76,13 @@ public class FlFileController {
                                          @RequestParam("outputId") Long outputId) {
 
         return flFileService.deleteFl(applicationId, outputId);
+    }
+
+    // 读取文件内容
+    @PostMapping("/readFl")
+    public Body<String> readFl(@RequestParam("applicationId") String applicationId,
+                               @RequestParam("outputId") Long outputId) throws IOException {
+
+        return flFileService.readFl(applicationId, outputId);
     }
 }

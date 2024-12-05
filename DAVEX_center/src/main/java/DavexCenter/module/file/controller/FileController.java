@@ -172,6 +172,7 @@ public class FileController {
 
                 // 调用 save 方法
                 Body<String> result = save(multipartFile, fileInfo, applicationId, null);
+                // 记录消息
                 String content;
                 if (result.getCode() == 1) {
                     content = String.format("文件传输任务完成\n代理: %s\n文件名: %s",
@@ -191,57 +192,11 @@ public class FileController {
         return future;
     }
 
-    // 测试getFile接口
-    @PostMapping("/tGetFile")
-    public CompletableFuture<Body<String>> tGetFile(@RequestParam("applicationId") String applicationId) throws Exception {
-        // 这里创建一个 CompletableFuture 对象来处理异步结果
-        CompletableFuture<Body<String>> future = new CompletableFuture<>();
+    // 读取文件内容
+    @PostMapping("/read")
+    public Body<String> read(@RequestParam("applicationId") String applicationId,
+                             @RequestParam("outputId") Long outputId) throws IOException {
 
-        // 修改为从本地文件读取数据而不是从 WebClient 获取
-        File fileInfo = new File();
-        fileInfo.setUid("5");
-        fileInfo.setAgentId("5");
-        fileInfo.setFolderId("10");
-        fileInfo.setName("安全多方学习_从安全计算到安全学习_韩伟力.pdf");
-        fileInfo.setType("pdf");
-        fileInfo.setCreateDate(Timestamp.valueOf("2024-07-21 09:39:09"));
-        fileInfo.setLastUpdate(Timestamp.valueOf("2024-07-21 09:39:09"));
-        fileInfo.setSize(3087316L);
-        fileInfo.setHash("759771dabfb5ceddc7339a3d2d72ad208e963ec029e2819bf8d1f099b6d17971");
-        java.io.File localFile = new java.io.File("/home/zkx/DAVE/1.pdf");
-        try (FileInputStream fis = new FileInputStream(localFile)) {
-            // 将文件内容读取到字节数组中
-            byte[] fileBytes = fis.readAllBytes();
-
-            // 将字节数组分成多个字节数组以模拟 Flux<byte[]> 的行为
-            // 这里只用一个字节数组模拟，如果需要更复杂的逻辑，可以自行调整
-            Flux<byte[]> fileFlux = Flux.just(fileBytes);
-
-            fileFlux.collectList().subscribe(bytesList -> {
-                try {
-                    // 将字节数组列表合并为一个完整的字节数组
-                    ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-                    for (byte[] bytes : bytesList) {
-                        byteArrayOutputStream.write(bytes);
-                    }
-                    byte[] fileBytesArray = byteArrayOutputStream.toByteArray();
-
-                    // 创建 CustomMultipartFile
-                    CustomMultipartFile multipartFile = new CustomMultipartFile(fileBytesArray, "1.pdf");
-
-                    // 调用 save 方法
-                    Body<String> result = save(multipartFile, fileInfo, applicationId, null);
-                    future.complete(result);
-                } catch (IOException e) {
-                    future.completeExceptionally(e);
-                    e.printStackTrace();
-                }
-            });
-        } catch (IOException e) {
-            future.completeExceptionally(e);
-            e.printStackTrace();
-        }
-
-        return future;
+        return fileService.readFile(applicationId, outputId);
     }
 }

@@ -6,6 +6,7 @@ import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import DavexCenter.entity.ComparisonOutput;
 import DavexCenter.entity.FlOutput;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -178,5 +179,16 @@ public class QueryFileService {
         }
 
         return Body.success(String.format("删除成功，结果id: %d，文件名: %s", outputId, fileName));
+    }
+
+    public Body<String> readQuery(String applicationId, Long outputId) throws IOException {
+        LambdaQueryWrapper<QueryOutput> queryWrapper = Wrappers.<QueryOutput>lambdaQuery()
+                .eq(QueryOutput::getApplicationId, applicationId)
+                .eq(QueryOutput::getUid, outputId);
+        QueryOutput queryOutput = queryOutputMapper.selectOne(queryWrapper);
+        String filePath = queryOutput.getPath();
+        String fileName = queryOutput.getName();
+
+        return fileService.readFileContent(filePath, fileName);
     }
 }

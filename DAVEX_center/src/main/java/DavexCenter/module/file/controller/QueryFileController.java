@@ -1,5 +1,6 @@
 package DavexCenter.module.file.controller;
 
+import java.io.IOException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
@@ -75,5 +76,13 @@ public class QueryFileController {
                                     @RequestParam("outputId") Long outputId) {
 
         return queryFileService.deleteQuery(applicationId, outputId);
+    }
+
+    // 读取文件内容
+    @PostMapping("/readQuery")
+    public Body<String> readQuery(@RequestParam("applicationId") String applicationId,
+                                  @RequestParam("outputId") Long outputId) throws IOException {
+
+        return queryFileService.readQuery(applicationId, outputId);
     }
 }

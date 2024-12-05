@@ -1,5 +1,6 @@
 package DavexCenter.module.file.controller;
 
+import java.io.IOException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
@@ -79,5 +80,13 @@ public class ComparisonFileController {
                                          @RequestParam("outputId") Long outputId) {
 
         return comparisonFileService.deleteComparison(applicationId, outputId);
+    }
+
+    // 读取文件内容
+    @PostMapping("/readComparison")
+    public Body<String> readComparison(@RequestParam("applicationId") String applicationId,
+                                       @RequestParam("outputId") Long outputId) throws IOException {
+
+        return comparisonFileService.readComparison(applicationId, outputId);
     }
 }
