@@ -1,5 +1,6 @@
 package DavexCenter.module.task.controller;
 
+import java.io.IOException;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -67,4 +68,10 @@ public class MpcTaskOutputController {
         return mpcTaskOutputService.deleteMpc(applicationId, mpcOutputId);
     }
 
+    @PostMapping("/read")
+    public Body<String> readMpc(@RequestParam("applicationId") String applicationId,
+                                @RequestParam("mpcOutputId") Long mpcOutputId) throws IOException {
+
+        return mpcTaskOutputService.readMpc(applicationId, mpcOutputId);
+    }
 }

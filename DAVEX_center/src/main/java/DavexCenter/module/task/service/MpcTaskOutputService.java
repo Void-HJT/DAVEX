@@ -12,6 +12,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 import DavexBase.service.notification.NotificationService;
+import DavexCenter.entity.ComparisonOutput;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.stereotype.Service;
@@ -181,5 +182,16 @@ public class MpcTaskOutputService {
             return Body.error(String.format("删除失败: 结果id %d，文件名: %s，错误信息: %s", mpcOutputId, fileName, e.getMessage()));
         }
         return Body.success(String.format("删除成功，结果id: %d，文件名: %s", mpcOutputId, fileName));
+    }
+
+    public Body<String> readMpc(String applicationId, Long mpcOutputId) throws IOException {
+        LambdaQueryWrapper<MpcTaskOutput> queryWrapper = Wrappers.<MpcTaskOutput>lambdaQuery()
+                .eq(MpcTaskOutput::getApplicationId, applicationId)
+                .eq(MpcTaskOutput::getUid, mpcOutputId);
+        MpcTaskOutput queryOutput = mpcTaskOutputMapper.selectOne(queryWrapper);
+        String filePath = queryOutput.getPath();
+        String fileName = queryOutput.getName();
+
+        return fileService.readFileContent(filePath, fileName);
     }
 }

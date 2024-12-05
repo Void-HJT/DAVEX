@@ -1,11 +1,6 @@
 package DavexCenter.module.file.service;
 
-import java.io.BufferedInputStream;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.OutputStream;
+import java.io.*;
 import java.net.URLEncoder;
 import java.nio.file.Paths;
 import java.security.MessageDigest;
@@ -21,7 +16,13 @@ import javax.servlet.http.HttpServletResponse;
 import javax.xml.bind.DatatypeConverter;
 
 import DavexCenter.entity.ComparisonOutput;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVRecord;
 import org.apache.commons.io.FileUtils;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.text.PDFTextStripper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
@@ -50,6 +51,8 @@ public class FileService {
     private JdbcTemplate jdbcTemplate;
     @Autowired
     private DownloadTaskMapper downloadTaskMapper;
+
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     public Body<String> saveFile(MultipartFile file, File fileInfo, String applicationId,
             String base, java.sql.Timestamp expiredTime) {
@@ -384,5 +387,71 @@ public class FileService {
         if (file.isFile() && file.exists()) {
             file.delete();
         }
+    }
+
+    public Body<String> readFile(String applicationId, Long outputId) throws IOException {
+        LambdaQueryWrapper<Output> queryWrapper = Wrappers.<Output>lambdaQuery()
+                .eq(Output::getApplicationId, applicationId)
+                .eq(Output::getUid, outputId);
+        Output queryOutput = outputMapper.selectOne(queryWrapper);
+        String filePath = queryOutput.getPath();
+        String fileName = queryOutput.getName();
+
+        return readFileContent(filePath, fileName);
+    }
+
+    public Body<String> readFileContent(String filePath, String fileName) throws IOException {
+
+        java.io.File file = new java.io.File(filePath);
+        if (!file.exists()) {
+            return Body.error(String.format("文件不存在，文件路径: %s", filePath));
+        }
+
+        String extension = fileName.substring(fileName.lastIndexOf(".") + 1);
+        return switch (extension.toLowerCase()) {
+            case "txt" -> Body.success(readTxtFile(file));
+            case "csv" -> Body.success(readCsvFile(file));
+            case "pdf" -> Body.success(readPdfFile(file));
+            case "json" -> Body.success(readJsonFile(file));
+            default -> Body.error(String.format("不支持的文件类型: %s", extension));
+        };
+    }
+
+    private String readTxtFile(java.io.File file) throws IOException {
+        StringBuilder content = new StringBuilder();
+        try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                content.append(line).append("\n");
+            }
+        }
+        return content.toString();
+    }
+
+    private String readCsvFile(java.io.File file) throws IOException {
+        StringBuilder content = new StringBuilder();
+        try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+            Iterable<CSVRecord> records = CSVFormat.DEFAULT.withFirstRecordAsHeader().parse(reader);
+            for (CSVRecord record : records) {
+                for (String field : record) {
+                    content.append(field).append("\t");
+                }
+                content.append("\n");
+            }
+        }
+        return content.toString();
+    }
+
+    private String readPdfFile(java.io.File file) throws IOException {
+        PDDocument document = PDDocument.load(file);
+        PDFTextStripper stripper = new PDFTextStripper();
+        String content = stripper.getText(document);
+        document.close();
+        return content;
+    }
+
+    private String readJsonFile(java.io.File file) throws IOException {
+        JsonNode jsonNode = objectMapper.readTree(file);
+        return objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(jsonNode);
     }
 }

@@ -46,3 +46,15 @@ export const deleteMpc = ({ mpcOutputId, applicationId }) => {
     )
     return res
 }
+
+// 从结果管理区预览文件
+export const readMpc = ({ mpcOutputId, applicationId }) => {
+    const params = new URLSearchParams()
+    params.append('mpcOutputId', mpcOutputId)
+    params.append('applicationId', applicationId)
+    let res = request.post(
+        'MpcTasksOutput/read',
+        params.toString()
+    )
+    return res
+}

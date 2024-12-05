@@ -38,13 +38,13 @@
           </el-table-column>
           <el-table-column label="操作">
             <template #default="scope">
+              <el-button class="small-default-button" @click="readFlMethod(scope.row.uid)">
+                <el-icon><View /></el-icon> 预览文件
+              </el-button>
               <el-button class="small-default-button" @click="fetchFlMethod(scope.row.uid)">
                 <el-icon><Download /></el-icon> 获取文件
               </el-button>
-              <el-button
-                  class="small-delete-button"
-                  @click="deleteFlMethod(scope.row.uid)"
-              >
+              <el-button class="small-delete-button" @click="deleteFlMethod(scope.row.uid)">
                 <el-icon><Delete /></el-icon> 删除文件
               </el-button>
             </template>
@@ -85,11 +85,27 @@
         </div>
       </template>
     </el-dialog>
+  <el-dialog v-model="readSuccessVisible" title="文件预览结果" width="30%">
+    <span>{{ readSuccessMessage }}</span>
+    <template #footer>
+      <div class="dialog-footer">
+        <el-button class="close-button" @click="readSuccessVisible = false">确定</el-button>
+      </div>
+    </template>
+  </el-dialog>
+  <el-dialog v-model="readFailedVisible" title="文件预览结果" width="30%">
+    <span>{{ readFailedMessage }}</span>
+    <template #footer>
+      <div class="dialog-footer">
+        <el-button class="close-button" @click="readFailedVisible = false">返回</el-button>
+      </div>
+    </template>
+  </el-dialog>
   </template>
   
   <script lang="ts" setup>
   import {onMounted, ref} from "vue";
-  import {getFlResult, fetchFl, deleteFl} from "../../api/flOutput.js"
+  import {getFlResult, fetchFl, deleteFl, readFl} from "../../api/flOutput.js"
   import {Delete, Document, Download} from "@element-plus/icons-vue";
   
   onMounted(() => {
@@ -105,6 +121,10 @@
   const deleteFailedVisible = ref(false)
   const deleteSuccessMessage = ref('');
   const deleteFailedMessage = ref('');
+  const readSuccessVisible = ref(false)
+  const readFailedVisible = ref(false)
+  const readSuccessMessage = ref('');
+  const readFailedMessage = ref('');
   
   const applicationId = 'Davex-C1-A1'
   const resultData = ref([])
@@ -116,6 +136,10 @@
     applicationId: applicationId
   })
   const deleteFlBody = ref({
+    outputId: '',
+    applicationId: applicationId
+  })
+  const readFlBody = ref({
     outputId: '',
     applicationId: applicationId
   })
@@ -164,6 +188,24 @@
     }
     catch (error) {
       console.error('Failed to delete file:', error)
+    }
+  }
+
+  const readFlMethod = async (outputId) => {
+    try {
+      readFlBody.value.outputId = outputId
+      const res = await readFl(readFlBody.value)
+      if (res.data.code == 1) {
+        readSuccessMessage.value = res.data.message;
+        readSuccessVisible.value = true
+      }
+      else {
+        readFailedMessage.value = res.data.message;
+        readFailedVisible.value = true
+      }
+    }
+    catch (error) {
+      console.error('Failed to read file:', error)
     }
   }
   

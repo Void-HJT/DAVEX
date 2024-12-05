@@ -7,6 +7,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import DavexBase.entity.MpcTaskOutput;
+import DavexCenter.entity.Output;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
@@ -173,5 +174,16 @@ public class ComparisonFileService {
         }
 
         return Body.success(String.format("删除成功，结果id: %d，文件名: %s", outputId, fileName));
+    }
+
+    public Body<String> readComparison(String applicationId, Long outputId) throws IOException {
+        LambdaQueryWrapper<ComparisonOutput> queryWrapper = Wrappers.<ComparisonOutput>lambdaQuery()
+                .eq(ComparisonOutput::getApplicationId, applicationId)
+                .eq(ComparisonOutput::getUid, outputId);
+        ComparisonOutput queryOutput = comparisonOutputMapper.selectOne(queryWrapper);
+        String filePath = queryOutput.getPath();
+        String fileName = queryOutput.getName();
+
+        return fileService.readFileContent(filePath, fileName);
     }
 }

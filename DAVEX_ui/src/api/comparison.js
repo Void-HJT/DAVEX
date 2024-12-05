@@ -173,3 +173,15 @@ export const deleteComparison = ({ outputId, applicationId }) => {
     )
     return res
 }
+
+// 从结果管理区预览文件
+export const readComparison = ({ outputId, applicationId }) => {
+    const params = new URLSearchParams()
+    params.append('outputId', outputId)
+    params.append('applicationId', applicationId)
+    let res = request.post(
+        'comparisonFile/readComparison',
+        params.toString()
+    )
+    return res
+}

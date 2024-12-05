@@ -46,3 +46,15 @@ export const deleteFl = ({ outputId, applicationId }) => {
     )
     return res
 }
+
+// 从结果管理区预览文件
+export const readFl = ({ outputId, applicationId }) => {
+    const params = new URLSearchParams()
+    params.append('outputId', outputId)
+    params.append('applicationId', applicationId)
+    let res = request.post(
+        'flFile/readFl',
+        params.toString()
+    )
+    return res
+}
