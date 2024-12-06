@@ -1,11 +1,13 @@
 package DavexCenter.module.file.service;
 
 import java.io.IOException;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import DavexBase.common.My;
 import DavexBase.entity.MpcTaskOutput;
 import DavexCenter.entity.Output;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,8 +39,11 @@ public class ComparisonFileService {
     @Autowired
     private JdbcTemplate jdbcTemplate;
 
-    public Body<String> saveComparison(MultipartFile file, String hash, String applicationId, String agentId, String fileId, String folderId, String fileName,
-                                           String base, java.sql.Timestamp expiredTime) {
+    @Autowired
+    private My my;
+
+    public Body<String> saveComparison(MultipartFile file, String hash, String applicationId, String agentId, String fileId, String folderId,
+                                       String fileName, java.sql.Timestamp expiredTime) {
 
         // 校验sha256
         String fileHash = fileService.getSha256(file);
@@ -60,7 +65,8 @@ public class ComparisonFileService {
 
         ComparisonOutput newComparisonOutput = new ComparisonOutput();
         newComparisonOutput.setHash(hash);
-        newComparisonOutput.setPath(Paths.get(base).resolve("comparison").resolve(fileHash + "_appid_" + applicationId).toString());
+        newComparisonOutput.setPath(Paths.get(my.getBase_path()).resolve("result").resolve("comparison")
+                .resolve(fileHash + "_appid_" + applicationId).toString());
         newComparisonOutput.setUploadDate(Timestamp.valueOf(LocalDateTime.now()));
         newComparisonOutput.setApplicationId(applicationId);
         newComparisonOutput.setExpiredTime(expiredTime);
@@ -85,7 +91,7 @@ public class ComparisonFileService {
                 resultName));
     }
 
-    public Body<String> fetchComparison(Long outputId, String applicationId, String downloadPath) {
+    public Body<String> fetchComparison(Long outputId, String applicationId) {
 
         // 根据结果id查找结果表
         LambdaQueryWrapper<ComparisonOutput> queryWrapper = Wrappers.<ComparisonOutput>lambdaQuery()
@@ -113,8 +119,9 @@ public class ComparisonFileService {
         // 直接通过路径访问文件
         String filePath = queryComparisonOutput.getPath();
         String fileName = queryComparisonOutput.getName();
+        Path downloadPath = Paths.get(my.getBase_path()).resolve("download").resolve("comparison");
         try {
-            fileService.copyFile(filePath, fileName, downloadPath);
+            fileService.copyFile(filePath, fileName, downloadPath.toString());
         } catch (Exception e) {
             e.printStackTrace();
             return Body.error(String.format("获取失败: 结果id %d，文件名: %s，错误信息: %s", outputId, fileName, e.getMessage()));

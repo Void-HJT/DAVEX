@@ -2,6 +2,8 @@ package DavexCenter.module.file.service;
 
 import java.io.*;
 import java.net.URLEncoder;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -15,6 +17,7 @@ import java.util.Map;
 import javax.servlet.http.HttpServletResponse;
 import javax.xml.bind.DatatypeConverter;
 
+import DavexBase.common.My;
 import DavexCenter.entity.ComparisonOutput;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -51,11 +54,13 @@ public class FileService {
     private JdbcTemplate jdbcTemplate;
     @Autowired
     private DownloadTaskMapper downloadTaskMapper;
+    @Autowired
+    private My my;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     public Body<String> saveFile(MultipartFile file, File fileInfo, String applicationId,
-            String base, java.sql.Timestamp expiredTime) {
+            java.sql.Timestamp expiredTime) {
 
         // 校验sha256
         String fileHash = getSha256(file);
@@ -86,7 +91,8 @@ public class FileService {
         newOutput.setAttribute(fileInfo.getAttribute());
         newOutput.setSize(fileInfo.getSize());
         newOutput.setDescription(fileInfo.getDescription());
-        newOutput.setPath(Paths.get(base).resolve("common").resolve(fileHash + "_appid_" + applicationId).toString());
+        newOutput.setPath(Paths.get(my.getBase_path()).resolve("result").resolve("common")
+                .resolve(fileHash + "_appid_" + applicationId).toString());
         newOutput.setExpiredTime(expiredTime);
         newOutput.setHash(fileHash);
         newOutput.setFileId(fileInfo.getUid());
@@ -108,7 +114,7 @@ public class FileService {
     }
 
     public Body<List<String>> saveFiles(List<MultipartFile> files, List<File> fileInfos, String applicationId,
-            String base, List<java.sql.Timestamp> expiredTimes) {
+            List<java.sql.Timestamp> expiredTimes) {
         List<String> results = new ArrayList<>();
 
         if (files.size() != fileInfos.size() || files.size() != expiredTimes.size()) {
@@ -152,7 +158,7 @@ public class FileService {
             newOutput.setSize(fileInfo.getSize());
             newOutput.setDescription(fileInfo.getDescription());
             newOutput.setPath(
-                    Paths.get(base).resolve("common").resolve(fileHash + "_appid_" + applicationId).toString());
+                    Paths.get(my.getBase_path()).resolve("result").resolve("common").resolve(fileHash + "_appid_" + applicationId).toString());
             newOutput.setExpiredTime(expiredTime);
             newOutput.setHash(fileHash);
             newOutput.setFileId(fileInfo.getUid());
@@ -230,7 +236,7 @@ public class FileService {
         return Body.success(String.format("获取成功，结果id: %d，文件名: %s", outputId, fileName));
     }
 
-    public Body<String> fetchFile(Long outputId, String applicationId, String downloadPath) {
+    public Body<String> fetchFile(Long outputId, String applicationId) {
 
         // 根据结果id查找结果表
         LambdaQueryWrapper<Output> queryWrapper = Wrappers.<Output>lambdaQuery()
@@ -258,8 +264,9 @@ public class FileService {
         // 直接通过路径访问文件
         String filePath = queryOutput.getPath();
         String fileName = queryOutput.getName();
+        Path downloadPath = Paths.get(my.getBase_path()).resolve("download").resolve("common");
         try {
-            copyFile(filePath, fileName, downloadPath);
+            copyFile(filePath, fileName, downloadPath.toString());
         } catch (Exception e) {
             e.printStackTrace();
             return Body.error(String.format("获取失败: 结果id %d，文件名: %s，错误信息: %s", outputId, fileName, e.getMessage()));
@@ -368,6 +375,7 @@ public class FileService {
     public void copyFile(String filePath, String fileName, String downloadPath) throws Exception {
         var source = new java.io.File(filePath);
         var dest = new java.io.File(Paths.get(downloadPath).resolve(fileName).toString());
+        Files.createDirectories(dest.getParentFile().toPath());
         try (var fis = new FileInputStream(source);
                 var fos = new FileOutputStream(dest)) {
 

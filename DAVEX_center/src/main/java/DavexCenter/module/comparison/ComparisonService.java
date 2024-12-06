@@ -188,7 +188,7 @@ public class ComparisonService {
 
                 // 调用 saveComparisonFile 方法
                 Body<String> res = comparisonFileService.saveComparison(file, fileService.getSha256(file), applicationId, agentId, fileId, folderId, fileName,
-                        uploadBaseDir, Timestamp.valueOf(LocalDateTime.now().plusWeeks(1)));
+                        Timestamp.valueOf(LocalDateTime.now().plusWeeks(1)));
                 String content;
                 if (res.getCode() == 1) {
                         content = String.format("比对任务完成\n代理: %s\n文件名: %s",
@@ -296,7 +296,7 @@ public class ComparisonService {
 
                 // 调用 saveComparisonFile 方法
                 comparisonFileService.saveComparison(ResultFile, fileService.getSha256(ResultFile), applicationId, agentId, fileId, folderId, fileName,
-                        uploadBaseDir, Timestamp.valueOf(LocalDateTime.now().plusWeeks(1)));
+                        Timestamp.valueOf(LocalDateTime.now().plusWeeks(1)));
 
                 return Body.success(comparisonResults, "比对成功");
         }

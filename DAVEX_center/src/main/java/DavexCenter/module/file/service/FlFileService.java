@@ -1,11 +1,13 @@
 package DavexCenter.module.file.service;
 
 import java.io.IOException;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import DavexBase.common.My;
 import DavexCenter.entity.ComparisonOutput;
 import DavexCenter.entity.Output;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,8 +39,11 @@ public class FlFileService {
     @Autowired
     private JdbcTemplate jdbcTemplate;
 
+    @Autowired
+    private My my;
+
     public Body<String> saveFl(MultipartFile file, String hash, String applicationId,
-                                           String base, java.sql.Timestamp expiredTime) {
+                                           java.sql.Timestamp expiredTime) {
 
         // 校验sha256
         String fileHash = fileService.getSha256(file);
@@ -60,7 +65,8 @@ public class FlFileService {
 
         FlOutput newFlOutput = new FlOutput();
         newFlOutput.setHash(hash);
-        newFlOutput.setPath(Paths.get(base).resolve("fl").resolve(fileHash + "_appid_" + applicationId).toString());
+        newFlOutput.setPath(Paths.get(my.getBase_path()).resolve("result").resolve("fl")
+                .resolve(fileHash + "_appid_" + applicationId).toString());
         newFlOutput.setUploadDate(Timestamp.valueOf(LocalDateTime.now()));
         newFlOutput.setApplicationId(applicationId);
         newFlOutput.setExpiredTime(expiredTime);
@@ -81,7 +87,7 @@ public class FlFileService {
                 fileName));
     }
 
-    public Body<String> fetchFl(Long outputId, String applicationId, String downloadPath) {
+    public Body<String> fetchFl(Long outputId, String applicationId) {
 
         // 根据结果id查找结果表
         LambdaQueryWrapper<FlOutput> queryWrapper = Wrappers.<FlOutput>lambdaQuery()
@@ -109,8 +115,9 @@ public class FlFileService {
         // 直接通过路径访问文件
         String filePath = queryFlOutput.getPath();
         String fileName = queryFlOutput.getName();
+        Path downloadPath = Paths.get(my.getBase_path()).resolve("download").resolve("fl");
         try {
-            fileService.copyFile(filePath, fileName, downloadPath);
+            fileService.copyFile(filePath, fileName, downloadPath.toString());
         } catch (Exception e) {
             e.printStackTrace();
             return Body.error(String.format("获取失败: 结果id %d，文件名: %s，错误信息: %s", outputId, fileName, e.getMessage()));

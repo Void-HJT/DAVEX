@@ -44,7 +44,7 @@ public class QueryFileController {
             expiredTime = java.sql.Timestamp.from(Instant.now().plus(7, ChronoUnit.DAYS));
         }
 
-        return queryFileService.saveQuery(file, hash, applicationId, uploadBaseDir, expiredTime);
+        return queryFileService.saveQuery(file, hash, applicationId, expiredTime);
     }
 
     // application通过路径直接获取center结果管理区query文件的接口
@@ -52,7 +52,7 @@ public class QueryFileController {
     public Body<String> fetchQuery(@RequestParam("outputId") Long outputId,
                                    @RequestParam("applicationId") String applicationId) {
 
-        return queryFileService.fetchQuery(outputId, applicationId, downloadBaseDir);
+        return queryFileService.fetchQuery(outputId, applicationId);
     }
 
     // application查询center结果管理区所有query文件的接口

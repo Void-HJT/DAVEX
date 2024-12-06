@@ -62,7 +62,7 @@ public class FileController {
             expiredTime = java.sql.Timestamp.from(Instant.now().plus(7, ChronoUnit.DAYS));
         }
 
-        return fileService.saveFile(file, fileInfo, applicationId, uploadBaseDir, expiredTime);
+        return fileService.saveFile(file, fileInfo, applicationId, expiredTime);
     }
 
     // 多文件保存
@@ -84,7 +84,7 @@ public class FileController {
             return Body.error("失效时间数量和文件数量不匹配");
         }
 
-        return fileService.saveFiles(files, fileInfos, applicationId, uploadBaseDir, expiredTimes);
+        return fileService.saveFiles(files, fileInfos, applicationId, expiredTimes);
     }
 
     // application从center结果管理区通过Http获取文件的接口
@@ -101,7 +101,7 @@ public class FileController {
     public Body<String> fetch(@RequestParam("outputId") Long outputId,
                               @RequestParam("applicationId") String applicationId) {
 
-        return fileService.fetchFile(outputId, applicationId, downloadBaseDir);
+        return fileService.fetchFile(outputId, applicationId);
     }
 
     // application查询center结果管理区所有文件的接口

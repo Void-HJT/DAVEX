@@ -59,7 +59,7 @@ public class MpcTaskOutputService {
             throw new Exception("文件hash不匹配");
         }
         String fileName = file.getOriginalFilename();
-        Path path = Paths.get(my.getBase_path()).resolve("mpctask").resolve(fileName);
+        Path path = Paths.get(my.getBase_path()).resolve("result").resolve("mpctask").resolve(fileName);
         try {
             Files.createDirectories(path.getParent());
             Files.write(path, file.getBytes());
@@ -76,8 +76,8 @@ public class MpcTaskOutputService {
         MpcTaskOutput mpcTaskOutput = new MpcTaskOutput();
         Path outputPath = Paths.get(my.getGarnet_path()).resolve("Output")
                 .resolve(mpcTask.getUid() + "-P" + mpcTask.getPart() + "-0");
-        Path savePath = Paths.get(my.getBase_path()).resolve("mpctask").resolve(mpcTask.getUid());
-        mpcTaskOutput.setPath(Paths.get(my.getBase_path()).resolve("mpctask").resolve(mpcTask.getUid()).toString());
+        Path savePath = Paths.get(my.getBase_path()).resolve("result").resolve("mpctask").resolve(mpcTask.getUid());
+        mpcTaskOutput.setPath(Paths.get(my.getBase_path()).resolve("result").resolve("mpctask").resolve(mpcTask.getUid()).toString());
         mpcTaskOutput.setTaskId(mpcTask.getUid());
         mpcTaskOutput.setExpiredTime(java.sql.Timestamp
                 .from(Instant.now().plus(7, ChronoUnit.DAYS)));

@@ -1,11 +1,13 @@
 package DavexCenter.module.file.service;
 
 import java.io.IOException;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import DavexBase.common.My;
 import DavexCenter.entity.ComparisonOutput;
 import DavexCenter.entity.FlOutput;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,8 +40,11 @@ public class QueryFileService {
     @Autowired
     private JdbcTemplate jdbcTemplate;
 
+    @Autowired
+    private My my;
+
     public Body<String> saveQuery(MultipartFile file, String hash, String applicationId,
-                                      String base, java.sql.Timestamp expiredTime) {
+                                      java.sql.Timestamp expiredTime) {
 
         // 校验sha256
         String fileHash = fileService.getSha256(file);
@@ -60,7 +65,8 @@ public class QueryFileService {
         }
         QueryOutput newQueryOutput = new QueryOutput();
         newQueryOutput.setHash(hash);
-        newQueryOutput.setPath(Paths.get(base).resolve("query").resolve(fileHash + "_appid_" + applicationId).toString());
+        newQueryOutput.setPath(Paths.get(my.getBase_path()).resolve("result").resolve("query")
+                .resolve(fileHash + "_appid_" + applicationId).toString());
         newQueryOutput.setUploadDate(Timestamp.valueOf(LocalDateTime.now()));
         newQueryOutput.setApplicationId(applicationId);
         newQueryOutput.setExpiredTime(expiredTime);
@@ -90,7 +96,7 @@ public class QueryFileService {
                 fileName));
     }
 
-    public Body<String> fetchQuery(Long outputId, String applicationId, String downloadPath) {
+    public Body<String> fetchQuery(Long outputId, String applicationId) {
 
         // 根据结果id查找结果表
         LambdaQueryWrapper<QueryOutput> queryWrapper = Wrappers.<QueryOutput>lambdaQuery()
@@ -118,8 +124,9 @@ public class QueryFileService {
         // 直接通过路径访问文件
         String filePath = queryQueryOutput.getPath();
         String fileName = queryQueryOutput.getName();
+        Path downloadPath = Paths.get(my.getBase_path()).resolve("download").resolve("query");
         try {
-            fileService.copyFile(filePath, fileName, downloadPath);
+            fileService.copyFile(filePath, fileName, downloadPath.toString());
         } catch (Exception e) {
             e.printStackTrace();
             return Body.error(String.format("获取失败: 结果id %d，文件名: %s，错误信息: %s", outputId, fileName, e.getMessage()));
