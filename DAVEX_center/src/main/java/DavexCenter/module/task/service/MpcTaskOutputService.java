@@ -118,17 +118,18 @@ public class MpcTaskOutputService {
         }
 
         // 添加下载任务记录到任务表
+        String filePath = queryMpcOutput.getPath();
+        String fileName = queryMpcOutput.getName();
+        Path downloadPath = Paths.get(my.getBase_path()).resolve("download").resolve("mpc");
         DownloadTask newDownloadTask = new DownloadTask();
         newDownloadTask.setApplicationId(applicationId);
         newDownloadTask.setOutputId(queryMpcOutput.getUid());
         newDownloadTask.setDownloadTime(Timestamp.valueOf(LocalDateTime.now()));
         newDownloadTask.setType("mpc");
+        newDownloadTask.setPath(downloadPath.resolve(fileName).toString());
         downloadTaskMapper.insert(newDownloadTask);
 
         // 直接通过路径访问文件
-        String filePath = queryMpcOutput.getPath();
-        String fileName = queryMpcOutput.getName();
-        Path downloadPath = Paths.get(my.getBase_path()).resolve("download").resolve("mpc");
         try {
             Files.createDirectories(downloadPath);
             fileService.copyFile(filePath, fileName, downloadPath.toString());
@@ -136,7 +137,7 @@ public class MpcTaskOutputService {
             e.printStackTrace();
             return Body.error(String.format("获取失败: 结果id %d，文件名: %s，错误信息: %s", mpcOutputId, fileName, e.getMessage()));
         }
-        return Body.success(String.format("获取成功，结果id: %d，文件名: %s", mpcOutputId, fileName));
+        return Body.success(String.format("获取成功，结果id: %d，文件名: %s，保存路径: %s", mpcOutputId, fileName, newDownloadTask.getPath()));
     }
 
     public Body<List<MpcTaskOutput>> queryMpc(String applicationId) {

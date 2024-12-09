@@ -14,4 +14,5 @@ public class DownloadTask {
     private Long outputId;
     private java.sql.Timestamp downloadTime;
     private String type;
+    private String path;
 }

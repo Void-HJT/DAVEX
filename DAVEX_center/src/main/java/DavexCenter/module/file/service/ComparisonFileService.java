@@ -109,24 +109,25 @@ public class ComparisonFileService {
         }
 
         // 添加下载任务记录到任务表
+        String filePath = queryComparisonOutput.getPath();
+        String fileName = queryComparisonOutput.getName();
+        Path downloadPath = Paths.get(my.getBase_path()).resolve("download").resolve("comparison");
         DownloadTask newDownloadTask = new DownloadTask();
         newDownloadTask.setApplicationId(applicationId);
         newDownloadTask.setOutputId(queryComparisonOutput.getUid());
         newDownloadTask.setDownloadTime(Timestamp.valueOf(LocalDateTime.now()));
         newDownloadTask.setType("comparison");
+        newDownloadTask.setPath(downloadPath.resolve(fileName).toString());
         downloadTaskMapper.insert(newDownloadTask);
 
         // 直接通过路径访问文件
-        String filePath = queryComparisonOutput.getPath();
-        String fileName = queryComparisonOutput.getName();
-        Path downloadPath = Paths.get(my.getBase_path()).resolve("download").resolve("comparison");
         try {
             fileService.copyFile(filePath, fileName, downloadPath.toString());
         } catch (Exception e) {
             e.printStackTrace();
             return Body.error(String.format("获取失败: 结果id %d，文件名: %s，错误信息: %s", outputId, fileName, e.getMessage()));
         }
-        return Body.success(String.format("获取成功，结果id: %d，文件名: %s", outputId, fileName));
+        return Body.success(String.format("获取成功，结果id: %d，文件名: %s，保存路径: %s", outputId, fileName, newDownloadTask.getPath()));
     }
 
     public Body<List<ComparisonOutput>> queryComparison(String applicationId) {
