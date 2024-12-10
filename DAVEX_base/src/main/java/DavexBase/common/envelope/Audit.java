@@ -1,14 +1,18 @@
 package DavexBase.common.envelope;
 
-import lombok.Data;
+import com.alibaba.fastjson.JSONObject;
 
-import java.util.Map;
+import lombok.Data;
 
 // Audit.java
 @Data
 public class Audit {
-    private String type;
-    private Map<String, Object> setting;
+    public enum AuditType {
+        STORE_PROOF, TRACE
+    }
+
+    private AuditType type;
+    private JSONObject setting;
 
     // Getters and Setters
 }

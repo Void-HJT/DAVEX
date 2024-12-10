@@ -5,6 +5,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -42,8 +44,11 @@ public class MpcTaskController {
     @Autowired
     private MpcTaskOutputService mpcTaskOutputService;
 
+    private static final Logger logger = LoggerFactory.getLogger(MpcTaskController.class);
+
     @PostMapping("/create")
     public R<MpcTask> createMpcTask(@RequestBody UploadAgentTaskInfo mpcTask) {
+        logger.info("接收到任务：{}", mpcTask);
         try {
             mpcTask = mpcTaskService.create(mpcTask);
             switch (mpcTask.getTaskType()) {
@@ -56,14 +61,17 @@ public class MpcTaskController {
                     break;
             }
         } catch (Exception e) {
+            logger.error(e.getMessage());
             return R.error(e.getMessage());
         }
+        logger.info("任务创建成功");
         return R.success(mpcTask, "成功创建");
     }
 
     @PostMapping("/create_with_input")
-    public R<MpcTask> postMethodName(@RequestPart("file") MultipartFile file,
+    public R<MpcTask> createWithInput(@RequestPart("file") MultipartFile file,
             @RequestPart("mpcTask") UploadAgentTaskInfo mpcTask) {
+        logger.info("接收到任务：{}", mpcTask);
         Path path = Utils.resolveFileNameConflict(
                 Paths.get(my.getBase_path()).resolve("Input").resolve(file.getOriginalFilename()));
         Input input = new Input();
@@ -85,8 +93,10 @@ public class MpcTaskController {
                     break;
             }
         } catch (Exception e) {
+            logger.error(e.getMessage());
             return R.error(e.getMessage());
         }
+        logger.info("任务创建成功");
         return R.success(mpcTask, "成功创建");
     }
 
@@ -118,5 +128,4 @@ public class MpcTaskController {
     public List<MpcTask> list() {
         return mpcTaskService.list();
     }
-
 }

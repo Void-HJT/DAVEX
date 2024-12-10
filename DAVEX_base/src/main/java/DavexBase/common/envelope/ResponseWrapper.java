@@ -4,6 +4,9 @@ import lombok.Data;
 
 @Data
 public class ResponseWrapper {
-    private ResponseEnvelope responseEnvelope;  // 注意：这里的字段名称应与 JSON 中的字段名称保持一致
-    // Getters and Setters
+    private ResponseEnvelope responseEnvelope; // 注意：这里的字段名称应与 JSON 中的字段名称保持一致
+
+    public ResponseWrapper(ResponseEnvelope responseEnvelope) {
+        this.responseEnvelope = responseEnvelope;
+    }
 }

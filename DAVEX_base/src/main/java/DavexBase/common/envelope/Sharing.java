@@ -1,14 +1,18 @@
 package DavexBase.common.envelope;
 
-import lombok.Data;
+import com.alibaba.fastjson.JSONObject;
 
-import java.util.Map;
+import lombok.Data;
 
 // Sharing.java
 @Data
 public class Sharing {
-    private String type;
-    private Map<String, Object> setting;
+    public enum SharingType {
+        FILE_EXCHANGE, COMPARISON, QUERY, PSI, MPC, SECURITY_INFERENCE, FEDERATED_LEARNING
+    }
+
+    private SharingType type;
+    private JSONObject setting;
 
     // Getters and Setters
 }

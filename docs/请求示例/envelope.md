@@ -1,0 +1,63 @@
+```json
+{
+    "requestEnvelope":{
+        "header":{
+            "version":"1.0",
+            "timeStamp":"2024-10-17T10:06:00Z",
+            "hash":"922bf49f718d77512e37f54b20f8e5a1ef6fc7e4ae086299910b56ec32498b47",
+            "requestId":"e7cef615-a987-4f3e-97a8-1774ee2e52ed",
+            "sender":"DAVEX-CXX2-AXX1",
+            "receiver":"DAVEX-CXX2"
+        },
+        "body":{
+            "authentication":{
+                "subject":"DAVEX-CXX2-AXX1",
+                "token":"eyJhbGciOiJ..."
+            },
+            "sharing":{
+                "type":"PSI",
+                "setting":{
+                    "partInfo":[
+                        {
+                            "agentID":100,
+                            "part":1,
+                            "fileID":3
+                        }
+                    ],
+                    "applicationId":0,
+                    "centerId":1,
+                    "compileParameters":{
+                    },
+                    "host":"10.176.34.171",
+                    "mpcId":"PSI_GARNET",
+                    "n":2,
+                    "part":0,
+                    "port":6000,
+                    "runtimeParameters":{
+                        "PK":"案号",
+                        "protocol":"semi2k-party"
+                    },
+                    "status":"INIT",
+                    "taskType":"GARNET_PSI",
+                    "uid":null
+                }
+            },
+            "results":{
+                "type":"COMMON_FILE",
+                "setting":{
+                    "expiredTime":"2024-10-17 14:36:01",
+                    "tag":"trainingData",
+                    "name":"training.csv"
+                }
+            },
+            "audit":{
+                "type":"STORE_PROOF",
+                "setting":{
+                    "signature":"base64_encoded_signature",
+                    "sharingSettingHash":"844af49f718d77512e37f54b20f8e5a1ef6fc7e4ae086299910b56ec32498b47"
+                }
+            }
+        }
+    }
+}
+```
