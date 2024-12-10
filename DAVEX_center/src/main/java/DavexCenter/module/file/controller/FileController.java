@@ -133,63 +133,7 @@ public class FileController {
                                                    @RequestParam("agentId") String agentId,
                                                    @RequestParam("folderId") String folderId,
                                                    @RequestParam("applicationId") String applicationId) throws Exception {
-        WebClient webclient = centerWebClientService.center2AgentWebClient(agentId);
-        File fileInfo = webclient.post()
-                .uri(uriBuilder -> uriBuilder.path("/directory/fileFolder/getFile")
-                        .queryParam("fileId", fileId)
-                        .queryParam("agentId", agentId).build())
-                .retrieve()
-                .bodyToMono(new ParameterizedTypeReference<Body<File>>() {
-                }).block().getData();
-
-        Flux<byte[]> fileFlux = webclient.post().uri(uriBuilder -> uriBuilder.path("/directory/fileFolder/sendFile")
-                .queryParam("fileId", fileId)
-                .queryParam("agentId", agentId)
-                .queryParam("folderId", folderId).build()).accept(MediaType.APPLICATION_OCTET_STREAM).retrieve()
-                .bodyToFlux(byte[].class);
-
-        // 这里创建一个 CompletableFuture 对象来处理异步结果
-        CompletableFuture<Body<String>> future = new CompletableFuture<>();
-
-        fileFlux.collectList().subscribe(bytesList -> {
-//            try (FileOutputStream fos = new FileOutputStream(new File("D:\\1.pdf"))) {
-//                for (byte[] bytes : bytesList) {
-//                    fos.write(bytes);
-//                }
-//            } catch (IOException e) {
-//                e.printStackTrace();
-//            }
-            try {
-                // 将字节数组列表合并为一个完整的字节数组
-                ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-                for (byte[] bytes : bytesList) {
-                    byteArrayOutputStream.write(bytes);
-                }
-                byte[] fileBytes = byteArrayOutputStream.toByteArray();
-
-                // 创建 CustomMultipartFile，这里文件名随意
-                CustomMultipartFile multipartFile = new CustomMultipartFile(fileBytes, "1.pdf");
-
-                // 调用 save 方法
-                Body<String> result = save(multipartFile, fileInfo, applicationId, null);
-                // 记录消息
-                String content;
-                if (result.getCode() == 1) {
-                    content = String.format("文件传输任务完成\n代理: %s\n文件名: %s",
-                            agentId, fileInfo.getName());
-                } else {
-                    content = String.format("文件传输任务失败\n代理: %s\n文件名: %s\n错误信息: %s",
-                            agentId, fileInfo.getName(), result.getMessage());
-                }
-                notificationService.setMessage(applicationId, "文件传输任务结束", content, null, result.getCode(), "fileTransfer", true);
-                future.complete(result);
-            } catch (IOException e) {
-                future.completeExceptionally(e);
-                e.printStackTrace();
-            }
-        });
-
-        return future;
+        return fileService.getFile(fileId, agentId, folderId, applicationId);
     }
 
     // 读取文件内容

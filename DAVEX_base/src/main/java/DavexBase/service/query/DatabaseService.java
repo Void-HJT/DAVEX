@@ -192,14 +192,15 @@ public class DatabaseService {
                     mapper.writeValue(out, results);
                     byte[] jsonData = out.toByteArray();
 
+                    //========================上链模块========================
                     if(chainMaker){
                         String responseMsgJson = new String(jsonData, StandardCharsets.UTF_8);
                         //生成responseID
                         String responseId = generateUUID("response", "query", my.getId());
                         //将响应进行上链操作
                         ContractResponse responseResponse = upChainService.responseUpChain(requestHash,responseMsgJson,responseId,requestId,my.getId(),"agent");
-                        return Body.success(jsonData, "查询成功");
                     }
+                    //========================上链结束========================
 
                     // 返回查询结果
                     return Body.success(jsonData, "查询成功");
@@ -226,7 +227,7 @@ public class DatabaseService {
     public Body<String> query2Agent(QueryRequest request, String applicationId, String agentId, Long databaseId) {
 
         try {
-            //生成requestID
+            //========================上链模块：将查询请求进行上链操作========================
             String centerId = my.getId();
             String requestId = generateUUID("request", "query", centerId);
             String requestMsg = "{" +
@@ -237,17 +238,19 @@ public class DatabaseService {
                     "}";
             String fileDescription = centerId + "has a query task related to the external database"+ databaseId + "that the " + agentId + "is connected to.";
 
-            //将请求进行上链操作
             ContractResponse respectResponse = upChainService.requestUpChain(requestId,fileDescription,requestMsg,centerId,"center");
             Map<String, Object> resultMap = (Map<String, Object>) respectResponse.getData();
             String requestHash = resultMap.get("sharing_setting_hash").toString();
+            //========================上链模块结束========================
 
             Body<byte[]> response = centerWebClientService.center2AgentWebClient(agentId).post()
                     .uri(uriBuilder -> uriBuilder.path("/query/database/locateQuery")
                             .queryParam("databaseId", databaseId)
+                            //========================上链时需要传递的参数========================
                             .queryParam("chainMaker", true)
                             .queryParam("requestHash", requestHash)
                             .queryParam("requestId", requestId)
+                            //========================上链时需要传递的参数结束========================
                             .build())
                     .bodyValue(request) // 将请求体设置为QueryRequest
                     .retrieve() // 准备接收响应

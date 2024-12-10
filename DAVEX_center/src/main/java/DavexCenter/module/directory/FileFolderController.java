@@ -100,9 +100,11 @@ public class FileFolderController {
     @PostMapping("/sendFile")
     public ResponseEntity<Resource> sendFile(@RequestParam("fileId") String fileId,
             @RequestParam("agentId") String agentId,
-            @RequestParam("folderId") String folderId) {
-
-        return fileFolderService.sendFile(fileId, agentId, folderId, my.getBase_path());
+            @RequestParam("folderId") String folderId,
+            @RequestParam(value = "chainMaker", defaultValue = "false") Boolean chainMaker,
+            @RequestParam(value = "requestHash", defaultValue = "defaultHash") String requestHash,
+            @RequestParam(value = "requestId", defaultValue = "defaultId") String requestId) throws Exception {
+        return fileFolderService.sendFile(fileId, agentId, folderId, my.getBase_path(), chainMaker, requestHash, requestId);
     }
 
     //
@@ -152,8 +154,11 @@ public class FileFolderController {
 
     @PostMapping("/getFile")
     public Body<File> getFile(@RequestParam("fileId") String fileId,
-            @RequestParam("agentId") String agentId) {
-        return fileFolderService.getFile(fileId, agentId);
+            @RequestParam("agentId") String agentId,
+            @RequestParam(value = "chainMaker", defaultValue = "false") Boolean chainMaker,
+            @RequestParam(value = "requestHash", defaultValue = "defaultHash") String requestHash,
+            @RequestParam(value = "requestId", defaultValue = "defaultId") String requestId) throws Exception {
+        return fileFolderService.getFile(fileId, agentId, chainMaker, requestHash, requestId);
     }
 
     @PostMapping("/getFolder")

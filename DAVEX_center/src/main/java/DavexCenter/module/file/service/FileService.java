@@ -8,17 +8,24 @@ import java.nio.file.Paths;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.sql.Timestamp;
+import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 
 //import java.io.File; 命名冲突，使用全限定名
 import javax.servlet.http.HttpServletResponse;
 import javax.xml.bind.DatatypeConverter;
 
 import DavexBase.common.My;
-import DavexCenter.entity.ComparisonOutput;
+import DavexBase.common.ContractResponse;
+import DavexBase.service.auth.CenterWebClientService;
+import DavexBase.service.blockchain.UpChainService;
+import DavexBase.service.notification.NotificationService;
+import DavexCenter.common.CustomMultipartFile;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.csv.CSVFormat;
@@ -27,6 +34,9 @@ import org.apache.commons.io.FileUtils;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.text.PDFTextStripper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -34,7 +44,6 @@ import org.springframework.web.multipart.MultipartFile;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.fasterxml.jackson.databind.MappingIterator;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.csv.CsvMapper;
 import com.fasterxml.jackson.dataformat.csv.CsvSchema;
 
@@ -44,6 +53,10 @@ import DavexCenter.entity.DownloadTask;
 import DavexCenter.entity.Output;
 import DavexCenter.mapper.DownloadTaskMapper;
 import DavexCenter.mapper.OutputMapper;
+import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.publisher.Flux;
+
+import static DavexBase.common.UUIDGenerator.generateUUID;
 
 @Service
 public class FileService {
@@ -58,6 +71,15 @@ public class FileService {
     private My my;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
+
+    @Autowired
+    private CenterWebClientService centerWebClientService;
+
+    @Autowired
+    private NotificationService notificationService;
+
+    @Autowired
+    private UpChainService upChainService;
 
     public Body<String> saveFile(MultipartFile file, File fileInfo, String applicationId,
             java.sql.Timestamp expiredTime) {
@@ -462,5 +484,97 @@ public class FileService {
     private String readJsonFile(java.io.File file) throws IOException {
         JsonNode jsonNode = objectMapper.readTree(file);
         return objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(jsonNode);
+    }
+
+    public CompletableFuture<Body<String>> getFile(String fileId, String agentId, String folderId, String applicationId) throws Exception {
+
+        //========================上链模块-请求文件信息上链========================
+        String centerId = my.getId();
+        String requestId = generateUUID("request", "fileTransfer", centerId);
+        String requestMsg = "{" +
+                "\"fileId\": \"" + fileId + "\", " +
+                "\"agentId\": \"" + agentId + "\"" +
+                "\"folderId\": \"" + folderId + "\"" +
+                "\"application\": \"" + applicationId + "\", " +
+                "\"center\": \"" + centerId + "\", " +
+                "}";
+        String fileDescription = centerId + "向" + agentId + "请求文件信息" + fileId;
+
+        ContractResponse respectResponse = upChainService.requestUpChain(requestId,fileDescription,requestMsg,centerId,"center");
+        Map<String, Object> resultMap = (Map<String, Object>) respectResponse.getData();
+        String requestHash = resultMap.get("sharing_setting_hash").toString();
+        //========================上链模块结束===================================
+
+        WebClient webclient = centerWebClientService.center2AgentWebClient(agentId);
+        File fileInfo = webclient.post()
+                .uri(uriBuilder -> uriBuilder.path("/directory/fileFolder/getFile")
+                        .queryParam("fileId", fileId)
+                        .queryParam("agentId", agentId)
+                        //========================上链时需传递的参数========================
+                        .queryParam("chainMaker", true)
+                        .queryParam("requestHash", requestHash)
+                        .queryParam("requestId", requestId)
+                        //========================上链参数结束=============================
+                        .build())
+                .retrieve()
+                .bodyToMono(new ParameterizedTypeReference<Body<File>>() {
+                }).block().getData();
+
+        //========================上链模块-请求下载文件上链========================
+        String requestId1 = generateUUID("request", "fileTransfer", centerId);
+        String fileDescription1 = centerId + "向" + agentId + "请求下载文件" + fileId;
+        ContractResponse respectResponse1 = upChainService.requestUpChain(requestId1,fileDescription1,requestMsg,centerId,"center");
+        Map<String, Object> resultMap1 = (Map<String, Object>) respectResponse1.getData();
+        String requestHash1 = resultMap1.get("sharing_setting_hash").toString();
+        //========================上链模块结束===================================
+
+        Flux<byte[]> fileFlux = webclient.post().uri(uriBuilder -> uriBuilder.path("/directory/fileFolder/sendFile")
+                        .queryParam("fileId", fileId)
+                        .queryParam("agentId", agentId)
+                        .queryParam("folderId", folderId)
+                        //========================上链时需传递的参数========================
+                        .queryParam("chainMaker", true)
+                        .queryParam("requestHash", requestHash1)
+                        .queryParam("requestId", requestId1)
+                        //========================上链参数结束=============================
+                        .build()).accept(MediaType.APPLICATION_OCTET_STREAM).retrieve()
+                .bodyToFlux(byte[].class);
+
+        // 这里创建一个 CompletableFuture 对象来处理异步结果
+        CompletableFuture<Body<String>> future = new CompletableFuture<>();
+
+        fileFlux.collectList().subscribe(bytesList -> {
+            try {
+                // 将字节数组列表合并为一个完整的字节数组
+                ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+                for (byte[] bytes : bytesList) {
+                    byteArrayOutputStream.write(bytes);
+                }
+                byte[] fileBytes = byteArrayOutputStream.toByteArray();
+
+                // 创建 CustomMultipartFile，这里文件名随意
+                CustomMultipartFile multipartFile = new CustomMultipartFile(fileBytes, "test1.txt");
+
+                java.sql.Timestamp expiredTime = java.sql.Timestamp.from(Instant.now().plus(7, ChronoUnit.DAYS));
+
+                // 调用 save 方法
+                Body<String> result = saveFile(multipartFile, fileInfo, applicationId,expiredTime);
+                String content;
+                if (result.getCode() == 1) {
+                    content = String.format("文件传输任务完成\n代理: %s\n文件名: %s",
+                            agentId, fileInfo.getName());
+                } else {
+                    content = String.format("文件传输任务失败\n代理: %s\n文件名: %s\n错误信息: %s",
+                            agentId, fileInfo.getName(), result.getMessage());
+                }
+                notificationService.setMessage(applicationId, "文件传输任务结束", content, null, result.getCode(), "fileTransfer", true);
+                future.complete(result);
+            } catch (IOException e) {
+                future.completeExceptionally(e);
+                e.printStackTrace();
+            }
+        });
+
+        return future;
     }
 }
