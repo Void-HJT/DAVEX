@@ -62,7 +62,7 @@ public class FileController {
             expiredTime = java.sql.Timestamp.from(Instant.now().plus(7, ChronoUnit.DAYS));
         }
 
-        return fileService.saveFile(file, fileInfo, applicationId, uploadBaseDir, expiredTime);
+        return fileService.saveFile(file, fileInfo, applicationId, expiredTime);
     }
 
     // 多文件保存
@@ -84,7 +84,7 @@ public class FileController {
             return Body.error("失效时间数量和文件数量不匹配");
         }
 
-        return fileService.saveFiles(files, fileInfos, applicationId, uploadBaseDir, expiredTimes);
+        return fileService.saveFiles(files, fileInfos, applicationId, expiredTimes);
     }
 
     // application从center结果管理区通过Http获取文件的接口
@@ -101,7 +101,7 @@ public class FileController {
     public Body<String> fetch(@RequestParam("outputId") Long outputId,
                               @RequestParam("applicationId") String applicationId) {
 
-        return fileService.fetchFile(outputId, applicationId, downloadBaseDir);
+        return fileService.fetchFile(outputId, applicationId);
     }
 
     // application查询center结果管理区所有文件的接口
@@ -133,115 +133,14 @@ public class FileController {
                                                    @RequestParam("agentId") String agentId,
                                                    @RequestParam("folderId") String folderId,
                                                    @RequestParam("applicationId") String applicationId) throws Exception {
-        WebClient webclient = centerWebClientService.center2AgentWebClient(agentId);
-        File fileInfo = webclient.post()
-                .uri(uriBuilder -> uriBuilder.path("/directory/fileFolder/getFile")
-                        .queryParam("fileId", fileId)
-                        .queryParam("agentId", agentId).build())
-                .retrieve()
-                .bodyToMono(new ParameterizedTypeReference<Body<File>>() {
-                }).block().getData();
-
-        Flux<byte[]> fileFlux = webclient.post().uri(uriBuilder -> uriBuilder.path("/directory/fileFolder/sendFile")
-                .queryParam("fileId", fileId)
-                .queryParam("agentId", agentId)
-                .queryParam("folderId", folderId).build()).accept(MediaType.APPLICATION_OCTET_STREAM).retrieve()
-                .bodyToFlux(byte[].class);
-
-        // 这里创建一个 CompletableFuture 对象来处理异步结果
-        CompletableFuture<Body<String>> future = new CompletableFuture<>();
-
-        fileFlux.collectList().subscribe(bytesList -> {
-//            try (FileOutputStream fos = new FileOutputStream(new File("D:\\1.pdf"))) {
-//                for (byte[] bytes : bytesList) {
-//                    fos.write(bytes);
-//                }
-//            } catch (IOException e) {
-//                e.printStackTrace();
-//            }
-            try {
-                // 将字节数组列表合并为一个完整的字节数组
-                ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-                for (byte[] bytes : bytesList) {
-                    byteArrayOutputStream.write(bytes);
-                }
-                byte[] fileBytes = byteArrayOutputStream.toByteArray();
-
-                // 创建 CustomMultipartFile，这里文件名随意
-                CustomMultipartFile multipartFile = new CustomMultipartFile(fileBytes, "1.pdf");
-
-                // 调用 save 方法
-                Body<String> result = save(multipartFile, fileInfo, applicationId, null);
-                String content;
-                if (result.getCode() == 1) {
-                    content = String.format("文件传输任务完成\n代理: %s\n文件名: %s",
-                            agentId, fileInfo.getName());
-                } else {
-                    content = String.format("文件传输任务失败\n代理: %s\n文件名: %s\n错误信息: %s",
-                            agentId, fileInfo.getName(), result.getMessage());
-                }
-                notificationService.setMessage(applicationId, "文件传输任务结束", content, null, result.getCode(), "fileTransfer", true);
-                future.complete(result);
-            } catch (IOException e) {
-                future.completeExceptionally(e);
-                e.printStackTrace();
-            }
-        });
-
-        return future;
+        return fileService.getFile(fileId, agentId, folderId, applicationId);
     }
 
-    // 测试getFile接口
-    @PostMapping("/tGetFile")
-    public CompletableFuture<Body<String>> tGetFile(@RequestParam("applicationId") String applicationId) throws Exception {
-        // 这里创建一个 CompletableFuture 对象来处理异步结果
-        CompletableFuture<Body<String>> future = new CompletableFuture<>();
+    // 读取文件内容
+    @PostMapping("/read")
+    public Body<String> read(@RequestParam("applicationId") String applicationId,
+                             @RequestParam("outputId") Long outputId) throws IOException {
 
-        // 修改为从本地文件读取数据而不是从 WebClient 获取
-        File fileInfo = new File();
-        fileInfo.setUid("5");
-        fileInfo.setAgentId("5");
-        fileInfo.setFolderId("10");
-        fileInfo.setName("安全多方学习_从安全计算到安全学习_韩伟力.pdf");
-        fileInfo.setType("pdf");
-        fileInfo.setCreateDate(Timestamp.valueOf("2024-07-21 09:39:09"));
-        fileInfo.setLastUpdate(Timestamp.valueOf("2024-07-21 09:39:09"));
-        fileInfo.setSize(3087316L);
-        fileInfo.setHash("759771dabfb5ceddc7339a3d2d72ad208e963ec029e2819bf8d1f099b6d17971");
-        java.io.File localFile = new java.io.File("/home/zkx/DAVE/1.pdf");
-        try (FileInputStream fis = new FileInputStream(localFile)) {
-            // 将文件内容读取到字节数组中
-            byte[] fileBytes = fis.readAllBytes();
-
-            // 将字节数组分成多个字节数组以模拟 Flux<byte[]> 的行为
-            // 这里只用一个字节数组模拟，如果需要更复杂的逻辑，可以自行调整
-            Flux<byte[]> fileFlux = Flux.just(fileBytes);
-
-            fileFlux.collectList().subscribe(bytesList -> {
-                try {
-                    // 将字节数组列表合并为一个完整的字节数组
-                    ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-                    for (byte[] bytes : bytesList) {
-                        byteArrayOutputStream.write(bytes);
-                    }
-                    byte[] fileBytesArray = byteArrayOutputStream.toByteArray();
-
-                    // 创建 CustomMultipartFile
-                    CustomMultipartFile multipartFile = new CustomMultipartFile(fileBytesArray, "1.pdf");
-
-                    // 调用 save 方法
-                    Body<String> result = save(multipartFile, fileInfo, applicationId, null);
-                    future.complete(result);
-                } catch (IOException e) {
-                    future.completeExceptionally(e);
-                    e.printStackTrace();
-                }
-            });
-        } catch (IOException e) {
-            future.completeExceptionally(e);
-            e.printStackTrace();
-        }
-
-        return future;
+        return fileService.readFile(applicationId, outputId);
     }
 }

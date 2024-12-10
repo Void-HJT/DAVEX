@@ -259,4 +259,65 @@ body {
 .el-pagination .el-pager .number:not(:last-child) {
   margin-right: 6px;  /* 设置按钮之间的间距 */
 }
+
+::-webkit-scrollbar {
+  width: 8px; /* 滚动条宽度 */
+  height: 8px; /* 横向滚动条高度 */
+}
+::-webkit-scrollbar-thumb {
+  background-color: rgba(120, 161, 203, 0.5); /* 默认颜色（78a1cb），透明度50% */
+  border-radius: 4px; /* 圆角 */
+}
+::-webkit-scrollbar-thumb:hover {
+  background-color: #78a1cb; /* 鼠标悬停时不透明 */
+}
+
+.el-notification {
+  border-radius: 5px !important; /* 圆角设置 */
+  width: 400px !important;
+  height: 200px;
+}
+.el-notification .el-notification__group {
+  margin: 0 !important;
+}
+.el-notification__content {
+  line-height: 1.5 !important; /* 内容行高设置为 1.5 倍 */
+}
+.el-notification .el-notification__title {
+  padding: 0;
+  color: #5c79b0; /* 标题文字颜色 */
+  font-size: 14px; /* 字体大小 */
+  font-weight: normal;
+  margin-bottom: 25px;
+}
+.el-notification__closeBtn {
+  top: 0 !important;
+  right: 0 !important;
+  height: 40px !important;
+  width: 40px !important;
+  color: #5c79b0 !important; /* 按钮颜色 */
+}
+.el-notification__closeBtn:hover {
+  color: #f86359 !important; /* 悬停变为红色 */
+}
+.notification-content {
+  display: inline-flex;
+  align-items: center;
+}
+.button-container {
+  position: absolute;
+  right: 15px; /* 距离右边 10px */
+  bottom: 15px; /* 距离底部 10px */
+}
+.notification-icon {
+  color: #e6a23c;
+  width: 50px;
+  margin-right: 10px;
+  margin-left: 30px;
+}
+.notification-icon svg {
+  width: 100%;
+  height: 100%;
+  vertical-align: middle;
+}
 </style>

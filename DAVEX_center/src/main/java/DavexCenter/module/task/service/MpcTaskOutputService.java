@@ -12,6 +12,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 import DavexBase.service.notification.NotificationService;
+import DavexCenter.entity.ComparisonOutput;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.stereotype.Service;
@@ -58,7 +59,7 @@ public class MpcTaskOutputService {
             throw new Exception("文件hash不匹配");
         }
         String fileName = file.getOriginalFilename();
-        Path path = Paths.get(my.getBase_path()).resolve("mpctask").resolve(fileName);
+        Path path = Paths.get(my.getBase_path()).resolve("result").resolve("mpctask").resolve(fileName);
         try {
             Files.createDirectories(path.getParent());
             Files.write(path, file.getBytes());
@@ -75,8 +76,8 @@ public class MpcTaskOutputService {
         MpcTaskOutput mpcTaskOutput = new MpcTaskOutput();
         Path outputPath = Paths.get(my.getGarnet_path()).resolve("Output")
                 .resolve(mpcTask.getUid() + "-P" + mpcTask.getPart() + "-0");
-        Path savePath = Paths.get(my.getBase_path()).resolve("mpctask").resolve(mpcTask.getUid());
-        mpcTaskOutput.setPath(Paths.get(my.getBase_path()).resolve("mpctask").resolve(mpcTask.getUid()).toString());
+        Path savePath = Paths.get(my.getBase_path()).resolve("result").resolve("mpctask").resolve(mpcTask.getUid());
+        mpcTaskOutput.setPath(Paths.get(my.getBase_path()).resolve("result").resolve("mpctask").resolve(mpcTask.getUid()).toString());
         mpcTaskOutput.setTaskId(mpcTask.getUid());
         mpcTaskOutput.setExpiredTime(java.sql.Timestamp
                 .from(Instant.now().plus(7, ChronoUnit.DAYS)));
@@ -117,17 +118,18 @@ public class MpcTaskOutputService {
         }
 
         // 添加下载任务记录到任务表
+        String filePath = queryMpcOutput.getPath();
+        String fileName = queryMpcOutput.getName();
+        Path downloadPath = Paths.get(my.getBase_path()).resolve("download").resolve("mpc");
         DownloadTask newDownloadTask = new DownloadTask();
         newDownloadTask.setApplicationId(applicationId);
         newDownloadTask.setOutputId(queryMpcOutput.getUid());
         newDownloadTask.setDownloadTime(Timestamp.valueOf(LocalDateTime.now()));
         newDownloadTask.setType("mpc");
+        newDownloadTask.setPath(downloadPath.resolve(fileName).toString());
         downloadTaskMapper.insert(newDownloadTask);
 
         // 直接通过路径访问文件
-        String filePath = queryMpcOutput.getPath();
-        String fileName = queryMpcOutput.getName();
-        Path downloadPath = Paths.get(my.getBase_path()).resolve("download").resolve("mpc");
         try {
             Files.createDirectories(downloadPath);
             fileService.copyFile(filePath, fileName, downloadPath.toString());
@@ -135,7 +137,7 @@ public class MpcTaskOutputService {
             e.printStackTrace();
             return Body.error(String.format("获取失败: 结果id %d，文件名: %s，错误信息: %s", mpcOutputId, fileName, e.getMessage()));
         }
-        return Body.success(String.format("获取成功，结果id: %d，文件名: %s", mpcOutputId, fileName));
+        return Body.success(String.format("获取成功，结果id: %d，文件名: %s，保存路径: %s", mpcOutputId, fileName, newDownloadTask.getPath()));
     }
 
     public Body<List<MpcTaskOutput>> queryMpc(String applicationId) {
@@ -181,5 +183,16 @@ public class MpcTaskOutputService {
             return Body.error(String.format("删除失败: 结果id %d，文件名: %s，错误信息: %s", mpcOutputId, fileName, e.getMessage()));
         }
         return Body.success(String.format("删除成功，结果id: %d，文件名: %s", mpcOutputId, fileName));
+    }
+
+    public Body<String> readMpc(String applicationId, Long mpcOutputId) throws IOException {
+        LambdaQueryWrapper<MpcTaskOutput> queryWrapper = Wrappers.<MpcTaskOutput>lambdaQuery()
+                .eq(MpcTaskOutput::getApplicationId, applicationId)
+                .eq(MpcTaskOutput::getUid, mpcOutputId);
+        MpcTaskOutput queryOutput = mpcTaskOutputMapper.selectOne(queryWrapper);
+        String filePath = queryOutput.getPath();
+        String fileName = queryOutput.getName();
+
+        return fileService.readFileContent(filePath, fileName);
     }
 }

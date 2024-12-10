@@ -1,5 +1,6 @@
 package DavexCenter.module.file.controller;
 
+import java.io.IOException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
@@ -47,7 +48,7 @@ public class ComparisonFileController {
             expiredTime = java.sql.Timestamp.from(Instant.now().plus(7, ChronoUnit.DAYS));
         }
 
-        return comparisonFileService.saveComparison(file, hash, applicationId, agentId, fileId, folderId, fileName, uploadBaseDir, expiredTime);
+        return comparisonFileService.saveComparison(file, hash, applicationId, agentId, fileId, folderId, fileName, expiredTime);
     }
 
     // application通过路径直接获取center结果管理区comparison文件的接口
@@ -55,7 +56,7 @@ public class ComparisonFileController {
     public Body<String> fetchComparison(@RequestParam("outputId") Long outputId,
                                         @RequestParam("applicationId") String applicationId) {
 
-        return comparisonFileService.fetchComparison(outputId, applicationId, downloadBaseDir);
+        return comparisonFileService.fetchComparison(outputId, applicationId);
     }
 
     // application查询center结果管理区所有comparison文件的接口
@@ -79,5 +80,13 @@ public class ComparisonFileController {
                                          @RequestParam("outputId") Long outputId) {
 
         return comparisonFileService.deleteComparison(applicationId, outputId);
+    }
+
+    // 读取文件内容
+    @PostMapping("/readComparison")
+    public Body<String> readComparison(@RequestParam("applicationId") String applicationId,
+                                       @RequestParam("outputId") Long outputId) throws IOException {
+
+        return comparisonFileService.readComparison(applicationId, outputId);
     }
 }

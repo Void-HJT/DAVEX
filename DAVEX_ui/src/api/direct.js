@@ -72,3 +72,15 @@ export const deleteFile = ({ outputId, applicationId }) => {
     )
     return res
 }
+
+// 从结果管理区预览文件
+export const readFile = ({ outputId, applicationId }) => {
+    const params = new URLSearchParams()
+    params.append('outputId', outputId)
+    params.append('applicationId', applicationId)
+    let res = request.post(
+        'file/read',
+        params.toString()
+    )
+    return res
+}

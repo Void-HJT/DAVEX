@@ -12,7 +12,7 @@ public class UUIDGenerator {
 
         // 验证任务类型是否有效
         if (!isValidTaskType(taskType)) {
-            throw new IllegalArgumentException("Invalid task type. Must be 'query', 'comparison', or 'other'.");
+            throw new IllegalArgumentException("Invalid task type. Must be 'query', 'comparison', 'fileTransfer', or 'other'.");
         }
 
         // 生成 UUID
@@ -29,6 +29,6 @@ public class UUIDGenerator {
 
     // 验证任务类型是否有效
     private static boolean isValidTaskType(String taskType) {
-        return "query".equalsIgnoreCase(taskType) || "comparison".equalsIgnoreCase(taskType) || "other".equalsIgnoreCase(taskType);
+        return "query".equalsIgnoreCase(taskType) || "comparison".equalsIgnoreCase(taskType)|| "fileTransfer".equalsIgnoreCase(taskType) || "other".equalsIgnoreCase(taskType);
     }
 }

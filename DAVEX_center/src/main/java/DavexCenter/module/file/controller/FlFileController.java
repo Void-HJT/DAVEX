@@ -1,5 +1,6 @@
 package DavexCenter.module.file.controller;
 
+import java.io.IOException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
@@ -43,7 +44,7 @@ public class FlFileController {
             expiredTime = java.sql.Timestamp.from(Instant.now().plus(7, ChronoUnit.DAYS));
         }
 
-        return flFileService.saveFl(file, hash, applicationId, uploadBaseDir, expiredTime);
+        return flFileService.saveFl(file, hash, applicationId, expiredTime);
     }
 
     // application通过路径直接获取center结果管理区联邦学习结果文件的接口
@@ -51,7 +52,7 @@ public class FlFileController {
     public Body<String> fetchFl(@RequestParam("outputId") Long outputId,
                                         @RequestParam("applicationId") String applicationId) {
 
-        return flFileService.fetchFl(outputId, applicationId, downloadBaseDir);
+        return flFileService.fetchFl(outputId, applicationId);
     }
 
     // application查询center结果管理区所有联邦学习结果文件的接口
@@ -75,5 +76,13 @@ public class FlFileController {
                                          @RequestParam("outputId") Long outputId) {
 
         return flFileService.deleteFl(applicationId, outputId);
+    }
+
+    // 读取文件内容
+    @PostMapping("/readFl")
+    public Body<String> readFl(@RequestParam("applicationId") String applicationId,
+                               @RequestParam("outputId") Long outputId) throws IOException {
+
+        return flFileService.readFl(applicationId, outputId);
     }
 }

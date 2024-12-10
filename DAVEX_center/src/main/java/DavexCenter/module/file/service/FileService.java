@@ -1,28 +1,42 @@
 package DavexCenter.module.file.service;
 
-import java.io.BufferedInputStream;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.OutputStream;
+import java.io.*;
 import java.net.URLEncoder;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.sql.Timestamp;
+import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 
 //import java.io.File; 命名冲突，使用全限定名
 import javax.servlet.http.HttpServletResponse;
 import javax.xml.bind.DatatypeConverter;
 
-import DavexCenter.entity.ComparisonOutput;
+import DavexBase.common.My;
+import DavexBase.common.ContractResponse;
+import DavexBase.service.auth.CenterWebClientService;
+import DavexBase.service.blockchain.UpChainService;
+import DavexBase.service.notification.NotificationService;
+import DavexCenter.common.CustomMultipartFile;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVRecord;
 import org.apache.commons.io.FileUtils;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.text.PDFTextStripper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -30,7 +44,6 @@ import org.springframework.web.multipart.MultipartFile;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.fasterxml.jackson.databind.MappingIterator;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.csv.CsvMapper;
 import com.fasterxml.jackson.dataformat.csv.CsvSchema;
 
@@ -40,6 +53,10 @@ import DavexCenter.entity.DownloadTask;
 import DavexCenter.entity.Output;
 import DavexCenter.mapper.DownloadTaskMapper;
 import DavexCenter.mapper.OutputMapper;
+import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.publisher.Flux;
+
+import static DavexBase.common.UUIDGenerator.generateUUID;
 
 @Service
 public class FileService {
@@ -50,9 +67,22 @@ public class FileService {
     private JdbcTemplate jdbcTemplate;
     @Autowired
     private DownloadTaskMapper downloadTaskMapper;
+    @Autowired
+    private My my;
+
+    private final ObjectMapper objectMapper = new ObjectMapper();
+
+    @Autowired
+    private CenterWebClientService centerWebClientService;
+
+    @Autowired
+    private NotificationService notificationService;
+
+    @Autowired
+    private UpChainService upChainService;
 
     public Body<String> saveFile(MultipartFile file, File fileInfo, String applicationId,
-            String base, java.sql.Timestamp expiredTime) {
+            java.sql.Timestamp expiredTime) {
 
         // 校验sha256
         String fileHash = getSha256(file);
@@ -83,7 +113,8 @@ public class FileService {
         newOutput.setAttribute(fileInfo.getAttribute());
         newOutput.setSize(fileInfo.getSize());
         newOutput.setDescription(fileInfo.getDescription());
-        newOutput.setPath(Paths.get(base).resolve("common").resolve(fileHash + "_appid_" + applicationId).toString());
+        newOutput.setPath(Paths.get(my.getBase_path()).resolve("result").resolve("common")
+                .resolve(fileHash + "_appid_" + applicationId).toString());
         newOutput.setExpiredTime(expiredTime);
         newOutput.setHash(fileHash);
         newOutput.setFileId(fileInfo.getUid());
@@ -105,7 +136,7 @@ public class FileService {
     }
 
     public Body<List<String>> saveFiles(List<MultipartFile> files, List<File> fileInfos, String applicationId,
-            String base, List<java.sql.Timestamp> expiredTimes) {
+            List<java.sql.Timestamp> expiredTimes) {
         List<String> results = new ArrayList<>();
 
         if (files.size() != fileInfos.size() || files.size() != expiredTimes.size()) {
@@ -149,7 +180,7 @@ public class FileService {
             newOutput.setSize(fileInfo.getSize());
             newOutput.setDescription(fileInfo.getDescription());
             newOutput.setPath(
-                    Paths.get(base).resolve("common").resolve(fileHash + "_appid_" + applicationId).toString());
+                    Paths.get(my.getBase_path()).resolve("result").resolve("common").resolve(fileHash + "_appid_" + applicationId).toString());
             newOutput.setExpiredTime(expiredTime);
             newOutput.setHash(fileHash);
             newOutput.setFileId(fileInfo.getUid());
@@ -227,7 +258,7 @@ public class FileService {
         return Body.success(String.format("获取成功，结果id: %d，文件名: %s", outputId, fileName));
     }
 
-    public Body<String> fetchFile(Long outputId, String applicationId, String downloadPath) {
+    public Body<String> fetchFile(Long outputId, String applicationId) {
 
         // 根据结果id查找结果表
         LambdaQueryWrapper<Output> queryWrapper = Wrappers.<Output>lambdaQuery()
@@ -245,23 +276,25 @@ public class FileService {
         }
 
         // 添加下载任务记录到任务表
+        String filePath = queryOutput.getPath();
+        String fileName = queryOutput.getName();
+        Path downloadPath = Paths.get(my.getBase_path()).resolve("download").resolve("common");
         DownloadTask newDownloadTask = new DownloadTask();
         newDownloadTask.setApplicationId(applicationId);
         newDownloadTask.setOutputId(queryOutput.getUid());
         newDownloadTask.setDownloadTime(Timestamp.valueOf(LocalDateTime.now()));
         newDownloadTask.setType("common");
+        newDownloadTask.setPath(downloadPath.resolve(fileName).toString());
         downloadTaskMapper.insert(newDownloadTask);
 
         // 直接通过路径访问文件
-        String filePath = queryOutput.getPath();
-        String fileName = queryOutput.getName();
         try {
-            copyFile(filePath, fileName, downloadPath);
+            copyFile(filePath, fileName, downloadPath.toString());
         } catch (Exception e) {
             e.printStackTrace();
             return Body.error(String.format("获取失败: 结果id %d，文件名: %s，错误信息: %s", outputId, fileName, e.getMessage()));
         }
-        return Body.success(String.format("获取成功，结果id: %d，文件名: %s", outputId, fileName));
+        return Body.success(String.format("获取成功，结果id: %d，文件名: %s，保存路径: %s", outputId, fileName, newDownloadTask.getPath()));
     }
 
     public Body<List<Output>> queryFile(String applicationId) {
@@ -365,6 +398,7 @@ public class FileService {
     public void copyFile(String filePath, String fileName, String downloadPath) throws Exception {
         var source = new java.io.File(filePath);
         var dest = new java.io.File(Paths.get(downloadPath).resolve(fileName).toString());
+        Files.createDirectories(dest.getParentFile().toPath());
         try (var fis = new FileInputStream(source);
                 var fos = new FileOutputStream(dest)) {
 
@@ -384,5 +418,163 @@ public class FileService {
         if (file.isFile() && file.exists()) {
             file.delete();
         }
+    }
+
+    public Body<String> readFile(String applicationId, Long outputId) throws IOException {
+        LambdaQueryWrapper<Output> queryWrapper = Wrappers.<Output>lambdaQuery()
+                .eq(Output::getApplicationId, applicationId)
+                .eq(Output::getUid, outputId);
+        Output queryOutput = outputMapper.selectOne(queryWrapper);
+        String filePath = queryOutput.getPath();
+        String fileName = queryOutput.getName();
+
+        return readFileContent(filePath, fileName);
+    }
+
+    public Body<String> readFileContent(String filePath, String fileName) throws IOException {
+
+        java.io.File file = new java.io.File(filePath);
+        if (!file.exists()) {
+            return Body.error(String.format("文件不存在，文件路径: %s", filePath));
+        }
+
+        String extension = fileName.substring(fileName.lastIndexOf(".") + 1);
+        return switch (extension.toLowerCase()) {
+            case "txt" -> Body.success(readTxtFile(file));
+            case "csv" -> Body.success(readCsvFile(file));
+            case "pdf" -> Body.success(readPdfFile(file));
+            case "json" -> Body.success(readJsonFile(file));
+            default -> Body.error(String.format("不支持的文件类型: %s", extension));
+        };
+    }
+
+    private String readTxtFile(java.io.File file) throws IOException {
+        StringBuilder content = new StringBuilder();
+        try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                content.append(line).append("\n");
+            }
+        }
+        return content.toString();
+    }
+
+    private String readCsvFile(java.io.File file) throws IOException {
+        StringBuilder content = new StringBuilder();
+        try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+            Iterable<CSVRecord> records = CSVFormat.DEFAULT.withFirstRecordAsHeader().parse(reader);
+            for (CSVRecord record : records) {
+                for (String field : record) {
+                    content.append(field).append("\t");
+                }
+                content.append("\n");
+            }
+        }
+        return content.toString();
+    }
+
+    private String readPdfFile(java.io.File file) throws IOException {
+        PDDocument document = PDDocument.load(file);
+        PDFTextStripper stripper = new PDFTextStripper();
+        String content = stripper.getText(document);
+        document.close();
+        return content;
+    }
+
+    private String readJsonFile(java.io.File file) throws IOException {
+        JsonNode jsonNode = objectMapper.readTree(file);
+        return objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(jsonNode);
+    }
+
+    public CompletableFuture<Body<String>> getFile(String fileId, String agentId, String folderId, String applicationId) throws Exception {
+
+        //========================上链模块-请求文件信息上链========================
+        String centerId = my.getId();
+        String requestId = generateUUID("request", "fileTransfer", centerId);
+        String requestMsg = "{" +
+                "\"fileId\": \"" + fileId + "\", " +
+                "\"agentId\": \"" + agentId + "\"" +
+                "\"folderId\": \"" + folderId + "\"" +
+                "\"application\": \"" + applicationId + "\", " +
+                "\"center\": \"" + centerId + "\", " +
+                "}";
+        String fileDescription = centerId + "向" + agentId + "请求文件信息" + fileId;
+
+        ContractResponse respectResponse = upChainService.requestUpChain(requestId,fileDescription,requestMsg,centerId,"center");
+        Map<String, Object> resultMap = (Map<String, Object>) respectResponse.getData();
+        String requestHash = resultMap.get("sharing_setting_hash").toString();
+        //========================上链模块结束===================================
+
+        WebClient webclient = centerWebClientService.center2AgentWebClient(agentId);
+        File fileInfo = webclient.post()
+                .uri(uriBuilder -> uriBuilder.path("/directory/fileFolder/getFile")
+                        .queryParam("fileId", fileId)
+                        .queryParam("agentId", agentId)
+                        //========================上链时需传递的参数========================
+                        .queryParam("chainMaker", true)
+                        .queryParam("requestHash", requestHash)
+                        .queryParam("requestId", requestId)
+                        //========================上链参数结束=============================
+                        .build())
+                .retrieve()
+                .bodyToMono(new ParameterizedTypeReference<Body<File>>() {
+                }).block().getData();
+
+        //========================上链模块-请求下载文件上链========================
+        String requestId1 = generateUUID("request", "fileTransfer", centerId);
+        String fileDescription1 = centerId + "向" + agentId + "请求下载文件" + fileId;
+        ContractResponse respectResponse1 = upChainService.requestUpChain(requestId1,fileDescription1,requestMsg,centerId,"center");
+        Map<String, Object> resultMap1 = (Map<String, Object>) respectResponse1.getData();
+        String requestHash1 = resultMap1.get("sharing_setting_hash").toString();
+        //========================上链模块结束===================================
+
+        Flux<byte[]> fileFlux = webclient.post().uri(uriBuilder -> uriBuilder.path("/directory/fileFolder/sendFile")
+                        .queryParam("fileId", fileId)
+                        .queryParam("agentId", agentId)
+                        .queryParam("folderId", folderId)
+                        //========================上链时需传递的参数========================
+                        .queryParam("chainMaker", true)
+                        .queryParam("requestHash", requestHash1)
+                        .queryParam("requestId", requestId1)
+                        //========================上链参数结束=============================
+                        .build()).accept(MediaType.APPLICATION_OCTET_STREAM).retrieve()
+                .bodyToFlux(byte[].class);
+
+        // 这里创建一个 CompletableFuture 对象来处理异步结果
+        CompletableFuture<Body<String>> future = new CompletableFuture<>();
+
+        fileFlux.collectList().subscribe(bytesList -> {
+            try {
+                // 将字节数组列表合并为一个完整的字节数组
+                ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+                for (byte[] bytes : bytesList) {
+                    byteArrayOutputStream.write(bytes);
+                }
+                byte[] fileBytes = byteArrayOutputStream.toByteArray();
+
+                // 创建 CustomMultipartFile，这里文件名随意
+                CustomMultipartFile multipartFile = new CustomMultipartFile(fileBytes, "test1.txt");
+
+                java.sql.Timestamp expiredTime = java.sql.Timestamp.from(Instant.now().plus(7, ChronoUnit.DAYS));
+
+                // 调用 save 方法
+                Body<String> result = saveFile(multipartFile, fileInfo, applicationId,expiredTime);
+                String content;
+                if (result.getCode() == 1) {
+                    content = String.format("文件传输任务完成\n代理: %s\n文件名: %s",
+                            agentId, fileInfo.getName());
+                } else {
+                    content = String.format("文件传输任务失败\n代理: %s\n文件名: %s\n错误信息: %s",
+                            agentId, fileInfo.getName(), result.getMessage());
+                }
+                notificationService.setMessage(applicationId, "文件传输任务结束", content, null, result.getCode(), "fileTransfer", true);
+                future.complete(result);
+            } catch (IOException e) {
+                future.completeExceptionally(e);
+                e.printStackTrace();
+            }
+        });
+
+        return future;
     }
 }

@@ -7,6 +7,7 @@ import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
 import java.net.MalformedURLException;
 import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -18,7 +19,11 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import DavexBase.common.ContractResponse;
+import DavexBase.common.My;
 import DavexBase.service.MQ.MessageService;
+import DavexBase.service.blockchain.UpChainService;
+import com.alibaba.fastjson.JSON;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.core.io.Resource;
@@ -57,6 +62,8 @@ import DavexBase.mapper.RabbitmqConnectionMapper;
 import DavexBase.service.MQ.PublishService;
 import DavexBase.service.auth.CenterWebClientService;
 
+import static DavexBase.common.UUIDGenerator.generateUUID;
+
 @Service
 public class FileFolderService {
 
@@ -86,6 +93,12 @@ public class FileFolderService {
 
     @Autowired
     MessageService messageService;
+
+    @Autowired
+    private My my;
+
+    @Autowired
+    private UpChainService upChainService;
 
     // 使用 Jackson ObjectMapper
     private final ObjectMapper objectMapper = new ObjectMapper();
@@ -651,7 +664,7 @@ public class FileFolderService {
     }
 
     //
-    public ResponseEntity<Resource> sendFile(String fileId, String agentId, String folderId, String baseDirectory) {
+    public ResponseEntity<Resource> sendFile(String fileId, String agentId, String folderId, String baseDirectory,Boolean chainMaker, String requestHash, String requestId) throws Exception {
 
         LambdaQueryWrapper<File> queryFolderWrapper = Wrappers.<File>lambdaQuery()
                 .eq(File::getUid, fileId)
@@ -682,6 +695,16 @@ public class FileFolderService {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
         }
 
+        //=========================上链模块=========================
+        if(chainMaker){
+            String responseMsgJson = JSON.toJSONString(resource);
+            //生成responseID
+            String responseId = generateUUID("response", "fileTransfer", my.getId());
+            //将响应进行上链操作
+            ContractResponse responseResponse = upChainService.responseUpChain(requestHash,responseMsgJson,responseId,requestId,my.getId(),"agent");
+        }
+        //======================上链模块结束=========================
+
         // 发送文件
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_OCTET_STREAM)
@@ -690,10 +713,20 @@ public class FileFolderService {
 
     }
 
-    public Body<File> getFile(String fileId, String agentId) {
-
+    public Body<File> getFile(String fileId, String agentId,Boolean chainMaker, String requestHash, String requestId) throws Exception {
         LambdaQueryWrapper<File> queryWrapper = Wrappers.<File>lambdaQuery().eq(File::getUid, fileId);
         File file = fileMapper.selectOne(queryWrapper);
+
+        //========================上链模块=====================
+        if(chainMaker){
+            String responseMsgJson = JSON.toJSONString(file);
+            //生成responseID
+            String responseId = generateUUID("response", "fileTransfer", my.getId());
+            //将响应进行上链操作
+            ContractResponse responseResponse = upChainService.responseUpChain(requestHash,responseMsgJson,responseId,requestId,my.getId(),"agent");
+        }
+        //=====================上链模块结束=====================
+
         return Body.success(file, "查询成功");
     }
 
