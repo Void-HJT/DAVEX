@@ -23,4 +23,5 @@ public class Output {
     private String fileId;
     private String agentId;
     private String applicationId;
+    private String tag;
 }

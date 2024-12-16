@@ -55,7 +55,7 @@ public class FileController {
     public Body<String> save(@RequestPart("file") MultipartFile file,
                              @ModelAttribute("fileInfo") File fileInfo,
                              @RequestParam("applicationId") String applicationId,
-                             @RequestParam(value = "expiredTime", required = false) java.sql.Timestamp expiredTime) {
+                             @RequestParam(value = "expiredTime", required = false) java.sql.Timestamp expiredTime) throws IOException {
 
         if (expiredTime == null) {
             // 设置默认值为当前时间的一周后
