@@ -9,19 +9,18 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 //import java.io.File; 命名冲突，使用全限定名
 import javax.servlet.http.HttpServletResponse;
 import javax.xml.bind.DatatypeConverter;
 
 import DavexBase.common.My;
-import DavexCenter.entity.ComparisonOutput;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
 import org.apache.commons.io.FileUtils;
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -34,7 +33,6 @@ import org.springframework.web.multipart.MultipartFile;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.fasterxml.jackson.databind.MappingIterator;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.csv.CsvMapper;
 import com.fasterxml.jackson.dataformat.csv.CsvSchema;
 
@@ -44,6 +42,8 @@ import DavexCenter.entity.DownloadTask;
 import DavexCenter.entity.Output;
 import DavexCenter.mapper.DownloadTaskMapper;
 import DavexCenter.mapper.OutputMapper;
+
+import com.hankcs.hanlp.HanLP;
 
 @Service
 public class FileService {
@@ -60,7 +60,7 @@ public class FileService {
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     public Body<String> saveFile(MultipartFile file, File fileInfo, String applicationId,
-            java.sql.Timestamp expiredTime) {
+            java.sql.Timestamp expiredTime) throws IOException {
 
         // 校验sha256
         String fileHash = getSha256(file);
@@ -104,6 +104,12 @@ public class FileService {
         // 存储文件到结果管理区
         try {
             saveFileToPath(file, filePath);
+            // 提取高频词
+            String fileContent = readFileContent(filePath, fileName).getData();
+            Map<String, Integer> wordFrequency = extractWordFrequency(fileContent);
+            String highFrequencyWords = String.join(",", wordFrequency.keySet());
+            newOutput.setTag(highFrequencyWords);
+            outputMapper.updateById(newOutput);
         } catch (IOException e) {
             e.printStackTrace();
             return Body.error(String.format("保存失败: 文件id %s，代理id: %s，文件名: %s，错误信息: %s",
@@ -418,10 +424,10 @@ public class FileService {
 
         String extension = fileName.substring(fileName.lastIndexOf(".") + 1);
         return switch (extension.toLowerCase()) {
-            case "txt" -> Body.success(readTxtFile(file));
-            case "csv" -> Body.success(readCsvFile(file));
-            case "pdf" -> Body.success(readPdfFile(file));
-            case "json" -> Body.success(readJsonFile(file));
+            case "txt" -> Body.success(readTxtFile(file), "读取成功");
+            case "csv" -> Body.success(readCsvFile(file), "读取成功");
+            case "pdf" -> Body.success(readPdfFile(file), "读取成功");
+            case "json" -> Body.success(readJsonFile(file), "读取成功");
             default -> Body.error(String.format("不支持的文件类型: %s", extension));
         };
     }
@@ -439,9 +445,25 @@ public class FileService {
 
     private String readCsvFile(java.io.File file) throws IOException {
         StringBuilder content = new StringBuilder();
-        try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
-            Iterable<CSVRecord> records = CSVFormat.DEFAULT.withFirstRecordAsHeader().parse(reader);
-            for (CSVRecord record : records) {
+        try (BufferedReader reader = new BufferedReader(new FileReader(file));
+             CSVParser parser = CSVFormat.DEFAULT
+                     .withDelimiter(',')  // 指定分隔符，例如：制表符
+                     .withFirstRecordAsHeader() // 明确第一行为表头
+                     .parse(reader)) {
+
+            // 表头信息
+            content.append("表头:\n");
+            if (parser.getHeaderNames() != null) {
+                content.append(String.join("\t", parser.getHeaderNames()));
+                content.append("\n");
+            }
+            content.append("\n"); // 空行分隔
+
+            // 内容信息
+            content.append("内容:\n");
+            for (CSVRecord record : parser) {
+                // 添加记录分隔线
+                content.append("------------\n");
                 for (String field : record) {
                     content.append(field).append("\t");
                 }
@@ -456,11 +478,66 @@ public class FileService {
         PDFTextStripper stripper = new PDFTextStripper();
         String content = stripper.getText(document);
         document.close();
+        // 清理多余的空白字符和换行符
+        content = content.replaceAll("\\s+", " ").trim();
+        // 保留中英文标点符号，去除其他特殊字符
+        content = content.replaceAll("[^\\p{Punct}\\p{IsAlphabetic}\\p{IsDigit}\\u4E00-\\u9FFF\\s]", "");
         return content;
     }
 
     private String readJsonFile(java.io.File file) throws IOException {
         JsonNode jsonNode = objectMapper.readTree(file);
         return objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(jsonNode);
+    }
+
+//    private Map<String, Integer> extractWordFrequency(String content) {
+//        // 使用正则表达式将内容分词，过滤掉标点符号和空白
+//        String[] words = content.toLowerCase().split("\\W+");
+//
+//        // 统计词频
+//        Map<String, Integer> wordCountMap = new HashMap<>();
+//        for (String word : words) {
+//            wordCountMap.put(word, wordCountMap.getOrDefault(word, 0) + 1);
+//        }
+//
+//        // 根据词频排序，返回前 N 个高频词
+//        Map<String, Integer> res = wordCountMap.entrySet().stream()
+//                .sorted((a, b) -> b.getValue().compareTo(a.getValue()))
+//                .limit(5) // 限制返回高频词数量
+//                .collect(Collectors.toMap(
+//                        Map.Entry::getKey,
+//                        Map.Entry::getValue,
+//                        (e1, e2) -> e1, LinkedHashMap::new));
+//        System.out.println(res);
+//        return res;
+//    }
+
+    public static Map<String, Integer> extractWordFrequency(String content) {
+        // 停用词集合
+        Set<String> stopWords = new HashSet<>(Arrays.asList("的", "了", "和", "在", "是", "有", "被", "于", "与", "及", "其", "中", "对"));
+
+        // 使用 HanLP 分词
+        List<String> words = HanLP.segment(content).stream()
+                .map(term -> term.word) // 获取分词结果
+                .filter(word -> word.length() > 1) // 去掉单字
+                .filter(word -> !stopWords.contains(word)) // 过滤停用词
+                .collect(Collectors.toList());
+
+        // 统计词频
+        Map<String, Integer> wordCountMap = new HashMap<>();
+        for (String word : words) {
+            wordCountMap.put(word, wordCountMap.getOrDefault(word, 0) + 1);
+        }
+
+        // 根据词频排序，返回前 N 个高频词
+        Map<String, Integer> res = wordCountMap.entrySet().stream()
+                .sorted((a, b) -> b.getValue().compareTo(a.getValue()))
+                .limit(10) // 限制返回高频词数量
+                .collect(Collectors.toMap(
+                        Map.Entry::getKey,
+                        Map.Entry::getValue,
+                        (e1, e2) -> e1, LinkedHashMap::new));
+        System.out.println(res);
+        return res;
     }
 }

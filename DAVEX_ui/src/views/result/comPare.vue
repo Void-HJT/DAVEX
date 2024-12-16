@@ -7,7 +7,7 @@
       </div>
     </el-header>
     <el-main>
-      <el-table :data="resultData">
+      <el-table :data="filterResultData">
         <el-table-column label="上传时间" width="300">
           <template #default="scope">
             <div style="display: flex; align-items: center">
@@ -50,6 +50,11 @@
             </el-button>
           </template>
         </el-table-column>
+        <el-table-column align="right">
+          <template #header>
+            <el-input v-model="search" size="small" placeholder="搜索" />
+          </template>
+        </el-table-column>
       </el-table>
     </el-main>
   </el-container>
@@ -86,8 +91,8 @@
       </div>
     </template>
   </el-dialog>
-  <el-dialog v-model="readSuccessVisible" title="文件预览结果" width="30%">
-    <span>{{ readSuccessMessage }}</span>
+  <el-dialog v-model="readSuccessVisible" title="文件预览结果" width="70%">
+    <span v-html="readSuccessMessage"></span>
     <template #footer>
       <div class="dialog-footer">
         <el-button class="close-button" @click="readSuccessVisible = false">确定</el-button>
@@ -105,7 +110,7 @@
 </template>
 
 <script lang="ts" setup>
-import {onMounted, ref} from "vue";
+import {onMounted, ref, computed} from "vue";
 import {getComparisonResult, fetchComparison, deleteComparison, readComparison} from "../../api/comparison.js";
 import {Delete, Document, Download} from "@element-plus/icons-vue";
 
@@ -126,6 +131,17 @@ const readSuccessVisible = ref(false)
 const readFailedVisible = ref(false)
 const readSuccessMessage = ref('');
 const readFailedMessage = ref('');
+const search = ref('')
+const filterResultData = computed(() =>
+    resultData.value.filter((data) => {
+      const searchValue = search.value?.toLowerCase(); // 转为小写避免大小写问题
+      return (
+          !searchValue || // 如果没有输入搜索词，保留所有数据
+          data.name.toLowerCase().includes(searchValue) || // 检查 name 字段
+          (data.tag && data.tag.toLowerCase().includes(searchValue)) // 检查 tag 字段
+      );
+    })
+)
 
 const applicationId = "DAVEX-C1-A1"
 const resultData = ref([])
@@ -197,11 +213,11 @@ const readComparisonMethod = async (outputId) => {
     readComparisonBody.value.outputId = outputId
     const res = await readComparison(readComparisonBody.value)
     if (res.data.code == 1) {
-      readSuccessMessage.value = res.data.message;
+      readSuccessMessage.value = res.data.data.replace(/\n/g, '<br>')
       readSuccessVisible.value = true
     }
     else {
-      readFailedMessage.value = res.data.message;
+      readFailedMessage.value = res.data.message
       readFailedVisible.value = true
     }
   }
