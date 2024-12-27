@@ -548,20 +548,20 @@ public class FileService {
     public CompletableFuture<Body<String>> getFile(String fileId, String agentId, String folderId, String applicationId) throws Exception {
 
         //========================上链模块-请求文件信息上链========================
-        String centerId = my.getId();
-        String requestId = generateUUID("request", "fileTransfer", centerId);
-        String requestMsg = "{" +
-                "\"fileId\": \"" + fileId + "\", " +
-                "\"agentId\": \"" + agentId + "\"" +
-                "\"folderId\": \"" + folderId + "\"" +
-                "\"application\": \"" + applicationId + "\", " +
-                "\"center\": \"" + centerId + "\", " +
-                "}";
-        String fileDescription = centerId + "向" + agentId + "请求文件信息" + fileId;
-
-        ContractResponse respectResponse = upChainService.requestUpChain(requestId,fileDescription,requestMsg,centerId,"center");
-        Map<String, Object> resultMap = (Map<String, Object>) respectResponse.getData();
-        String requestHash = resultMap.get("sharing_setting_hash").toString();
+//        String centerId = my.getId();
+//        String requestId = generateUUID("request", "fileTransfer", centerId);
+//        String requestMsg = "{" +
+//                "\"fileId\": \"" + fileId + "\", " +
+//                "\"agentId\": \"" + agentId + "\"" +
+//                "\"folderId\": \"" + folderId + "\"" +
+//                "\"application\": \"" + applicationId + "\", " +
+//                "\"center\": \"" + centerId + "\", " +
+//                "}";
+//        String fileDescription = centerId + "向" + agentId + "请求文件信息" + fileId;
+//
+//        ContractResponse respectResponse = upChainService.requestUpChain(requestId,fileDescription,requestMsg,centerId,"center");
+//        Map<String, Object> resultMap = (Map<String, Object>) respectResponse.getData();
+//        String requestHash = resultMap.get("sharing_setting_hash").toString();
         //========================上链模块结束===================================
 
         WebClient webclient = centerWebClientService.center2AgentWebClient(agentId);
@@ -571,8 +571,8 @@ public class FileService {
                         .queryParam("agentId", agentId)
                         //========================上链时需传递的参数========================
                         .queryParam("chainMaker", true)
-                        .queryParam("requestHash", requestHash)
-                        .queryParam("requestId", requestId)
+                        .queryParam("requestHash", "")
+                        .queryParam("requestId", "")
                         //========================上链参数结束=============================
                         .build())
                 .retrieve()
@@ -580,11 +580,11 @@ public class FileService {
                 }).block().getData();
 
         //========================上链模块-请求下载文件上链========================
-        String requestId1 = generateUUID("request", "fileTransfer", centerId);
-        String fileDescription1 = centerId + "向" + agentId + "请求下载文件" + fileId;
-        ContractResponse respectResponse1 = upChainService.requestUpChain(requestId1,fileDescription1,requestMsg,centerId,"center");
-        Map<String, Object> resultMap1 = (Map<String, Object>) respectResponse1.getData();
-        String requestHash1 = resultMap1.get("sharing_setting_hash").toString();
+//        String requestId1 = generateUUID("request", "fileTransfer", centerId);
+//        String fileDescription1 = centerId + "向" + agentId + "请求下载文件" + fileId;
+//        ContractResponse respectResponse1 = upChainService.requestUpChain(requestId1,fileDescription1,requestMsg,centerId,"center");
+//        Map<String, Object> resultMap1 = (Map<String, Object>) respectResponse1.getData();
+//        String requestHash1 = resultMap1.get("sharing_setting_hash").toString();
         //========================上链模块结束===================================
 
         Flux<byte[]> fileFlux = webclient.post().uri(uriBuilder -> uriBuilder.path("/directory/fileFolder/sendFile")
@@ -593,8 +593,8 @@ public class FileService {
                         .queryParam("folderId", folderId)
                         //========================上链时需传递的参数========================
                         .queryParam("chainMaker", true)
-                        .queryParam("requestHash", requestHash1)
-                        .queryParam("requestId", requestId1)
+                        .queryParam("requestHash", "")
+                        .queryParam("requestId", "")
                         //========================上链参数结束=============================
                         .build()).accept(MediaType.APPLICATION_OCTET_STREAM).retrieve()
                 .bodyToFlux(byte[].class);

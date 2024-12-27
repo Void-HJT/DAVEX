@@ -137,6 +137,73 @@
     <el-header class="custom-header">
       <div class="icon-text">
         <el-icon><Tickets /></el-icon>
+        <span>选择MPC文件</span>
+      </div>
+    </el-header>
+    <el-main>
+      <div>
+        <el-table
+            :data="mpcList"
+            max-height="400"
+        >
+          <el-table-column fixed label="" width="50" align="center">
+            <template #default="scope">
+              <el-icon>
+                <template>
+                  <el-icon><Files /></el-icon>
+                </template>
+              </el-icon>
+            </template>
+          </el-table-column>
+          <el-table-column
+              label="MPC文件ID"
+              prop="uid"
+              width="200"
+              align="center"
+          ></el-table-column>
+          <el-table-column
+              label="名称"
+              prop="name"
+              width="180"
+              align="center"
+          ></el-table-column>
+          <el-table-column
+              fixed="right"
+              label="操作"
+              mid-width="300"
+              header-align="center"
+              align="center"
+          >
+            <template v-slot="scope">
+              <el-button
+                  class="small-default-button"
+                  @click="showParameters(scope.row, 'compile')"
+              >
+                <el-icon><Tickets /></el-icon> 查看编译参数
+              </el-button>
+              <el-button
+                  class="small-default-button"
+                  @click="showParameters(scope.row, 'runtime')"
+              >
+                <el-icon><Tickets /></el-icon> 查看运行参数
+              </el-button>
+              <el-button
+                  class="small-default-button"
+                  @click="chooseMpcMethod(scope.row)"
+              >
+                <el-icon><Tickets /></el-icon> 选择该MPC文件
+              </el-button>
+            </template>
+          </el-table-column>
+        </el-table>
+      </div>
+    </el-main>
+  </el-container>
+
+  <el-container>
+    <el-header class="custom-header">
+      <div class="icon-text">
+        <el-icon><Tickets /></el-icon>
         <span>上传输入数据</span>
       </div>
     </el-header>
@@ -246,6 +313,40 @@
       </div>
     </template>
   </el-dialog>
+
+  <el-dialog
+      :title="parameterDialogTitle"
+      v-model="parameterDialogVisible"
+      width="60%"
+  >
+    <el-table :data="currentParameters">
+      <el-table-column
+          prop="name"
+          label="参数名称"
+          align="center"
+      ></el-table-column>
+      <el-table-column
+          prop="parameterType"
+          label="参数类型"
+          align="center"
+      ></el-table-column>
+      <el-table-column
+          prop="limitType"
+          label="参数限制"
+          align="center"
+      ></el-table-column>
+      <el-table-column label="限制条件" align="center">
+        <template #default="scope">
+          <span>
+            {{ formatLimit(scope.row.limit) }}
+          </span>
+        </template>
+      </el-table-column>
+    </el-table>
+    <template #footer>
+      <el-button @click="parameterDialogVisible = false">关闭</el-button>
+    </template>
+  </el-dialog>
 </template>
 
 <script lang="ts" setup>
@@ -253,14 +354,15 @@ import {getAgent} from '../../api/testDve.js'
 import {getDirectory, getRootByAgent} from '../../api/folderController.js'
 import {ref, computed, onMounted} from 'vue'
 import { createPsiTask } from '../../api/pSi.js'
+import { getMpcList } from '../../api/mpC.js'
 import {genFileId, UploadInstance, UploadProps, UploadRawFile} from 'element-plus'
 //导入axios
 import axios from 'axios'
-import {Connection} from "@element-plus/icons-vue";
+import {Connection, Tickets} from "@element-plus/icons-vue";
 
 onMounted(() => {
   getAgentMethod()
-  // getDirectoryMethod()
+  getMpcListMethod()
 })
 
 const psiSuccessVisible = ref(false)
@@ -271,8 +373,9 @@ const psiFailedMessage = ref('')
 const descriptionsTitle = computed(() => {
   const firstFileText = fileName.value ? `第一方文件：${fileName.value}` : ''
   const secondFileText = secondFileName.value ? `第二方文件：${secondFileName.value}` : ''
+  const mpcFileText = mpcFileName.value ? `MPC文件：${mpcFileName.value}` : ''
 
-  return [firstFileText, secondFileText].filter(Boolean).join(' \n')
+  return [firstFileText, secondFileText, mpcFileText].filter(Boolean).join(' \n')
 })
 const upload = ref<UploadInstance>()
 const agents = ref([])
@@ -530,6 +633,61 @@ const handleSelectPartyNumber = async (value) => {
     part: index + 1,
     fileID: ""
   }));
+}
+
+const parameterDialogVisible = ref(false)
+const currentParameters = ref([])
+const parameterDialogTitle = ref('')
+const formatLimit = (limit) => {
+  return Object.entries(limit)
+      .map(([key, value]) => `${key}: ${value}`)
+      .join(' ')
+}
+const showParameters = (row, type) => {
+  if (type === 'runtime') {
+    currentParameters.value = row.runtimeParameters
+    parameterDialogTitle.value = '查看运行参数'
+  } else if (type === 'compile') {
+    currentParameters.value = row.compileParameters
+    parameterDialogTitle.value = '查看编译参数'
+  }
+  parameterDialogVisible.value = true
+}
+
+const mpcList = ref([])
+const getMpcListMethod = async () => {
+  try {
+    const res = await getMpcList()
+    mpcList.value = res.data.body.data
+    console.log(mpcList.value)
+  } catch (error) {
+    console.error('Failed to get mpc list:', error)
+  }
+}
+
+const mpcFileName = ref('')
+const chooseMpcMethod = async (row) => {
+  try {
+    // 遍历传入的 parameters 并将 defaultValue 保存到 createMpcTaskBody 中
+    row.compileParameters.forEach(param => {
+      if (param.limit && param.limit.defaultValue !== undefined) {
+        createPsiTaskBody.value.compileParameters[param.name] = param.limit.defaultValue
+      }
+    })
+    row.runtimeParameters.forEach(param => {
+      if (param.limit && param.limit.defaultValue !== undefined) {
+        createPsiTaskBody.value.runtimeParameters[param.name] = param.limit.defaultValue
+      }
+    })
+    createPsiTaskBody.value.mpcId = row.uid
+    // createPsiTaskBody.value.mpcName = row.name
+    console.log(createPsiTaskBody.value.compileParameters)
+    console.log(createPsiTaskBody.value.runtimeParameters)
+    mpcFileName.value = row.name
+  }
+  catch (error) {
+    console.error('Failed to choose mpc file:', error)
+  }
 }
 </script>
 

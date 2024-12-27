@@ -407,14 +407,14 @@ DROP TABLE IF EXISTS `notification`;
 
 CREATE TABLE `notification` (
     `uid` BIGINT NOT NULL AUTO_INCREMENT,
-    `appID` varchar(255) NOT NULL,
-    `title` varchar(255) NOT NULL,
-    `content` TEXT NOT NULL,
-    `time` TIMESTAMP NOT NULL,
-    `hasRead` BOOLEAN NOT NULL,
-    `taskID` varchar(255) NOT NULL,
+    `appID` varchar(255) DEFAULT NULL,
+    `title` varchar(255) DEFAULT NULL,
+    `content` TEXT DEFAULT NULL,
+    `time` TIMESTAMP DEFAULT NULL,
+    `hasRead` BOOLEAN DEFAULT NULL,
+    `taskID` varchar(255) DEFAULT NULL,
     `code` int NULL DEFAULT NULL,
-    `type` varchar(255) NOT NULL,
+    `type` varchar(255) DEFAULT NULL,
     PRIMARY KEY (`uid`) USING BTREE
 ) ENGINE = InnoDB AUTO_INCREMENT = 1 DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci;
 

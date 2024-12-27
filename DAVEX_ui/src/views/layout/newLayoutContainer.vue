@@ -38,6 +38,10 @@ import {Document, EditPen, Message, MessageBox, Promotion, User, UserFilled} fro
               <el-icon><Files /></el-icon>
               <span class="centered-text">文件管理</span>
             </el-menu-item>
+            <el-menu-item index="/user/mpcFile">
+              <el-icon><Files /></el-icon>
+              <span class="centered-text">MPC文件管理</span>
+            </el-menu-item>
           </el-sub-menu>
           <el-sub-menu index="/datashare">
             <template #title>
@@ -62,7 +66,7 @@ import {Document, EditPen, Message, MessageBox, Promotion, User, UserFilled} fro
             </el-menu-item>
             <el-menu-item index="/datashare/mPc">
               <el-icon><EditPen /></el-icon>
-              <span class="centered-text">安全多方计算</span>
+              <span class="centered-text">自定义安全多方计算</span>
             </el-menu-item>
             <el-menu-item index="/datashare/secureInfer">
               <el-icon><EditPen /></el-icon>

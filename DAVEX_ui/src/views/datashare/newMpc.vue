@@ -137,6 +137,73 @@
     <el-header class="custom-header">
       <div class="icon-text">
         <el-icon><Tickets /></el-icon>
+        <span>选择MPC文件</span>
+      </div>
+    </el-header>
+    <el-main>
+      <div>
+        <el-table
+            :data="mpcList"
+            max-height="400"
+        >
+          <el-table-column fixed label="" width="50" align="center">
+            <template #default="scope">
+              <el-icon>
+                <template>
+                  <el-icon><Files /></el-icon>
+                </template>
+              </el-icon>
+            </template>
+          </el-table-column>
+          <el-table-column
+              label="MPC文件ID"
+              prop="uid"
+              width="200"
+              align="center"
+          ></el-table-column>
+          <el-table-column
+              label="名称"
+              prop="name"
+              width="180"
+              align="center"
+          ></el-table-column>
+          <el-table-column
+              fixed="right"
+              label="操作"
+              mid-width="300"
+              header-align="center"
+              align="center"
+          >
+            <template v-slot="scope">
+              <el-button
+                  class="small-default-button"
+                  @click="showParameters(scope.row, 'compile')"
+              >
+                <el-icon><Tickets /></el-icon> 查看编译参数
+              </el-button>
+              <el-button
+                  class="small-default-button"
+                  @click="showParameters(scope.row, 'runtime')"
+              >
+                <el-icon><Tickets /></el-icon> 查看运行参数
+              </el-button>
+              <el-button
+                  class="small-default-button"
+                  @click="chooseMpcMethod(scope.row)"
+              >
+                <el-icon><Tickets /></el-icon> 选择该MPC文件
+              </el-button>
+            </template>
+          </el-table-column>
+        </el-table>
+      </div>
+    </el-main>
+  </el-container>
+
+  <el-container>
+    <el-header class="custom-header">
+      <div class="icon-text">
+        <el-icon><Tickets /></el-icon>
         <span>上传输入数据</span>
       </div>
     </el-header>
@@ -150,12 +217,12 @@
       ></el-descriptions>
       <!--      <div class="form-container">-->
       <!--        <el-form-->
-      <!--            :model="createPsiTaskBody"-->
+      <!--            :model="createMpcTaskBody"-->
       <!--            style="max-width: 60%"-->
       <!--            class="styled-form"-->
       <!--        >-->
       <!--          <el-form-item label="主键">-->
-      <!--            <el-input v-model="createPsiTaskBody.runtimeParameters.PK"></el-input>-->
+      <!--            <el-input v-model="createMpcTaskBody.runtimeParameters.PK"></el-input>-->
       <!--          </el-form-item>-->
       <!--        </el-form>-->
       <!--      </div>-->
@@ -187,22 +254,22 @@
   <!--  <div>-->
   <!--    <div class="form-container">-->
   <!--      <el-form-->
-  <!--        :model="createPsiTaskBody"-->
+  <!--        :model="createMpcTaskBody"-->
   <!--        style="max-width: 60%"-->
   <!--        class="styled-form"-->
   <!--      >-->
   <!--        <el-form-item label="主键">-->
-  <!--          <el-input v-model="createPsiTaskBody.runtimeParameters.PK"></el-input>-->
+  <!--          <el-input v-model="createMpcTaskBody.runtimeParameters.PK"></el-input>-->
   <!--        </el-form-item>-->
   <!--        <el-form-item label="AgentID">-->
-  <!--          <el-input v-model="createPsiTaskBody.partInfo[0].agentID"></el-input>-->
+  <!--          <el-input v-model="createMpcTaskBody.partInfo[0].agentID"></el-input>-->
   <!--        </el-form-item>-->
   <!--        <el-form-item label="文件ID">-->
-  <!--          <el-input v-model="createPsiTaskBody.partInfo[0].fileID"></el-input>-->
+  <!--          <el-input v-model="createMpcTaskBody.partInfo[0].fileID"></el-input>-->
   <!--        </el-form-item>-->
   <!--        <el-form-item label="选择协议">-->
   <!--          <el-input-->
-  <!--            v-model="createPsiTaskBody.runtimeParameters.protocol"-->
+  <!--            v-model="createMpcTaskBody.runtimeParameters.protocol"-->
   <!--          ></el-input>-->
   <!--        </el-form-item>-->
   <!--        <el-upload ref="photoRef" :auto-upload="false" :http-request="upload">-->
@@ -225,11 +292,11 @@
   <!--      </span>-->
   <!--    </template>-->
   <!--  </el-dialog>-->
-  <el-dialog v-model="psiSuccessVisible" title="创建完成" width="30%">
-    <span>{{ psiSuccessMessage }}</span>
+  <el-dialog v-model="mpcSuccessVisible" title="创建完成" width="30%">
+    <span>{{ mpcSuccessMessage }}</span>
     <template #footer>
       <div class="dialog-footer">
-        <el-button class="close-button" @click="psiSuccessVisible = false" style="margin-right: 10px;">返回</el-button>
+        <el-button class="close-button" @click="mpcSuccessVisible = false" style="margin-right: 10px;">返回</el-button>
         <router-link to="/result/mPc">
           <el-button class="default-button">
             查看结果管理区
@@ -238,12 +305,46 @@
       </div>
     </template>
   </el-dialog>
-  <el-dialog v-model="psiFailedVisible" title="创建失败" width="30%">
-    <span>{{ psiFailedMessage }}</span>
+  <el-dialog v-model="mpcFailedVisible" title="创建失败" width="30%">
+    <span>{{ mpcFailedMessage }}</span>
     <template #footer>
       <div class="dialog-footer">
-        <el-button class="close-button" @click="psiFailedVisible = false">返回</el-button>
+        <el-button class="close-button" @click="mpcFailedVisible = false">返回</el-button>
       </div>
+    </template>
+  </el-dialog>
+
+  <el-dialog
+      :title="parameterDialogTitle"
+      v-model="parameterDialogVisible"
+      width="60%"
+  >
+    <el-table :data="currentParameters">
+      <el-table-column
+          prop="name"
+          label="参数名称"
+          align="center"
+      ></el-table-column>
+      <el-table-column
+          prop="parameterType"
+          label="参数类型"
+          align="center"
+      ></el-table-column>
+      <el-table-column
+          prop="limitType"
+          label="参数限制"
+          align="center"
+      ></el-table-column>
+      <el-table-column label="限制条件" align="center">
+        <template #default="scope">
+          <span>
+            {{ formatLimit(scope.row.limit) }}
+          </span>
+        </template>
+      </el-table-column>
+    </el-table>
+    <template #footer>
+      <el-button @click="parameterDialogVisible = false">关闭</el-button>
     </template>
   </el-dialog>
 </template>
@@ -252,27 +353,26 @@
 import {getAgent} from '../../api/testDve.js'
 import {getDirectory, getRootByAgent} from '../../api/folderController.js'
 import {ref, computed, onMounted} from 'vue'
-import { createPsiTask } from '../../api/pSi.js'
+import { createMpcTask, getMpcList } from '../../api/mpC.js'
 import {genFileId, UploadInstance, UploadProps, UploadRawFile} from 'element-plus'
-//导入axios
-import axios from 'axios'
 import {Connection, Tickets} from "@element-plus/icons-vue";
 
 onMounted(() => {
   getAgentMethod()
-  // getDirectoryMethod()
+  getMpcListMethod()
 })
 
-const psiSuccessVisible = ref(false)
-const psiFailedVisible = ref(false)
-const psiSuccessMessage = ref('')
-const psiFailedMessage = ref('')
+const mpcSuccessVisible = ref(false)
+const mpcFailedVisible = ref(false)
+const mpcSuccessMessage = ref('')
+const mpcFailedMessage = ref('')
 
 const descriptionsTitle = computed(() => {
   const firstFileText = fileName.value ? `第一方文件：${fileName.value}` : ''
   const secondFileText = secondFileName.value ? `第二方文件：${secondFileName.value}` : ''
+  const mpcFileText = mpcFileName.value ? `MPC文件：${mpcFileName.value}` : ''
 
-  return [firstFileText, secondFileText].filter(Boolean).join(' \n')
+  return [firstFileText, secondFileText, mpcFileText].filter(Boolean).join(' \n')
 })
 const upload = ref<UploadInstance>()
 const agents = ref([])
@@ -296,7 +396,7 @@ const getDirectoryBody = ref({
 const folderRoute = ref([])
 const fileName = ref('')
 const secondFileName = ref('')
-const createPsiTaskBody = ref({
+const createMpcTaskBody = ref({
   partInfo: [
     {
       agentID: "", //需要填写
@@ -312,12 +412,6 @@ const createPsiTaskBody = ref({
   applicationId: "DAVEX-C1-A1", //后台配置
   centerId: "DAVEX-C1", //后台配置
   compileParameters: {
-    "party_number": 2,
-    "feature_number": 5,
-    "ents.tree_h": 4,
-    "ents.n_threads": 4,
-    "sample_number_from_party_0":50,
-    "sample_number_from_party_1":49
   },
   host: '10.176.37.50', //后台配置
   mpcId: 'decision-tree', //后台配置
@@ -326,7 +420,7 @@ const createPsiTaskBody = ref({
   part: 0, //发起方默认为第0方
   port: 6000, //后台配置 无需用户在前端选择端口
   runtimeParameters: {
-    protocol: 'semi2k-with-conversion-party', //目前只支持一个协议 但是后续可能会有多个协议
+    // protocol: 'replicated-ring-party',
   },
   status: 'INIT', //默认INIT
   taskType: 'GARNET_MPC', //后台配置
@@ -335,21 +429,21 @@ const createPsiTaskBody = ref({
 
 const createBody = ref({
   file: null as File | null,
-  mpcTask: createPsiTaskBody.value
+  mpcTask: createMpcTaskBody.value
 })
 
 const createMethod = async () => {
   try {
     console.log(createBody.value)
-    const res = await createPsiTask(createBody.value)
+    const res = await createMpcTask(createBody.value)
     console.log(res.data)
     if (res.data.body.code == 1) {
-      psiSuccessMessage.value = `MPC任务创建完成，执行完成后将通过消息中心提示`
-      psiSuccessVisible.value = true
+      mpcSuccessMessage.value = `MPC任务创建完成，执行完成后将通过消息中心提示`
+      mpcSuccessVisible.value = true
     }
     else {
-      psiFailedMessage.value = res.data.message
-      psiFailedVisible.value = true
+      mpcFailedMessage.value = res.data.message
+      mpcFailedVisible.value = true
     }
   }
   catch (error) {
@@ -367,8 +461,8 @@ function deleteFolderRoute() {
 
 const chooseFileMethod = async (agentId, fileId, name, partIndex = 0) => {
   try {
-    createPsiTaskBody.value.partInfo[partIndex].agentID = agentId
-    createPsiTaskBody.value.partInfo[partIndex].fileID = fileId
+    createMpcTaskBody.value.partInfo[partIndex].agentID = agentId
+    createMpcTaskBody.value.partInfo[partIndex].fileID = fileId
     if (partIndex === 0) {
       fileName.value = name
     } else {
@@ -453,7 +547,7 @@ const handleFileChange: UploadProps['onChange'] = (file, fileList) => {
 
 const submitUpload = () => {
   createMethod()
-  console.log(createPsiTaskBody.value)
+  console.log(createMpcTaskBody.value)
 }
 
 const getRootByAgentMethod = async (agentId) => {
@@ -477,31 +571,67 @@ const handleSelectAgent = async (value) => {
 
 const handleSelectPartyNumber = async (value) => {
   partyNumber.value = value
-  createPsiTaskBody.value.n = partyNumber.value
+  createMpcTaskBody.value.n = partyNumber.value
   // 根据选择的参与方数量动态生成 partInfo
-  createPsiTaskBody.value.partInfo = Array.from({ length: partyNumber.value - 1 }, (_, index) => ({
+  createMpcTaskBody.value.partInfo = Array.from({ length: partyNumber.value - 1 }, (_, index) => ({
     agentID: "",
     part: index + 1,
     fileID: ""
-  }));
-  if (value == 3) {
-    createPsiTaskBody.value.compileParameters = {}
-    createPsiTaskBody.value.mpcId = 'correction-supervision'
-    createPsiTaskBody.value.mpcName = '社区监督'
-    createPsiTaskBody.value.runtimeParameters = { protocol: 'replicated-ring-party' }
+  }))
+}
+
+const parameterDialogVisible = ref(false)
+const currentParameters = ref([])
+const parameterDialogTitle = ref('')
+const formatLimit = (limit) => {
+  return Object.entries(limit)
+      .map(([key, value]) => `${key}: ${value}`)
+      .join(' ')
+}
+const showParameters = (row, type) => {
+  if (type === 'runtime') {
+    currentParameters.value = row.runtimeParameters
+    parameterDialogTitle.value = '查看运行参数'
+  } else if (type === 'compile') {
+    currentParameters.value = row.compileParameters
+    parameterDialogTitle.value = '查看编译参数'
   }
-  if (value == 2) {
-    createPsiTaskBody.value.compileParameters = {
-      "party_number": 2,
-      "feature_number": 5,
-      "ents.tree_h": 4,
-      "ents.n_threads": 4,
-      "sample_number_from_party_0":50,
-      "sample_number_from_party_1":49
-    }
-    createPsiTaskBody.value.mpcId = 'decision-tree'
-    createPsiTaskBody.value.mpcName = '决策树训练'
-    createPsiTaskBody.value.runtimeParameters = { protocol: 'semi2k-with-conversion-party' }
+  parameterDialogVisible.value = true
+}
+
+const mpcList = ref([])
+const getMpcListMethod = async () => {
+  try {
+    const res = await getMpcList()
+    mpcList.value = res.data.body.data
+    console.log(mpcList.value)
+  } catch (error) {
+    console.error('Failed to get mpc list:', error)
+  }
+}
+
+const mpcFileName = ref('')
+const chooseMpcMethod = async (row) => {
+  try {
+    // 遍历传入的 parameters 并将 defaultValue 保存到 createMpcTaskBody 中
+    row.compileParameters.forEach(param => {
+      if (param.limit && param.limit.defaultValue !== undefined) {
+        createMpcTaskBody.value.compileParameters[param.name] = param.limit.defaultValue
+      }
+    })
+    row.runtimeParameters.forEach(param => {
+      if (param.limit && param.limit.defaultValue !== undefined) {
+        createMpcTaskBody.value.runtimeParameters[param.name] = param.limit.defaultValue
+      }
+    })
+    createMpcTaskBody.value.mpcId = row.uid
+    createMpcTaskBody.value.mpcName = row.name
+    console.log(createMpcTaskBody.value.compileParameters)
+    console.log(createMpcTaskBody.value.runtimeParameters)
+    mpcFileName.value = row.name
+  }
+  catch (error) {
+    console.error('Failed to choose mpc file:', error)
   }
 }
 </script>
