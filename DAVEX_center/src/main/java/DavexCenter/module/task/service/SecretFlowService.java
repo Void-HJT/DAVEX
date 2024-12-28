@@ -61,7 +61,7 @@ public class SecretFlowService {
 
     @Async
     public void runFlTask(String taskName,String outputPath){
-        String mainC = String.format("/home/zw/SFFL/sfenv/bin/python /home/zw/SFFL/%s.py --result_dir /home/zw/SFFL/%s",taskName,outputPath);
+        String mainC = String.format("source /home/zw/DAVEX/sfenv/bin/activate && python %s/%s.py --result_dir %s/result/%s",my.getEnv_path(),taskName,my.getBase_path(),outputPath);
         List<String> command = new ArrayList<>(Arrays.asList(
                 "bash", "-c", mainC
         ));
@@ -105,6 +105,7 @@ public class SecretFlowService {
     public Body<String> executeAsyncCommand(String command) {
         try {
             ProcessBuilder processBuilder = new ProcessBuilder();
+            command = "source /home/zw/DAVEX/sfenv/bin/activate &&"+command;
             processBuilder.command("bash", "-c", command);
             processBuilder.directory(new java.io.File(my.getEnv_path()));
 //             启动进程并获取输出
@@ -144,6 +145,7 @@ public class SecretFlowService {
     public Body<String> executeCommand(String command) {
         try {
             ProcessBuilder processBuilder = new ProcessBuilder();
+            command = "source /home/zw/DAVEX/sfenv/bin/activate &&"+command;
             processBuilder.command("/bin/bash", "-c", command);
             processBuilder.directory(new java.io.File(my.getEnv_path()));
             processBuilder.environment().forEach((key, value) -> logger.info(key + "=" + value));

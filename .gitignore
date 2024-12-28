@@ -3,5 +3,7 @@
 .idea
 *.log
 **/target/**
+sfenv/
+programs/minst.npy
 DAVEX_ui/.vite/deps/package-lock.json
 DAVEX_ui_agent/.vite/deps/package-lock.json

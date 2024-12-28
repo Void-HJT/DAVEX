@@ -69,6 +69,9 @@ public class My {
     @Value("${my.env_path}")
     protected String env_path;
 
+//    @Value("${my.python_path}")
+//    protected String python_path;
+
     private Object myObject;
 
     protected KeyStore keyStore;
@@ -260,6 +263,10 @@ public class My {
     public String getEnv_path() {
         return env_path;
     }
+
+//    public String getPython_path() {
+//        return python_path;
+//    }
 
     public void setGarnet_path(String garnet_path) {
         this.garnet_path = garnet_path;
