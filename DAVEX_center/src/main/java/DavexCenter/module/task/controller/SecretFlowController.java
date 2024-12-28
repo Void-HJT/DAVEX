@@ -1,33 +1,28 @@
 package DavexCenter.module.task.controller;
 
 
-
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.beans.factory.annotation.Autowired;
-import DavexCenter.module.task.service.SecretFlowService;
+import DavexBase.common.Body;
 import DavexBase.common.My;
 import DavexBase.entity.FlTask;
+import DavexCenter.module.task.service.SecretFlowService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.FileInputStream;
-import org.springframework.web.multipart.MultipartFile;
-import org.springframework.mock.web.MockMultipartFile;
-import DavexBase.common.Body;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-
-
-import org.springframework.web.bind.annotation.*;
-import java.io.IOException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @RestController
 @RequestMapping("/SecretFlowTask")
+
 public class SecretFlowController {
     @Autowired
     private SecretFlowService secretFlowService;
@@ -35,20 +30,16 @@ public class SecretFlowController {
     @Autowired
     private My my;
 
+    private static final Logger logger = LoggerFactory.getLogger(SecretFlowController.class);
 
     @GetMapping("/executeTask")
     public Body<String> executeScript(
             @RequestParam String taskName,
             @RequestParam String outputPath
     ) {
-        String command = String.format("source sfenv/bin/activate && /home/zw/SFFL/sfenv/bin/python /home/zw/SFFL/%s.py --result_dir /home/zw/SFFL/%s",taskName,outputPath);
-        secretFlowService.executeAsyncCommand(command);
-        saveFile("accuracy.png");
-        saveFile("global_metric.txt");
-        saveFile("loss.png");
+        secretFlowService.runFlTask(taskName,outputPath);
+
         return Body.success("任务已开始执行");
-
-
     }
 
     @GetMapping("/active-mainRay")
@@ -56,7 +47,7 @@ public class SecretFlowController {
             @RequestParam String port        // 参数化端口
     ) {
         // 构造命令字符串
-        String command = String.format("source sfenv/bin/activate && ray start --head --node-ip-address=\"%s\" --port=\"%s\" --resources='{\"alice\": 16}' --include-dashboard=False --disable-usage-stats", my.getIp(), port);
+        String command = String.format("ray start --head --node-ip-address=\"%s\" --port=\"%s\" --resources='{\"%s\": 16}' --include-dashboard=False --disable-usage-stats", my.getIp(), port,my.getId());
 
         // 调用 service 中的方法执行命令
         return secretFlowService.executeCommand(command);
@@ -69,7 +60,7 @@ public class SecretFlowController {
             @RequestParam String name
     ) {
         // 构造命令字符串
-        String command = String.format("source sfenv/bin/activate && ray start --address=\"%s:%s\"  --resources='{\"%s\": 16}' --disable-usage-stats", ip, port,name);
+        String command = String.format("ray start --address=\"%s:%s\"  --resources='{\"%s\": 16}' --disable-usage-stats", ip, port,name);
 
         // 调用 service 中的方法执行命令
         return secretFlowService.executeCommand(command);
@@ -77,12 +68,13 @@ public class SecretFlowController {
 
     @GetMapping("/getRayStatus")
     public Body<String> getRayStatus() {
-        String command = "source sfenv/bin/activate && ray status";
+        String command = "ray status";
+
+        logger.info(my.getEnv_path());
         try {
             // 执行命令并获取结果
             return secretFlowService.executeCommand(command);
             // 可以根据需要对结果进行处理，比如解析JSON等
-
         } catch (Exception e) {
             // 处理执行命令时发生的任何异常
             // 记录日志、返回错误信息等
@@ -95,7 +87,7 @@ public class SecretFlowController {
     @GetMapping("/stop-mainRay")
     public Body<String> stopMainRay() {
         // 调用 service 中的方法执行命令
-        return secretFlowService.executeCommand("source sfenv/bin/activate && ray stop");
+        return secretFlowService.executeCommand("ray stop");
     }
 
     @GetMapping("/getOtherRayStatus")
@@ -105,9 +97,9 @@ public class SecretFlowController {
     }
 
     @GetMapping("/chooseAgentJoinRay")
-    public Body<String> chooseAgentJionRay(@RequestParam String agentId,@RequestParam String ip,@RequestParam String port,@RequestParam String name) {
+    public Body<String> chooseAgentJionRay(@RequestParam String agentId,@RequestParam String port,@RequestParam String name) {
         // 调用 service 中的方法执行命令
-        return secretFlowService.chooseAgentJionRay(agentId,ip,port,name);
+        return secretFlowService.chooseAgentJionRay(agentId,my.getIp(),port,name);
     }
     @PostMapping("/addAgent")
     public Body<String> addAgent(@RequestParam String uid,@RequestParam String name,@RequestParam String ip,@RequestParam Integer port,@RequestParam String description) {

@@ -11,6 +11,23 @@ export const activeRay = ({ port }) => {
     return res;
 }
 
+export const joinRay = ({ip,port,name})=>{
+    // 使用 URLSearchParams 来构建查询字符串
+    const params = new URLSearchParams();
+    params.append('ip', ip);  // 将 port 作为查询参数添加
+    params.append('port', port);  // 将 port 作为查询参数添加
+    params.append('name', name);  // 将 port 作为查询参数添加
+
+    const config = {
+        params,
+        timeout: 3000000 // 超时时间设置为30秒
+    };
+    // 使用 params 作为请求的查询参数
+    let res = request.get('/SecretFlowTask/joinRay', config);
+
+    return res;
+}
+
 
 export const executeTask = ({ taskName,outputPath }) => {
     // 使用 URLSearchParams 来构建查询字符串

@@ -14,7 +14,7 @@
             :value="item.value"
         />
       </el-select>
-      <el-button class="default-button" @click="getRayStatusMethod">将该agent加入当前节点</el-button>
+      <el-button class="default-button" @click="joinRayMethod">将该agent加入当前节点</el-button>
   </el-header>
   <!-- 创建一个下拉框 -->
   <el-dialog v-model="alertMessageVisible" :title="alertTitle" width="50%">
@@ -201,7 +201,7 @@
             <el-table-column
                 label="节点名称"
                 prop="userName"
-                width="80"
+                width="120"
                 align="center"
             ></el-table-column>
             <el-table-column
@@ -234,7 +234,7 @@
 </template>
 
 <script lang="ts" setup>
-import {activeRay,stopRay,getRayStatus,executeTask} from '../../api/fLearning.js'
+import {activeRay,stopRay,getRayStatus,executeTask,joinRay} from '../../api/fLearning.js'
 import {getAgent} from '../../api/testDve.js'
 import {getDirectory, getRootByAgent} from '../../api/folderController.js'
 import {onMounted, ref,reactive,computed} from "vue";
@@ -281,6 +281,11 @@ const createFLTaskTitle = ref('')
     taskName: 'HFL',
     outputPath: 'result',
   })
+  const joinRayBody = ref({
+    ip:'10.176.34.173',
+    port:'9876',
+    name:'',
+  })
   const fileName = ref('')
   const upload = ref<UploadInstance>()
   
@@ -293,6 +298,12 @@ const createFLTaskTitle = ref('')
   }
   
   
+
+  // const joinRayMethod = async()=>{
+  //   joinRayBody.value.name = agentId;
+  //   await joinRay(joinRayBody.value);
+    
+  // }
   const createMethod = async () => {
     try {
       createFLTaskMessage.value = `联邦学习任务创建完成`
@@ -478,21 +489,47 @@ function parseNodeStatus(message) {
     });
   }
 
- // 解析 usage 部分的用户内存数据
- const userMemoryPattern = /(\d+(\.\d+)?)\/(\d+(\.\d+)?)\s+([a-zA-Z]+)/g;
-  let match;
-  let skipLines = 2;
+//  // 解析 usage 部分的用户内存数据
+//  const userMemoryPattern = /(\d+(\.\d+)?|0B)\/(\d+(\.\d+)?)([a-zA-Z0-9\-]+)/g;
+//   let match;
+//   let skipLines = 1;
 
-  while ((match = userMemoryPattern.exec(message)) !== null) {
+//   while ((match = userMemoryPattern.exec(message)) !== null) {
  
-    if (skipLines > 0) {
-      skipLines -= 1;
-      continue;
+//     if (skipLines > 0) {
+//       skipLines -= 1;
+//       continue;
+//     }
+//     const memoryUsage = `${match[1]}/${match[3]}G`;  // 用户的内存使用格式：0/16.0
+//     const userName = match[5];  // 用户名（如 alice、bob 等）
+//     usage[userName] = memoryUsage;  // 将用户和内存使用量存入对象
+//   }
+// 解析 usage 部分的特定格式数据
+const usageLines = message.split('\n');
+  let isUsageSection = false;
+  let skipLines = 1;
+
+  usageLines.forEach(line => {
+    line = line.trim();
+    if (line.startsWith("Usage:")) {
+      isUsageSection = true; // 检测到 Usage 开始部分
+      return;
     }
-    const memoryUsage = `${match[1]}/${match[3]}G`;  // 用户的内存使用格式：0/16.0
-    const userName = match[5];  // 用户名（如 alice、bob 等）
-    usage[userName] = memoryUsage;  // 将用户和内存使用量存入对象
-  }
+    if (isUsageSection && line.length > 0) {
+      // 匹配指定格式的行
+      const match = /^(\d+(\.\d+)?|0B)\/(\d+(\.\d+)?)\s+([a-zA-Z0-9\-]+)$/.exec(line);
+      if (match) {
+        if (skipLines > 0) {
+            skipLines -= 1;
+        }else{
+
+        const memoryUsage = `${match[1]}/${match[3]}G`; // 格式化内存使用量
+        const userName = match[5]; // 提取用户名（如 CPU、DAVEX-C1 等）
+        usage[userName] = memoryUsage; // 将用户和内存使用量存入对象
+        }
+      }
+    }
+  });
 
   // 更新 state 中的值
   state.activeNodes = activeNodes;
@@ -533,7 +570,8 @@ const nodesWithUsage = computed(() => {
 
 const joinRayMethod = async () => {
     try {
-        const res = await joinRay()
+      joinRayBody.value.name = agentId;
+        const res = await joinRay(joinRayBody.value)
         editAlertMeassageMethod('加入ray节点','已加入ray节点')
         alertMessageVisible.value = true
     } catch (error) {
