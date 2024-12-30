@@ -1,43 +1,28 @@
 package DavexCenter.module.task.service;
 
-import DavexBase.entity.MpcTask;
-import DavexBase.service.programs.GarnetService;
+import DavexBase.common.Body;
+import DavexBase.common.My;
+import DavexBase.entity.Agent;
+import DavexBase.entity.FlTask;
+import DavexBase.mapper.AgentMapper;
+import DavexBase.mapper.FlTaskMapper;
+import DavexBase.service.auth.CenterWebClientService;
+import DavexCenter.module.file.controller.FlFileController;
+import DavexCenter.module.file.service.FileService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
-
-import java.io.BufferedReader;
-import java.io.FileInputStream;
-import java.io.InputStreamReader;
-
-import DavexCenter.module.file.controller.FlFileController;
-import DavexCenter.module.file.service.FileService;
-import DavexBase.common.My;
-import DavexBase.common.Body;
-
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.beans.factory.annotation.Autowired;
-import java.io.IOException;
+
+import java.io.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-
-import DavexBase.service.auth.CenterWebClientService;
-import DavexBase.mapper.AgentMapper;
-import DavexBase.entity.Agent;
-import DavexBase.entity.FlTask;
-import DavexBase.mapper.FlTaskMapper;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import java.io.FileNotFoundException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.io.File;
-import java.io.FileInputStream;
-import org.springframework.web.multipart.MultipartFile;
-import org.springframework.mock.web.MockMultipartFile;
 @Service
 public class SecretFlowService {
     private static final Logger logger = LoggerFactory.getLogger(SecretFlowService.class);
@@ -54,6 +39,22 @@ public class SecretFlowService {
     @Autowired
     private FlTaskMapper flTaskMapper;
 
+    public static String VENV_ACTIVATE;
+
+    // 注入配置
+    @Value("${my.base_path}")
+    private String basePath;
+
+    // 初始化常量
+    @Value("${my.base_path}")
+    public void setVenvActivate(String basePath) {
+        // 去掉最后一个路径部分
+        String parentPath = basePath.substring(0, basePath.lastIndexOf("/"));
+        VENV_ACTIVATE = "source " + parentPath + "/sfenv/bin/activate &&";
+    }
+
+
+
 
 
 
@@ -61,7 +62,7 @@ public class SecretFlowService {
 
     @Async
     public void runFlTask(String taskName,String outputPath){
-        String mainC = String.format("source /home/zw/DAVEX/sfenv/bin/activate && python %s/%s.py --result_dir %s/result/%s",my.getEnv_path(),taskName,my.getBase_path(),outputPath);
+        String mainC = String.format("%s python %s/%s.py --result_dir %s/result/%s",VENV_ACTIVATE, my.getEnv_path(),taskName,my.getBase_path(),outputPath);
         List<String> command = new ArrayList<>(Arrays.asList(
                 "bash", "-c", mainC
         ));
@@ -105,7 +106,7 @@ public class SecretFlowService {
     public Body<String> executeAsyncCommand(String command) {
         try {
             ProcessBuilder processBuilder = new ProcessBuilder();
-            command = "source /home/zw/DAVEX/sfenv/bin/activate &&"+command;
+            command = VENV_ACTIVATE +command;
             processBuilder.command("bash", "-c", command);
             processBuilder.directory(new java.io.File(my.getEnv_path()));
 //             启动进程并获取输出
@@ -145,7 +146,7 @@ public class SecretFlowService {
     public Body<String> executeCommand(String command) {
         try {
             ProcessBuilder processBuilder = new ProcessBuilder();
-            command = "source /home/zw/DAVEX/sfenv/bin/activate &&"+command;
+            command = VENV_ACTIVATE+command;
             processBuilder.command("/bin/bash", "-c", command);
             processBuilder.directory(new java.io.File(my.getEnv_path()));
             processBuilder.environment().forEach((key, value) -> logger.info(key + "=" + value));
@@ -190,7 +191,7 @@ public class SecretFlowService {
     }
 
     public void saveFile (String fileName){
-        String filePath = "/home/zw/SFFL/sLresult/" + fileName;
+        String filePath = my.getBase_path()+"/result/fltest/" + fileName;
         File file = new File(filePath);
 
         try (FileInputStream fileInputStream = new FileInputStream(file)) {
