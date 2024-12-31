@@ -70,10 +70,9 @@
             <version>1.17.1</version>
         </dependency>
         <dependency>
-            <groupId>mysql</groupId>
-            <artifactId>mysql-connector-java</artifactId>
-            <scope>runtime</scope>
-            <version>8.0.31</version>
+            <groupId>com.mysql</groupId>
+            <artifactId>mysql-connector-j</artifactId>
+            <version>9.1.0</version>
         </dependency>
         <dependency>
             <groupId>com.baomidou</groupId>
@@ -132,7 +131,7 @@
         <dependency>
             <groupId>commons-io</groupId>
             <artifactId>commons-io</artifactId>
-            <version>2.12.0</version>
+            <version>2.18.0</version>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
@@ -188,7 +187,7 @@
             <artifactId>jackson-datatype-jsr310</artifactId>
             <version>2.14.0</version> <!-- 请使用最新版本 -->
         </dependency>
-<!--        openid-->
+        <!--        openid-->
         <dependency>
             <groupId>org.keycloak</groupId>
             <artifactId>keycloak-core</artifactId>
@@ -216,6 +215,11 @@
             <artifactId>jjwt-jackson</artifactId> <!-- for JSON parsing -->
             <version>0.11.5</version>
             <scope>runtime</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.github.docker-java</groupId>
+            <artifactId>docker-java</artifactId>
+            <version>3.4.1</version>
         </dependency>
 
     </dependencies>

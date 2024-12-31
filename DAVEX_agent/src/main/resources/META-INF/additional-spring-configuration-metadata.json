@@ -1,108 +1,124 @@
 {
-  "properties": [
-    {
-      "name": "version",
-      "type": "java.lang.String",
-      "description": "A description for 'version'"
-    },
-    {
-      "name": "my.id",
-      "type": "java.lang.Int",
-      "description": "A description for 'my.id'"
-    },
-    {
-      "name": "my.ip",
-      "type": "java.lang.String",
-      "description": "A description for 'my.ip'"
-    },
-    {
-      "name": "ssl.key-store-type",
-      "type": "java.lang.String",
-      "description": "A description for 'ssl.key-store-type'"
-    },
-    {
-      "name": "ssl.keystore-path",
-      "type": "java.lang.String",
-      "description": "A description for 'ssl.keystore-path'"
-    },
-    {
-      "name": "ssl.key-store-password",
-      "type": "java.lang.String",
-      "description": "A description for 'ssl.key-store-password'"
-    },
-    {
-      "name": "ssl.truststore-path",
-      "type": "java.lang.String",
-      "description": "A description for 'ssl.truststore-path'"
-    },
-    {
-      "name": "ssl.trust-store-password",
-      "type": "java.lang.String",
-      "description": "A description for 'ssl.trust-store-password'"
-    },
-    {
-      "name": "ssl.client-auth",
-      "type": "java.lang.String",
-      "description": "A description for 'ssl.client-auth'"
-    },
-    {
-      "name": "my.name",
-      "type": "java.lang.String",
-      "description": "A description for 'my.name'"
-    },
-    {
-      "name": "my.description",
-      "type": "java.lang.String",
-      "description": "A description for 'my.description'"
-    },
-    {
-      "name": "my.garnet_path",
-      "type": "java.lang.String",
-      "description": "A description for 'my.garnet_path'"
-    },
-    {
-      "name": "threadpool.core-pool-size",
-      "type": "java.lang.String",
-      "description": "A description for 'threadpool.core-pool-size'"
-    },
-    {
-      "name": "threadpool.max-pool-size",
-      "type": "java.lang.String",
-      "description": "A description for 'threadpool.max-pool-size'"
-    },
-    {
-      "name": "threadpool.keep-alive-seconds",
-      "type": "java.lang.String",
-      "description": "A description for 'threadpool.keep-alive-seconds'"
-    },
-    {
-      "name": "threadpool.queue-capacity",
-      "type": "java.lang.String",
-      "description": "A description for 'threadpool.queue-capacity'"
-    },
-    {
-      "name": "threadpool.thread-name-prefix",
-      "type": "java.lang.String",
-      "description": "A description for 'threadpool.thread-name-prefix'"
-    },
-    {
-      "name": "threadpool.awaitTerminationSeconds",
-      "type": "java.lang.String",
-      "description": "A description for 'threadpool.awaitTerminationSeconds'"
-    },
-    {
-      "name": "my.base_path",
-      "type": "java.lang.String",
-      "description": "A description for 'my.base_path'"
-    },
-    {
-      "name": "my.davex_type",
-      "type": "java.lang.enum",
-      "description": "A description for 'my.davex_type'"
-    },
-    {
-      "name": "my.env_path",
-      "type": "java.lang.String",
-      "description": "A description for my.env_path."
-    }
-  ]}
+	"properties": [
+		{
+			"name": "version",
+			"type": "java.lang.String",
+			"description": "版本号"
+		},
+		{
+			"name": "my.id",
+			"type": "java.lang.Int",
+			"description": "ID"
+		},
+		{
+			"name": "my.ip",
+			"type": "java.lang.String",
+			"description": "IP"
+		},
+		{
+			"name": "my.name",
+			"type": "java.lang.String",
+			"description": "名字"
+		},
+		{
+			"name": "my.description",
+			"type": "java.lang.String",
+			"description": "描述"
+		},
+		{
+			"name": "threadpool.core-pool-size",
+			"type": "java.lang.Int",
+			"description": "核心线程池大小"
+		},
+		{
+			"name": "threadpool.max-pool-size",
+			"type": "java.lang.Int",
+			"description": "最大线程数"
+		},
+		{
+			"name": "threadpool.keep-alive-seconds",
+			"type": "java.lang.Int",
+			"description": "活跃时间：非核心线程空闲时间超过这个时间就会被回收"
+		},
+		{
+			"name": "threadpool.queue-capacity",
+			"type": "java.lang.Int",
+			"description": "队列容量"
+		},
+		{
+			"name": "threadpool.thread-name-prefix",
+			"type": "java.lang.String",
+			"description": "线程名字前缀'"
+		},
+		{
+			"name": "threadpool.awaitTerminationSeconds",
+			"type": "java.lang.Int",
+			"description": "主线程等待子线程执行时间"
+		},
+		{
+			"name": "my.base_path",
+			"type": "java.lang.String",
+			"description": "A description for 'my.base_path'"
+		},
+		{
+			"name": "my.davex_type",
+			"type": "java.lang.enum",
+			"description": "DAVEX类型 DAVEX_CENTER, DAVEX_AGENT"
+		},
+		{
+			"name": "file.upload-base-dir",
+			"type": "java.lang.String",
+			"description": "上传文件夹地址"
+		},
+		{
+			"name": "file.download-base-dir",
+			"type": "java.lang.String",
+			"description": "下载文件夹地址"
+		},
+		{
+			"name": "my.keycloak_username",
+			"type": "java.lang.String",
+			"description": "A description for my.keycloak_username."
+		},
+		{
+			"name": "my.keycloak_password",
+			"type": "java.lang.String",
+			"description": "A description for my.keycloak_password."
+		},
+		{
+			"name": "my.keycloak_id",
+			"type": "java.lang.String",
+			"description": "A description for my.keycloak_id."
+		},
+		{
+			"name": "my.env_path",
+			"type": "java.lang.String",
+			"description": "A description for my.env_path."
+		},
+		{
+			"name": "garnet.enabled",
+			"type": "java.lang.Boolean",
+			"description": "是否启用Garnet"
+		},
+		{
+			"name": "garnet.containerID",
+			"type": "java.lang.String",
+			"description": "Garnet 容器ID"
+		},
+		{
+			"name": "garnet.inputPath",
+			"type": "java.lang.String",
+			"description": "Garnet 输入文件文件夹挂载路径"
+		},
+		{
+			"name": "garnet.outputPath",
+			"type": "java.lang.String",
+			"description": "Garnet 输出文件文件夹挂载路径"
+		},
+		{
+			"name": "garnet.mpcPath",
+			"type": "java.lang.String",
+			"description": "Garnet mpc程序文件文件夹挂载路径"
+		}
+	]
+}

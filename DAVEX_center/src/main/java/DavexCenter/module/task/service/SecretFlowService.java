@@ -1,43 +1,33 @@
 package DavexCenter.module.task.service;
 
-import DavexBase.entity.MpcTask;
-import DavexBase.service.programs.GarnetService;
-import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.mock.web.MockMultipartFile;
-import org.springframework.scheduling.annotation.Async;
-import org.springframework.stereotype.Service;
-
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileInputStream;
-import java.io.InputStreamReader;
-
-import DavexCenter.module.file.controller.FlFileController;
-import DavexCenter.module.file.service.FileService;
-import DavexBase.common.My;
-import DavexBase.common.Body;
-
-import org.springframework.web.multipart.MultipartFile;
-import org.springframework.beans.factory.annotation.Autowired;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import DavexBase.service.auth.CenterWebClientService;
-import DavexBase.mapper.AgentMapper;
-import DavexBase.entity.Agent;
-import DavexBase.entity.FlTask;
-import DavexBase.mapper.FlTaskMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import java.io.FileNotFoundException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.io.File;
-import java.io.FileInputStream;
-import org.springframework.web.multipart.MultipartFile;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
+
+import DavexBase.common.Body;
+import DavexBase.common.My;
+import DavexBase.entity.Agent;
+import DavexBase.entity.FlTask;
+import DavexBase.mapper.AgentMapper;
+import DavexBase.mapper.FlTaskMapper;
+import DavexBase.service.auth.CenterWebClientService;
+import DavexCenter.module.file.controller.FlFileController;
+import DavexCenter.module.file.service.FileService;
+
 @Service
 public class SecretFlowService {
     private static final Logger logger = LoggerFactory.getLogger(SecretFlowService.class);
@@ -54,23 +44,21 @@ public class SecretFlowService {
     @Autowired
     private FlTaskMapper flTaskMapper;
 
-
-
-
     // 方法接受一个字符串参数作为命令，并执行它
 
     @Async
-    public void runFlTask(String taskName,String outputPath){
-        String mainC = String.format("source /home/zw/DAVEX/sfenv/bin/activate && python %s/%s.py --result_dir %s/result/%s",my.getEnv_path(),taskName,my.getBase_path(),outputPath);
+    public void runFlTask(String taskName, String outputPath) {
+        String mainC = String.format(
+                "source /home/zw/DAVEX/sfenv/bin/activate && python %s/%s.py --result_dir %s/result/%s",
+                my.getEnv_path(), taskName, my.getBase_path(), outputPath);
         List<String> command = new ArrayList<>(Arrays.asList(
-                "bash", "-c", mainC
-        ));
+                "bash", "-c", mainC));
 
         ProcessBuilder processBuilder = new ProcessBuilder(command).directory(new java.io.File(my.getEnv_path()));
         try {
             Process process = processBuilder.start();
             try (BufferedReader stdOut = new BufferedReader(new InputStreamReader(process.getInputStream()));
-                 BufferedReader stdErr = new BufferedReader(new InputStreamReader(process.getErrorStream()))) {
+                    BufferedReader stdErr = new BufferedReader(new InputStreamReader(process.getErrorStream()))) {
                 StringBuilder output = new StringBuilder();
                 String line;
                 while ((line = stdOut.readLine()) != null) {
@@ -105,10 +93,10 @@ public class SecretFlowService {
     public Body<String> executeAsyncCommand(String command) {
         try {
             ProcessBuilder processBuilder = new ProcessBuilder();
-            command = "source /home/zw/DAVEX/sfenv/bin/activate &&"+command;
+            command = "source /home/zw/DAVEX/sfenv/bin/activate &&" + command;
             processBuilder.command("bash", "-c", command);
             processBuilder.directory(new java.io.File(my.getEnv_path()));
-//             启动进程并获取输出
+            // 启动进程并获取输出
             Process process = processBuilder.start();
 
             // 捕获标准输出
@@ -129,13 +117,14 @@ public class SecretFlowService {
 
             int exitCode = process.waitFor();
             if (exitCode == 0) {
-                return Body.success(output.toString()+my.getEnv_path());
+                return Body.success(output.toString() + my.getEnv_path());
             } else {
-                return Body.error("Command execution failed with exit code: " + exitCode + "\nError Output: " + errorOutput.toString()+my.getGarnet_path());
+                return Body.error("Command execution failed with exit code: " + exitCode + "\nError Output: "
+                        + errorOutput.toString());
             }
-            } catch (IOException e) {
-                e.printStackTrace();
-                return Body.error(String.format(e.getMessage()));
+        } catch (IOException e) {
+            e.printStackTrace();
+            return Body.error(String.format(e.getMessage()));
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt(); // 重新设置中断状态
             return Body.error("The process was interrupted");
@@ -145,7 +134,7 @@ public class SecretFlowService {
     public Body<String> executeCommand(String command) {
         try {
             ProcessBuilder processBuilder = new ProcessBuilder();
-            command = "source /home/zw/DAVEX/sfenv/bin/activate &&"+command;
+            command = "source /home/zw/DAVEX/sfenv/bin/activate &&" + command;
             processBuilder.command("/bin/bash", "-c", command);
             processBuilder.directory(new java.io.File(my.getEnv_path()));
             processBuilder.environment().forEach((key, value) -> logger.info(key + "=" + value));
@@ -171,9 +160,10 @@ public class SecretFlowService {
 
             int exitCode = process.waitFor();
             if (exitCode == 0) {
-                return Body.success(output.toString()+my.getEnv_path());
+                return Body.success(output.toString() + my.getEnv_path());
             } else {
-                return Body.error("Command execution failed with exit code: " + exitCode + "\nError Output: " + errorOutput.toString()+my.getGarnet_path());
+                return Body.error("Command execution failed with exit code: " + exitCode + "\nError Output: "
+                        + errorOutput.toString());
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -183,13 +173,14 @@ public class SecretFlowService {
             return Body.error("The process was interrupted");
         }
     }
-    public Body<String> saveFile (MultipartFile file){
+
+    public Body<String> saveFile(MultipartFile file) {
         String hash = fileService.getSha256(file);
         String applicationId = "Davex-C1-A1";
-        return flFileController.saveFl(file,hash,applicationId,null);
+        return flFileController.saveFl(file, hash, applicationId, null);
     }
 
-    public void saveFile (String fileName){
+    public void saveFile(String fileName) {
         String filePath = "/home/zw/SFFL/sLresult/" + fileName;
         File file = new File(filePath);
 
@@ -198,24 +189,22 @@ public class SecretFlowService {
                     file.getName(),
                     file.getName(),
                     null,
-                    fileInputStream
-            );
+                    fileInputStream);
             String hash = fileService.getSha256(multipartFile);
             String applicationId = "Davex-C1-A1";
-            flFileController.saveFl(multipartFile,hash,applicationId,null);
-        }catch (IOException e){
+            flFileController.saveFl(multipartFile, hash, applicationId, null);
+        } catch (IOException e) {
             e.printStackTrace();
         }
 
     }
 
-
-
     public Body<String> getRayStatusFromAgent(String agentId) {
         try {
             return centerWebClientService.center2AgentWebClient(agentId).get()
                     .uri(uriBuilder -> uriBuilder.path("/SecretFlowTask/getRayStatus")
-                            .build()).retrieve().bodyToMono(new ParameterizedTypeReference<Body<String>>() {
+                            .build())
+                    .retrieve().bodyToMono(new ParameterizedTypeReference<Body<String>>() {
                     })
                     .block();
         } catch (Exception e) {
@@ -223,14 +212,15 @@ public class SecretFlowService {
         }
     }
 
-    public Body<String> chooseAgentJionRay(String agentId,String ip,String port,String name){
+    public Body<String> chooseAgentJionRay(String agentId, String ip, String port, String name) {
         try {
             Body<String> response = centerWebClientService.center2AgentWebClient(agentId).get()
                     .uri(uriBuilder -> uriBuilder.path("/SecretFlowTask/joinRay")
-                            .queryParam("ip",ip)
-                            .queryParam("port",port)
-                            .queryParam("name",name)
-                            .build()).retrieve().bodyToMono(new ParameterizedTypeReference<Body<String>>() {
+                            .queryParam("ip", ip)
+                            .queryParam("port", port)
+                            .queryParam("name", name)
+                            .build())
+                    .retrieve().bodyToMono(new ParameterizedTypeReference<Body<String>>() {
                     })
                     .block();
             return response;
@@ -238,19 +228,20 @@ public class SecretFlowService {
             return Body.error(e.getMessage());
         }
     }
-    public Body<FlTask> createFlTask(FlTask flTask){
+
+    public Body<FlTask> createFlTask(FlTask flTask) {
         try {
             int result = flTaskMapper.insert(flTask);
-            return Body.success(flTask,"成功");
-        }catch (Exception e){
+            return Body.success(flTask, "成功");
+        } catch (Exception e) {
             return Body.error(e.getMessage());
         }
     }
 
-    //调用网络接口 配置 url
-    //在数据库中插入一条agent信息
-    public Body<String> addAgent(String uid,String name,String ip,Integer port,String description){
-        try{
+    // 调用网络接口 配置 url
+    // 在数据库中插入一条agent信息
+    public Body<String> addAgent(String uid, String name, String ip, Integer port, String description) {
+        try {
             Agent agent = new Agent();
             agent.setUid(uid);
             agent.setName(name);
@@ -259,11 +250,9 @@ public class SecretFlowService {
             agent.setDescription(description);
             int result = agentMapper.insert(agent);
             return Body.success("成功");
-        }catch(Exception e){
+        } catch (Exception e) {
             return Body.error(e.getMessage());
         }
     }
 
-
 }
-

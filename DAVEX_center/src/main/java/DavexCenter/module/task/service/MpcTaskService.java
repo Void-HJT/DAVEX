@@ -6,6 +6,7 @@ import java.util.List;
 
 import DavexBase.service.notification.NotificationService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
@@ -31,6 +32,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @Service
+@ConditionalOnProperty(name = "garnet.enabled", havingValue = "true")
 public class MpcTaskService {
 
     @Autowired

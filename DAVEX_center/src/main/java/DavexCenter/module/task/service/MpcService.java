@@ -9,6 +9,7 @@ import java.nio.file.StandardCopyOption;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
@@ -23,6 +24,7 @@ import DavexBase.service.auth.CenterWebClientService;
 import DavexBase.service.programs.GarnetService;
 
 @Service
+@ConditionalOnProperty(name = "garnet.enabled", havingValue = "true")
 public class MpcService {
     @Autowired
     private CenterWebClientService centerWebClientService;

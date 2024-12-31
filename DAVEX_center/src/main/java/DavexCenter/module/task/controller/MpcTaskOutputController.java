@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -19,6 +20,7 @@ import DavexCenter.module.task.service.MpcTaskOutputService;
 
 @RestController
 @RequestMapping("/MpcTasksOutput")
+@ConditionalOnProperty(name = "garnet.enabled", havingValue = "true")
 public class MpcTaskOutputController {
 
     @Autowired

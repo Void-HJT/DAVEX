@@ -5,21 +5,19 @@ my:
   ip: ${MY_IP:10.176.34.171}
   name: ${MY_NAME:'171!'}
   description: ${MY_DESCRIPTION:'DAVEX Agent 171'}
-  garnet_path: ${MY_GARNET_PATH:/home/user/Garnet}
   base_path: ${MY_BASE_PATH:/home/user/DVE}
   davex_type: ${MY_DAVEX_TYPE:DAVEX_AGENT}
   env_path: ${MY_ENV_PATH:/home/drt/miniconda3/envs/sfenv}
   
+garnet:
+  enabled: ${GARNET_ENABLED:true}
+  containerID: ${GARNET_CONTAINER_ID:6ffbe649}
+  inputPath: ${GARNET_INPUT_PATH:/home/nhy/DAVEXFile/Inputs}
+  outputPath: ${GARNET_OUTPUT_PATH:/home/nhy/DAVEXFile/Outputs}
+  mpcPath: ${GARNET_MPC_PATH:/home/nhy/DAVEXFile/programs}
+
 server:
   port: ${SERVER_PORT:8080}
-
-ssl:
-  client-auth: ${SSL_CLIENT_AUTH:false}
-  key-store-password: ${SSL_KEY_STORE_PASSWORD:agopkljsfoi}
-  key-store-type: ${SSL_KEY_STORE_TYPE:JKS}
-  keystore-path: ${SSL_KEYSTORE_PATH:jwt.jks}
-  trust-store-password: ${SSL_TRUST_STORE_PASSWORD:dfjlkghalgd}
-  truststore-path: ${SSL_TRUSTSTORE_PATH:truststore.jks}
 
 spring:
   application:

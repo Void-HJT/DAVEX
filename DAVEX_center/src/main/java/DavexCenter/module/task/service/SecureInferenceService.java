@@ -10,6 +10,7 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.core.io.Resource;
 import org.springframework.scheduling.annotation.Async;
@@ -33,6 +34,7 @@ import DavexBase.service.auth.CenterWebClientService;
 import reactor.core.publisher.Mono;
 
 @Service
+@ConditionalOnProperty(name = "garnet.enabled", havingValue = "true")
 public class SecureInferenceService {
     @Autowired
     private MpcTaskService mpcTaskService;

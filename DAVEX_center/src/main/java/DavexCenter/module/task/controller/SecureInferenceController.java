@@ -5,6 +5,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestPart;
@@ -23,6 +24,7 @@ import DavexCenter.module.task.service.SecureInferenceService;
 
 @RestController
 @RequestMapping("/SecureInference")
+@ConditionalOnProperty(name = "garnet.enabled", havingValue = "true")
 public class SecureInferenceController {
 
     @Autowired

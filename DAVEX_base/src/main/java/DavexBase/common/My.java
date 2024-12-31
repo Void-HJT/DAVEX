@@ -57,9 +57,6 @@ public class My {
     // @Value("${ssl.key-store-type}")
     // protected String keyStoreType;
 
-    @Value("${my.garnet_path}")
-    protected String garnet_path;
-
     @Value("${my.base_path}")
     protected String base_path;
 
@@ -256,9 +253,6 @@ public class My {
     // this.keyStoreType = keyStoreType;
     // }
 
-    public String getGarnet_path() {
-        return garnet_path;
-    }
 
     public String getEnv_path() {
         return env_path;
@@ -267,10 +261,6 @@ public class My {
 //    public String getPython_path() {
 //        return python_path;
 //    }
-
-    public void setGarnet_path(String garnet_path) {
-        this.garnet_path = garnet_path;
-    }
 
     public String getBase_path() {
         return base_path;

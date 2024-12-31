@@ -11,9 +11,8 @@ import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 
-import DavexBase.service.notification.NotificationService;
-import DavexCenter.entity.ComparisonOutput;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -27,15 +26,21 @@ import DavexBase.common.Utils;
 import DavexBase.entity.MpcTask;
 import DavexBase.entity.MpcTaskOutput;
 import DavexBase.mapper.MpcTaskOutputMapper;
+import DavexBase.properties.GarnetProperties;
+import DavexBase.service.notification.NotificationService;
 import DavexCenter.entity.DownloadTask;
 import DavexCenter.mapper.DownloadTaskMapper;
 import DavexCenter.module.file.service.FileService;
 
 @Service
+@ConditionalOnProperty(name = "garnet.enabled", havingValue = "true")
 public class MpcTaskOutputService {
 
     @Autowired
     private MpcTaskOutputMapper mpcTaskOutputMapper;
+
+    @Autowired
+    private GarnetProperties garnetProperties;
 
     @Autowired
     private My my;
@@ -74,10 +79,11 @@ public class MpcTaskOutputService {
 
     public void saveOutputFromInner(MpcTask mpcTask) throws Exception {
         MpcTaskOutput mpcTaskOutput = new MpcTaskOutput();
-        Path outputPath = Paths.get(my.getGarnet_path()).resolve("Output")
+        Path outputPath = Paths.get(garnetProperties.getOutputPath())
                 .resolve(mpcTask.getUid() + "-P" + mpcTask.getPart() + "-0");
         Path savePath = Paths.get(my.getBase_path()).resolve("result").resolve("mpctask").resolve(mpcTask.getUid());
-        mpcTaskOutput.setPath(Paths.get(my.getBase_path()).resolve("result").resolve("mpctask").resolve(mpcTask.getUid()).toString());
+        mpcTaskOutput.setPath(
+                Paths.get(my.getBase_path()).resolve("result").resolve("mpctask").resolve(mpcTask.getUid()).toString());
         mpcTaskOutput.setTaskId(mpcTask.getUid());
         mpcTaskOutput.setExpiredTime(java.sql.Timestamp
                 .from(Instant.now().plus(7, ChronoUnit.DAYS)));
@@ -91,14 +97,16 @@ public class MpcTaskOutputService {
         } catch (Exception e) {
             String finishContent = String.format("MPC任务结果保存失败\n任务ID: %s\n任务类型: %s\n运行结果: %s",
                     mpcTask.getUid(), mpcTask.getTaskType(), mpcTask.getStatus());
-            notificationService.setMessage(mpcTask.getApplicationId(), "MPC任务运行结束", finishContent, mpcTask.getUid(), 0, "mpc");
+            notificationService.setMessage(mpcTask.getApplicationId(), "MPC任务运行结束", finishContent, mpcTask.getUid(), 0,
+                    "mpc");
             throw e;
         }
         mpcTaskOutputMapper.insert(mpcTaskOutput);
         // 运行结束的通知
         String finishContent = String.format("MPC任务结果保存成功\n任务ID: %s\n任务类型: %s\n运行结果: %s",
                 mpcTask.getUid(), mpcTask.getTaskType(), mpcTask.getStatus());
-        notificationService.setMessage(mpcTask.getApplicationId(), "MPC任务运行结束", finishContent, mpcTask.getUid(), 1, "mpc");
+        notificationService.setMessage(mpcTask.getApplicationId(), "MPC任务运行结束", finishContent, mpcTask.getUid(), 1,
+                "mpc");
     }
 
     public Body<String> fetchMpc(Long mpcOutputId, String applicationId) {
@@ -137,7 +145,8 @@ public class MpcTaskOutputService {
             e.printStackTrace();
             return Body.error(String.format("获取失败: 结果id %d，文件名: %s，错误信息: %s", mpcOutputId, fileName, e.getMessage()));
         }
-        return Body.success(String.format("获取成功，结果id: %d，文件名: %s，保存路径: %s", mpcOutputId, fileName, newDownloadTask.getPath()));
+        return Body.success(
+                String.format("获取成功，结果id: %d，文件名: %s，保存路径: %s", mpcOutputId, fileName, newDownloadTask.getPath()));
     }
 
     public Body<List<MpcTaskOutput>> queryMpc(String applicationId) {

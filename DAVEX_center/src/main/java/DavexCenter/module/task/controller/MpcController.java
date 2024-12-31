@@ -7,6 +7,7 @@ import java.nio.file.Paths;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
 import org.springframework.http.HttpHeaders;
@@ -31,6 +32,7 @@ import DavexBase.mapper.MpcMapper;
 
 @RestController
 @RequestMapping("/Mpc")
+@ConditionalOnProperty(name = "garnet.enabled", havingValue = "true")
 public class MpcController {
     @Autowired
     My my;

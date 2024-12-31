@@ -36,13 +36,13 @@ public class EnvelopeService {
     @Autowired
     private FileController fileController;
 
-    @Autowired
+    @Autowired(required = false)
     private SecureInferenceController secureInferenceController;
 
     @Autowired
     private ComparisonController comparisonController;
 
-    @Autowired
+    @Autowired(required = false)
     private MpcTaskController mpcTaskController;
 
     @Autowired

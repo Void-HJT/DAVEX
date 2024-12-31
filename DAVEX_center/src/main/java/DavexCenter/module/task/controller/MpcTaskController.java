@@ -8,6 +8,7 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -30,6 +31,7 @@ import DavexCenter.module.task.service.MpcTaskService;
 
 @RestController
 @RequestMapping("/MpcTasks")
+@ConditionalOnProperty(name = "garnet.enabled", havingValue = "true")
 public class MpcTaskController {
 
     @Autowired
