@@ -37,9 +37,6 @@ import DavexBase.mapper.MpcMapper;
 import DavexBase.mapper.MpcTaskMapper;
 import DavexBase.properties.GarnetProperties;
 
-//Todo mpc link
-//Todo test
-
 @Service
 @ConditionalOnProperty(name = "garnet.enabled", havingValue = "true")
 public class GarnetService {
@@ -51,6 +48,11 @@ public class GarnetService {
     private final DockerExecutor dockerExecutor;
 
     private static final Logger logger = LoggerFactory.getLogger(GarnetService.class);
+
+    public final String Docker_Garnet_Path = "/usr/src/Garnet";
+    public final String Docker_Input_Path = "/usr/src/Garnet/Inputs";
+    public final String Docker_Output_Path = "/usr/src/Garnet/Outputs";
+    public final String Docker_Mpc_Path = "/usr/src/Garnet/Programs/DAVEX";
 
     @Autowired
     private MpcMapper mpcMapper;
@@ -80,9 +82,9 @@ public class GarnetService {
 
             List<Mount> mounts = containerInfo.getMounts();
             StringBuilder errorMessages = new StringBuilder();
-            checkMount(mounts, "/usr/src/Garnet/Inputs", garnetProperties.getInputPath(), errorMessages);
-            checkMount(mounts, "/usr/src/Garnet/Outputs", garnetProperties.getOutputPath(), errorMessages);
-            checkMount(mounts, "/usr/src/Garnet/Programs/DAVEX", garnetProperties.getMpcPath(), errorMessages);
+            checkMount(mounts, Docker_Input_Path, garnetProperties.getInputPath(), errorMessages);
+            checkMount(mounts, Docker_Output_Path, garnetProperties.getOutputPath(), errorMessages);
+            checkMount(mounts, Docker_Mpc_Path, garnetProperties.getMpcPath(), errorMessages);
 
             if (errorMessages.length() > 0) {
                 logger.error(errorMessages.toString());
@@ -145,26 +147,34 @@ public class GarnetService {
     }
 
     public void link(String path, String prefix, Long part) throws Exception {
-        List<String> command = new ArrayList<>(Arrays.asList("ln", "-s", path,
-                garnetProperties.getInputPath() + "/" + prefix + "-P" + part + "-0"));
-        ProcessBuilder processBuilder = new ProcessBuilder(command)
-                .directory(Paths.get(garnetProperties.getInputPath()).toFile());
+        Path originPath = Paths.get(path);
+        Path destPath = Paths
+                .get(Paths.get(garnetProperties.getInputPath()).resolve(prefix).toString() + "-P" + part + "-0");
+        // List<String> command = new ArrayList<>(Arrays.asList("ln", "-s", path,
+        // Paths.get(garnetProperties.getInputPath()).resolve(prefix) + "-P" + part +
+        // "-0"));
+        // ProcessBuilder processBuilder = new ProcessBuilder(command)
+        // .directory(Paths.get(garnetProperties.getInputPath()).toFile());
         try {
-            Process process = processBuilder.start();
-            Integer exitcode = process.waitFor();
-            if (exitcode != 0) {
-                try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getErrorStream()))) {
-                    StringBuilder errorMsg = new StringBuilder();
-                    String line;
-                    while ((line = reader.readLine()) != null) {
-                        errorMsg.append(line).append(System.lineSeparator());
-                    }
-                    if (errorMsg.length() > 0) {
-                        logger.error(errorMsg.toString());
-                        throw new Exception(errorMsg.toString());
-                    }
-                }
-            }
+            // Todo 测试链接和copy哪个行？
+            // Files.copy(originPath, destPath);
+            Files.createLink(destPath, originPath);
+            // Process process = processBuilder.start();
+            // Integer exitcode = process.waitFor();
+            // if (exitcode != 0) {
+            // try (BufferedReader reader = new BufferedReader(new
+            // InputStreamReader(process.getErrorStream()))) {
+            // StringBuilder errorMsg = new StringBuilder();
+            // String line;
+            // while ((line = reader.readLine()) != null) {
+            // errorMsg.append(line).append(System.lineSeparator());
+            // }
+            // if (errorMsg.length() > 0) {
+            // logger.error(errorMsg.toString());
+            // throw new Exception(errorMsg.toString());
+            // }
+            // }
+            // }
         } catch (Exception e) {
             throw e;
         }
@@ -206,9 +216,14 @@ public class GarnetService {
                     break;
             }
         }
-        Path mpc_path = Paths.get(my.getBase_path()).resolve(mpc.getPath());
-        String mpc_name = mpc_path.getFileName().toString().split("\\.")[0];
-        List<String> command = new ArrayList<>(Arrays.asList("python3", "compile.py", mpc_path.toString()));
+        Path local_mpc_path = Paths.get(my.getBase_path()).resolve(mpc.getPath());
+        String mpc_name = local_mpc_path.getFileName().toString().split("\\.")[0];
+        Path mount_mpc_path = Paths.get(garnetProperties.getMpcPath()).resolve(local_mpc_path.getFileName());
+        Path docker_mpc_path = Paths.get("Programs/DAVEX").resolve(local_mpc_path.getFileName());
+        if (!Files.exists(mount_mpc_path)) {
+            Files.copy(local_mpc_path, mount_mpc_path);
+        }
+        List<String> command = new ArrayList<>(Arrays.asList("python3", "compile.py", docker_mpc_path.toString()));
 
         for (int i = 0; i < args.size(); i++) {
             command.add(args.get(i));
@@ -221,7 +236,7 @@ public class GarnetService {
             mpcTask.setStatus(MpcTask.Status.COMPILING);
             logger.info(mpcTask.getUid() + ":开始编译");
             mpcTaskMapper.updateById(mpcTask);
-            dockerExecutor.exec(garnetProperties.getContainerID(), "/usr/src/Garnet", command);
+            dockerExecutor.exec(garnetProperties.getContainerID(), Docker_Garnet_Path, command);
             mpcTask.setStatus(MpcTask.Status.READY);
             mpcTask.setMpcName(mpc_name);
             mpcTaskMapper.updateById(mpcTask);
@@ -236,15 +251,15 @@ public class GarnetService {
     }
 
     public void run(MpcTask mpcTask) throws Exception {
-        String inputPrefix = garnetProperties.getInputPath() + "/" + mpcTask.getUid();
-        String outputPrefix = garnetProperties.getOutputPath() + "/" + mpcTask.getUid();
+        Path inputPrefix = Paths.get(Docker_Input_Path).resolve(mpcTask.getUid());
+        Path outputPrefix = Paths.get(Docker_Output_Path).resolve(mpcTask.getUid());
         String protocol = mpcTask.getRuntimeParameters().getString("protocol");
         String mpc_name = mpcTask.getMpcName();
         Long part = mpcTask.getPart();
         List<String> command = new ArrayList<>(Arrays.asList(
                 "./" + protocol + ".x",
-                "-IF", inputPrefix,
-                "-OF", outputPrefix,
+                "-IF", inputPrefix.toString(),
+                "-OF", outputPrefix.toString(),
                 // "-N", mpcTask.getN().toString(),
                 "-h", mpcTask.getHost(),
                 "-pn", mpcTask.getPort().toString(),
@@ -257,7 +272,7 @@ public class GarnetService {
             mpcTask.setStatus(MpcTask.Status.RUNNING);
             logger.info(mpcTask.getUid() + ":开始运行");
             mpcTaskMapper.updateById(mpcTask);
-            dockerExecutor.exec(garnetProperties.getContainerID(), "/usr/src/Garnet", command);
+            dockerExecutor.exec(garnetProperties.getContainerID(), Docker_Garnet_Path, command);
             mpcTask.setStatus(MpcTask.Status.FINISHED);
             mpcTaskMapper.updateById(mpcTask);
             logger.info(mpcTask.getUid() + ":运行成功");
@@ -271,7 +286,9 @@ public class GarnetService {
     }
 
     public void csvExtract(String inputCsvPath, String fieldName, String prefix, Long part) {
-        String outputFilePath = garnetProperties.getInputPath() + "/" + prefix + "-P" + part + "-0";
+
+        String outputFilePath = Paths.get(garnetProperties.getInputPath()).resolve(prefix).toString() + "-P" + part
+                + "-0";
         try (BufferedReader reader = Files.newBufferedReader(Paths.get(inputCsvPath));
                 BufferedWriter writer = Files.newBufferedWriter(Paths.get(outputFilePath))) {
             String headerLine = reader.readLine();
@@ -310,7 +327,8 @@ public class GarnetService {
     }
 
     public void csvQuery(String inputCsvPath, String prefix, String fieldName, Long part, Path outputCsvPath) {
-        Path fieldFilePath = Paths.get(garnetProperties.getOutputPath() + "/" + prefix + "-P" + part + "-0");
+        Path fieldFilePath = Paths
+                .get(Paths.get(garnetProperties.getOutputPath()).resolve(prefix) + "-P" + part + "-0");
         try (BufferedReader csvReader = Files.newBufferedReader(Paths.get(inputCsvPath));
                 BufferedReader fieldReader = Files.newBufferedReader(fieldFilePath);
                 BufferedWriter csvWriter = Files.newBufferedWriter(outputCsvPath)) {

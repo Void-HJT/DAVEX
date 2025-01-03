@@ -1,8 +1,0 @@
-// Rules
-(#subject.uid == "DAVEX-C1-AXX1") ? true : null
-(#subjectAttribute["角色"] == "管理员") ? true : null
-((#subjectAttribute["等级"] == "市级" and #subjectAttribute["角色"] == "管理员") and #action == "PSI") ? true : null
-
-// Visibility
-(#subject.uid == "DAVEX-C1-AXX1") ? true : null
-(#subjectAttribute["角色"] == "管理员") ? true : null
