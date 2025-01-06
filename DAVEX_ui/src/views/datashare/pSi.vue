@@ -239,9 +239,17 @@
         <template #trigger>
           <el-button class="default-button" style="margin-right: 10px;">上传输入文件</el-button>
         </template>
-        <el-button class="start-button" @click="submitUpload">
-          创建PSI任务
+        <el-button class="default-button" @click="editCompileDialog">
+          配置编译参数
         </el-button>
+        <el-button class="default-button" @click="editRuntimeDialog">
+          配置运行参数
+        </el-button>
+        <div style="margin-top: 10px">
+          <el-button class="start-button" @click="submitUpload">
+            创建PSI任务
+          </el-button>
+        </div>
         <template #tip>
           <div class="el-upload__tip text-red">
             限制1个文件，新文件将覆盖旧文件
@@ -345,6 +353,83 @@
     </el-table>
     <template #footer>
       <el-button @click="parameterDialogVisible = false">关闭</el-button>
+    </template>
+  </el-dialog>
+
+  <!-- 配置编译参数 -->
+  <el-dialog
+      title="配置编译参数"
+      v-model="editCompileVisible"
+      width="60%"
+  >
+    <el-table :data="currentCompileParameters">
+      <el-table-column
+          prop="name"
+          label="参数名称"
+          align="center"
+      ></el-table-column>
+      <el-table-column
+          prop="limitType"
+          label="参数类型"
+          align="center"
+      ></el-table-column>
+      <el-table-column
+          prop="description"
+          label="参数描述"
+          align="center"
+      ></el-table-column>
+      <el-table-column prop="limit" label="限制条件" align="center">
+        <template #default="scope">
+          <span>{{ formatLimit(scope.row.limit) }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="设置值" align="center">
+        <template #default="scope">
+          <el-input v-model="scope.row.value"></el-input>
+        </template>
+      </el-table-column>
+    </el-table>
+    <template #footer>
+      <el-button class="default-button" @click="saveCompileParameters">
+        保存
+      </el-button>
+      <el-button class="close-button" @click="editCompileVisible = false">取消</el-button>
+    </template>
+  </el-dialog>
+
+  <!-- 配置运行参数 -->
+  <el-dialog
+      title="配置运行参数"
+      v-model="editRuntimeVisible"
+      width="60%"
+  >
+    <el-table :data="currentRuntimeParameters">
+      <el-table-column
+          prop="name"
+          label="参数名称"
+          align="center"
+      ></el-table-column>
+      <el-table-column
+          prop="limitType"
+          label="参数类型"
+          align="center"
+      ></el-table-column>
+      <el-table-column prop="limit" label="限制条件" align="center">
+        <template #default="scope">
+          <span>{{ formatLimit(scope.row.limit) }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="设置值" align="center">
+        <template #default="scope">
+          <el-input v-model="scope.row.value"></el-input>
+        </template>
+      </el-table-column>
+    </el-table>
+    <template #footer>
+      <el-button class="default-button" @click="saveRuntimeParameters">
+        保存
+      </el-button>
+      <el-button class="close-button" @click="editRuntimeVisible = false">取消</el-button>
     </template>
   </el-dialog>
 </template>
@@ -688,6 +773,57 @@ const chooseMpcMethod = async (row) => {
   catch (error) {
     console.error('Failed to choose mpc file:', error)
   }
+}
+
+const editCompileVisible = ref(false)
+const editRuntimeVisible = ref(false)
+const currentCompileParameters = ref([])
+const currentRuntimeParameters = ref([])
+const editCompileDialog = () => {
+  const mpc = mpcList.value.find(
+      (t) => t.uid === createPsiTaskBody.value.mpcId,
+  )
+  if (mpc) {
+    currentCompileParameters.value = mpc.compileParameters.map((param) => ({
+      ...param,
+      // value: param.limit.defaultValue || '',
+      value: param.limit?.defaultValue ?? '',
+    }))
+    editCompileVisible.value = true
+  }
+}
+const editRuntimeDialog = () => {
+  const task = mpcList.value.find(
+      (t) => t.uid === createPsiTaskBody.value.mpcId,
+  )
+  if (task) {
+    currentRuntimeParameters.value = task.runtimeParameters.map((param) => ({
+      ...param,
+      // value: param.limit.defaultValue || '',
+      value: param.limit?.defaultValue ?? '',
+    }))
+  }
+  editRuntimeVisible.value = true
+}
+
+const saveCompileParameters = () => {
+  currentCompileParameters.value.forEach((param) => {
+    // 检查参数值是否为数字，如果是则转换为数字
+    if (!isNaN(param.value) && param.limitType === 'NUM') {
+      createPsiTaskBody.value.compileParameters[param.name] = Number(param.value)
+    } else {
+      // 对于其他类型（如字符串），直接存储
+      createPsiTaskBody.value.compileParameters[param.name] = param.value
+    }
+  })
+  editCompileVisible.value = false
+}
+
+const saveRuntimeParameters = () => {
+  currentRuntimeParameters.value.forEach((param) => {
+    createPsiTaskBody.value.runtimeParameters[param.name] = param.value
+  })
+  editRuntimeVisible.value = false
 }
 </script>
 
