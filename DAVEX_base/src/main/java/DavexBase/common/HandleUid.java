@@ -29,9 +29,9 @@ public class HandleUid {
             return "application"; // 格式为 DAVEX-CXXn-AXXn 的类型
         } else if (uid.matches("^DAVEX-CXX\\d+-GXX\\d+$")) {
             return "agent"; // 格式为 DAVEX-CXXn-GXXn 的类型
-        } else if (uid.matches("^DAVEX-CXX\\d+-GXX\\d+-F\\d+$")) {
+        } else if (uid.matches("^DAVEX-CXX\\d+-GXX\\d+-F\\d+$")||uid.matches("^DAVEX-CXX\\d+-F\\d+$")) {
             return "folder"; // 格式为 DAVEX-CXXn-GXXn-Fn 的类型
-        } else if (uid.matches("^DAVEX-CXX\\d+-GXX\\d-D\\d+$")) {
+        } else if (uid.matches("^DAVEX-CXX\\d+-GXX\\d-D\\d+$")||uid.matches("^DAVEX-CXX\\d+-D\\d+$")) {
             return "file"; // 格式为 DAVEX-CXXn-GXXn-Dn 的类型
         }
 

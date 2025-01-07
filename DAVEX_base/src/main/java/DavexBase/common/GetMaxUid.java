@@ -68,42 +68,17 @@ public class GetMaxUid {
         return getMaxTailNumber(uidList);
     }
 
-//    public static Integer getMaxTailNumber(List<Object> uidList) {
-//        int maxTailNumber = 0; // 初始化最大尾部数字
-//        for (Object obj : uidList) {
-//            if (obj instanceof String) {
-//                String uid = (String) obj;
-//                // 利用UidParser解析uid并获取数字
-//                HandleUid parser = new HandleUid(uid);
-//                int[] numbers = parser.getNumbers();
-//                // 获取最后一个数字（尾部数字）
-//                if (numbers.length > 0) {
-//                    int tailNumber = numbers[numbers.length - 1]; // 尾部的数字
-//                    // 比较更新最大尾部数字
-//                    if (tailNumber > maxTailNumber) {
-//                        maxTailNumber = tailNumber;
-//                    }
-//                }
-//            }
-//        }
-//        return maxTailNumber;
-//    }
     public static Integer getMaxTailNumber(List<Object> uidList) {
         int maxTailNumber = 0; // 初始化最大尾部数字
-        Pattern pattern = Pattern.compile("\\d+"); // 匹配数字的正则表达式
-
         for (Object obj : uidList) {
             if (obj instanceof String) {
                 String uid = (String) obj;
-                // 使用正则表达式提取字符串中的所有数字
-                Matcher matcher = pattern.matcher(uid);
-                List<Integer> numbers = new ArrayList<>();
-                while (matcher.find()) {
-                    numbers.add(Integer.parseInt(matcher.group()));
-                }
+                // 利用UidParser解析uid并获取数字
+                HandleUid parser = new HandleUid(uid);
+                int[] numbers = parser.getNumbers();
                 // 获取最后一个数字（尾部数字）
-                if (!numbers.isEmpty()) {
-                    int tailNumber = numbers.get(numbers.size() - 1);
+                if (numbers.length > 0) {
+                    int tailNumber = numbers[numbers.length - 1]; // 尾部的数字
                     // 比较更新最大尾部数字
                     if (tailNumber > maxTailNumber) {
                         maxTailNumber = tailNumber;
