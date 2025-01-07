@@ -129,18 +129,6 @@ export const createFolder = ({ name, agentId, parentId }) => {
   return res
 }
 
-export const uploadFile = ({ agentId, folderId, file }) => {
-  const formData = new FormData()
-  formData.append('file', file) // 假设file是File对象
-
-  // 将agentId和folderId添加到查询参数中
-  const url = `/directory/fileFolder/uploadFile?agentId=${agentId}&folderId=${folderId}`
-
-  // 使用request发送请求，包含FormData
-  let res = request.post(url, formData)
-  return res
-}
-
 export const setFolderName = ({ agentId, folderId, name }) => {
   const params = new URLSearchParams()
 
@@ -153,7 +141,6 @@ export const setFolderName = ({ agentId, folderId, name }) => {
   )
   return res
 }
-
 
 export const getFile = ({ fileId, agentId, }) => {
   const params = new URLSearchParams()
@@ -257,13 +244,21 @@ export const getRootByAgent = ( agentId ) => {
   )
   return res
 }
-// export const uploadFile = ({
-//     agentId,
-//     folderId,
-//     formData}) => {
-//     const params = new URLSearchParams();
-//     params.append('agentId',agentId);
-//     params.append('folderId',folderId);
-//     let res = request.post('/directory/fileFolder/uploadFile', params.toString(),formData)
-//     return res
-// }
+
+export const uploadFile = ({ agentId, folderId, file }) => {
+  // 使用 FormData 来处理文件上传
+  const formData = new FormData()
+  formData.append('file', file)
+  formData.append('agentId', agentId)
+  formData.append('folderId', folderId)
+  let res = request.post(
+      '/directory/fileFolder/uploadFile',
+      formData,  // 传递 FormData 对象
+      {
+        headers: {
+          'Content-Type': 'multipart/form-data',  // 设置请求头
+        }
+      }
+  )
+  return res
+}
