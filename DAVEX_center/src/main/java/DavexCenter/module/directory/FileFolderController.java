@@ -184,7 +184,7 @@ public class FileFolderController {
     }
 
     @PostMapping("/syncFile")
-    public Body<String> syncFolder(@RequestBody File file,@RequestParam("target")String target){
+    public Body<String> syncFile(@RequestBody File file,@RequestParam("target")String target){
         return fileFolderService.syncFile(file,target);
     }
 }
