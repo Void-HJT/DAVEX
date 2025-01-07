@@ -177,4 +177,14 @@ public class FileFolderController {
     public Body<Folder> getRootByAgent(@RequestParam("agentId") String agentId) {
         return fileFolderService.getRootByAgent(agentId);
     }
+
+    @PostMapping("/syncFolder")
+    public Body<String> syncFolder(@RequestBody Folder folder,@RequestParam("target")String target){
+        return fileFolderService.syncFolder(folder,target);
+    }
+
+    @PostMapping("/syncFile")
+    public Body<String> syncFolder(@RequestBody File file,@RequestParam("target")String target){
+        return fileFolderService.syncFile(file,target);
+    }
 }

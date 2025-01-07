@@ -16,12 +16,16 @@ import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import DavexBase.common.ContractResponse;
 import DavexBase.common.My;
+import DavexBase.entity.*;
+import DavexBase.mapper.*;
 import DavexBase.service.MQ.MessageService;
+import DavexBase.service.auth.AgentWebClientService;
 import DavexBase.service.blockchain.UpChainService;
 import com.alibaba.fastjson.JSON;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -45,20 +49,8 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
 import DavexBase.common.Body;
 import DavexBase.common.GetMaxUid;
-import DavexBase.entity.Agent;
-import DavexBase.entity.ApplicationGroup;
-import DavexBase.entity.File;
-import DavexBase.entity.Folder;
-import DavexBase.entity.FolderVisibility;
-import DavexBase.entity.RabbitmqConnection;
 import DavexBase.info.DirectoryInfo;
 import DavexBase.info.FileInfo;
-import DavexBase.mapper.AgentMapper;
-import DavexBase.mapper.ApplicationGroupMapper;
-import DavexBase.mapper.FileMapper;
-import DavexBase.mapper.FolderMapper;
-import DavexBase.mapper.FolderVisibilityMapper;
-import DavexBase.mapper.RabbitmqConnectionMapper;
 import DavexBase.service.MQ.PublishService;
 import DavexBase.service.auth.CenterWebClientService;
 
@@ -69,6 +61,9 @@ public class FileFolderService {
 
     @Autowired
     private FolderMapper folderMapper;
+
+    @Autowired
+    private CenterMapper centerMapper;
 
     @Autowired
     private ApplicationGroupMapper applicationGroupMapper;
@@ -84,6 +79,9 @@ public class FileFolderService {
 
     @Autowired
     private FolderVisibilityMapper folderVisibilityMapper;
+
+    @Autowired
+    private AgentWebClientService agentWebClientService;
 
     @Autowired
     private CenterWebClientService centerWebClientService;
@@ -150,19 +148,43 @@ public class FileFolderService {
         folderMapper.insert(new_folder);
 
         //通信
-        String exchange = "FileExchange";
-        String message = null;
-        String operation = "Create";
-        String entity = "folder";
-        message = messageService.getMessage(operation,entity,objectMapper,new_folder);
+//        String exchange = "FileExchange";
+//        String message = null;
+//        String operation = "Create";
+//        String entity = "folder";
+//        message = messageService.getMessage(operation,entity,objectMapper,new_folder);
+//        //
+//        List<Object> uidList = rabbitmqConnectionMapper.selectObjs(new QueryWrapper<RabbitmqConnection>().select("uid"));
+//        for(Object obj : uidList){
+//            if (obj instanceof String){
+//                String targetId = (String) obj;
+//                publishService.sendMessageToFanoutExchange(targetId,exchange,message);
+//            }
+//        }
         //
-        List<Object> uidList = rabbitmqConnectionMapper.selectObjs(new QueryWrapper<RabbitmqConnection>().select("uid"));
-        for(Object obj : uidList){
-            if (obj instanceof String){
-                String targetId = (String) obj;
-                publishService.sendMessageToFanoutExchange(targetId,exchange,message);
+        List<Center> centerList = centerMapper.selectList(new LambdaQueryWrapper<>());
+        for(Center center:centerList){
+            try {
+                // 准备 target 参数，可以根据实际情况选择 add, delete 或 update
+                String target = "add";
+                if(center.getUid().equals(my.getId())){//跳过自己
+                    continue;
+                }
+                // 构建 WebClient 请求并发送 POST 请求
+                agentWebClientService.agent2CenterWebClient(center.getUid())
+                        .post()
+                        .uri(UriBuilder -> UriBuilder.path("/directory/fileFolder/syncFolder").queryParam("target", target).build())// 请求 URL
+                        .bodyValue(new_folder)
+                        .retrieve() // 发起请求
+                        .bodyToMono(String.class) // 处理返回响应，假设返回的 Body 是 String 类型
+                        .block();
+            } catch (Exception e) {
+                // 处理可能的异常
+                System.err.println("Error processing center with UID: " + center.getUid());
+                e.printStackTrace();
             }
         }
+
         return Body.success("插入新文件夹成功");
     }
 
@@ -215,19 +237,43 @@ public class FileFolderService {
         }
 
         //通信
-        String exchange = "FileExchange";
-        String message = null;
-        String operation = "Update";
-        String entity = "folder";
-        message = messageService.getMessage(operation,entity,objectMapper,folder);
+//        String exchange = "FileExchange";
+//        String message = null;
+//        String operation = "Update";
+//        String entity = "folder";
+//        message = messageService.getMessage(operation,entity,objectMapper,folder);
+//        //
+//        List<Object> uidList = rabbitmqConnectionMapper.selectObjs(new QueryWrapper<RabbitmqConnection>().select("uid"));
+//        for(Object obj : uidList){
+//            if (obj instanceof String){
+//                String targetId = (String) obj;
+//                publishService.sendMessageToFanoutExchange(targetId,exchange,message);
+//            }
+//        }
         //
-        List<Object> uidList = rabbitmqConnectionMapper.selectObjs(new QueryWrapper<RabbitmqConnection>().select("uid"));
-        for(Object obj : uidList){
-            if (obj instanceof String){
-                String targetId = (String) obj;
-                publishService.sendMessageToFanoutExchange(targetId,exchange,message);
+        List<Center> centerList = centerMapper.selectList(new LambdaQueryWrapper<>());
+        for(Center center:centerList){
+            try {
+                // 准备 target 参数，可以根据实际情况选择 add, delete 或 update
+                String target = "update";
+                if(center.getUid().equals(my.getId())){//跳过自己
+                    continue;
+                }
+                // 构建 WebClient 请求并发送 POST 请求
+                agentWebClientService.agent2CenterWebClient(center.getUid())
+                        .post()
+                        .uri(UriBuilder -> UriBuilder.path("/directory/fileFolder/syncFolder").queryParam("target", target).build())// 请求 URL
+                        .bodyValue(folder)
+                        .retrieve() // 发起请求
+                        .bodyToMono(String.class) // 处理返回响应，假设返回的 Body 是 String 类型
+                        .block();
+            } catch (Exception e) {
+                // 处理可能的异常
+                System.err.println("Error processing center with UID: " + center.getUid());
+                e.printStackTrace();
             }
         }
+
 
         return Body.success("文件夹名称更新成功");
 
@@ -281,19 +327,43 @@ public class FileFolderService {
         }
 
         //通信
-        String exchange = "FileExchange";
-        String message = null;
-        String operation = "Delete";
-        String entity = "folder";
-        message = messageService.getMessage(operation,entity,objectMapper,folder);
+//        String exchange = "FileExchange";
+//        String message = null;
+//        String operation = "Delete";
+//        String entity = "folder";
+//        message = messageService.getMessage(operation,entity,objectMapper,folder);
+//        //
+//        List<Object> uidList = rabbitmqConnectionMapper.selectObjs(new QueryWrapper<RabbitmqConnection>().select("uid"));
+//        for(Object obj : uidList){
+//            if (obj instanceof String){
+//                String targetId = (String) obj;
+//                publishService.sendMessageToFanoutExchange(targetId,exchange,message);
+//            }
+//        }
         //
-        List<Object> uidList = rabbitmqConnectionMapper.selectObjs(new QueryWrapper<RabbitmqConnection>().select("uid"));
-        for(Object obj : uidList){
-            if (obj instanceof String){
-                String targetId = (String) obj;
-                publishService.sendMessageToFanoutExchange(targetId,exchange,message);
+        List<Center> centerList = centerMapper.selectList(new LambdaQueryWrapper<>());
+        for(Center center:centerList){
+            try {
+                // 准备 target 参数，可以根据实际情况选择 add, delete 或 update
+                String target = "delete";
+                if(center.getUid().equals(my.getId())){//跳过自己
+                    continue;
+                }
+                // 构建 WebClient 请求并发送 POST 请求
+                agentWebClientService.agent2CenterWebClient(center.getUid())
+                        .post()
+                        .uri(UriBuilder -> UriBuilder.path("/directory/fileFolder/syncFolder").queryParam("target", target).build())// 请求 URL
+                        .bodyValue(folder)
+                        .retrieve() // 发起请求
+                        .bodyToMono(String.class) // 处理返回响应，假设返回的 Body 是 String 类型
+                        .block();
+            } catch (Exception e) {
+                // 处理可能的异常
+                System.err.println("Error processing center with UID: " + center.getUid());
+                e.printStackTrace();
             }
         }
+
 
         return Body.success("文件夹删除成功");
     }
@@ -383,17 +453,39 @@ public class FileFolderService {
         fileMapper.insert(fileRecord);
 
         //通信
-        String exchange = "FileExchange";
-        String message = null;
-        String operation = "Create";
-        String entity = "file";
-        message = messageService.getMessage(operation,entity,objectMapper,fileRecord);
-        //
-        List<Object> uidList = rabbitmqConnectionMapper.selectObjs(new QueryWrapper<RabbitmqConnection>().select("uid"));
-        for(Object obj : uidList){
-            if (obj instanceof String){
-                String targetId = (String) obj;
-                publishService.sendMessageToFanoutExchange(targetId,exchange,message);
+//        String exchange = "FileExchange";
+//        String message = null;
+//        String operation = "Create";
+//        String entity = "file";
+//        message = messageService.getMessage(operation,entity,objectMapper,fileRecord);
+//        //
+//        List<Object> uidList = rabbitmqConnectionMapper.selectObjs(new QueryWrapper<RabbitmqConnection>().select("uid"));
+//        for(Object obj : uidList){
+//            if (obj instanceof String){
+//                String targetId = (String) obj;
+//                publishService.sendMessageToFanoutExchange(targetId,exchange,message);
+//            }
+//        }
+        List<Center> centerList = centerMapper.selectList(new LambdaQueryWrapper<>());
+        for(Center center:centerList){
+            try {
+                // 准备 target 参数，可以根据实际情况选择 add, delete 或 update
+                String target = "add";
+                if(center.getUid().equals(my.getId())){//跳过自己
+                    continue;
+                }
+                // 构建 WebClient 请求并发送 POST 请求
+                agentWebClientService.agent2CenterWebClient(center.getUid())
+                        .post()
+                        .uri(UriBuilder -> UriBuilder.path("/directory/fileFolder/syncFile").queryParam("target", target).build())// 请求 URL
+                        .bodyValue(fileRecord)
+                        .retrieve() // 发起请求
+                        .bodyToMono(String.class) // 处理返回响应，假设返回的 Body 是 String 类型
+                        .block();
+            } catch (Exception e) {
+                // 处理可能的异常
+                System.err.println("Error processing center with UID: " + center.getUid());
+                e.printStackTrace();
             }
         }
 
@@ -425,19 +517,42 @@ public class FileFolderService {
         fileMapper.update(new_file, updateWrapper);
 
         //通信
-        String exchange = "FileExchange";
-        String message = null;
-        String operation = "Update";
-        String entity = "file";
-        message = messageService.getMessage(operation,entity,objectMapper,new_file);
-        //
-        List<Object> uidList = rabbitmqConnectionMapper.selectObjs(new QueryWrapper<RabbitmqConnection>().select("uid"));
-        for(Object obj : uidList){
-            if (obj instanceof String){
-                String targetId = (String) obj;
-                publishService.sendMessageToFanoutExchange(targetId,exchange,message);
+//        String exchange = "FileExchange";
+//        String message = null;
+//        String operation = "Update";
+//        String entity = "file";
+//        message = messageService.getMessage(operation,entity,objectMapper,new_file);
+//        //
+//        List<Object> uidList = rabbitmqConnectionMapper.selectObjs(new QueryWrapper<RabbitmqConnection>().select("uid"));
+//        for(Object obj : uidList){
+//            if (obj instanceof String){
+//                String targetId = (String) obj;
+//                publishService.sendMessageToFanoutExchange(targetId,exchange,message);
+//            }
+//        }
+        List<Center> centerList = centerMapper.selectList(new LambdaQueryWrapper<>());
+        for(Center center:centerList){
+            try {
+                // 准备 target 参数，可以根据实际情况选择 add, delete 或 update
+                String target = "update";
+                if(center.getUid().equals(my.getId())){//跳过自己
+                    continue;
+                }
+                // 构建 WebClient 请求并发送 POST 请求
+                agentWebClientService.agent2CenterWebClient(center.getUid())
+                        .post()
+                        .uri(UriBuilder -> UriBuilder.path("/directory/fileFolder/syncFile").queryParam("target", target).build())// 请求 URL
+                        .bodyValue(new_file)
+                        .retrieve() // 发起请求
+                        .bodyToMono(String.class) // 处理返回响应，假设返回的 Body 是 String 类型
+                        .block();
+            } catch (Exception e) {
+                // 处理可能的异常
+                System.err.println("Error processing center with UID: " + center.getUid());
+                e.printStackTrace();
             }
         }
+
         return Body.success("更新成功");
     }
 
@@ -476,22 +591,133 @@ public class FileFolderService {
 
 
         //通信
-        String exchange = "FileExchange";
-        String message = null;
-        String operation = "Delete";
-        String entity = "file";
-        message = messageService.getMessage(operation,entity,objectMapper,file);
-        //
-        List<Object> uidList = rabbitmqConnectionMapper.selectObjs(new QueryWrapper<RabbitmqConnection>().select("uid"));
-        for(Object obj : uidList){
-            if (obj instanceof String){
-                String targetId = (String) obj;
-                publishService.sendMessageToFanoutExchange(targetId,exchange,message);
+//        String exchange = "FileExchange";
+//        String message = null;
+//        String operation = "Delete";
+//        String entity = "file";
+//        message = messageService.getMessage(operation,entity,objectMapper,file);
+//        //
+//        List<Object> uidList = rabbitmqConnectionMapper.selectObjs(new QueryWrapper<RabbitmqConnection>().select("uid"));
+//        for(Object obj : uidList){
+//            if (obj instanceof String){
+//                String targetId = (String) obj;
+//                publishService.sendMessageToFanoutExchange(targetId,exchange,message);
+//            }
+//        }
+        List<Center> centerList = centerMapper.selectList(new LambdaQueryWrapper<>());
+        for(Center center:centerList){
+            try {
+                // 准备 target 参数，可以根据实际情况选择 add, delete 或 update
+                String target = "delete";
+                if(center.getUid().equals(my.getId())){//跳过自己
+                    continue;
+                }
+                // 构建 WebClient 请求并发送 POST 请求
+                agentWebClientService.agent2CenterWebClient(center.getUid())
+                        .post()
+                        .uri(UriBuilder -> UriBuilder.path("/directory/fileFolder/syncFile").queryParam("target", target).build())// 请求 URL
+                        .bodyValue(file)
+                        .retrieve() // 发起请求
+                        .bodyToMono(String.class) // 处理返回响应，假设返回的 Body 是 String 类型
+                        .block();
+            } catch (Exception e) {
+                // 处理可能的异常
+                System.err.println("Error processing center with UID: " + center.getUid());
+                e.printStackTrace();
             }
         }
 
+
         return Body.success("文件删除成功");
 
+    }
+    //
+    public Body<String> syncFolder(Folder folder,String target){
+
+        // 检查输入参数
+        if (folder == null || target == null || target.isEmpty()) {
+            return Body.error("Invalid input: folder or target is null or empty.");
+        }
+
+        LambdaQueryWrapper<Folder> queryFolderWrapper = Wrappers.<Folder>lambdaQuery()
+                .eq(Folder::getUid, folder.getUid());
+        //查看folder是否存在
+        Folder existingFolder = folderMapper.selectOne(queryFolderWrapper);
+        //根据target不同进行不同操作 add delete update
+        try {
+            switch (target.toLowerCase()) {
+                case "add":
+                    if (existingFolder != null) {
+                        return Body.error("Folder with the same UID already exists.");
+                    }
+                    folderMapper.insert(folder); // 插入新的 folder
+                    return Body.success("Folder added successfully.");
+
+                case "delete":
+                    if (existingFolder == null) {
+                        return Body.error("Folder not found. Cannot delete.");
+                    }
+                    folderMapper.delete(queryFolderWrapper); // 删除目标 folder
+                    return Body.success("Folder deleted successfully.");
+
+                case "update":
+                    if (existingFolder == null) {
+                        return Body.error("Folder not found. Cannot update.");
+                    }
+                    folderMapper.update(folder, queryFolderWrapper); // 更新 folder
+                    return Body.success("Folder updated successfully.");
+
+                default:
+                    return Body.error("Invalid target action: " + target);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return Body.error("An error occurred: " + e.getMessage());
+        }
+    }
+
+    public Body<String> syncFile(File file,String target){
+
+        // 检查输入参数
+        if (file == null || target == null || target.isEmpty()) {
+            return Body.error("Invalid input: file or target is null or empty.");
+        }
+
+        LambdaQueryWrapper<File> queryFileWrapper = Wrappers.<File>lambdaQuery()
+                .eq(File::getUid, file.getUid());
+        //查看file是否存在
+        File existingFile = fileMapper.selectOne(queryFileWrapper);
+        //根据target不同进行不同操作 add delete update
+        try {
+            switch (target.toLowerCase()) {
+                case "add":
+                    if (existingFile != null) {
+                        return Body.error("File with the same UID already exists.");
+                    }
+                    fileMapper.insert(file); // 插入新的 file
+                    return Body.success("File added successfully.");
+
+                case "delete":
+                    if (existingFile == null) {
+                        return Body.error("File not found. Cannot delete.");
+                    }
+                    fileMapper.delete(queryFileWrapper); // 删除目标 file
+                    return Body.success("File deleted successfully.");
+
+                case "update":
+                    if (existingFile == null) {
+                        return Body.error("File not found. Cannot update.");
+                    }
+                    fileMapper.update(file, queryFileWrapper); // 更新 file
+                    return Body.success("File updated successfully.");
+
+                default:
+                    return Body.error("Invalid target action: " + target);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return Body.error("An error occurred: " + e.getMessage());
+        }
     }
 
     //
