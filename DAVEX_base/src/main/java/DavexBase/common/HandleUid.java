@@ -23,15 +23,16 @@ public class HandleUid {
         }
 
         // 检查是否有 "-C" 的部分
-        if (uid.matches("^DAVEX-CXX\\d+$")) {
+// 检查是否有 "-C" 的部分
+        if (uid.matches("^DAVEX-C[A-Za-z]*\\d+$")) {
             return "center"; // 格式为 DAVEX-CXXn 的类型
-        } else if (uid.matches("^DAVEX-CXX\\d+-AXX\\d+$")) {
+        } else if (uid.matches("^DAVEX-C[A-Za-z]*\\d+-A[A-Za-z]*\\d+$")) {
             return "application"; // 格式为 DAVEX-CXXn-AXXn 的类型
-        } else if (uid.matches("^DAVEX-CXX\\d+-GXX\\d+$")) {
+        } else if (uid.matches("^DAVEX-C[A-Za-z]*\\d+-G[A-Za-z]*\\d+$")) {
             return "agent"; // 格式为 DAVEX-CXXn-GXXn 的类型
-        } else if (uid.matches("^DAVEX-CXX\\d+-GXX\\d+-F\\d+$")||uid.matches("^DAVEX-CXX\\d+-F\\d+$")) {
+        } else if (uid.matches("^DAVEX-C[A-Za-z]*\\d+-G[A-Za-z]*\\d+-F\\d+$") || uid.matches("^DAVEX-C[A-Za-z]*\\d+-F\\d+$")) {
             return "folder"; // 格式为 DAVEX-CXXn-GXXn-Fn 的类型
-        } else if (uid.matches("^DAVEX-CXX\\d+-GXX\\d-D\\d+$")||uid.matches("^DAVEX-CXX\\d+-D\\d+$")) {
+        } else if (uid.matches("^DAVEX-C[A-Za-z]*\\d+-G[A-Za-z]*\\d-D\\d+$") || uid.matches("^DAVEX-C[A-Za-z]*\\d+-D\\d+$")) {
             return "file"; // 格式为 DAVEX-CXXn-GXXn-Dn 的类型
         }
 
