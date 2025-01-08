@@ -10,38 +10,17 @@ export const getDirectory = ({ rootId }) => {
   return res
 }
 
-export const updateFile = ({
-  uid,
-  agentId,
-  folderId,
-  name,
-  createDate,
-  lastUpdata,
-  tag,
-  size,
-  description,
-  expireTime,
-  hash,
-  example,
-  type,
-
-}) => {
-  let res = request.post('/directory/fileFolder/updateFile', {
-    uid,
-  agentId,
-  folderId,
-  name,
-  createDate,
-  lastUpdata,
-  tag,
-  size,
-  description,
-  expireTime,
-  hash,
-  example,
-  type,
-  })
-
+export const updateFile = ({ fileInfo }) => {
+  const fileInfoJson = JSON.stringify(fileInfo)
+  let res = request.post(
+      '/directory/fileFolder/updateFile',
+      fileInfoJson,  // 直接传递 JSON 字符串
+      {
+        headers: {
+          'Content-Type': 'application/json', // 设置请求头为 JSON
+        },
+      }
+  )
   return res
 }
 

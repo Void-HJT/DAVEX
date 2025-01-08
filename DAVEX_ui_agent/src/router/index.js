@@ -10,7 +10,7 @@ const router = createRouter({
     }, //登陆页
     {
       path: '/',
-      component: () => import('@/views/layout/layoutContainer.vue'),
+      component: () => import('@/views/layout/newLayoutContainer.vue'),
       redirect: '/login',
       children: [
         {

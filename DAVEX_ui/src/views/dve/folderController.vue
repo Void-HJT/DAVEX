@@ -17,8 +17,8 @@
     </el-header>
     <el-main>
       <div>
-        <el-button @click="getDirectoryMethod">返回根目录</el-button>
-        <el-button @click="returnFrontDirectory">返回上一级目录</el-button>
+        <el-button class="default-button" @click="getDirectoryMethod">返回根目录</el-button>
+        <el-button  class="default-button" @click="returnFrontDirectory">返回上一级目录</el-button>
         <el-popover
           placement="top-start"
           title="此处输入新文件夹名"
@@ -26,7 +26,7 @@
           trigger="click"
         >
           <template #reference>
-            <el-button v-if="centerId === agentId">在当前目录下新建文件夹</el-button>
+            <el-button class="default-button" v-if="centerId === agentId">在当前目录下新建文件夹</el-button>
           </template>
           <el-form
             :model="createFolderBody"
@@ -37,6 +37,7 @@
               <el-input v-model="createFolderBody.name"></el-input>
             </el-form-item>
             <el-button
+              class="default-button"
               @click="createFolderMethod"
               calss="el-button mt-4"
               style="width: 100%"
@@ -52,7 +53,7 @@
           trigger="click"
         >
           <template #reference>
-            <el-button v-if="centerId === agentId">上传文件</el-button>
+            <el-button class="default-button" v-if="centerId === agentId">上传文件</el-button>
           </template>
           <el-upload
               ref="upload"
@@ -88,7 +89,6 @@
         >
           <el-table-column fixed label="" width="50" align="center">
             <template #default="scope">
-              <!-- 根据 scope.row.type 的值来决定显示哪个图标 -->
               <el-icon>
                 <template v-if="scope.row.type === 'folder'">
                   <el-icon color="#409efc"><Folder /></el-icon>
@@ -156,13 +156,12 @@
                     scope.row.parentId,
                   )
                 "
-                size="small"
               >
                 <el-icon><Delete /></el-icon> 删除
               </el-button>
               <el-button
-                  class="small-default-button"
-                  @click="
+                class="small-default-button"
+                @click="
                   scope.row.type === 'folder'
                     ? openFolderRenameBlock(
                         scope.row.uid,
@@ -170,12 +169,9 @@
                         scope.row.name,
                       )
                     : openFileRenameBlockMethod(
-                        scope.row.uid,
-                        scope.row.agentId,
-                        scope.row.name,
+                        scope.row
                       )
                 "
-                size="small"
               >
                 <el-icon><Edit /></el-icon> 重命名
               </el-button>
@@ -368,7 +364,7 @@
         </el-form>
         <template #footer>
           <span class="dialog-footer">
-            <el-button type="primary" @click="closeFolderRenameBlock">
+            <el-button class="default-button" @click="closeFolderRenameBlock">
               确认
             </el-button>
           </span>
@@ -377,7 +373,7 @@
       <el-dialog v-model="fileRenameVisible" title="文件重命名" width="30%">
         <el-form :model="fileInfoBody" label-width="20%" style="max-width: 80%">
           <el-form-item label="新文件名">
-            <el-input v-model="updateFileBody.name"></el-input>
+            <el-input v-model="fileInfo.name"></el-input>
           </el-form-item>
         </el-form>
         <template #footer>
@@ -578,7 +574,7 @@ onMounted(() => {
   getAgentMethod()
   // getDirectoryMethod()
   // getGroups()
-  getApplicationMethod()
+  // getApplicationMethod()
 })
 
 // 对话框是否可见
@@ -605,20 +601,23 @@ const folderRenameVisible = ref(false)
 const fileRuleListData = ref([])
 const userGroupData = ref([])
 const directorySelectedData = ref([])
-const updateFileBody = ref({
+const fileInfo = ref({
   uid: '',
   agentId: '',
   folderId: '',
   name: '1',
   createDate: '',
   lastUpdate: '',
-  tag: '',
   size: '',
   description: '',
   expiredTime: '',
   hash: '',
   example: '',
   type: '',
+  attribute: '',
+})
+const updateFileBody = ref({
+  fileInfo: fileInfo
 })
 
 const getApplicationMethod = async () => {
@@ -1043,20 +1042,36 @@ const closeFolderRenameBlock = async () => {
   getDirectoryMethod()
 }
 
-const openFileRenameBlockMethod = async (Uid, agentId, name) => {
+const openFileRenameBlockMethod = async (row) => {
   fileRenameVisible.value = true
-  console.log('name:', name)
-  fileInfoBody.value.agentId = agentId
-  fileInfoBody.value.fileId = Uid
-  const res = await getFile(fileInfoBody.value)
-  console.log('res:', res.data.body.data)
-  updateFileBody.value = res.data.body.data
+  // console.log('name:', name)
+  // fileInfoBody.value.agentId = agentId
+  // fileInfoBody.value.fileId = Uid
+  // const res = await getFile(fileInfoBody.value)
+  // console.log('res:', res.data.body.data)
+  // fileInfo.value = res.data.body.data
+  fileInfo.value.uid = row.uid
+  fileInfo.value.agentId = row.agentId
+  fileInfo.value.folderId = row.parentId
+  fileInfo.value.name = row.name
+  fileInfo.value.createDate = row.createDate
+  fileInfo.value.lastUpdate = row.lastUpdate
+  fileInfo.value.size = row.size
+  fileInfo.value.description = row.description
+  fileInfo.value.expiredTime = row.expiredTime
+  fileInfo.value.hash = row.hash
+  fileInfo.value.example = row.example
+  fileInfo.value.type = row.fileType
+  fileInfo.value.attribute = row.attribute
+  console.log(fileInfo.value)
 }
 
 const closeFileRenameBlock = async () => {
-  await updateFile(updateFileBody.value)
+  const res = await updateFile(updateFileBody.value)
+  console.log(res)
   fileRenameVisible.value = false
-  getDirectoryMethod()
+  // getDirectoryMethod()
+  findCurrentFolder()
 }
 
 const returnFrontDirectory = async () => {
