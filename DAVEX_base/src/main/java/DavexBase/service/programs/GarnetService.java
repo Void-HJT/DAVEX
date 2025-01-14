@@ -236,7 +236,8 @@ public class GarnetService {
             mpcTask.setStatus(MpcTask.Status.COMPILING);
             logger.info(mpcTask.getUid() + ":开始编译");
             mpcTaskMapper.updateById(mpcTask);
-            dockerExecutor.exec(garnetProperties.getContainerID(), Docker_Garnet_Path, command);
+            String output = dockerExecutor.exec(garnetProperties.getContainerID(), Docker_Garnet_Path, command);
+            logger.info(mpcTask.getUid() + ":命令输出: " + output);
             mpcTask.setStatus(MpcTask.Status.READY);
             mpcTask.setMpcName(mpc_name);
             mpcTaskMapper.updateById(mpcTask);
@@ -272,7 +273,8 @@ public class GarnetService {
             mpcTask.setStatus(MpcTask.Status.RUNNING);
             logger.info(mpcTask.getUid() + ":开始运行");
             mpcTaskMapper.updateById(mpcTask);
-            dockerExecutor.exec(garnetProperties.getContainerID(), Docker_Garnet_Path, command);
+            String output = dockerExecutor.exec(garnetProperties.getContainerID(), Docker_Garnet_Path, command);
+            logger.info(mpcTask.getUid() + ":命令输出: " + output);
             mpcTask.setStatus(MpcTask.Status.FINISHED);
             mpcTaskMapper.updateById(mpcTask);
             logger.info(mpcTask.getUid() + ":运行成功");

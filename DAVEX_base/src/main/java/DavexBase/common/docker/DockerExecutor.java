@@ -2,6 +2,7 @@ package DavexBase.common.docker;
 
 import java.util.List;
 
+import com.github.dockerjava.api.command.InspectExecResponse;
 import org.springframework.stereotype.Component;
 
 import com.github.dockerjava.api.DockerClient;
@@ -39,11 +40,19 @@ public class DockerExecutor {
         var callback = new ExecResultCallback();
         dockerClient.execStartCmd(cmd.getId())
                 .exec(callback).awaitCompletion();
-        if (callback.getStderr().length() > 0) {
-            throw new Exception(callback.getStderr());
-        } else {
-            return callback.getStdout();
+//        if (callback.getStderr().length() > 0) {
+//            throw new Exception(callback.getStderr());
+//        } else {
+//            return callback.getStdout();
+//        }
+        // 获取命令的退出状态
+        InspectExecResponse execResponse = dockerClient.inspectExecCmd(cmd.getId()).exec();
+        int exitCode = execResponse.getExitCode();
+        // 检查退出状态是否为成功
+        if (exitCode != 0) {
+            throw new Exception("命令执行失败，退出码: " + exitCode + "，错误信息: " + callback.getStderr());
         }
+        return callback.getStdout();
     }
 
     /**
