@@ -1,6 +1,15 @@
 <script setup>
 
-import {Document, EditPen, Message, MessageBox, Promotion, User, UserFilled} from "@element-plus/icons-vue";
+import {
+  Document,
+  EditPen,
+  FolderOpened,
+  Message,
+  MessageBox,
+  Promotion,
+  User,
+  UserFilled
+} from "@element-plus/icons-vue";
 </script>
 
 <template>
@@ -28,18 +37,18 @@ import {Document, EditPen, Message, MessageBox, Promotion, User, UserFilled} fro
           <el-sub-menu index="/dve">
             <template #title>
               <el-icon><Menu /></el-icon>
-              <span class="centered-text">用户与文件管理</span>
-            </template>
-            <el-menu-item index="/dve/testTrans">
-              <el-icon><User /></el-icon>
-              <span class="centered-text">用户管理</span>
-            </el-menu-item>
-            <el-menu-item index="/dve/folderController">
-              <el-icon><Files /></el-icon>
               <span class="centered-text">文件管理</span>
+            </template>
+<!--            <el-menu-item index="/dve/testTrans">-->
+<!--              <el-icon><User /></el-icon>-->
+<!--              <span class="centered-text">用户管理</span>-->
+<!--            </el-menu-item>-->
+            <el-menu-item index="/dve/folderController">
+              <el-icon><FolderOpened /></el-icon>
+              <span class="centered-text">一般文件管理</span>
             </el-menu-item>
             <el-menu-item index="/user/mpcFile">
-              <el-icon><Files /></el-icon>
+              <el-icon><Document /></el-icon>
               <span class="centered-text">MPC文件管理</span>
             </el-menu-item>
           </el-sub-menu>

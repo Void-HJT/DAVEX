@@ -1,51 +1,33 @@
 <template>
   <el-container>
-    <el-header style="height: 50px">
-      <div
-        style="
-          background-color: antiquewhite;
-          height: 40px;
-          display: flex;
-          justify-content: center;
-          align-items: center;
-        "
-      >
-        <p
-          style="
-            font-size: 20px;
-            color: black;
-            opacity: 100%;
-            text-align: center;
-          "
-        >
-          用户表
-        </p>
+    <el-header class="custom-header">
+      <div class="icon-text">
+        <el-icon><User /></el-icon>
+        <span>用户列表</span>
       </div>
     </el-header>
     <el-main>
       <el-table
         :data="tableData"
         style="width: 100%"
-        stripe
-        height="200"
-        max-height="200"
+        max-height="400"
       >
         <el-table-column
           label="用户ID"
           prop="uid"
-          width="180"
+          width="200"
           align="center"
         ></el-table-column>
         <el-table-column
           label="所属中心"
           prop="centerName"
-          width="180"
+          width="200"
           align="center"
         ></el-table-column>
         <el-table-column
           label="名称"
           prop="name"
-          width="180"
+          width="200"
           align="center"
         ></el-table-column>
         <el-table-column
@@ -122,190 +104,190 @@
       </el-dialog>
     </el-main>
   </el-container>
-  <el-header style="height: 50px">
-    <div
-      style="
-        background-color: antiquewhite;
-        height: 40px;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-      "
-    >
-      <p
-        style="font-size: 20px; color: black; opacity: 100%; text-align: center"
-      >
-        分组表
-      </p>
-    </div>
-  </el-header>
-  <el-main>
-    <el-table stripe :data="userGroupData" style="width: 100%" max-height="300">
-      <el-table-column
-        fixed
-        label="组ID"
-        prop="uid"
-        width="180"
-        align="center"
-      ></el-table-column>
-      <el-table-column
-        label="名称"
-        prop="name"
-        width="180"
-        align="center"
-      ></el-table-column>
-      <el-table-column
-        label="所属中心"
-        prop="centerName"
-        width="180"
-        align="center"
-      ></el-table-column>
-      <el-table-column
-        label="权限"
-        prop="rule"
-        width="300"
-        align="center"
-      ></el-table-column>
-      <el-table-column
-        fixed="right"
-        label="操作"
-        mid-width="60"
-        header-align="center"
-        align="center"
-      >
-        <template v-slot="scope">
-          <div
-            style="display: flex; justify-content: center; align-items: center"
-          >
-            <el-button
-              link
-              type="primary"
-              @click="deleteGroupMethod(scope.row.uid, scope.row.centerId)"
-              size="small"
-            >
-              删除分组
-            </el-button>
-            <el-button
-              link
-              type="primary"
-              @click="
-                (setGroupRuleDialogVisible = true),
-                  (setGroupRuleBody.groupId = scope.row.uid)
-              "
-              size="small"
-            >
-              管理权限
-            </el-button>
+<!--  <el-header style="height: 50px">-->
+<!--    <div-->
+<!--      style="-->
+<!--        background-color: antiquewhite;-->
+<!--        height: 40px;-->
+<!--        display: flex;-->
+<!--        justify-content: center;-->
+<!--        align-items: center;-->
+<!--      "-->
+<!--    >-->
+<!--      <p-->
+<!--        style="font-size: 20px; color: black; opacity: 100%; text-align: center"-->
+<!--      >-->
+<!--        分组表-->
+<!--      </p>-->
+<!--    </div>-->
+<!--  </el-header>-->
+<!--  <el-main>-->
+<!--    <el-table stripe :data="userGroupData" style="width: 100%" max-height="300">-->
+<!--      <el-table-column-->
+<!--        fixed-->
+<!--        label="组ID"-->
+<!--        prop="uid"-->
+<!--        width="180"-->
+<!--        align="center"-->
+<!--      ></el-table-column>-->
+<!--      <el-table-column-->
+<!--        label="名称"-->
+<!--        prop="name"-->
+<!--        width="180"-->
+<!--        align="center"-->
+<!--      ></el-table-column>-->
+<!--      <el-table-column-->
+<!--        label="所属中心"-->
+<!--        prop="centerName"-->
+<!--        width="180"-->
+<!--        align="center"-->
+<!--      ></el-table-column>-->
+<!--      <el-table-column-->
+<!--        label="权限"-->
+<!--        prop="rule"-->
+<!--        width="300"-->
+<!--        align="center"-->
+<!--      ></el-table-column>-->
+<!--      <el-table-column-->
+<!--        fixed="right"-->
+<!--        label="操作"-->
+<!--        mid-width="60"-->
+<!--        header-align="center"-->
+<!--        align="center"-->
+<!--      >-->
+<!--        <template v-slot="scope">-->
+<!--          <div-->
+<!--            style="display: flex; justify-content: center; align-items: center"-->
+<!--          >-->
+<!--            <el-button-->
+<!--              link-->
+<!--              type="primary"-->
+<!--              @click="deleteGroupMethod(scope.row.uid, scope.row.centerId)"-->
+<!--              size="small"-->
+<!--            >-->
+<!--              删除分组-->
+<!--            </el-button>-->
+<!--            <el-button-->
+<!--              link-->
+<!--              type="primary"-->
+<!--              @click="-->
+<!--                (setGroupRuleDialogVisible = true),-->
+<!--                  (setGroupRuleBody.groupId = scope.row.uid)-->
+<!--              "-->
+<!--              size="small"-->
+<!--            >-->
+<!--              管理权限-->
+<!--            </el-button>-->
 
-            <!-- <el-popover
-              placement="top-start"
-              title="权限管理"
-              :width="400"
-              trigger="click"
-            >
-              <template #reference>
-                <div>
-                  <el-button
-                    link
-                    type="primary"
-                    size="small"
-                    @click="
-                      (setGroupRuleBody.groupId = scope.row.uid),
-                        (setGroupRulePopoverVisible = true)
-                    "
-                  >
-                    管理权限
-                  </el-button>
-                </div>
-              </template>
-              <div style="height: 20px;"><el-icon style="float:right;"> <CloseBold /></el-icon></div>
-              <el-form
-                :model="setGroupRuleBody"
-                label-width="60px"
-                label-position="left"
-                style="
-                  display: flex;
-                  justify-content: center;
-                  align-items: center;
-                "
-              >
-                <el-form-item label="权限名">
-                  <el-input v-model="setGroupRuleBody.allowMethod"></el-input>
-                </el-form-item>
-              </el-form>
-              <div
-                style="
-                  display: flex;
-                  justify-content: center;
-                  align-items: center;
-                "
-              >
-                <el-button @click="addGroupRuleMethod">增添该权限</el-button>
-                <el-button @click="deleteRuleMethod">移除该权限</el-button>
-              </div>
-            </el-popover> -->
-          </div>
-        </template>
-      </el-table-column>
-    </el-table>
-    <el-dialog
-      v-model="setGroupRuleDialogVisible"
-      title="权限管理"
-      width="500"
-      :before-close="setGroupRuleDialogClose"
-    >
-      <el-form-item label="权限名">
-        <el-select
-          v-model="setGroupRuleBody.allowMethod"
-          placeholder="请选择需要管理的权限"
-        >
-          <el-option
-            v-for="item in AllAllowedMethod"
-            :key="item"
-            :label="item"
-            :value="item"
-          />
-        </el-select>
-      </el-form-item>
-      <template #footer>
-        <div class="dialog-footer">
-          <el-button type="primary" @click="addGroupRuleMethod">
-            增加该权限
-          </el-button>
-          <el-button type="primary" @click="deleteGroupRuleMethod">
-            移除该权限
-          </el-button>
-        </div>
-      </template>
-    </el-dialog>
-    <el-popover
-      placement="top-start"
-      title="此处输入新增组名"
-      :width="400"
-      trigger="click"
-    >
-      <template #reference>
-        <div>
-          <div style="height: 20px"></div>
-          <el-button class="el-button mt-4" style="width: 100%">
-            增加组别
-          </el-button>
-        </div>
-      </template>
-      <el-form :model="addGroupBody" label-width="80px" label-position="left">
-        <el-form-item label="组名">
-          <el-input v-model="addGroupBody.name"></el-input>
-        </el-form-item>
-        <el-button
-          @click="addGroups"
-          calss="el-button mt-4"
-          style="width: 100%"
-        >
-          增加组别
-        </el-button>
-      </el-form>
-    </el-popover>
-  </el-main>
+<!--            &lt;!&ndash; <el-popover-->
+<!--              placement="top-start"-->
+<!--              title="权限管理"-->
+<!--              :width="400"-->
+<!--              trigger="click"-->
+<!--            >-->
+<!--              <template #reference>-->
+<!--                <div>-->
+<!--                  <el-button-->
+<!--                    link-->
+<!--                    type="primary"-->
+<!--                    size="small"-->
+<!--                    @click="-->
+<!--                      (setGroupRuleBody.groupId = scope.row.uid),-->
+<!--                        (setGroupRulePopoverVisible = true)-->
+<!--                    "-->
+<!--                  >-->
+<!--                    管理权限-->
+<!--                  </el-button>-->
+<!--                </div>-->
+<!--              </template>-->
+<!--              <div style="height: 20px;"><el-icon style="float:right;"> <CloseBold /></el-icon></div>-->
+<!--              <el-form-->
+<!--                :model="setGroupRuleBody"-->
+<!--                label-width="60px"-->
+<!--                label-position="left"-->
+<!--                style="-->
+<!--                  display: flex;-->
+<!--                  justify-content: center;-->
+<!--                  align-items: center;-->
+<!--                "-->
+<!--              >-->
+<!--                <el-form-item label="权限名">-->
+<!--                  <el-input v-model="setGroupRuleBody.allowMethod"></el-input>-->
+<!--                </el-form-item>-->
+<!--              </el-form>-->
+<!--              <div-->
+<!--                style="-->
+<!--                  display: flex;-->
+<!--                  justify-content: center;-->
+<!--                  align-items: center;-->
+<!--                "-->
+<!--              >-->
+<!--                <el-button @click="addGroupRuleMethod">增添该权限</el-button>-->
+<!--                <el-button @click="deleteRuleMethod">移除该权限</el-button>-->
+<!--              </div>-->
+<!--            </el-popover> &ndash;&gt;-->
+<!--          </div>-->
+<!--        </template>-->
+<!--      </el-table-column>-->
+<!--    </el-table>-->
+<!--    <el-dialog-->
+<!--      v-model="setGroupRuleDialogVisible"-->
+<!--      title="权限管理"-->
+<!--      width="500"-->
+<!--      :before-close="setGroupRuleDialogClose"-->
+<!--    >-->
+<!--      <el-form-item label="权限名">-->
+<!--        <el-select-->
+<!--          v-model="setGroupRuleBody.allowMethod"-->
+<!--          placeholder="请选择需要管理的权限"-->
+<!--        >-->
+<!--          <el-option-->
+<!--            v-for="item in AllAllowedMethod"-->
+<!--            :key="item"-->
+<!--            :label="item"-->
+<!--            :value="item"-->
+<!--          />-->
+<!--        </el-select>-->
+<!--      </el-form-item>-->
+<!--      <template #footer>-->
+<!--        <div class="dialog-footer">-->
+<!--          <el-button type="primary" @click="addGroupRuleMethod">-->
+<!--            增加该权限-->
+<!--          </el-button>-->
+<!--          <el-button type="primary" @click="deleteGroupRuleMethod">-->
+<!--            移除该权限-->
+<!--          </el-button>-->
+<!--        </div>-->
+<!--      </template>-->
+<!--    </el-dialog>-->
+<!--    <el-popover-->
+<!--      placement="top-start"-->
+<!--      title="此处输入新增组名"-->
+<!--      :width="400"-->
+<!--      trigger="click"-->
+<!--    >-->
+<!--      <template #reference>-->
+<!--        <div>-->
+<!--          <div style="height: 20px"></div>-->
+<!--          <el-button class="el-button mt-4" style="width: 100%">-->
+<!--            增加组别-->
+<!--          </el-button>-->
+<!--        </div>-->
+<!--      </template>-->
+<!--      <el-form :model="addGroupBody" label-width="80px" label-position="left">-->
+<!--        <el-form-item label="组名">-->
+<!--          <el-input v-model="addGroupBody.name"></el-input>-->
+<!--        </el-form-item>-->
+<!--        <el-button-->
+<!--          @click="addGroups"-->
+<!--          calss="el-button mt-4"-->
+<!--          style="width: 100%"-->
+<!--        >-->
+<!--          增加组别-->
+<!--        </el-button>-->
+<!--      </el-form>-->
+<!--    </el-popover>-->
+<!--  </el-main>-->
 </template>
 
 <script lang="ts" setup>
