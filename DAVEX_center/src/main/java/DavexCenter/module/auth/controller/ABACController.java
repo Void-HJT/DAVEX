@@ -133,4 +133,14 @@ public class ABACController {
         return abacService.deleteFolderVisibility(folderVisibilityId);
     }
 
+    @PostMapping("/syncRule")
+    public Body<String> syncRule(@RequestBody Rule rule,@RequestParam("target")String target){
+        return abacService.syncRule(rule,target);
+    }
+
+    @PostMapping("/syncFileRule")
+    public Body<String> syncFileRule(@RequestBody FileRule fileRule,@RequestParam("target")String target){
+        return abacService.syncFileRule(fileRule,target);
+    }
+
 }

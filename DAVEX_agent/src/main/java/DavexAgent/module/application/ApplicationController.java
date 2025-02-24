@@ -1,8 +1,9 @@
-package DavexCenter.module.application;
-
+package DavexAgent.module.application;
 
 import DavexBase.common.Body;
 import DavexBase.entity.Application;
+import DavexBase.entity.FileRule;
+import DavexBase.entity.Rule;
 import DavexBase.service.application.ApplicationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -35,5 +36,11 @@ public class ApplicationController {
     public Body<List<Application>> getApplicationList(){
         return applicationService.getApplicationList();
     }
+
+    @PostMapping("/syncApplication")
+    public Body<String> syncApplication(@RequestBody Application application, @RequestParam("target")String target){
+        return applicationService.syncApplication(application,target);
+    }
+
 
 }
