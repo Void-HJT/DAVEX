@@ -75,7 +75,7 @@ public class GarnetService {
                 logger.error("Garnet容器未启动");
                 return;
             }
-            if (!containerInfo.getConfig().getImage().equals("garnet")) {
+            if (!containerInfo.getConfig().getImage().equals("davex-garnet")) {
                 logger.error("Garnet容器镜像不正确");
                 return;
             }
