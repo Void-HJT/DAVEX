@@ -66,3 +66,7 @@ threadpool:
 file:
   upload-base-dir: ${FILE_UPLOAD_BASE_DIR:/home/user/DAVEX/Files/}
   download-base-dir: ${FILE_DOWNLOAD_BASE_DIR:/home/user/DAVEX/ApplicationFiles/}
+
+jwt:
+  secret: ${JWT_SECRET:6mYq3t7w9y$B&E)H@McQeThWmZq4t7w!}
+  expiration-hours: ${JWT_EXPIRATION_HOURS:24}

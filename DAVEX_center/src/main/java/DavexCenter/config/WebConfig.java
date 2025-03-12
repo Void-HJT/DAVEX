@@ -1,6 +1,7 @@
 package DavexCenter.config;
 
 import DavexBase.common.AuthenticationInterceptor;
+import DavexCenter.common.JwtAuthenticationInterceptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.lang.NonNull;
@@ -12,13 +13,15 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 public class WebConfig implements WebMvcConfigurer {
 
     @Autowired
-    private AuthenticationInterceptor authenticationInterceptor;
+    private JwtAuthenticationInterceptor jwtAuthenticationInterceptor;
 
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
-        registry.addInterceptor(authenticationInterceptor)
+        registry.addInterceptor(jwtAuthenticationInterceptor)
                 .addPathPatterns("/**")  // 对所有路径进行拦截
                 .excludePathPatterns("/**")
+                .excludePathPatterns("/auth/deleteAllRevokedJWT")
+                .excludePathPatterns("/auth/login")
                 .excludePathPatterns("/swagger-ui/**")           // Swagger UI 静态页面
                 .excludePathPatterns("/swagger-resources/**")    // Swagger 资源配置
                 .excludePathPatterns("/v3/api-docs/**")          // OpenAPI 3.0 文档路径

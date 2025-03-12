@@ -20,7 +20,7 @@ import java.util.Set;
 
 
 @RestController
-@RequestMapping("/auth")
+@RequestMapping("/authNew")
 public class AuthController {
 
     @Autowired

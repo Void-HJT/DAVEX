@@ -456,3 +456,18 @@ CREATE TABLE keys_storage (
                               owner_name VARCHAR(255) NOT NULL, -- 唯一ID
                               public_key TEXT NOT NULL       -- 公钥
 );
+
+-- ----------------------------
+-- Table structure for jwt_metadata
+-- ----------------------------
+DROP TABLE IF EXISTS `jwt_metadata`;
+CREATE TABLE `jwt_metadata` (
+                                `uid` varchar(255) NOT NULL,
+                                `agent_uid` varchar(255) DEFAULT NULL,
+                                `issued_time` datetime DEFAULT NULL,
+                                `expires_time` datetime DEFAULT NULL,
+                                `revoked` tinyint(1) DEFAULT NULL,
+                                PRIMARY KEY (`uid`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+SET FOREIGN_KEY_CHECKS = 1;
