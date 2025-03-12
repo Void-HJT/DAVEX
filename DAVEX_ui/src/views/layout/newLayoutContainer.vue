@@ -15,10 +15,10 @@ import {
 <template>
   <el-container class="layout-container">
     <el-header class="header">
-      <div>
-        <img src="@/assets/DAVEX.png" class="logo-img" />
-      </div>
-      <div class="header-text">DAVEX_Center操作界面</div>
+<!--      <div>-->
+<!--        <img src="@/assets/DAVEX.png" class="logo-img" />-->
+<!--      </div>-->
+      <div class="header-text">隐私计算平台 (DAVEX) - Center 操作界面</div>
     </el-header>
     <el-container>
       <el-aside style="background-color: #010927; margin-right: 10px">
