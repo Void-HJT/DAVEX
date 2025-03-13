@@ -212,8 +212,9 @@ public class FileService {
             }
         }
 
-        if (flag == false)
+        if (flag == false) {
             return Body.error(results, "部分文件保存失败");
+        }
         return Body.success(results, "文件保存处理完成");
     }
 
@@ -570,9 +571,9 @@ public class FileService {
                         .queryParam("fileId", fileId)
                         .queryParam("agentId", agentId)
                         //========================上链时需传递的参数========================
-                        .queryParam("chainMaker", true)
-                        .queryParam("requestHash", "")
-                        .queryParam("requestId", "")
+//                        .queryParam("chainMaker", true)
+//                        .queryParam("requestHash", requestHash)
+//                        .queryParam("requestId", requestId)
                         //========================上链参数结束=============================
                         .build())
                 .retrieve()
@@ -592,9 +593,9 @@ public class FileService {
                         .queryParam("agentId", agentId)
                         .queryParam("folderId", folderId)
                         //========================上链时需传递的参数========================
-                        .queryParam("chainMaker", true)
-                        .queryParam("requestHash", "")
-                        .queryParam("requestId", "")
+//                        .queryParam("chainMaker", true)
+//                        .queryParam("requestHash", requestHash1)
+//                        .queryParam("requestId", requestId1)
                         //========================上链参数结束=============================
                         .build()).accept(MediaType.APPLICATION_OCTET_STREAM).retrieve()
                 .bodyToFlux(byte[].class);
