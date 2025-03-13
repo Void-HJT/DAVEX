@@ -40,9 +40,9 @@ public class DatabaseController {
     @PostMapping("/locateQuery")
     public Body<byte[]> executeQuery(@RequestBody QueryRequest request,
                                      @RequestParam("databaseId") Long databaseId,
-                                     @RequestParam("chainMaker") boolean chainMaker,
-                                     @RequestParam("requestHash") String requestHash,
-                                     @RequestParam("requestId") String requestId) throws Exception {
+                                     @RequestParam(value = "chainMaker", defaultValue = "false") Boolean chainMaker,
+                                     @RequestParam(value = "requestHash", defaultValue = "defaultHash") String requestHash,
+                                     @RequestParam(value = "requestId", defaultValue = "defaultId") String requestId) throws Exception {
         return databaseService.executeQuery(request, databaseId,chainMaker,requestHash,requestId);
     }
 
