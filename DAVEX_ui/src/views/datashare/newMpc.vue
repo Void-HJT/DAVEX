@@ -1,23 +1,29 @@
 <template>
   <el-container>
-    <span style="display: block; margin-bottom: 10px;">参与方数量</span>
-    <el-select v-model="partyNumber" placeholder="Select" @change="handleSelectPartyNumber">
-      <el-option
-          v-for="item in partyNumbers"
-          :key="item.value"
-          :label="item.label"
-          :value="item.value"
-      />
-    </el-select>
-    <span style="display: block; margin-bottom: 10px;">代理</span>
-    <el-select v-model="agentId" placeholder="选择代理" @change="handleSelectAgent">
-      <el-option
-          v-for="item in agents"
-          :key="item.value"
-          :label="item.label"
-          :value="item.value"
-      />
-    </el-select>
+    <div style="display: flex; gap: 10px; align-items: center;">
+      <div>
+        <span style="display: block; margin-bottom: 5px;">参与方数量</span>
+        <el-select v-model="partyNumber" placeholder="选择参与方数量" @change="handleSelectPartyNumber">
+          <el-option
+              v-for="item in partyNumbers"
+              :key="item.value"
+              :label="item.label"
+              :value="item.value"
+          />
+        </el-select>
+      </div>
+      <div>
+        <span style="display: block; margin-bottom: 5px;">代理</span>
+        <el-select v-model="agentId" placeholder="选择代理" @change="handleSelectAgent">
+          <el-option
+              v-for="item in agents"
+              :key="item.value"
+              :label="item.label"
+              :value="item.value"
+          />
+        </el-select>
+      </div>
+    </div>
     <el-header class="custom-header">
       <div class="icon-text">
         <el-icon><Folder /></el-icon>

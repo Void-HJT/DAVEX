@@ -282,7 +282,9 @@ public class DatabaseService {
                 MultiValueMap<String, Object> multipartBody = new LinkedMultiValueMap<>();
                 multipartBody.add("file", multipartFile.getResource()); // 这里的 "file" 是服务端期望的文件字段名
 
-                R<String> res = agentWebClientService.agent2CenterWebClient("DAVEX-C2").post()
+
+                String centerId = my.getId();
+                R<String> res = agentWebClientService.agent2CenterWebClient(centerId).post()
                         .uri(UriBuilder -> UriBuilder.path("/queryFile/saveQuery").queryParam("hash", hash)
                                 .queryParam("applicationId", applicationId).build())
                         .contentType(MediaType.MULTIPART_FORM_DATA).body(BodyInserters.fromMultipartData(multipartBody))
@@ -297,7 +299,7 @@ public class DatabaseService {
                     content = String.format("查询任务完成\n代理: %s\n数据库id: %s\n表名: %s\n错误信息: %s",
                             agentId, databaseId, request.getTableName(), res.getBody().getMessage());
                 }
-                agentWebClientService.agent2CenterWebClient("DAVEX-C2").post()
+                agentWebClientService.agent2CenterWebClient(centerId).post()
                         .uri(uriBuilder -> uriBuilder.path("/notification/set")
                                 .queryParam("appID", applicationId)
                                 .queryParam("title", "查询任务结束")
