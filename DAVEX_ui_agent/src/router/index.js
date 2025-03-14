@@ -11,7 +11,7 @@ const router = createRouter({
     {
       path: '/',
       component: () => import('@/views/layout/newLayoutContainer.vue'),
-      redirect: '/login',
+      redirect: 'dve/folderController',
       children: [
         {
           path: 'locate/locateCompute',
