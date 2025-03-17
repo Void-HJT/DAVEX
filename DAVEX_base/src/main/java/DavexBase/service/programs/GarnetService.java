@@ -86,11 +86,11 @@ public class GarnetService {
             checkMount(mounts, Docker_Output_Path, garnetProperties.getOutputPath(), errorMessages);
             checkMount(mounts, Docker_Mpc_Path, garnetProperties.getMpcPath(), errorMessages);
 
-            if (errorMessages.length() > 0) {
-                logger.error(errorMessages.toString());
-                logger.error("Mounts: " + containerInfo.getMounts().toString() + "\n");
-                return;
-            }
+//            if (errorMessages.length() > 0) {
+//                logger.error(errorMessages.toString());
+//                logger.error("Mounts: " + containerInfo.getMounts().toString() + "\n");
+//                return;
+//            }
             StringBuilder sb = new StringBuilder();
             sb.append("Container Name: ").append(containerInfo.getName()).append("\n");
             sb.append("Image: ").append(containerInfo.getConfig().getImage()).append("\n");
