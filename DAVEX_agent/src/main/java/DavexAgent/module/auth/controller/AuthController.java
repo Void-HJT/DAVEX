@@ -16,7 +16,7 @@ import java.util.Set;
 
 
 @RestController
-@RequestMapping("/auth")
+@RequestMapping("/au")
 public class AuthController {
 
     @Autowired
