@@ -2,8 +2,13 @@ package DavexAgent.module.auth.service;
 
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import DavexBase.common.JwtCache;
+import DavexBase.entity.JwtMetadata;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.MediaType;
@@ -79,19 +84,26 @@ public class AuthService {
         agent.setPassword(password);
 
         try {
-            String token = webClientService.agent2CenterWebClient(centerId).post()
+            Map<String, Object> ans = webClientService.agent2CenterWebClient(centerId).post()
                     .uri("/auth/login")
                     .contentType(MediaType.APPLICATION_JSON)
                     .bodyValue(agent)
                     .retrieve()
-                    .bodyToMono(String.class)
+                    .bodyToMono(new ParameterizedTypeReference<Map<String, Object>>() {})
                     .block();
-
-            if (StringUtils.hasText(token)) {
-                jwtCache.putToken(centerId, token);
-                return true;
+            if (ans == null) {
+                throw new RuntimeException("Login response is null");
             }
-            return false;
+            // 获取 token
+            String token = (String) ans.get("token");
+            // 解析 metadata
+            ObjectMapper objectMapper = new ObjectMapper();
+            objectMapper.registerModule(new JavaTimeModule()); // 注册 JSR-310 模块
+            objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS); // 避免写成时间戳
+            JwtMetadata jwtMetadata = objectMapper.convertValue(ans.get("metadata"), JwtMetadata.class);
+            jwtCache.putToken(centerId, token);
+            jwtCache.putMeta(centerId,jwtMetadata);
+            return true;
         } catch (WebClientResponseException e) {
             System.err.println("HTTP Error: " + e.getStatusCode() + " - " + e.getResponseBodyAsString());
             return false;
@@ -131,18 +143,23 @@ public class AuthService {
         //访问
         // 远程验证
         try {
-            // 发送刷新请求并获取新token
-            String newToken = webClientService.agent2CenterWebClient(centerId).post()
+            // 发送刷新请求并获取响应
+            Map<String, Object> response = webClientService.agent2CenterWebClient(centerId).post()
                     .uri("/auth/refreshJWT")
                     .header("Authorization", token)
                     .retrieve()
-                    .bodyToMono(String.class) // 注意这里改为String类型
+                    .bodyToMono(new ParameterizedTypeReference<Map<String, Object>>() {})
                     .block();
-
-            // 保存新token到本地缓存
-            if (StringUtils.hasText(newToken)) {
-                jwtCache.putToken(centerId, newToken);
-                System.out.println("center[{}]令牌刷新成功" + centerId);
+            if(response!=null){
+                // 获取 token
+                String newToken = (String) response.get("token");
+                // 解析 metadata
+                ObjectMapper objectMapper = new ObjectMapper();
+                objectMapper.registerModule(new JavaTimeModule()); // 注册 JSR-310 模块
+                objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS); // 避免写成时间戳
+                JwtMetadata jwtMetadata = objectMapper.convertValue(response.get("metadata"), JwtMetadata.class);
+                jwtCache.putToken(centerId,newToken);
+                jwtCache.putMeta(centerId,jwtMetadata);
                 return true;
             }
         } catch (Exception e) {
@@ -174,6 +191,10 @@ public class AuthService {
     }
     //展示所有的token
     public java.util.Set<java.util.Map.Entry<String, String>> getAllJwt(){
-        return jwtCache.getAllEntries();
+        return jwtCache.getAllTokenEntries();
+    }
+    //展示所有的Meta
+    public java.util.Set<java.util.Map.Entry<String, JwtMetadata>> getAllMeta(){
+        return jwtCache.getAllMetaEntries();
     }
 }

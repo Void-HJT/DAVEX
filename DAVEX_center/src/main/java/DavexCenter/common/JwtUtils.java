@@ -1,6 +1,6 @@
 package DavexCenter.common;
 
-import DavexCenter.entity.JwtMetadata;
+import DavexBase.entity.JwtMetadata;
 import DavexCenter.mapper.JwtMetadataMapper;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
@@ -15,9 +15,7 @@ import javax.servlet.http.HttpServletRequest;
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.Base64;
-import java.util.Date;
-import java.util.UUID;
+import java.util.*;
 
 @Component
 public class JwtUtils {
@@ -32,7 +30,7 @@ public class JwtUtils {
     /**
      * 生成 JWT（包含元数据存储）
      */
-    public String generateToken(String agentUid) {
+    public Map<String, Object> generateToken(String agentUid) {
         // 1. 生成 JWT
         LocalDateTime now = LocalDateTime.now();
         String jti = UUID.randomUUID().toString(); // 唯一标识
@@ -54,7 +52,13 @@ public class JwtUtils {
         metadata.setRevoked(false);
         jwtMetadataMapper.insert(metadata);
 
-        return token;
+        // 3. 返回 Token 和 Metadata
+        Map<String, Object> result = new HashMap<>();
+        result.put("token", token);
+        result.put("metadata", metadata);
+
+
+        return result;
     }
     //
     public  String generateSecret() {

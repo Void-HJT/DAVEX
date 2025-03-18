@@ -1,6 +1,7 @@
 package DavexAgent.module.auth.controller;
 
 import DavexAgent.module.auth.service.AuthService;
+import DavexBase.entity.JwtMetadata;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -24,7 +25,7 @@ public class JwtController {
     }
 
     @PostMapping("/checkJwt")
-    public ResponseEntity<String> getJwt(@RequestParam("centerId")String centerId){
+    public ResponseEntity<String> checkJwt(@RequestParam("centerId")String centerId){
         boolean is = authService.checkJwt(centerId);
         return is?ResponseEntity.ok("valid jwt")
                 : ResponseEntity.status(401).body("invalid jwt");
@@ -47,6 +48,11 @@ public class JwtController {
     @PostMapping("/getAllJwt")
     public java.util.Set<java.util.Map.Entry<String, String>> getAllJwt(){
         return authService.getAllJwt();
+    }
+
+    @PostMapping("/getAllMeta")
+    public java.util.Set<java.util.Map.Entry<String, JwtMetadata>> getAllMeta(){
+        return authService.getAllMeta();
     }
 
 }

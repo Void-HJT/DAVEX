@@ -1,11 +1,12 @@
 package DavexCenter.module.auth.service;
 
 import java.util.List;
+import java.util.Map;
 
 import DavexBase.service.auth.CenterWebClientService;
 import DavexCenter.common.AuthException;
 import DavexCenter.common.JwtUtils;
-import DavexCenter.entity.JwtMetadata;
+import DavexBase.entity.JwtMetadata;
 import DavexCenter.mapper.JwtMetadataMapper;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -58,7 +59,7 @@ public class AuthService {
     /**
      * Agent 登录并返回 JWT
      */
-    public String login(String agentUid, String password) {
+    public Map<String,Object> login(String agentUid, String password) {
         // 1. 验证 Agent 身份
         Agent agent = agentMapper.selectById(agentUid);
         if (agent == null || !password.equals(agent.getPassword())) {
@@ -84,7 +85,7 @@ public class AuthService {
     }
 
     // 刷新 Token
-    public String refreshToken(String oldToken) {
+    public Map<String, Object> refreshToken(String oldToken) {
         DecodedJWT oldJwt = jwtUtils.verifyToken(oldToken);
         if (isTokenRevoked(oldJwt.getId())) {
             throw new AuthException("Token is revoked");
