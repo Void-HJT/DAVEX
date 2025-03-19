@@ -73,6 +73,10 @@ const router = createRouter({
           path: 'result/comPare',
           component: () => import('@/views/result/comPare.vue'),
         },
+        {
+          path: 'auth/tokens',
+          component: () => import('@/views/auth/tokens.vue'),
+        },
       ],
     }, //布局
   ],

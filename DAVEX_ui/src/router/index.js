@@ -105,14 +105,14 @@ const router = createRouter({
           path: 'user/notification',
           component: () => import('@/views/user/notification.vue'),
         },
-        {
-          path: 'auth/tokens',
-          component: () => import('@/views/auth/tokens.vue'),
-        },
-        {
-          path: 'auth/userManagement',
-          component: () => import('@/views/auth/userManagement.vue'),
-        }
+        // {
+        //   path: 'auth/tokens',
+        //   component: () => import('@/views/auth/tokens.vue'),
+        // },
+        // {
+        //   path: 'auth/userManagement',
+        //   component: () => import('@/views/auth/userManagement.vue'),
+        // }
       ],
     }, //布局
   ],

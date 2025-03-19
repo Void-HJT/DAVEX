@@ -1,8 +1,10 @@
 package DavexAgent.module.auth.service;
 
+import java.text.SimpleDateFormat;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TimeZone;
 
 import DavexBase.common.JwtCache;
 import DavexBase.entity.JwtMetadata;
@@ -98,8 +100,10 @@ public class AuthService {
             String token = (String) ans.get("token");
             // 解析 metadata
             ObjectMapper objectMapper = new ObjectMapper();
-            objectMapper.registerModule(new JavaTimeModule()); // 注册 JSR-310 模块
-            objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS); // 避免写成时间戳
+            objectMapper.registerModule(new JavaTimeModule());
+            objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS); // 关闭时间戳
+            objectMapper.setDateFormat(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")); // 统一格式
+            objectMapper.setTimeZone(TimeZone.getTimeZone("Asia/Shanghai")); // 明确时区
             JwtMetadata jwtMetadata = objectMapper.convertValue(ans.get("metadata"), JwtMetadata.class);
             jwtCache.putToken(centerId, token);
             jwtCache.putMeta(centerId,jwtMetadata);
@@ -155,8 +159,10 @@ public class AuthService {
                 String newToken = (String) response.get("token");
                 // 解析 metadata
                 ObjectMapper objectMapper = new ObjectMapper();
-                objectMapper.registerModule(new JavaTimeModule()); // 注册 JSR-310 模块
-                objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS); // 避免写成时间戳
+                objectMapper.registerModule(new JavaTimeModule());
+                objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS); // 关闭时间戳
+                objectMapper.setDateFormat(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")); // 统一格式
+                objectMapper.setTimeZone(TimeZone.getTimeZone("Asia/Shanghai")); // 明确时区
                 JwtMetadata jwtMetadata = objectMapper.convertValue(response.get("metadata"), JwtMetadata.class);
                 jwtCache.putToken(centerId,newToken);
                 jwtCache.putMeta(centerId,jwtMetadata);
@@ -185,6 +191,7 @@ public class AuthService {
         } catch (Exception e) {
             System.err.println("JWT远程吊销失败，强制清除本地缓存"+e.getMessage());
         } finally {
+            jwtCache.removeMeta(centerId);
             jwtCache.removeToken(centerId); // 无论远程是否成功都清除本地
         }
         return true;
@@ -197,4 +204,6 @@ public class AuthService {
     public java.util.Set<java.util.Map.Entry<String, JwtMetadata>> getAllMeta(){
         return jwtCache.getAllMetaEntries();
     }
+    //
+
 }

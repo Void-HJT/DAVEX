@@ -56,6 +56,16 @@ const handleCommand = (key) => {
               <span class="centered-text">文件管理</span>
             </el-menu-item>
           </el-sub-menu>
+          <el-sub-menu index="/auth">
+            <template #title>
+              <el-icon><UserFilled /></el-icon>
+              <span class="centered-text">认证管理</span>
+            </template>
+            <el-menu-item index="/auth/tokens">
+              <el-icon><EditPen /></el-icon>
+              <span class="centered-text">Token管理</span>
+            </el-menu-item>
+          </el-sub-menu>
         </el-menu>
       </el-aside>
       <el-main>

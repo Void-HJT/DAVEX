@@ -112,20 +112,20 @@ import {
               <span class="centered-text">联邦学习</span>
             </el-menu-item>
           </el-sub-menu>
-          <el-sub-menu index="/auth">
-            <template #title>
-              <el-icon><UserFilled /></el-icon>
-              <span class="centered-text">认证管理</span>
-            </template>
-            <el-menu-item index="/auth/tokens">
-              <el-icon><EditPen /></el-icon>
-              <span class="centered-text">Token管理</span>
-            </el-menu-item>
-            <el-menu-item index="/auth/userManagement">
-              <el-icon><EditPen /></el-icon>
-              <span class="centered-text">认证服务用户管理</span>
-            </el-menu-item>
-          </el-sub-menu>
+<!--          <el-sub-menu index="/auth">-->
+<!--            <template #title>-->
+<!--              <el-icon><UserFilled /></el-icon>-->
+<!--              <span class="centered-text">认证管理</span>-->
+<!--            </template>-->
+<!--            <el-menu-item index="/auth/tokens">-->
+<!--              <el-icon><EditPen /></el-icon>-->
+<!--              <span class="centered-text">Token管理</span>-->
+<!--            </el-menu-item>-->
+<!--            <el-menu-item index="/auth/userManagement">-->
+<!--              <el-icon><EditPen /></el-icon>-->
+<!--              <span class="centered-text">认证服务用户管理</span>-->
+<!--            </el-menu-item>-->
+<!--          </el-sub-menu>-->
         </el-menu>
       </el-aside>
       <el-main>
