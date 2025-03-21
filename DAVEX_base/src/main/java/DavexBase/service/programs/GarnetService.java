@@ -157,8 +157,8 @@ public class GarnetService {
         // .directory(Paths.get(garnetProperties.getInputPath()).toFile());
         try {
             // Todo 测试链接和copy哪个行？
-            // Files.copy(originPath, destPath);
-            Files.createLink(destPath, originPath);
+             Files.copy(originPath, destPath);
+            // Files.createLink(destPath, originPath);
             // Process process = processBuilder.start();
             // Integer exitcode = process.waitFor();
             // if (exitcode != 0) {
