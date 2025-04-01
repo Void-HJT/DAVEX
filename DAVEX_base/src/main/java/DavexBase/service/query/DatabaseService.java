@@ -55,8 +55,8 @@ public class DatabaseService {
     @Autowired
     private CenterWebClientService centerWebClientService;
 
-    @Autowired
-    private ExternalDatabaseProperties externalDatabasePropertiesBean;
+//    @Autowired
+//    private ExternalDatabaseProperties externalDatabasePropertiesBean;
 
     @Autowired
     private My my;
@@ -76,11 +76,11 @@ public class DatabaseService {
     }
 
     public void populateDatabaseTables(OutsideDatabase database) {
-        Optional<ExternalDatabaseProperties.DatabaseConfig> dbConfig = getExternalDatabaseConfig(database.getName());
+        //Optional<ExternalDatabaseProperties.DatabaseConfig> dbConfig = getExternalDatabaseConfig(database.getName());
 
-        if (dbConfig.isPresent()) {
+        if (database!=null) {
             try (Connection connection = DriverManager.getConnection(
-                    dbConfig.get().getUrl(), dbConfig.get().getUsername(), dbConfig.get().getPassword())) {
+                    database.getConnection(), database.getUsername(), database.getPassword())) {
 
                 DatabaseMetaData metaData = connection.getMetaData();
 
@@ -128,11 +128,11 @@ public class DatabaseService {
         }
     }
 
-    private Optional<ExternalDatabaseProperties.DatabaseConfig> getExternalDatabaseConfig(String dbName) {
-        return externalDatabasePropertiesBean.getDatabases().stream()
-                .filter(db -> db.getName().equalsIgnoreCase(dbName))
-                .findFirst();
-    }
+//    private Optional<ExternalDatabaseProperties.DatabaseConfig> getExternalDatabaseConfig(String dbName) {
+//        return externalDatabasePropertiesBean.getDatabases().stream()
+//                .filter(db -> db.getName().equalsIgnoreCase(dbName))
+//                .findFirst();
+//    }
 
     public Body<List<OutsideDatabaseTable>> getTable(Long databaseId) {
         LambdaQueryWrapper<OutsideDatabaseTable> queryWrapper = Wrappers.<OutsideDatabaseTable>lambdaQuery()
@@ -158,10 +158,10 @@ public class DatabaseService {
                 .eq(OutsideDatabase::getUid, databaseId);
         OutsideDatabase database = databaseMapper.selectOne(queryWrapper);
 
-        Optional<ExternalDatabaseProperties.DatabaseConfig> dbConfig = getExternalDatabaseConfig(database.getName());
-        if (dbConfig.isPresent()) {
+        //Optional<ExternalDatabaseProperties.DatabaseConfig> dbConfig = getExternalDatabaseConfig(database.getName());
+        if (database!=null) {
             try (Connection connection = DriverManager.getConnection(
-                    dbConfig.get().getUrl(), dbConfig.get().getUsername(), dbConfig.get().getPassword());
+                    database.getConnection(), database.getUsername(), database.getPassword());
                  PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
 
                 // 设置参数

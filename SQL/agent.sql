@@ -174,6 +174,8 @@ CREATE TABLE `outside_database` (
     `type` enum('mysql') DEFAULT NULL,
     `connection` varchar(255) DEFAULT NULL,
     `description` varchar(255) DEFAULT NULL,
+    `username` varchar(255) DEFAULT NULL,
+    `password` varchar(255) DEFAULT NULL,
     PRIMARY KEY (`uid`)
 ) ENGINE = InnoDB AUTO_INCREMENT = 29 DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci;
 

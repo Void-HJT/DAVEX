@@ -13,4 +13,6 @@ public class OutsideDatabase {
     private String type;
     private String connection;
     private String description;
+    private String username;
+    private String password;
 }
