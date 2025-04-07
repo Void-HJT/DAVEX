@@ -401,8 +401,10 @@ public class DatabaseService {
         return message.contains("syntax error") || message.contains("you have an error in your sql syntax");
     }
 
-    public Body<List<OutsideDatabase>> getDatabase() {
-        List<OutsideDatabase> outsideDatabases = databaseMapper.selectList(null);
+    public Body<List<OutsideDatabase>> getDatabase(String agentId) {
+        LambdaQueryWrapper<OutsideDatabase> queryWrapper = Wrappers.<OutsideDatabase>lambdaQuery()
+                .eq(OutsideDatabase::getAgentId, agentId);
+        List<OutsideDatabase> outsideDatabases = databaseMapper.selectList(queryWrapper);
         return Body.success(outsideDatabases, "");
     }
 }

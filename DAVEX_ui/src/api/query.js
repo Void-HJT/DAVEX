@@ -1,7 +1,9 @@
 import request from '@/utils/request'
 
-export const getDatabase = () => {
-    let res = request.post('/query/database/getDatabase')
+export const getDatabase = (agentId) => {
+    const params = new URLSearchParams()
+    params.append('agentId', agentId)
+    let res = request.post('/query/database/getDatabase', params.toString())
     return res
   }
 
@@ -89,3 +91,29 @@ export const readQuery = ({ outputId, applicationId }) => {
   )
   return res
 }
+
+// 新增数据库
+export const addDatabase = (outsideDatabase) => {
+  return request.post(
+      '/query/database/addDatabase',
+      outsideDatabase
+  )
+}
+
+// 新增数据库
+// export const addDatabase = ({ outsideDatabase }) => {
+//   const formData = new FormData()
+//   const outsideDatabaseJson = JSON.stringify(outsideDatabase)
+//   const outsideDatabaseBlob = new Blob([outsideDatabaseJson], { type: 'application/json' })
+//   formData.append('outsideDatabase', outsideDatabaseBlob)
+//   let res = request.post(
+//       'query/database/addDatabase',
+//       formData,  // 传递 FormData 对象
+//       {
+//         headers: {
+//           'Content-Type': 'multipart/form-data',  // 设置请求头
+//         }
+//       }
+//   )
+//   return res
+// }

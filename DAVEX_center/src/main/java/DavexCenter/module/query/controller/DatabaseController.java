@@ -28,8 +28,8 @@ public class DatabaseController {
     }
 
     @PostMapping("/getDatabase")
-    public Body<List<OutsideDatabase>> getDatabase() {
-        return databaseService.getDatabase();
+    public Body<List<OutsideDatabase>> getDatabase(@RequestParam("agentId") String agentId) {
+        return databaseService.getDatabase(agentId);
     }
 
     @PostMapping("/getTable")

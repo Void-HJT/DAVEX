@@ -2,6 +2,7 @@ package DavexAgent.module.query;
 
 import java.util.List;
 
+import DavexBase.common.My;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -22,6 +23,9 @@ public class DatabaseController {
     @Autowired
     DatabaseService databaseService;
 
+    @Autowired
+    private My my;
+
     @PostMapping("/addDatabase")
     public Body<String> addDatabase(@RequestBody OutsideDatabase outsideDatabase) {
         return databaseService.addDatabase(outsideDatabase);
@@ -29,7 +33,7 @@ public class DatabaseController {
 
     @PostMapping("/getDatabase")
     public Body<List<OutsideDatabase>> getDatabase() {
-        return databaseService.getDatabase();
+        return databaseService.getDatabase(my.getId());
     }
 
     @PostMapping("/getTable")

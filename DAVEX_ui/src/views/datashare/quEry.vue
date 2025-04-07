@@ -1,5 +1,24 @@
 <template>
   <el-container>
+    <div style="display: flex; gap: 10px; align-items: center;">
+      <span style="display: block; margin-bottom: 10px;">代理</span>
+      <el-select v-model="agentId" placeholder="选择代理" @change="handleSelectAgent">
+        <el-option
+            v-for="item in agents"
+            :key="item.value"
+            :label="item.label"
+            :value="item.value"
+        />
+      </el-select>
+      <div>
+        <el-button
+            class="default-button"
+            @click="addDialogVisible = true"
+        >
+          <el-icon><Plus /></el-icon> 新增数据库
+        </el-button>
+      </div>
+    </div>
     <el-header class="custom-header">
       <div class="icon-text">
         <el-icon><DataBoard /></el-icon>
@@ -306,23 +325,60 @@
     </template>
   </el-dialog>
 
+    <!-- 新增数据库对话框 -->
+    <el-dialog
+        v-model="addDialogVisible"
+        title="新增数据库"
+        width="800"
+    >
+      <el-form :model="addForm" label-width="120px">
+        <el-form-item label="代理">
+          <el-input v-model="addForm.agentId" disabled></el-input>
+        </el-form-item>
+        <el-form-item label="类型">
+          <el-input v-model="addForm.type" disabled></el-input>
+        </el-form-item>
+        <el-form-item label="数据库名">
+          <el-input v-model="addForm.name"></el-input>
+        </el-form-item>
+        <el-form-item label="连接信息">
+          <el-input v-model="addForm.connection"></el-input>
+        </el-form-item>
+        <el-form-item label="用户名">
+          <el-input v-model="addForm.username"></el-input>
+        </el-form-item>
+        <el-form-item label="密码">
+          <el-input v-model="addForm.password"></el-input>
+        </el-form-item>
+        <el-form-item label="描述信息">
+          <el-input v-model="addForm.description"></el-input>
+        </el-form-item>
+      </el-form>
+
+      <template #footer>
+        <el-button class="start-button" @click="addDatabaseMethod">新增数据库</el-button>
+      </template>
+    </el-dialog>
+
   </el-container>
 </template>
 
 
 <script lang="ts" setup>
-import { ref, onMounted } from 'vue'
+import {ref, onMounted, reactive} from 'vue'
 
+import {getAgent} from '../../api/testDve.js'
 import {
   getDatabase,
   getDatabaseTable,
   query,
+  addDatabase
 } from '../../api/query.js'
-import {DataBoard, Delete, Download, Edit, Search} from "@element-plus/icons-vue";
+import {DataBoard, Delete, Download, Edit, Search, Plus} from "@element-plus/icons-vue";
 
 //初始化
 onMounted(() => {
-  getDatabaseList()
+  getAgentMethod()
 })
 
 // 控制对话框的变量
@@ -334,6 +390,7 @@ const querySuccessVisible = ref(false)
 const queryFailedVisible = ref(false)
 const querySuccessMessage = ref('');
 const queryFailedMessage = ref('');
+const addDialogVisible = ref(false)
 
 // 表格数据
 const databaseData = ref([])
@@ -342,7 +399,8 @@ const currentExample = ref('')
 const schemaExample = ref('')
 const schemaTableData = ref([])
 const exampleTableData = ref([])
-let agentId = "DAVEX-C1-G1"
+const agents = ref([])
+const agentId = ref('')
 let applicationId = 6
 
 // 查询表单
@@ -358,6 +416,19 @@ const queryForm = ref({
   },
   limit: 10,         // 查询返回的记录条数
   offset: 0,         // 偏移量
+});
+
+// 新增表单
+const addForm = reactive({
+  get agentId() {
+    return agentId.value;
+  },
+  name: '',
+  type: 'mysql',
+  connection: 'jdbc:mysql://10.176.34.171:3306/testdb',
+  description: '',
+  username: '',
+  password: '',
 });
 
 
@@ -384,7 +455,7 @@ const handleViewDatabaseTableSchemaExample = (row) => {
 }
 
 const handleViewOpenQueryDialog = (row) => {
-  agentId = row.agentId
+  agentId.value = row.agentId
   schemaTableData.value = JSON.parse(row.schemaExample) 
   queryForm.value.tableName = row.name; // 可以从表格中获取实际表名
   queryDialogVisible.value = true;
@@ -393,7 +464,7 @@ const handleViewOpenQueryDialog = (row) => {
 //函数
 const getDatabaseList = async () => {
   try{
-    const res = await getDatabase()
+    const res = await getDatabase(agentId.value)
     if (Array.isArray(res.data.data)) {
       // 对于res.data.data中的每一个进行操作
       databaseData.value = res.data.data
@@ -490,7 +561,7 @@ const generateQuery = async () => {
   }
 
   try{
-    const res = await query(queryForm.value.applicationId,agentId,queryForm.value.databaseId,queryObject)
+    const res = await query(queryForm.value.applicationId,agentId.value,queryForm.value.databaseId,queryObject)
     //
     // querySuccessMessage.value = res.data.message
     querySuccessMessage.value = "查询成功"  
@@ -502,6 +573,31 @@ const generateQuery = async () => {
   // alert(JSON.stringify(queryObject, null, 2));
   // // 在这里发送查询对象到后端
 };
+
+// 新增数据库
+const addDatabaseMethod = async () => {
+  try{
+    const res = await addDatabase(addForm)
+    querySuccessMessage.value = "新增成功"
+    querySuccessVisible.value = true
+  }catch(error) {
+    queryFailedMessage.value = 'Failed to add:' + error
+    queryFailedVisible.value = true
+  }
+};
+
+const getAgentMethod = async () => {
+  const res = await getAgent()
+  agents.value = res.data.body.data.map(item => ({
+    value: item.uid,
+    label: item.uid
+  }))
+}
+
+const handleSelectAgent = async (value) => {
+  agentId.value = value
+  getDatabaseList()
+}
 
 </script>
 <style scoped></style>
