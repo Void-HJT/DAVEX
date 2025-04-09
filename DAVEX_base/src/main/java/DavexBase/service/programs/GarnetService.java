@@ -265,7 +265,7 @@ public class GarnetService {
                 "-h", mpcTask.getHost(),
                 "-pn", mpcTask.getPort().toString(),
                 "-p", part.toString(),
-                // "-u",
+                "-u",
                 mpc_name));
         logger.info("容器：" + garnetProperties.getContainerID());
         logger.info("命令：" + command.toString());
