@@ -86,11 +86,11 @@ public class GarnetService {
             checkMount(mounts, Docker_Output_Path, garnetProperties.getOutputPath(), errorMessages);
             checkMount(mounts, Docker_Mpc_Path, garnetProperties.getMpcPath(), errorMessages);
 
-//            if (errorMessages.length() > 0) {
-//                logger.error(errorMessages.toString());
-//                logger.error("Mounts: " + containerInfo.getMounts().toString() + "\n");
-//                return;
-//            }
+            // if (errorMessages.length() > 0) {
+            // logger.error(errorMessages.toString());
+            // logger.error("Mounts: " + containerInfo.getMounts().toString() + "\n");
+            // return;
+            // }
             StringBuilder sb = new StringBuilder();
             sb.append("Container Name: ").append(containerInfo.getName()).append("\n");
             sb.append("Image: ").append(containerInfo.getConfig().getImage()).append("\n");
@@ -157,7 +157,7 @@ public class GarnetService {
         // .directory(Paths.get(garnetProperties.getInputPath()).toFile());
         try {
             // Todo 测试链接和copy哪个行？
-             Files.copy(originPath, destPath);
+            Files.copy(originPath, destPath);
             // Files.createLink(destPath, originPath);
             // Process process = processBuilder.start();
             // Integer exitcode = process.waitFor();
@@ -266,6 +266,17 @@ public class GarnetService {
                 "-pn", mpcTask.getPort().toString(),
                 "-p", part.toString(),
                 "-u",
+                mpc_name,
+
+                "||",
+
+                "./" + protocol + ".x",
+                "-IF", inputPrefix.toString(),
+                "-OF", outputPrefix.toString(),
+                // "-N", mpcTask.getN().toString(),
+                "-h", mpcTask.getHost(),
+                "-pn", mpcTask.getPort().toString(),
+                "-p", part.toString(),
                 mpc_name));
         logger.info("容器：" + garnetProperties.getContainerID());
         logger.info("命令：" + command.toString());
