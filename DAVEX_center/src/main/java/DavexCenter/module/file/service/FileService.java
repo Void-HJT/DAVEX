@@ -455,7 +455,8 @@ public class FileService {
             case "csv" -> Body.success(readCsvFile(file), "读取成功");
             case "pdf" -> Body.success(readPdfFile(file), "读取成功");
             case "json" -> Body.success(readJsonFile(file), "读取成功");
-            default -> Body.error(String.format("不支持的文件类型: %s", extension));
+//            default -> Body.error(String.format("不支持的文件类型: %s", extension));
+            default -> Body.success(readTxtFile(file), "读取成功");
         };
     }
 

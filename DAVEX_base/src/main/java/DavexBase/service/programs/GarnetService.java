@@ -257,27 +257,31 @@ public class GarnetService {
         String protocol = mpcTask.getRuntimeParameters().getString("protocol");
         String mpc_name = mpcTask.getMpcName();
         Long part = mpcTask.getPart();
-        List<String> command = new ArrayList<>(Arrays.asList(
-                "./" + protocol + ".x",
-                "-IF", inputPrefix.toString(),
-                "-OF", outputPrefix.toString(),
-                // "-N", mpcTask.getN().toString(),
-                "-h", mpcTask.getHost(),
-                "-pn", mpcTask.getPort().toString(),
-                "-p", part.toString(),
-                "-u",
-                mpc_name,
-
-                "||",
-
-                "./" + protocol + ".x",
-                "-IF", inputPrefix.toString(),
-                "-OF", outputPrefix.toString(),
-                // "-N", mpcTask.getN().toString(),
-                "-h", mpcTask.getHost(),
-                "-pn", mpcTask.getPort().toString(),
-                "-p", part.toString(),
-                mpc_name));
+        List<String> command;
+        Set<String> useUProtocols = Set.of("replicated-ring-party");
+        if (useUProtocols.contains(protocol)) {
+            command = new ArrayList<>(Arrays.asList(
+                    "./" + protocol + ".x",
+                    "-IF", inputPrefix.toString(),
+                    "-OF", outputPrefix.toString(),
+                    // "-N", mpcTask.getN().toString(),
+                    "-h", mpcTask.getHost(),
+                    "-pn", mpcTask.getPort().toString(),
+                    "-p", part.toString(),
+                    "-u",
+                    mpc_name));
+        }
+        else {
+            command = new ArrayList<>(Arrays.asList(
+                    "./" + protocol + ".x",
+                    "-IF", inputPrefix.toString(),
+                    "-OF", outputPrefix.toString(),
+                    // "-N", mpcTask.getN().toString(),
+                    "-h", mpcTask.getHost(),
+                    "-pn", mpcTask.getPort().toString(),
+                    "-p", part.toString(),
+                    mpc_name));
+        }
         logger.info("容器：" + garnetProperties.getContainerID());
         logger.info("命令：" + command.toString());
         try {
