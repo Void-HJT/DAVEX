@@ -5,8 +5,6 @@ import java.util.List;
 
 import DavexBase.entity.*;
 import DavexBase.mapper.*;
-import DavexBase.service.MQ.MessageService;
-import DavexBase.service.MQ.PublishService;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -49,11 +47,7 @@ public class ABACService {
     @Autowired
     private AgentWebClientService agentWebClientService;
     @Autowired
-    private MessageService messageService;
-    @Autowired
     private RabbitmqConnectionMapper rabbitmqConnectionMapper;
-    @Autowired
-    private PublishService publishService;
 
     // 使用 Jackson ObjectMapper
     private final ObjectMapper objectMapper = new ObjectMapper();
@@ -566,16 +560,6 @@ public class ABACService {
         String message = null;
         String operation = "Create";
         String entity = "visibility";
-        message = messageService.getMessage(operation, entity, objectMapper, visibility);
-        //
-        List<Object> uidList = rabbitmqConnectionMapper
-                .selectObjs(new QueryWrapper<RabbitmqConnection>().select("uid"));
-        for (Object obj : uidList) {
-            if (obj instanceof String) {
-                String targetId = (String) obj;
-                publishService.sendMessageToFanoutExchange(targetId, exchange, message);
-            }
-        }
         return Body.success("创建可见性成功");
     }
 
@@ -593,16 +577,6 @@ public class ABACService {
         String message = null;
         String operation = "Delete";
         String entity = "visibility";
-        message = messageService.getMessage(operation, entity, objectMapper, visibility);
-        //
-        List<Object> uidList = rabbitmqConnectionMapper
-                .selectObjs(new QueryWrapper<RabbitmqConnection>().select("uid"));
-        for (Object obj : uidList) {
-            if (obj instanceof String) {
-                String targetId = (String) obj;
-                publishService.sendMessageToFanoutExchange(targetId, exchange, message);
-            }
-        }
         return Body.success("删除可见性成功");
     }
 
@@ -622,16 +596,6 @@ public class ABACService {
         String message = null;
         String operation = "Update";
         String entity = "visibility";
-        message = messageService.getMessage(operation, entity, objectMapper, visibility);
-        //
-        List<Object> uidList = rabbitmqConnectionMapper
-                .selectObjs(new QueryWrapper<RabbitmqConnection>().select("uid"));
-        for (Object obj : uidList) {
-            if (obj instanceof String) {
-                String targetId = (String) obj;
-                publishService.sendMessageToFanoutExchange(targetId, exchange, message);
-            }
-        }
         return Body.success("更新可见性成功");
     }
 
@@ -665,16 +629,6 @@ public class ABACService {
         String message = null;
         String operation = "Create";
         String entity = "folderVisibility";
-        message = messageService.getMessage(operation, entity, objectMapper, folderVisibility);
-        //
-        List<Object> uidList = rabbitmqConnectionMapper
-                .selectObjs(new QueryWrapper<RabbitmqConnection>().select("uid"));
-        for (Object obj : uidList) {
-            if (obj instanceof String) {
-                String targetId = (String) obj;
-                publishService.sendMessageToFanoutExchange(targetId, exchange, message);
-            }
-        }
         return Body.success("创建文件夹可见性成功");
     }
 
@@ -692,16 +646,6 @@ public class ABACService {
         String message = null;
         String operation = "Delete";
         String entity = "folderVisibility";
-        message = messageService.getMessage(operation, entity, objectMapper, folderVisibility);
-        //
-        List<Object> uidList = rabbitmqConnectionMapper
-                .selectObjs(new QueryWrapper<RabbitmqConnection>().select("uid"));
-        for (Object obj : uidList) {
-            if (obj instanceof String) {
-                String targetId = (String) obj;
-                publishService.sendMessageToFanoutExchange(targetId, exchange, message);
-            }
-        }
         return Body.success("删除文件夹可见性成功");
     }
 
@@ -727,16 +671,6 @@ public class ABACService {
         String message = null;
         String operation = "Update";
         String entity = "folderVisibility";
-        message = messageService.getMessage(operation, entity, objectMapper, folderVisibility);
-        //
-        List<Object> uidList = rabbitmqConnectionMapper
-                .selectObjs(new QueryWrapper<RabbitmqConnection>().select("uid"));
-        for (Object obj : uidList) {
-            if (obj instanceof String) {
-                String targetId = (String) obj;
-                publishService.sendMessageToFanoutExchange(targetId, exchange, message);
-            }
-        }
         return Body.success("更新文件夹可见性成功");
     }
     // #endregion

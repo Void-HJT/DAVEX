@@ -24,7 +24,6 @@ import DavexBase.common.ContractResponse;
 import DavexBase.common.My;
 import DavexBase.entity.*;
 import DavexBase.mapper.*;
-import DavexBase.service.MQ.MessageService;
 import DavexBase.service.auth.AgentWebClientService;
 import DavexBase.service.blockchain.UpChainService;
 import com.alibaba.fastjson.JSON;
@@ -51,7 +50,6 @@ import DavexBase.common.Body;
 import DavexBase.common.GetMaxUid;
 import DavexBase.info.DirectoryInfo;
 import DavexBase.info.FileInfo;
-import DavexBase.service.MQ.PublishService;
 import DavexBase.service.auth.CenterWebClientService;
 
 import static DavexBase.common.UUIDGenerator.generateUUID;
@@ -86,11 +84,6 @@ public class FileFolderService {
     @Autowired
     private CenterWebClientService centerWebClientService;
 
-    @Autowired
-    PublishService publishService;
-
-    @Autowired
-    MessageService messageService;
 
     @Autowired
     private My my;

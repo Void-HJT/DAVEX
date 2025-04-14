@@ -36,7 +36,7 @@ public class TestController {
 
         WebClient webclient = null;
         try {
-            webclient = centerWebClientService.center2AgentWebClientInAuth(target_id,username,password,authId);
+            webclient = centerWebClientService.center2AgentWebClient(target_id);
         } catch (Exception e) {
             e.printStackTrace();
         }

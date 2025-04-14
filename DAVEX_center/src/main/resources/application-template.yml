@@ -42,11 +42,7 @@ spring:
   mvc:
     pathmatch:
       matching-strategy: ${SPRING_MVC_PATHMATCH_MATCHING_STRATEGY:ANT_PATH_MATCHER}
-  rabbitmq:
-    host: ${SPRING_RABBITMQ_HOST:localhost}
-    port: ${SPRING_RABBITMQ_PORT:5672}
-    username: ${SPRING_RABBITMQ_USERNAME:guest}
-    password: ${SPRING_RABBITMQ_PASSWORD:guest}
+
 
 mybatis-plus:
   configuration:

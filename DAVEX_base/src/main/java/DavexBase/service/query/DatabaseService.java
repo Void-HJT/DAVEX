@@ -28,7 +28,6 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import DavexBase.common.Body;
-import DavexBase.common.ExternalDatabaseProperties;
 import DavexBase.common.R;
 import DavexBase.entity.OutsideDatabase;
 import DavexBase.entity.OutsideDatabaseTable;
@@ -55,8 +54,6 @@ public class DatabaseService {
     @Autowired
     private CenterWebClientService centerWebClientService;
 
-//    @Autowired
-//    private ExternalDatabaseProperties externalDatabasePropertiesBean;
 
     @Autowired
     private My my;

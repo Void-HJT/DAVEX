@@ -10,7 +10,6 @@ import DavexBase.entity.Rule;
 import DavexBase.mapper.AgentMapper;
 import DavexBase.mapper.ApplicationMapper;
 import DavexBase.mapper.CenterMapper;
-import DavexBase.service.MQ.MessageService;
 import DavexBase.service.auth.CenterWebClientService;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
@@ -28,16 +27,10 @@ public class ApplicationService {
     @Autowired
     ApplicationMapper applicationMapper;
 
-//    @Autowired
-//    AdminMQPublishService adminMQPublishService;
-
-    @Autowired
-    MessageService messageService;
     @Autowired
     AgentMapper agentMapper;
     @Autowired
     CenterWebClientService centerWebClientService;
-
 
     @Value("${my.id}")
     private String uid;
