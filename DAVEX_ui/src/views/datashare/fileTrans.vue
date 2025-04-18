@@ -108,7 +108,7 @@
             <template v-slot="scope">
               <el-button
                   class="small-default-button"
-                  v-if="scope.row.type === 'file'"
+                  v-if="scope.row.type === 'file' && scope.row.fileType?.includes('trans')"
                   @click="
                   getFileMethod(
                     scope.row.uid,

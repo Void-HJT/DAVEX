@@ -166,6 +166,17 @@
               >
                 <el-icon><Edit /></el-icon> 重命名
               </el-button>
+              <el-button
+                  v-if="scope.row.type === 'file'"
+                  class="small-default-button"
+                  @click="
+                  openFileFuncEditBlockMethod(
+                        scope.row
+                      )
+                "
+              >
+                <el-icon><Edit /></el-icon> 功能权限
+              </el-button>
 <!--              <el-button-->
 <!--                v-if="scope.row.type === 'file'"-->
 <!--                link-->
@@ -375,6 +386,21 @@
           </span>
         </template>
       </el-dialog>
+
+      <el-dialog v-model="fileFuncEditVisible" title="文件功能权限管理" width="30%">
+        <el-form :model="fileInfoBody" label-width="20%" style="max-width: 80%">
+          <el-form-item label="功能权限">
+            <el-input v-model="fileInfo.type"></el-input>
+          </el-form-item>
+        </el-form>
+        <template #footer>
+          <span class="dialog-footer">
+            <el-button class="default-button" @click="closeFileFuncEditBlock">
+              确认
+            </el-button>
+          </span>
+        </template>
+      </el-dialog>
     </el-main>
   </el-container>
 
@@ -570,6 +596,7 @@ onMounted(async () => {
 // 对话框是否可见
 const fileRenameVisible = ref(false)
 const folderVisibleDialogVisible = ref(false)
+const fileFuncEditVisible = ref(false)
 
 // 对话框关闭时的回调
 const folderVisibleDialogClose = () => {
@@ -1059,6 +1086,31 @@ const closeFileRenameBlock = async () => {
   console.log(res)
   fileRenameVisible.value = false
   // getDirectoryMethod()
+  findCurrentFolder()
+}
+
+const openFileFuncEditBlockMethod = async (row) => {
+  fileFuncEditVisible.value = true
+  fileInfo.value.uid = row.uid
+  fileInfo.value.agentId = row.agentId
+  fileInfo.value.folderId = row.parentId
+  fileInfo.value.name = row.name
+  fileInfo.value.createDate = row.createDate
+  fileInfo.value.lastUpdate = row.lastUpdate
+  fileInfo.value.size = row.size
+  fileInfo.value.description = row.description
+  fileInfo.value.expiredTime = row.expiredTime
+  fileInfo.value.hash = row.hash
+  fileInfo.value.example = row.example
+  fileInfo.value.type = row.fileType
+  fileInfo.value.attribute = row.attribute
+  console.log(fileInfo.value)
+}
+
+const closeFileFuncEditBlock = async () => {
+  const res = await updateFile(updateFileBody.value)
+  console.log(res)
+  fileFuncEditVisible.value = false
   findCurrentFolder()
 }
 

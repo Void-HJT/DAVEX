@@ -501,6 +501,7 @@ public class FileFolderService {
         new_file.setExpiredTime(file.getExpiredTime());
         new_file.setExample(file.getExample());
         new_file.setLastUpdate(new Timestamp(System.currentTimeMillis()));
+        new_file.setType(file.getType());
         new_file.setUid(file.getUid());
         new_file.setAgentId(file.getAgentId());
         new_file.setFolderId(file.getFolderId());
@@ -960,7 +961,7 @@ public class FileFolderService {
         if (file == null) {
             return Body.error("找不到文件");
         }
-        if (!file.getType().equals(".csv")) {
+        if (!file.getName().endsWith(".csv")) {
             return Body.error("非csv文件");
         } else {
             String filePath = getFilePath(file, baseDirectory);

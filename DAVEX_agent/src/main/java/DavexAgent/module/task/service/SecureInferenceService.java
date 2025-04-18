@@ -70,8 +70,8 @@ public class SecureInferenceService {
         if (file == null) {
             throw new Exception("文件不存在");
         }
-        if (!"model".equals(file.getType())) {
-            throw new Exception("文件不是模型");
+        if (!file.getType().toLowerCase().contains("secureinfer")) {
+            throw new Exception("文件类型不符");
         }
         for (UploadAgentTaskInfo.PartInfo partInfo : mpcTaskInfo.getPartInfo()) {
             MpcTaskAgent mpcTaskAgent = new MpcTaskAgent();

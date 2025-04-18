@@ -87,7 +87,7 @@
             <template v-slot="scope">
               <el-button
                   class="small-default-button"
-                  v-if="scope.row.type === 'file' && scope.row.fileType === 'model'"
+                  v-if="scope.row.type === 'file' && scope.row.fileType?.includes('secureinfer')"
                   @click="
                   chooseModelMethod(
                     scope.row.agentId,
