@@ -390,7 +390,13 @@
       <el-dialog v-model="fileFuncEditVisible" title="文件功能权限管理" width="30%">
         <el-form :model="fileInfoBody" label-width="20%" style="max-width: 80%">
           <el-form-item label="功能权限">
-            <el-input v-model="fileInfo.type"></el-input>
+            <el-checkbox-group v-model="selectedFuncTypes">
+              <el-checkbox label="trans">文件传输</el-checkbox>
+              <el-checkbox label="compare">数据比对</el-checkbox>
+              <el-checkbox label="mpc">安全多方计算</el-checkbox>
+              <el-checkbox label="psi">隐私集合求交</el-checkbox>
+              <el-checkbox label="secureinfer">安全推理</el-checkbox>
+            </el-checkbox-group>
           </el-form-item>
         </el-form>
         <template #footer>
@@ -635,6 +641,8 @@ const fileInfo = ref({
 const updateFileBody = ref({
   fileInfo: fileInfo
 })
+
+const selectedFuncTypes = ref([])
 
 const getApplicationMethod = async () => {
   const res = await getApplication()
@@ -1104,10 +1112,13 @@ const openFileFuncEditBlockMethod = async (row) => {
   fileInfo.value.example = row.example
   fileInfo.value.type = row.fileType
   fileInfo.value.attribute = row.attribute
+  selectedFuncTypes.value = (row.fileType?.split(',') || []).map(s => s.trim())
+  console.log(selectedFuncTypes.value)
   console.log(fileInfo.value)
 }
 
 const closeFileFuncEditBlock = async () => {
+  fileInfo.value.type = selectedFuncTypes.value.join(',')
   const res = await updateFile(updateFileBody.value)
   console.log(res)
   fileFuncEditVisible.value = false
