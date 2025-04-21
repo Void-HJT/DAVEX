@@ -52,13 +52,6 @@ public class ApplicationService {
         application.setLastUpdated(LocalDateTime.now());
         application.setPassword(uid);
         applicationMapper.insert(application);
-        //通信
-//        String exchange = "ApplicationExchange";
-//        String message = null;
-//        String operation = "Create";
-//        String entity = "application";
-//        message = messageService.getMessage(operation,entity,objectMapper,application);
-//        adminMQPublishService.publishMessageToFanout(exchange,message);
         List<Agent> agentList = agentMapper.selectList(new LambdaQueryWrapper<>());
         for(Agent agent:agentList){
             try {
@@ -91,13 +84,6 @@ public class ApplicationService {
         applicationMapper.deleteById(applicationId);
         Application application = new Application();
         application.setUid(applicationId);
-        //通信
-//        String exchange = "ApplicationExchange";
-//        String message = null;
-//        String operation = "Delete";
-//        String entity = "application";
-//        message = messageService.getMessage(operation,entity,objectMapper,application);
-//        adminMQPublishService.publishMessageToFanout(exchange,message);
         List<Agent> agentList = agentMapper.selectList(new LambdaQueryWrapper<>());
         for(Agent agent:agentList){
             try {
@@ -127,13 +113,6 @@ public class ApplicationService {
     public Body<String> updateApplication(Application application) {
         if (!uid.equals(application.getCenterId())){return Body.error("uid不正确");}
         applicationMapper.updateById(application);
-        //通信
-//        String exchange = "ApplicationExchange";
-//        String message = null;
-//        String operation = "Update";
-//        String entity = "application";
-//        message = messageService.getMessage(operation,entity,objectMapper,application);
-//        adminMQPublishService.publishMessageToFanout(exchange,message);
         List<Agent> agentList = agentMapper.selectList(new LambdaQueryWrapper<>());
         for(Agent agent:agentList){
             try {

@@ -1,10 +1,5 @@
 package DavexBase.service.auth;
 
-import DavexBase.common.AuthTokenCache;
-import DavexBase.entity.Keycloak;
-import DavexBase.info.TokenResult;
-import DavexBase.mapper.KeycloakMapper;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.http.codec.json.Jackson2JsonDecoder;
@@ -28,13 +23,6 @@ public class CenterWebClientService {
 
     private ExchangeStrategies strategies;
 
-    @Autowired
-    AuthTokenCache authTokenCache;
-
-
-
-    @Autowired
-    KeycloakMapper keycloakMapper;
 
     public CenterWebClientService(ObjectMapper objectMapper, AgentMapper agentMapper) {
         this.agentMapper = agentMapper;

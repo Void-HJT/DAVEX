@@ -140,21 +140,6 @@ public class FileFolderService {
         new_folder.setLastUpdate(Timestamp.valueOf(LocalDateTime.now()));
         folderMapper.insert(new_folder);
 
-        //通信
-//        String exchange = "FileExchange";
-//        String message = null;
-//        String operation = "Create";
-//        String entity = "folder";
-//        message = messageService.getMessage(operation,entity,objectMapper,new_folder);
-//        //
-//        List<Object> uidList = rabbitmqConnectionMapper.selectObjs(new QueryWrapper<RabbitmqConnection>().select("uid"));
-//        for(Object obj : uidList){
-//            if (obj instanceof String){
-//                String targetId = (String) obj;
-//                publishService.sendMessageToFanoutExchange(targetId,exchange,message);
-//            }
-//        }
-        //
         List<Center> centerList = centerMapper.selectList(new LambdaQueryWrapper<>());
         for(Center center:centerList){
             try {
@@ -229,21 +214,6 @@ public class FileFolderService {
             return Body.error("本地文件夹不存在或不是一个目录");
         }
 
-        //通信
-//        String exchange = "FileExchange";
-//        String message = null;
-//        String operation = "Update";
-//        String entity = "folder";
-//        message = messageService.getMessage(operation,entity,objectMapper,folder);
-//        //
-//        List<Object> uidList = rabbitmqConnectionMapper.selectObjs(new QueryWrapper<RabbitmqConnection>().select("uid"));
-//        for(Object obj : uidList){
-//            if (obj instanceof String){
-//                String targetId = (String) obj;
-//                publishService.sendMessageToFanoutExchange(targetId,exchange,message);
-//            }
-//        }
-        //
         List<Center> centerList = centerMapper.selectList(new LambdaQueryWrapper<>());
         for(Center center:centerList){
             try {
@@ -319,21 +289,7 @@ public class FileFolderService {
             return Body.error("本地文件夹不存在或不是一个目录");
         }
 
-        //通信
-//        String exchange = "FileExchange";
-//        String message = null;
-//        String operation = "Delete";
-//        String entity = "folder";
-//        message = messageService.getMessage(operation,entity,objectMapper,folder);
-//        //
-//        List<Object> uidList = rabbitmqConnectionMapper.selectObjs(new QueryWrapper<RabbitmqConnection>().select("uid"));
-//        for(Object obj : uidList){
-//            if (obj instanceof String){
-//                String targetId = (String) obj;
-//                publishService.sendMessageToFanoutExchange(targetId,exchange,message);
-//            }
-//        }
-        //
+
         List<Center> centerList = centerMapper.selectList(new LambdaQueryWrapper<>());
         for(Center center:centerList){
             try {
@@ -445,20 +401,7 @@ public class FileFolderService {
         // 其他元数据设置
         fileMapper.insert(fileRecord);
 
-        //通信
-//        String exchange = "FileExchange";
-//        String message = null;
-//        String operation = "Create";
-//        String entity = "file";
-//        message = messageService.getMessage(operation,entity,objectMapper,fileRecord);
-//        //
-//        List<Object> uidList = rabbitmqConnectionMapper.selectObjs(new QueryWrapper<RabbitmqConnection>().select("uid"));
-//        for(Object obj : uidList){
-//            if (obj instanceof String){
-//                String targetId = (String) obj;
-//                publishService.sendMessageToFanoutExchange(targetId,exchange,message);
-//            }
-//        }
+
         List<Center> centerList = centerMapper.selectList(new LambdaQueryWrapper<>());
         for(Center center:centerList){
             try {
@@ -510,20 +453,7 @@ public class FileFolderService {
                 .eq("uid", file.getUid());
         fileMapper.update(new_file, updateWrapper);
 
-        //通信
-//        String exchange = "FileExchange";
-//        String message = null;
-//        String operation = "Update";
-//        String entity = "file";
-//        message = messageService.getMessage(operation,entity,objectMapper,new_file);
-//        //
-//        List<Object> uidList = rabbitmqConnectionMapper.selectObjs(new QueryWrapper<RabbitmqConnection>().select("uid"));
-//        for(Object obj : uidList){
-//            if (obj instanceof String){
-//                String targetId = (String) obj;
-//                publishService.sendMessageToFanoutExchange(targetId,exchange,message);
-//            }
-//        }
+
         List<Center> centerList = centerMapper.selectList(new LambdaQueryWrapper<>());
         for(Center center:centerList){
             try {
@@ -584,20 +514,7 @@ public class FileFolderService {
         }
 
 
-        //通信
-//        String exchange = "FileExchange";
-//        String message = null;
-//        String operation = "Delete";
-//        String entity = "file";
-//        message = messageService.getMessage(operation,entity,objectMapper,file);
-//        //
-//        List<Object> uidList = rabbitmqConnectionMapper.selectObjs(new QueryWrapper<RabbitmqConnection>().select("uid"));
-//        for(Object obj : uidList){
-//            if (obj instanceof String){
-//                String targetId = (String) obj;
-//                publishService.sendMessageToFanoutExchange(targetId,exchange,message);
-//            }
-//        }
+
         List<Center> centerList = centerMapper.selectList(new LambdaQueryWrapper<>());
         for(Center center:centerList){
             try {
@@ -916,13 +833,13 @@ public class FileFolderService {
         }
 
         //=========================上链模块=========================
-        if(chainMaker){
-            String responseMsgJson = JSON.toJSONString(resource);
-            //生成responseID
-            String responseId = generateUUID("response", "fileTransfer", my.getId());
-            //将响应进行上链操作
-            ContractResponse responseResponse = upChainService.responseUpChain(requestHash,responseMsgJson,responseId,requestId,my.getId(),"agent");
-        }
+//        if(chainMaker){
+//            String responseMsgJson = JSON.toJSONString(resource);
+//            //生成responseID
+//            String responseId = generateUUID("response", "fileTransfer", my.getId());
+//            //将响应进行上链操作
+//            ContractResponse responseResponse = upChainService.responseUpChain(requestHash,responseMsgJson,responseId,requestId,my.getId(),"agent");
+//        }
         //======================上链模块结束=========================
 
         // 发送文件
@@ -938,13 +855,13 @@ public class FileFolderService {
         File file = fileMapper.selectOne(queryWrapper);
 
         //========================上链模块=====================
-        if(chainMaker){
-            String responseMsgJson = JSON.toJSONString(file);
-            //生成responseID
-            String responseId = generateUUID("response", "fileTransfer", my.getId());
-            //将响应进行上链操作
-            ContractResponse responseResponse = upChainService.responseUpChain(requestHash,responseMsgJson,responseId,requestId,my.getId(),"agent");
-        }
+//        if(chainMaker){
+//            String responseMsgJson = JSON.toJSONString(file);
+//            //生成responseID
+//            String responseId = generateUUID("response", "fileTransfer", my.getId());
+//            //将响应进行上链操作
+//            ContractResponse responseResponse = upChainService.responseUpChain(requestHash,responseMsgJson,responseId,requestId,my.getId(),"agent");
+//        }
         //=====================上链模块结束=====================
 
         return Body.success(file, "查询成功");
