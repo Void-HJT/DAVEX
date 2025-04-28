@@ -1,5 +1,6 @@
 package DavexAgent.module.directory;
 
+import DavexBase.entity.Center;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
@@ -137,6 +138,21 @@ public class FileFolderController {
         // 处理文件数据并保存到数据库
         fileFolderService.addAgent(agent);
         return ResponseEntity.ok("File synchronized successfully");
+    }
+
+    @PostMapping("/addCenter")
+    public void addCenter(@RequestBody Center center) {
+        fileFolderService.addCenter(center);
+    }
+
+    @PostMapping("/syncFolders2Center")
+    public void syncFolders2Center(@RequestParam("centerId") String centerId) {
+        fileFolderService.syncFolders2Center(centerId);
+    }
+
+    @PostMapping("/syncFiles2Center")
+    public void syncFiles2Center(@RequestParam("centerId") String centerId) {
+        fileFolderService.syncFiles2Center(centerId);
     }
 
     @GetMapping("/test")

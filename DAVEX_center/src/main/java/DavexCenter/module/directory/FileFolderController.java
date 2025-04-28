@@ -141,6 +141,23 @@ public class FileFolderController {
         return ResponseEntity.ok("File synchronized successfully");
     }
 
+    @PostMapping("/syncFolders")
+    public Body<String> syncFolders(@RequestBody List<Folder> folderList) {
+        return fileFolderService.syncFolders(folderList);
+    }
+
+    @PostMapping("/syncFiles")
+    public Body<String> syncFiles(@RequestBody List<File> fileList) {
+        return fileFolderService.syncFiles(fileList);
+    }
+
+    @PostMapping("/linkAgent")
+    public Body<String> linkAgent(@RequestParam("agentId") String agentId,
+                                  @RequestParam("ip") String ip,
+                                  @RequestParam("port") Integer port) {
+        return fileFolderService.linkAgent(agentId, ip, port);
+    }
+
     @GetMapping("/test")
     public String test() {
         return fileFolderService.test();

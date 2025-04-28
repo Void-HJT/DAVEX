@@ -542,6 +542,49 @@ public class FileFolderService {
         return Body.success("文件删除成功");
 
     }
+
+    public void addCenter(Center center) {
+        try {
+            centerMapper.insert(center);
+        } catch (Exception e) {
+            System.err.println("Error processing center with UID: " + center.getUid());
+        }
+    }
+
+    public void syncFolders2Center(String centerId) {
+        try {
+            List<Folder> folderList = folderMapper.selectList(null);
+            agentWebClientService.agent2CenterWebClient(centerId)
+                    .post()
+                    .uri(UriBuilder -> UriBuilder.path("/directory/fileFolder/syncFolders")
+                    .build())
+                    .bodyValue(folderList)
+                    .retrieve() // 发起请求
+                    .bodyToMono(String.class)
+                    .block();
+        } catch (Exception e) {
+            System.err.println("Error processing center with UID: " + centerId);
+            e.printStackTrace();
+        }
+    }
+
+    public void syncFiles2Center(String centerId) {
+        try {
+            List<File> fileList = fileMapper.selectList(null);
+            agentWebClientService.agent2CenterWebClient(centerId)
+                    .post()
+                    .uri(UriBuilder -> UriBuilder.path("/directory/fileFolder/syncFiles")
+                    .build())
+                    .bodyValue(fileList)
+                    .retrieve() // 发起请求
+                    .bodyToMono(String.class)
+                    .block();
+        } catch (Exception e) {
+            System.err.println("Error processing center with UID: " + centerId);
+            e.printStackTrace();
+        }
+    }
+
     //
     public Body<String> syncFolder(Folder folder,String target){
 
@@ -631,9 +674,90 @@ public class FileFolderService {
         }
     }
 
+    public Body<String> syncFolders(List<Folder> folderList){
+        try {
+            for (Folder folder : folderList) {
+                LambdaQueryWrapper<Folder> queryFolderWrapper = Wrappers.<Folder>lambdaQuery()
+                        .eq(Folder::getUid, folder.getUid());
+                Folder existingFolder = folderMapper.selectOne(queryFolderWrapper);
+                if (existingFolder == null) {
+                    folderMapper.insert(folder); // 只插不存在的
+                }
+            }
+
+            return Body.success("Folders added successfully.");
+        } catch (Exception e) {
+            e.printStackTrace();
+            return Body.error("An error occurred: " + e.getMessage());
+        }
+    }
+
+    public Body<String> syncFiles(List<File> fileList){
+        try {
+            for (File file : fileList) {
+                LambdaQueryWrapper<File> queryFileWrapper = Wrappers.<File>lambdaQuery()
+                        .eq(File::getUid, file.getUid());
+                File existingFile = fileMapper.selectOne(queryFileWrapper);
+                if (existingFile == null) {
+                    fileMapper.insert(file); // 只插不存在的
+                }
+            }
+            return Body.success("Files added successfully.");
+        } catch (Exception e) {
+            e.printStackTrace();
+            return Body.error("An error occurred: " + e.getMessage());
+        }
+    }
+
     //
     public void addAgent(Agent agent) {
         agentMapper.insert(agent);
+    }
+
+    // center连接新agent
+    public Body<String> linkAgent(String agentId, String ip, Integer port) {
+        try {
+            Agent agent = new Agent();
+            agent.setUid(agentId);
+            agent.setIp(ip);
+            agent.setPort(port);
+            agentMapper.insert(agent);
+            Center center = new Center();
+            center.setUid(my.getId());
+            center.setName(my.getName());
+            center.setIp(my.getIp());
+            center.setPort(my.getPort());
+            centerWebClientService.center2AgentWebClient(agent.getUid())
+                    .post()
+                    .uri(UriBuilder -> UriBuilder.path("/directory/fileFolder/addCenter")
+                    .build())
+                    .bodyValue(center)
+                    .retrieve() // 发起请求
+                    .bodyToMono(String.class)
+                    .block();
+
+            centerWebClientService.center2AgentWebClient(agent.getUid())
+                    .post()
+                    .uri(UriBuilder -> UriBuilder.path("/directory/fileFolder/syncFolders2Center")
+                    .queryParam("centerId", center.getUid())
+                    .build())
+                    .retrieve() // 发起请求
+                    .bodyToMono(String.class)
+                    .block();
+            centerWebClientService.center2AgentWebClient(agent.getUid())
+                    .post()
+                    .uri(UriBuilder -> UriBuilder.path("/directory/fileFolder/syncFiles2Center")
+                    .queryParam("centerId", center.getUid())
+                    .build())
+                    .retrieve() // 发起请求
+                    .bodyToMono(String.class)
+                    .block();
+
+            return Body.success("Agent linked to center successfully.");
+        } catch (Exception e) {
+            e.printStackTrace();
+            return Body.error(e.getMessage());
+        }
     }
 
     private void findAllParentFolders(String folderId, List<String> parentFolderIds,
