@@ -1,0 +1,19 @@
+port: 8888
+
+log_config:
+  log_file: /home/bax/dev/logs
+  log_level: info
+  enable_console_logger: true
+
+tls_config:
+  enable_tls: false              # 不启用 TLS
+
+storage_config:
+  storage_backend: "mysql"       # 使用 MySQL 作为存储后端
+  db_url: "mysql://nhy:makeMPLgreat*2@10.176.34.171:3306/bax_center"
+  password: "makeMPLgreat*2"    # 数据库用户密码
+
+scheme: "RSA"                    # 密钥生成方式
+enable_inject_cm_key: false
+cm_private_key_path: ""
+cm_cert_path: ""

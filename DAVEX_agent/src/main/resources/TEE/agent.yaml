@@ -1,0 +1,33 @@
+!!DavexBase.service.TEE.models.YamlConfig
+add_data_rule: null
+cert_chain_file: null
+common:
+  cert_pems_file: [agent.crt]
+  party_id: XTPIS55IU5WVB2HHSHNW7ANLUYKHMYBOVBQDQG7U7VDX57D5HNSA
+  private_key_file: agent.key
+  scheme: null
+delete_data_key: {resource_uri: null}
+delete_data_policy: null
+delete_data_rule: {data_uuid: null, rule_id: null, scope: null}
+get_data_policys: {scope: null}
+get_export_data_key_b64: null
+host: 127.0.0.1:8888
+private_key_file: null
+register_data_keys:
+  data_keys:
+  - {data_key_b64: gsY7b0sSK/WIooPGts/R4g==, resource_uri: 2007_01_data}
+register_data_policy:
+  data_uuid: 2007_01_data
+  rules:
+  - columns: [原始链接, 案号, 案件名称, 法院, 所属地区, 案件类型, 案件类型编码, 来源, 审理程序, 裁判日期, 公开日期, 当事人, 案由,
+      法律依据, 全文]
+    global_constraints: []
+    grantee_party_ids: [5W3LGZCB5QHKFX73C7QWICIUKSWCLVLYH3XE7H5UCV7IDLGMVLWA]
+    op_constraints:
+    - constraints: []
+      op_name: psi
+    rule_id: 2007_01_data_rule_id_1
+  scope: default
+root_ca_file: null
+tee_constraints: {mr_boot: null, mr_plat: null, mr_signer: null, mr_ta: null}
+tee_plat: sim
