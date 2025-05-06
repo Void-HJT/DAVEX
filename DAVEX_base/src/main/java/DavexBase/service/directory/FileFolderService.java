@@ -7,7 +7,6 @@ import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
 import java.net.MalformedURLException;
 import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -16,17 +15,12 @@ import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.stream.Collectors;
 
-import DavexBase.common.ContractResponse;
 import DavexBase.common.My;
 import DavexBase.entity.*;
 import DavexBase.mapper.*;
 import DavexBase.service.auth.AgentWebClientService;
-import DavexBase.service.blockchain.UpChainService;
-import com.alibaba.fastjson.JSON;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.core.io.Resource;
@@ -39,10 +33,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
@@ -51,8 +43,6 @@ import DavexBase.common.GetMaxUid;
 import DavexBase.info.DirectoryInfo;
 import DavexBase.info.FileInfo;
 import DavexBase.service.auth.CenterWebClientService;
-
-import static DavexBase.common.UUIDGenerator.generateUUID;
 
 @Service
 public class FileFolderService {
@@ -64,19 +54,10 @@ public class FileFolderService {
     private CenterMapper centerMapper;
 
     @Autowired
-    private ApplicationGroupMapper applicationGroupMapper;
-
-    @Autowired
     private FileMapper fileMapper;
 
     @Autowired
     private AgentMapper agentMapper;
-
-    @Autowired
-    private RabbitmqConnectionMapper rabbitmqConnectionMapper;
-
-    @Autowired
-    private FolderVisibilityMapper folderVisibilityMapper;
 
     @Autowired
     private AgentWebClientService agentWebClientService;
@@ -84,17 +65,12 @@ public class FileFolderService {
     @Autowired
     private CenterWebClientService centerWebClientService;
 
-
     @Autowired
     private My my;
-
-    @Autowired
-    private UpChainService upChainService;
 
     // 使用 Jackson ObjectMapper
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    @Autowired
     public FileFolderService() {
         this.objectMapper.registerModule(new JavaTimeModule());
     }
@@ -141,17 +117,18 @@ public class FileFolderService {
         folderMapper.insert(new_folder);
 
         List<Center> centerList = centerMapper.selectList(new LambdaQueryWrapper<>());
-        for(Center center:centerList){
+        for (Center center : centerList) {
             try {
                 // 准备 target 参数，可以根据实际情况选择 add, delete 或 update
                 String target = "add";
-                if(center.getUid().equals(my.getId())){//跳过自己
+                if (center.getUid().equals(my.getId())) {// 跳过自己
                     continue;
                 }
                 // 构建 WebClient 请求并发送 POST 请求
                 agentWebClientService.agent2CenterWebClient(center.getUid())
                         .post()
-                        .uri(UriBuilder -> UriBuilder.path("/directory/fileFolder/syncFolder").queryParam("target", target).build())// 请求 URL
+                        .uri(UriBuilder -> UriBuilder.path("/directory/fileFolder/syncFolder")
+                                .queryParam("target", target).build())// 请求 URL
                         .bodyValue(new_folder)
                         .retrieve() // 发起请求
                         .bodyToMono(String.class) // 处理返回响应，假设返回的 Body 是 String 类型
@@ -215,17 +192,18 @@ public class FileFolderService {
         }
 
         List<Center> centerList = centerMapper.selectList(new LambdaQueryWrapper<>());
-        for(Center center:centerList){
+        for (Center center : centerList) {
             try {
                 // 准备 target 参数，可以根据实际情况选择 add, delete 或 update
                 String target = "update";
-                if(center.getUid().equals(my.getId())){//跳过自己
+                if (center.getUid().equals(my.getId())) {// 跳过自己
                     continue;
                 }
                 // 构建 WebClient 请求并发送 POST 请求
                 agentWebClientService.agent2CenterWebClient(center.getUid())
                         .post()
-                        .uri(UriBuilder -> UriBuilder.path("/directory/fileFolder/syncFolder").queryParam("target", target).build())// 请求 URL
+                        .uri(UriBuilder -> UriBuilder.path("/directory/fileFolder/syncFolder")
+                                .queryParam("target", target).build())// 请求 URL
                         .bodyValue(folder)
                         .retrieve() // 发起请求
                         .bodyToMono(String.class) // 处理返回响应，假设返回的 Body 是 String 类型
@@ -236,7 +214,6 @@ public class FileFolderService {
                 e.printStackTrace();
             }
         }
-
 
         return Body.success("文件夹名称更新成功");
 
@@ -289,19 +266,19 @@ public class FileFolderService {
             return Body.error("本地文件夹不存在或不是一个目录");
         }
 
-
         List<Center> centerList = centerMapper.selectList(new LambdaQueryWrapper<>());
-        for(Center center:centerList){
+        for (Center center : centerList) {
             try {
                 // 准备 target 参数，可以根据实际情况选择 add, delete 或 update
                 String target = "delete";
-                if(center.getUid().equals(my.getId())){//跳过自己
+                if (center.getUid().equals(my.getId())) {// 跳过自己
                     continue;
                 }
                 // 构建 WebClient 请求并发送 POST 请求
                 agentWebClientService.agent2CenterWebClient(center.getUid())
                         .post()
-                        .uri(UriBuilder -> UriBuilder.path("/directory/fileFolder/syncFolder").queryParam("target", target).build())// 请求 URL
+                        .uri(UriBuilder -> UriBuilder.path("/directory/fileFolder/syncFolder")
+                                .queryParam("target", target).build())// 请求 URL
                         .bodyValue(folder)
                         .retrieve() // 发起请求
                         .bodyToMono(String.class) // 处理返回响应，假设返回的 Body 是 String 类型
@@ -312,7 +289,6 @@ public class FileFolderService {
                 e.printStackTrace();
             }
         }
-
 
         return Body.success("文件夹删除成功");
     }
@@ -401,19 +377,19 @@ public class FileFolderService {
         // 其他元数据设置
         fileMapper.insert(fileRecord);
 
-
         List<Center> centerList = centerMapper.selectList(new LambdaQueryWrapper<>());
-        for(Center center:centerList){
+        for (Center center : centerList) {
             try {
                 // 准备 target 参数，可以根据实际情况选择 add, delete 或 update
                 String target = "add";
-                if(center.getUid().equals(my.getId())){//跳过自己
+                if (center.getUid().equals(my.getId())) {// 跳过自己
                     continue;
                 }
                 // 构建 WebClient 请求并发送 POST 请求
                 agentWebClientService.agent2CenterWebClient(center.getUid())
                         .post()
-                        .uri(UriBuilder -> UriBuilder.path("/directory/fileFolder/syncFile").queryParam("target", target).build())// 请求 URL
+                        .uri(UriBuilder -> UriBuilder.path("/directory/fileFolder/syncFile")
+                                .queryParam("target", target).build())// 请求 URL
                         .bodyValue(fileRecord)
                         .retrieve() // 发起请求
                         .bodyToMono(String.class) // 处理返回响应，假设返回的 Body 是 String 类型
@@ -453,19 +429,19 @@ public class FileFolderService {
                 .eq("uid", file.getUid());
         fileMapper.update(new_file, updateWrapper);
 
-
         List<Center> centerList = centerMapper.selectList(new LambdaQueryWrapper<>());
-        for(Center center:centerList){
+        for (Center center : centerList) {
             try {
                 // 准备 target 参数，可以根据实际情况选择 add, delete 或 update
                 String target = "update";
-                if(center.getUid().equals(my.getId())){//跳过自己
+                if (center.getUid().equals(my.getId())) {// 跳过自己
                     continue;
                 }
                 // 构建 WebClient 请求并发送 POST 请求
                 agentWebClientService.agent2CenterWebClient(center.getUid())
                         .post()
-                        .uri(UriBuilder -> UriBuilder.path("/directory/fileFolder/syncFile").queryParam("target", target).build())// 请求 URL
+                        .uri(UriBuilder -> UriBuilder.path("/directory/fileFolder/syncFile")
+                                .queryParam("target", target).build())// 请求 URL
                         .bodyValue(new_file)
                         .retrieve() // 发起请求
                         .bodyToMono(String.class) // 处理返回响应，假设返回的 Body 是 String 类型
@@ -513,20 +489,19 @@ public class FileFolderService {
             return Body.error("本地文件不存在或不是一个目录");
         }
 
-
-
         List<Center> centerList = centerMapper.selectList(new LambdaQueryWrapper<>());
-        for(Center center:centerList){
+        for (Center center : centerList) {
             try {
                 // 准备 target 参数，可以根据实际情况选择 add, delete 或 update
                 String target = "delete";
-                if(center.getUid().equals(my.getId())){//跳过自己
+                if (center.getUid().equals(my.getId())) {// 跳过自己
                     continue;
                 }
                 // 构建 WebClient 请求并发送 POST 请求
                 agentWebClientService.agent2CenterWebClient(center.getUid())
                         .post()
-                        .uri(UriBuilder -> UriBuilder.path("/directory/fileFolder/syncFile").queryParam("target", target).build())// 请求 URL
+                        .uri(UriBuilder -> UriBuilder.path("/directory/fileFolder/syncFile")
+                                .queryParam("target", target).build())// 请求 URL
                         .bodyValue(file)
                         .retrieve() // 发起请求
                         .bodyToMono(String.class) // 处理返回响应，假设返回的 Body 是 String 类型
@@ -537,7 +512,6 @@ public class FileFolderService {
                 e.printStackTrace();
             }
         }
-
 
         return Body.success("文件删除成功");
 
@@ -557,7 +531,7 @@ public class FileFolderService {
             agentWebClientService.agent2CenterWebClient(centerId)
                     .post()
                     .uri(UriBuilder -> UriBuilder.path("/directory/fileFolder/syncFolders")
-                    .build())
+                            .build())
                     .bodyValue(folderList)
                     .retrieve() // 发起请求
                     .bodyToMono(String.class)
@@ -574,7 +548,7 @@ public class FileFolderService {
             agentWebClientService.agent2CenterWebClient(centerId)
                     .post()
                     .uri(UriBuilder -> UriBuilder.path("/directory/fileFolder/syncFiles")
-                    .build())
+                            .build())
                     .bodyValue(fileList)
                     .retrieve() // 发起请求
                     .bodyToMono(String.class)
@@ -586,7 +560,7 @@ public class FileFolderService {
     }
 
     //
-    public Body<String> syncFolder(Folder folder,String target){
+    public Body<String> syncFolder(Folder folder, String target) {
 
         // 检查输入参数
         if (folder == null || target == null || target.isEmpty()) {
@@ -595,9 +569,9 @@ public class FileFolderService {
 
         LambdaQueryWrapper<Folder> queryFolderWrapper = Wrappers.<Folder>lambdaQuery()
                 .eq(Folder::getUid, folder.getUid());
-        //查看folder是否存在
+        // 查看folder是否存在
         Folder existingFolder = folderMapper.selectOne(queryFolderWrapper);
-        //根据target不同进行不同操作 add delete update
+        // 根据target不同进行不同操作 add delete update
         try {
             switch (target.toLowerCase()) {
                 case "add":
@@ -630,7 +604,7 @@ public class FileFolderService {
         }
     }
 
-    public Body<String> syncFile(File file,String target){
+    public Body<String> syncFile(File file, String target) {
 
         // 检查输入参数
         if (file == null || target == null || target.isEmpty()) {
@@ -639,9 +613,9 @@ public class FileFolderService {
 
         LambdaQueryWrapper<File> queryFileWrapper = Wrappers.<File>lambdaQuery()
                 .eq(File::getUid, file.getUid());
-        //查看file是否存在
+        // 查看file是否存在
         File existingFile = fileMapper.selectOne(queryFileWrapper);
-        //根据target不同进行不同操作 add delete update
+        // 根据target不同进行不同操作 add delete update
         try {
             switch (target.toLowerCase()) {
                 case "add":
@@ -674,7 +648,7 @@ public class FileFolderService {
         }
     }
 
-    public Body<String> syncFolders(List<Folder> folderList){
+    public Body<String> syncFolders(List<Folder> folderList) {
         try {
             for (Folder folder : folderList) {
                 LambdaQueryWrapper<Folder> queryFolderWrapper = Wrappers.<Folder>lambdaQuery()
@@ -692,7 +666,7 @@ public class FileFolderService {
         }
     }
 
-    public Body<String> syncFiles(List<File> fileList){
+    public Body<String> syncFiles(List<File> fileList) {
         try {
             for (File file : fileList) {
                 LambdaQueryWrapper<File> queryFileWrapper = Wrappers.<File>lambdaQuery()
@@ -730,7 +704,7 @@ public class FileFolderService {
             centerWebClientService.center2AgentWebClient(agent.getUid())
                     .post()
                     .uri(UriBuilder -> UriBuilder.path("/directory/fileFolder/addCenter")
-                    .build())
+                            .build())
                     .bodyValue(center)
                     .retrieve() // 发起请求
                     .bodyToMono(String.class)
@@ -739,16 +713,16 @@ public class FileFolderService {
             centerWebClientService.center2AgentWebClient(agent.getUid())
                     .post()
                     .uri(UriBuilder -> UriBuilder.path("/directory/fileFolder/syncFolders2Center")
-                    .queryParam("centerId", center.getUid())
-                    .build())
+                            .queryParam("centerId", center.getUid())
+                            .build())
                     .retrieve() // 发起请求
                     .bodyToMono(String.class)
                     .block();
             centerWebClientService.center2AgentWebClient(agent.getUid())
                     .post()
                     .uri(UriBuilder -> UriBuilder.path("/directory/fileFolder/syncFiles2Center")
-                    .queryParam("centerId", center.getUid())
-                    .build())
+                            .queryParam("centerId", center.getUid())
+                            .build())
                     .retrieve() // 发起请求
                     .bodyToMono(String.class)
                     .block();
@@ -862,70 +836,10 @@ public class FileFolderService {
         node.setExpiredTime(file.getExpiredTime());
         node.setFileType(file.getType());
     }
-    //
-
-    public DirectoryInfo filterFoldersByVisibility(Long groupId, String agentId, DirectoryInfo directoryAll) {
-        return filterFoldersRecursive(groupId, agentId, directoryAll);
-    }
 
     //
-    public DirectoryInfo filterFolders(List<Long> groupIds, String agentId, DirectoryInfo directory) {
-        return filterFoldersRecursive(groupIds, agentId, directory);
-    }
-
-    //
-    private DirectoryInfo filterFoldersRecursive(Long groupId, String agentId, DirectoryInfo directory) {
-        List<DirectoryInfo> visibleChildren = new ArrayList<>();
-        for (DirectoryInfo child : directory.getChildren()) {
-            if ("folder".equals(child.getType())) {
-                FolderVisibility visibility = folderVisibilityMapper.selectOne(
-                        new QueryWrapper<FolderVisibility>()
-                                .eq("group_id", groupId)
-                                .eq("agent_id", agentId)
-                                .eq("folder_id", child.getUid()));
-                if (visibility != null) {
-                    visibleChildren.add(filterFoldersRecursive(groupId, agentId, child));
-                }
-            } else {
-                visibleChildren.add(child);// 将文件直接插入
-            }
-        }
-        directory.setChildren(visibleChildren);
-        return directory;
-    }
-
-    //
-    private DirectoryInfo filterFoldersRecursive(List<Long> groupIds, String agentId, DirectoryInfo directory) {
-        List<DirectoryInfo> visibleChildren = new ArrayList<>();
-        for (DirectoryInfo child : directory.getChildren()) {
-            if ("folder".equals(child.getType())) {
-                boolean isVisible = groupIds.stream().anyMatch(groupId -> folderVisibilityMapper.selectCount(
-                        new QueryWrapper<FolderVisibility>()
-                                .eq("group_id", groupId)
-                                .eq("agent_id", agentId)
-                                .eq("folder_id", child.getUid())) > 0);
-                if (isVisible) {
-                    visibleChildren.add(filterFoldersRecursive(groupIds, agentId, child));
-                }
-            } else {
-                visibleChildren.add(child); // 将文件直接插入
-            }
-        }
-        directory.setChildren(visibleChildren);
-        return directory;
-    }
-
-    //
-    public List<Long> getGroupIdsByApplication(String applicationId, String agentId) {
-        return applicationGroupMapper.selectList(
-                new QueryWrapper<ApplicationGroup>()
-                        .eq("application_id", applicationId)
-                        .eq("agent_id", agentId))
-                .stream().map(ApplicationGroup::getGroupId).collect(Collectors.toList());
-    }
-
-    //
-    public ResponseEntity<Resource> sendFile(String fileId, String agentId, String folderId, String baseDirectory,Boolean chainMaker, String requestHash, String requestId) throws Exception {
+    public ResponseEntity<Resource> sendFile(String fileId, String agentId, String folderId, String baseDirectory,
+            Boolean chainMaker, String requestHash, String requestId) throws Exception {
 
         LambdaQueryWrapper<File> queryFolderWrapper = Wrappers.<File>lambdaQuery()
                 .eq(File::getUid, fileId)
@@ -956,15 +870,16 @@ public class FileFolderService {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
         }
 
-        //=========================上链模块=========================
-//        if(chainMaker){
-//            String responseMsgJson = JSON.toJSONString(resource);
-//            //生成responseID
-//            String responseId = generateUUID("response", "fileTransfer", my.getId());
-//            //将响应进行上链操作
-//            ContractResponse responseResponse = upChainService.responseUpChain(requestHash,responseMsgJson,responseId,requestId,my.getId(),"agent");
-//        }
-        //======================上链模块结束=========================
+        // =========================上链模块=========================
+        // if(chainMaker){
+        // String responseMsgJson = JSON.toJSONString(resource);
+        // //生成responseID
+        // String responseId = generateUUID("response", "fileTransfer", my.getId());
+        // //将响应进行上链操作
+        // ContractResponse responseResponse =
+        // upChainService.responseUpChain(requestHash,responseMsgJson,responseId,requestId,my.getId(),"agent");
+        // }
+        // ======================上链模块结束=========================
 
         // 发送文件
         return ResponseEntity.ok()
@@ -974,19 +889,21 @@ public class FileFolderService {
 
     }
 
-    public Body<File> getFile(String fileId, String agentId,Boolean chainMaker, String requestHash, String requestId) throws Exception {
+    public Body<File> getFile(String fileId, String agentId, Boolean chainMaker, String requestHash, String requestId)
+            throws Exception {
         LambdaQueryWrapper<File> queryWrapper = Wrappers.<File>lambdaQuery().eq(File::getUid, fileId);
         File file = fileMapper.selectOne(queryWrapper);
 
-        //========================上链模块=====================
-//        if(chainMaker){
-//            String responseMsgJson = JSON.toJSONString(file);
-//            //生成responseID
-//            String responseId = generateUUID("response", "fileTransfer", my.getId());
-//            //将响应进行上链操作
-//            ContractResponse responseResponse = upChainService.responseUpChain(requestHash,responseMsgJson,responseId,requestId,my.getId(),"agent");
-//        }
-        //=====================上链模块结束=====================
+        // ========================上链模块=====================
+        // if(chainMaker){
+        // String responseMsgJson = JSON.toJSONString(file);
+        // //生成responseID
+        // String responseId = generateUUID("response", "fileTransfer", my.getId());
+        // //将响应进行上链操作
+        // ContractResponse responseResponse =
+        // upChainService.responseUpChain(requestHash,responseMsgJson,responseId,requestId,my.getId(),"agent");
+        // }
+        // =====================上链模块结束=====================
 
         return Body.success(file, "查询成功");
     }

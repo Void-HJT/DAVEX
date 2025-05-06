@@ -39,20 +39,6 @@ CREATE TABLE `application` (
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci;
 
 -- ----------------------------
--- Table structure for application_group
--- ----------------------------
-DROP TABLE IF EXISTS `application_group`;
-
-CREATE TABLE `application_group` (
-    `uid` bigint NOT NULL AUTO_INCREMENT,
-    `agent_id` varchar(255) NOT NULL,
-    `center_id` varchar(255) DEFAULT NULL,
-    `application_id` varchar(255) DEFAULT NULL,
-    `group_id` bigint DEFAULT NULL,
-    PRIMARY KEY (`uid`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 2 DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci;
-
--- ----------------------------
 -- Table structure for center
 -- ----------------------------
 DROP TABLE IF EXISTS `center`;
@@ -311,19 +297,6 @@ CREATE TABLE `rabbitmq_connection` (
     `password` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
     `virtual_host` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
     PRIMARY KEY (`center_id`) USING BTREE
-) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci;
-
--- ----------------------------
--- Table structure for rule
--- ----------------------------
-DROP TABLE IF EXISTS `rule`;
-
-CREATE TABLE `rule` (
-    `uid` bigint NOT NULL AUTO_INCREMENT,
-    `agent_id` varchar(255) NOT NULL,
-    `group_id` bigint DEFAULT NULL,
-    `allowed_method` enum('psi', 'pir', 'direct', 'mpc') DEFAULT NULL,
-    PRIMARY KEY (`uid`, `agent_id`)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci;
 
 -- ----------------------------

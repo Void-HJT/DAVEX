@@ -38,19 +38,6 @@ CREATE TABLE `application` (
     PRIMARY KEY (`uid`) USING BTREE
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci;
 
--- ----------------------------
--- Table structure for application_group
--- ----------------------------
-DROP TABLE IF EXISTS `application_group`;
-
-CREATE TABLE `application_group` (
-    `uid` bigint NOT NULL AUTO_INCREMENT,
-    `agent_id` varchar(255) NOT NULL,
-    `center_id` varchar(255) NOT NULL,
-    `application_id` varchar(255) NOT NULL,
-    `group_id` bigint NOT NULL,
-    PRIMARY KEY (`uid`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 32 DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci;
 
 -- ----------------------------
 -- Table structure for center
