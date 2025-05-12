@@ -6,7 +6,6 @@ import java.util.List;
 import DavexBase.entity.*;
 import DavexBase.mapper.*;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.slf4j.Logger;
@@ -47,7 +46,6 @@ public class ABACService {
     @Autowired
     private AgentWebClientService agentWebClientService;
     @Autowired
-    private RabbitmqConnectionMapper rabbitmqConnectionMapper;
 
     // 使用 Jackson ObjectMapper
     private final ObjectMapper objectMapper = new ObjectMapper();
@@ -91,6 +89,9 @@ public class ABACService {
     }
 
     public boolean getAccess(Application app, File file, String action) {
+        if (action.equals("pass")) {
+            return true;
+        }
         logger.info("处理数据访问ABAC请求\nsubject:{}\nobject:{}\naction:{}", app, file, action);
         StandardEvaluationContext context = new StandardEvaluationContext();
 
@@ -214,32 +215,33 @@ public class ABACService {
         }
 
         // 通信
-//        String exchange = "RuleExchange";
-//        String message = null;
-//        String operation = "Create";
-//        String entity = "rule";
-//        message = messageService.getMessage(operation, entity, objectMapper, rule);
-//        //
-//        List<Object> uidList = rabbitmqConnectionMapper
-//                .selectObjs(new QueryWrapper<RabbitmqConnection>().select("uid"));
-//        for (Object obj : uidList) {
-//            if (obj instanceof String) {
-//                String targetId = (String) obj;
-//                publishService.sendMessageToFanoutExchange(targetId, exchange, message);
-//            }
-//        }
+        // String exchange = "RuleExchange";
+        // String message = null;
+        // String operation = "Create";
+        // String entity = "rule";
+        // message = messageService.getMessage(operation, entity, objectMapper, rule);
+        // //
+        // List<Object> uidList = rabbitmqConnectionMapper
+        // .selectObjs(new QueryWrapper<RabbitmqConnection>().select("uid"));
+        // for (Object obj : uidList) {
+        // if (obj instanceof String) {
+        // String targetId = (String) obj;
+        // publishService.sendMessageToFanoutExchange(targetId, exchange, message);
+        // }
+        // }
         List<Center> centerList = centerMapper.selectList(new LambdaQueryWrapper<>());
-        for(Center center:centerList){
+        for (Center center : centerList) {
             try {
                 // 准备 target 参数，可以根据实际情况选择 add, delete 或 update
                 String target = "add";
-                if(center.getUid().equals(my.getId())){//跳过自己
+                if (center.getUid().equals(my.getId())) {// 跳过自己
                     continue;
                 }
                 // 构建 WebClient 请求并发送 POST 请求
                 agentWebClientService.agent2CenterWebClient(center.getUid())
                         .post()
-                        .uri(UriBuilder -> UriBuilder.path("/abac/syncRule").queryParam("target", target).build())// 请求 URL
+                        .uri(UriBuilder -> UriBuilder.path("/abac/syncRule").queryParam("target", target).build())// 请求
+                                                                                                                  // URL
                         .bodyValue(rule)
                         .retrieve() // 发起请求
                         .bodyToMono(String.class) // 处理返回响应，假设返回的 Body 是 String 类型
@@ -265,32 +267,33 @@ public class ABACService {
             return Body.error("删除规则失败：{}", e.getMessage());
         }
         // 通信
-//        String exchange = "RuleExchange";
-//        String message = null;
-//        String operation = "Delete";
-//        String entity = "rule";
-//        message = messageService.getMessage(operation, entity, objectMapper, rule);
-//        //
-//        List<Object> uidList = rabbitmqConnectionMapper
-//                .selectObjs(new QueryWrapper<RabbitmqConnection>().select("uid"));
-//        for (Object obj : uidList) {
-//            if (obj instanceof String) {
-//                String targetId = (String) obj;
-//                publishService.sendMessageToFanoutExchange(targetId, exchange, message);
-//            }
-//        }
+        // String exchange = "RuleExchange";
+        // String message = null;
+        // String operation = "Delete";
+        // String entity = "rule";
+        // message = messageService.getMessage(operation, entity, objectMapper, rule);
+        // //
+        // List<Object> uidList = rabbitmqConnectionMapper
+        // .selectObjs(new QueryWrapper<RabbitmqConnection>().select("uid"));
+        // for (Object obj : uidList) {
+        // if (obj instanceof String) {
+        // String targetId = (String) obj;
+        // publishService.sendMessageToFanoutExchange(targetId, exchange, message);
+        // }
+        // }
         List<Center> centerList = centerMapper.selectList(new LambdaQueryWrapper<>());
-        for(Center center:centerList){
+        for (Center center : centerList) {
             try {
                 // 准备 target 参数，可以根据实际情况选择 add, delete 或 update
                 String target = "delete";
-                if(center.getUid().equals(my.getId())){//跳过自己
+                if (center.getUid().equals(my.getId())) {// 跳过自己
                     continue;
                 }
                 // 构建 WebClient 请求并发送 POST 请求
                 agentWebClientService.agent2CenterWebClient(center.getUid())
                         .post()
-                        .uri(UriBuilder -> UriBuilder.path("/abac/syncRule").queryParam("target", target).build())// 请求 URL
+                        .uri(UriBuilder -> UriBuilder.path("/abac/syncRule").queryParam("target", target).build())// 请求
+                                                                                                                  // URL
                         .bodyValue(rule)
                         .retrieve() // 发起请求
                         .bodyToMono(String.class) // 处理返回响应，假设返回的 Body 是 String 类型
@@ -317,32 +320,33 @@ public class ABACService {
             return Body.error("更新规则失败：{}", e.getMessage());
         }
         // 通信
-//        String exchange = "RuleExchange";
-//        String message = null;
-//        String operation = "Update";
-//        String entity = "rule";
-//        message = messageService.getMessage(operation, entity, objectMapper, rule);
-//        //
-//        List<Object> uidList = rabbitmqConnectionMapper
-//                .selectObjs(new QueryWrapper<RabbitmqConnection>().select("uid"));
-//        for (Object obj : uidList) {
-//            if (obj instanceof String) {
-//                String targetId = (String) obj;
-//                publishService.sendMessageToFanoutExchange(targetId, exchange, message);
-//            }
-//        }
+        // String exchange = "RuleExchange";
+        // String message = null;
+        // String operation = "Update";
+        // String entity = "rule";
+        // message = messageService.getMessage(operation, entity, objectMapper, rule);
+        // //
+        // List<Object> uidList = rabbitmqConnectionMapper
+        // .selectObjs(new QueryWrapper<RabbitmqConnection>().select("uid"));
+        // for (Object obj : uidList) {
+        // if (obj instanceof String) {
+        // String targetId = (String) obj;
+        // publishService.sendMessageToFanoutExchange(targetId, exchange, message);
+        // }
+        // }
         List<Center> centerList = centerMapper.selectList(new LambdaQueryWrapper<>());
-        for(Center center:centerList){
+        for (Center center : centerList) {
             try {
                 // 准备 target 参数，可以根据实际情况选择 add, delete 或 update
                 String target = "update";
-                if(center.getUid().equals(my.getId())){//跳过自己
+                if (center.getUid().equals(my.getId())) {// 跳过自己
                     continue;
                 }
                 // 构建 WebClient 请求并发送 POST 请求
                 agentWebClientService.agent2CenterWebClient(center.getUid())
                         .post()
-                        .uri(UriBuilder -> UriBuilder.path("/abac/syncRule").queryParam("target", target).build())// 请求 URL
+                        .uri(UriBuilder -> UriBuilder.path("/abac/syncRule").queryParam("target", target).build())// 请求
+                                                                                                                  // URL
                         .bodyValue(rule)
                         .retrieve() // 发起请求
                         .bodyToMono(String.class) // 处理返回响应，假设返回的 Body 是 String 类型
@@ -382,32 +386,34 @@ public class ABACService {
             return Body.error("创建文件规则失败：{}", e.getMessage());
         }
         // 通信
-//        String exchange = "RuleExchange";
-//        String message = null;
-//        String operation = "Create";
-//        String entity = "fileRule";
-//        message = messageService.getMessage(operation, entity, objectMapper, fileRule);
-//        //
-//        List<Object> uidList = rabbitmqConnectionMapper
-//                .selectObjs(new QueryWrapper<RabbitmqConnection>().select("uid"));
-//        for (Object obj : uidList) {
-//            if (obj instanceof String) {
-//                String targetId = (String) obj;
-//                publishService.sendMessageToFanoutExchange(targetId, exchange, message);
-//            }
-//        }
+        // String exchange = "RuleExchange";
+        // String message = null;
+        // String operation = "Create";
+        // String entity = "fileRule";
+        // message = messageService.getMessage(operation, entity, objectMapper,
+        // fileRule);
+        // //
+        // List<Object> uidList = rabbitmqConnectionMapper
+        // .selectObjs(new QueryWrapper<RabbitmqConnection>().select("uid"));
+        // for (Object obj : uidList) {
+        // if (obj instanceof String) {
+        // String targetId = (String) obj;
+        // publishService.sendMessageToFanoutExchange(targetId, exchange, message);
+        // }
+        // }
         List<Center> centerList = centerMapper.selectList(new LambdaQueryWrapper<>());
-        for(Center center:centerList){
+        for (Center center : centerList) {
             try {
                 // 准备 target 参数，可以根据实际情况选择 add, delete 或 update
                 String target = "add";
-                if(center.getUid().equals(my.getId())){//跳过自己
+                if (center.getUid().equals(my.getId())) {// 跳过自己
                     continue;
                 }
                 // 构建 WebClient 请求并发送 POST 请求
                 agentWebClientService.agent2CenterWebClient(center.getUid())
                         .post()
-                        .uri(UriBuilder -> UriBuilder.path("/abac/syncFileRule").queryParam("target", target).build())// 请求 URL
+                        .uri(UriBuilder -> UriBuilder.path("/abac/syncFileRule").queryParam("target", target).build())// 请求
+                                                                                                                      // URL
                         .bodyValue(fileRule)
                         .retrieve() // 发起请求
                         .bodyToMono(String.class) // 处理返回响应，假设返回的 Body 是 String 类型
@@ -433,32 +439,34 @@ public class ABACService {
             return Body.error("删除文件规则失败：{}", e.getMessage());
         }
         // 通信
-//        String exchange = "RuleExchange";
-//        String message = null;
-//        String operation = "Delete";
-//        String entity = "fileRule";
-//        message = messageService.getMessage(operation, entity, objectMapper, fileRule);
-//        //
-//        List<Object> uidList = rabbitmqConnectionMapper
-//                .selectObjs(new QueryWrapper<RabbitmqConnection>().select("uid"));
-//        for (Object obj : uidList) {
-//            if (obj instanceof String) {
-//                String targetId = (String) obj;
-//                publishService.sendMessageToFanoutExchange(targetId, exchange, message);
-//            }
-//        }
+        // String exchange = "RuleExchange";
+        // String message = null;
+        // String operation = "Delete";
+        // String entity = "fileRule";
+        // message = messageService.getMessage(operation, entity, objectMapper,
+        // fileRule);
+        // //
+        // List<Object> uidList = rabbitmqConnectionMapper
+        // .selectObjs(new QueryWrapper<RabbitmqConnection>().select("uid"));
+        // for (Object obj : uidList) {
+        // if (obj instanceof String) {
+        // String targetId = (String) obj;
+        // publishService.sendMessageToFanoutExchange(targetId, exchange, message);
+        // }
+        // }
         List<Center> centerList = centerMapper.selectList(new LambdaQueryWrapper<>());
-        for(Center center:centerList){
+        for (Center center : centerList) {
             try {
                 // 准备 target 参数，可以根据实际情况选择 add, delete 或 update
                 String target = "delete";
-                if(center.getUid().equals(my.getId())){//跳过自己
+                if (center.getUid().equals(my.getId())) {// 跳过自己
                     continue;
                 }
                 // 构建 WebClient 请求并发送 POST 请求
                 agentWebClientService.agent2CenterWebClient(center.getUid())
                         .post()
-                        .uri(UriBuilder -> UriBuilder.path("/abac/syncFileRule").queryParam("target", target).build())// 请求 URL
+                        .uri(UriBuilder -> UriBuilder.path("/abac/syncFileRule").queryParam("target", target).build())// 请求
+                                                                                                                      // URL
                         .bodyValue(fileRule)
                         .retrieve() // 发起请求
                         .bodyToMono(String.class) // 处理返回响应，假设返回的 Body 是 String 类型
@@ -491,32 +499,34 @@ public class ABACService {
             return Body.error("更新文件规则失败：{}", e.getMessage());
         }
         // 通信
-//        String exchange = "RuleExchange";
-//        String message = null;
-//        String operation = "Update";
-//        String entity = "fileRule";
-//        message = messageService.getMessage(operation, entity, objectMapper, fileRule);
-//        //
-//        List<Object> uidList = rabbitmqConnectionMapper
-//                .selectObjs(new QueryWrapper<RabbitmqConnection>().select("uid"));
-//        for (Object obj : uidList) {
-//            if (obj instanceof String) {
-//                String targetId = (String) obj;
-//                publishService.sendMessageToFanoutExchange(targetId, exchange, message);
-//            }
-//        }
+        // String exchange = "RuleExchange";
+        // String message = null;
+        // String operation = "Update";
+        // String entity = "fileRule";
+        // message = messageService.getMessage(operation, entity, objectMapper,
+        // fileRule);
+        // //
+        // List<Object> uidList = rabbitmqConnectionMapper
+        // .selectObjs(new QueryWrapper<RabbitmqConnection>().select("uid"));
+        // for (Object obj : uidList) {
+        // if (obj instanceof String) {
+        // String targetId = (String) obj;
+        // publishService.sendMessageToFanoutExchange(targetId, exchange, message);
+        // }
+        // }
         List<Center> centerList = centerMapper.selectList(new LambdaQueryWrapper<>());
-        for(Center center:centerList){
+        for (Center center : centerList) {
             try {
                 // 准备 target 参数，可以根据实际情况选择 add, delete 或 update
                 String target = "update";
-                if(center.getUid().equals(my.getId())){//跳过自己
+                if (center.getUid().equals(my.getId())) {// 跳过自己
                     continue;
                 }
                 // 构建 WebClient 请求并发送 POST 请求
                 agentWebClientService.agent2CenterWebClient(center.getUid())
                         .post()
-                        .uri(UriBuilder -> UriBuilder.path("/abac/syncFileRule").queryParam("target", target).build())// 请求 URL
+                        .uri(UriBuilder -> UriBuilder.path("/abac/syncFileRule").queryParam("target", target).build())// 请求
+                                                                                                                      // URL
                         .bodyValue(fileRule)
                         .retrieve() // 发起请求
                         .bodyToMono(String.class) // 处理返回响应，假设返回的 Body 是 String 类型
@@ -556,10 +566,6 @@ public class ABACService {
         } catch (Exception e) {
             return Body.error("创建可见性失败：{}", e.getMessage());
         }
-        String exchange = "RuleExchange";
-        String message = null;
-        String operation = "Create";
-        String entity = "visibility";
         return Body.success("创建可见性成功");
     }
 
@@ -573,10 +579,6 @@ public class ABACService {
         } catch (Exception e) {
             return Body.error("删除可见性失败：{}", e.getMessage());
         }
-        String exchange = "RuleExchange";
-        String message = null;
-        String operation = "Delete";
-        String entity = "visibility";
         return Body.success("删除可见性成功");
     }
 
@@ -592,10 +594,6 @@ public class ABACService {
         } catch (Exception e) {
             return Body.error("更新可见性失败：{}", e.getMessage());
         }
-        String exchange = "RuleExchange";
-        String message = null;
-        String operation = "Update";
-        String entity = "visibility";
         return Body.success("更新可见性成功");
     }
 
@@ -625,10 +623,6 @@ public class ABACService {
         } catch (Exception e) {
             return Body.error("创建文件夹可见性失败：{}", e.getMessage());
         }
-        String exchange = "RuleExchange";
-        String message = null;
-        String operation = "Create";
-        String entity = "folderVisibility";
         return Body.success("创建文件夹可见性成功");
     }
 
@@ -642,10 +636,6 @@ public class ABACService {
         } catch (Exception e) {
             return Body.error("删除文件夹可见性失败：{}", e.getMessage());
         }
-        String exchange = "RuleExchange";
-        String message = null;
-        String operation = "Delete";
-        String entity = "folderVisibility";
         return Body.success("删除文件夹可见性成功");
     }
 
@@ -667,15 +657,12 @@ public class ABACService {
         } catch (Exception e) {
             return Body.error("更新文件夹可见性失败：{}", e.getMessage());
         }
-        String exchange = "RuleExchange";
-        String message = null;
-        String operation = "Update";
-        String entity = "folderVisibility";
         return Body.success("更新文件夹可见性成功");
     }
+
     // #endregion
     //
-    public Body<String> syncRule(Rule rule,String target){
+    public Body<String> syncRule(Rule rule, String target) {
 
         // 检查输入参数
         if (rule == null || target == null || target.isEmpty()) {
@@ -684,9 +671,9 @@ public class ABACService {
 
         LambdaQueryWrapper<Rule> queryRuleWrapper = Wrappers.<Rule>lambdaQuery()
                 .eq(Rule::getUid, rule.getUid());
-        //查看是否存在
+        // 查看是否存在
         Rule existingRule = ruleMapper.selectOne(queryRuleWrapper);
-        //根据target不同进行不同操作 add delete update
+        // 根据target不同进行不同操作 add delete update
         try {
             switch (target.toLowerCase()) {
                 case "add":
@@ -718,8 +705,9 @@ public class ABACService {
             return Body.error("An error occurred: " + e.getMessage());
         }
     }
+
     //
-    public Body<String> syncFileRule(FileRule fileRule,String target){
+    public Body<String> syncFileRule(FileRule fileRule, String target) {
 
         // 检查输入参数
         if (fileRule == null || target == null || target.isEmpty()) {
@@ -728,9 +716,9 @@ public class ABACService {
 
         LambdaQueryWrapper<FileRule> queryFileRuleWrapper = Wrappers.<FileRule>lambdaQuery()
                 .eq(FileRule::getUid, fileRule.getUid());
-        //查看是否存在
+        // 查看是否存在
         FileRule existingFileRule = fileRuleMapper.selectOne(queryFileRuleWrapper);
-        //根据target不同进行不同操作 add delete update
+        // 根据target不同进行不同操作 add delete update
         try {
             switch (target.toLowerCase()) {
                 case "add":
