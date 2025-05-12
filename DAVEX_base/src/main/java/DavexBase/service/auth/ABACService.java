@@ -45,7 +45,6 @@ public class ABACService {
     private FolderVisibilityMapper folderVisibilityMapper;
     @Autowired
     private AgentWebClientService agentWebClientService;
-    @Autowired
 
     // 使用 Jackson ObjectMapper
     private final ObjectMapper objectMapper = new ObjectMapper();
