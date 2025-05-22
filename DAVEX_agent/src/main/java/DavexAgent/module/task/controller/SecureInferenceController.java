@@ -30,8 +30,8 @@ public class SecureInferenceController {
         if (file == null) {
             return R.error("File not found");
         }
-        if (!"model".equals(file.getType())) {
-            return R.error("File is not a model");
+        if (!file.getType().toLowerCase().contains("secureinfer")) {
+            return R.error("File type not supported");
         }
         try {
             return R.success(secureInferenceService.getMpc(file), "MpcID");
@@ -46,8 +46,8 @@ public class SecureInferenceController {
         if (file == null) {
             return Body.error("File not found");
         }
-        if (!"model".equals(file.getType())) {
-            return Body.error("File is not a model");
+        if (!file.getType().toLowerCase().contains("secureinfer")) {
+            return Body.error("File type not supported");
         }
         return secureInferenceService.setMpc(file, mpcID);
     }

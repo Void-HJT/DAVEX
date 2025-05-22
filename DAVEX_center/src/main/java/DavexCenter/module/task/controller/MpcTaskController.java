@@ -84,6 +84,7 @@ public class MpcTaskController {
             Files.write(path, file.getBytes());
             inputMapper.insert(input);
             mpcTask.setDataId(input.getUid());
+            mpcTask.setHost(my.getIp());
             mpcTask = mpcTaskService.create(mpcTask);
             switch (mpcTask.getTaskType()) {
                 case GARNET_MPC:

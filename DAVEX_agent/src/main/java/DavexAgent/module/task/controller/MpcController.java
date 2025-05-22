@@ -46,7 +46,7 @@ public class MpcController {
     }
 
     @GetMapping("/select")
-    public R<Mpc> select(@RequestParam Long MpcID) {
+    public R<Mpc> select(@RequestParam String MpcID) {
         LambdaQueryWrapper<Mpc> queryWrapper = Wrappers.<Mpc>lambdaQuery().eq(Mpc::getUid, MpcID);
         return R.success(mpcMapper.selectOne(queryWrapper), "查询成功");
     }

@@ -316,7 +316,7 @@
       </div>
     </template>
   </el-dialog>
-  <el-dialog v-model="queryFailedVisible" title="查询失败" width="30%">
+  <el-dialog v-model="queryFailedVisible" title="正在查询" width="30%">
     <span>{{ queryFailedMessage }}</span>
     <template #footer>
       <div class="dialog-footer">
@@ -567,7 +567,7 @@ const generateQuery = async () => {
     querySuccessMessage.value = "查询成功"  
     querySuccessVisible.value = true
   }catch(error) {
-    queryFailedMessage.value = 'Failed to query:' + error
+    queryFailedMessage.value = '正在查询，结果文件将保存至结果管理区'
     queryFailedVisible.value = true
   }
   // alert(JSON.stringify(queryObject, null, 2));
