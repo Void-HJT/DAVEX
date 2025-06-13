@@ -20,14 +20,6 @@ public class ComparisonController {
     @Autowired
     private ComparisonService comparisonService;
 
-    // center发起数据目录获取请求
-    @PostMapping("/getDirectory")
-    public Body<DirectoryInfo> getDirectory(@RequestParam("applicationId") String applicationId,
-                                            @RequestParam("agentId") String agentId) throws Exception {
-
-        return comparisonService.getDirectory(applicationId, agentId);
-    }
-
     // center请求表头信息
     @PostMapping("/getTableHeader")
     public Body<TableHeader> getTableHeader(@RequestParam("agentId") String agentId,

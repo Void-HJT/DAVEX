@@ -1,17 +1,5 @@
 import request from '@/utils/request'
 
-// 获取数据目录
-export const getDirectory = ({ applicationId, agentId }) => {
-    const params = new URLSearchParams()
-    params.append('applicationId', applicationId)
-    params.append('agentId', agentId)
-    let res = request.post(
-        'comparison/getDirectory',
-        params.toString()
-    )
-    return res
-}
-
 // 发送文件传输请求
 export const getFile = ({ fileId, agentId, folderId, applicationId }) => {
     const params = new URLSearchParams()

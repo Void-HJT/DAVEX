@@ -66,26 +66,26 @@ public class FileController {
     }
 
     // 多文件保存
-    @PostMapping("/saves")
-    public Body<List<String>> saves(@RequestPart("files") List<MultipartFile> files,
-                                    @ModelAttribute("fileInfos") List<File> fileInfos,
-                                    @RequestParam("applicationId") String applicationId,
-                                    @RequestParam(value = "expiredTimes", required = false) List<java.sql.Timestamp> expiredTimes) {
-
-        // 如果没有提供失效时间，则设置默认值为当前时间的一周后
-        if (expiredTimes == null) {
-            expiredTimes = files.stream()
-                    .map(f -> java.sql.Timestamp.from(Instant.now().plus(7, ChronoUnit.DAYS)))
-                    .collect(Collectors.toList());
-        }
-
-        // 确保失效时间的数量与文件数量匹配
-        if (expiredTimes.size() != files.size()) {
-            return Body.error("失效时间数量和文件数量不匹配");
-        }
-
-        return fileService.saveFiles(files, fileInfos, applicationId, expiredTimes);
-    }
+//    @PostMapping("/saves")
+//    public Body<List<String>> saves(@RequestPart("files") List<MultipartFile> files,
+//                                    @ModelAttribute("fileInfos") List<File> fileInfos,
+//                                    @RequestParam("applicationId") String applicationId,
+//                                    @RequestParam(value = "expiredTimes", required = false) List<java.sql.Timestamp> expiredTimes) {
+//
+//        // 如果没有提供失效时间，则设置默认值为当前时间的一周后
+//        if (expiredTimes == null) {
+//            expiredTimes = files.stream()
+//                    .map(f -> java.sql.Timestamp.from(Instant.now().plus(7, ChronoUnit.DAYS)))
+//                    .collect(Collectors.toList());
+//        }
+//
+//        // 确保失效时间的数量与文件数量匹配
+//        if (expiredTimes.size() != files.size()) {
+//            return Body.error("失效时间数量和文件数量不匹配");
+//        }
+//
+//        return fileService.saveFiles(files, fileInfos, applicationId, expiredTimes);
+//    }
 
     // application从center结果管理区通过Http获取文件的接口
     @PostMapping("/fetchByHttp")

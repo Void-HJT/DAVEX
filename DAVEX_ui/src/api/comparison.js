@@ -1,17 +1,5 @@
 import request from '@/utils/request'
 
-// 获取数据目录
-export const getDirectory = ({ applicationId, agentId }) => {
-    const params = new URLSearchParams()
-    params.append('applicationId', applicationId)
-    params.append('agentId', agentId)
-    let res = request.post(
-        'comparison/getDirectory',
-        params.toString()
-    )
-    return res
-}
-
 // 获取csv文件表头信息
 export const getTableHeader = ({ agentId, fileId, folderId }) => {
     const params = new URLSearchParams()

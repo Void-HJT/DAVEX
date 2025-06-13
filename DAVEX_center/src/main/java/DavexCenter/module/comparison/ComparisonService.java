@@ -65,21 +65,6 @@ public class ComparisonService {
     @Autowired
     private ObjectMapper objectMapper;
 
-        public Body<DirectoryInfo> getDirectory(String applicationId, String agentId) throws Exception {
-
-                WebClient webclient = centerWebClientService.center2AgentWebClient(agentId);
-                DirectoryInfo directoryInfo = webclient.post()
-                                .uri(uriBuilder -> uriBuilder.path("/directory/fileFolder/getDirectoryByApplication")
-                                                .queryParam("rootId", 1)
-                                                .queryParam("agentId", agentId)
-                                                .queryParam("applicationId", applicationId).build())
-                                .retrieve()
-                                .bodyToMono(new ParameterizedTypeReference<Body<DirectoryInfo>>() {
-                                }).block().getData();
-
-                return Body.success(directoryInfo, "获取数据目录成功");
-        }
-
         public Body<TableHeader> getTableHeader(String agentId, String fileId, String folderId) throws Exception {
 
                 WebClient webclient = centerWebClientService.center2AgentWebClient(agentId);

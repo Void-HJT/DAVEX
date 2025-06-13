@@ -145,78 +145,78 @@ public class FileService {
                 fileInfo.getUid(), fileInfo.getAgentId(), fileName));
     }
 
-    public Body<List<String>> saveFiles(List<MultipartFile> files, List<File> fileInfos, String applicationId,
-            List<java.sql.Timestamp> expiredTimes) {
-        List<String> results = new ArrayList<>();
-
-        if (files.size() != fileInfos.size() || files.size() != expiredTimes.size()) {
-            return Body.error("文件数量、文件信息数量和失效时间数量不匹配");
-        }
-
-        boolean flag = true;
-        for (int i = 0; i < files.size(); i++) {
-            MultipartFile file = files.get(i);
-            File fileInfo = fileInfos.get(i);
-            java.sql.Timestamp expiredTime = expiredTimes.get(i);
-
-            // 校验md5
-            String fileHash = getSha256(file);
-            if (!fileHash.equals(fileInfo.getHash())) {
-                results.add(String.format("哈希校验失败，文件id: %s，代理id: %s", fileInfo.getUid(), fileInfo.getAgentId()));
-                flag = false;
-                continue;
-            }
-
-            // 文件信息加入结果表
-            // 若已存在，则进行覆盖
-            LambdaQueryWrapper<Output> queryWrapper1 = Wrappers.<Output>lambdaQuery()
-                    .eq(Output::getFileId, fileInfo.getUid())
-                    .eq(Output::getAgentId, fileInfo.getAgentId())
-                    .eq(Output::getApplicationId, applicationId)
-                    .eq(Output::getHash, fileHash);
-            Output queryOutput = outputMapper.selectOne(queryWrapper1);
-            if (queryOutput != null) {
-                jdbcTemplate.execute("SET FOREIGN_KEY_CHECKS = 0");
-                outputMapper.deleteById(queryOutput.getUid());
-                jdbcTemplate.execute("SET FOREIGN_KEY_CHECKS = 1");
-            }
-
-            Output newOutput = new Output();
-            String fileName = fileInfo.getName();
-            newOutput.setName(fileInfo.getName());
-            newOutput.setType(fileInfo.getType());
-            newOutput.setUploadDate(Timestamp.valueOf(LocalDateTime.now()));
-            newOutput.setAttribute(fileInfo.getAttribute());
-            newOutput.setSize(fileInfo.getSize());
-            newOutput.setDescription(fileInfo.getDescription());
-            newOutput.setPath(
-                    Paths.get(my.getBase_path()).resolve("result").resolve("common").resolve(fileHash + "_appid_" + applicationId).toString());
-            newOutput.setExpiredTime(expiredTime);
-            newOutput.setHash(fileHash);
-            newOutput.setFileId(fileInfo.getUid());
-            newOutput.setAgentId(fileInfo.getAgentId());
-            newOutput.setApplicationId(applicationId);
-            outputMapper.insert(newOutput);
-            String filePath = newOutput.getPath();
-
-            // 存储文件到结果管理区
-            try {
-                saveFileToPath(file, filePath);
-                results.add(String.format("保存成功，文件id: %s，代理id: %s，文件名: %s",
-                        fileInfo.getUid(), fileInfo.getAgentId(), fileName));
-            } catch (IOException e) {
-                e.printStackTrace();
-                results.add(String.format("保存失败: 文件id %s，代理id: %s，文件名: %s，错误信息: %s",
-                        fileInfo.getUid(), fileInfo.getAgentId(), fileName, e.getMessage()));
-                flag = false;
-            }
-        }
-
-        if (flag == false) {
-            return Body.error(results, "部分文件保存失败");
-        }
-        return Body.success(results, "文件保存处理完成");
-    }
+//    public Body<List<String>> saveFiles(List<MultipartFile> files, List<File> fileInfos, String applicationId,
+//            List<java.sql.Timestamp> expiredTimes) {
+//        List<String> results = new ArrayList<>();
+//
+//        if (files.size() != fileInfos.size() || files.size() != expiredTimes.size()) {
+//            return Body.error("文件数量、文件信息数量和失效时间数量不匹配");
+//        }
+//
+//        boolean flag = true;
+//        for (int i = 0; i < files.size(); i++) {
+//            MultipartFile file = files.get(i);
+//            File fileInfo = fileInfos.get(i);
+//            java.sql.Timestamp expiredTime = expiredTimes.get(i);
+//
+//            // 校验md5
+//            String fileHash = getSha256(file);
+//            if (!fileHash.equals(fileInfo.getHash())) {
+//                results.add(String.format("哈希校验失败，文件id: %s，代理id: %s", fileInfo.getUid(), fileInfo.getAgentId()));
+//                flag = false;
+//                continue;
+//            }
+//
+//            // 文件信息加入结果表
+//            // 若已存在，则进行覆盖
+//            LambdaQueryWrapper<Output> queryWrapper1 = Wrappers.<Output>lambdaQuery()
+//                    .eq(Output::getFileId, fileInfo.getUid())
+//                    .eq(Output::getAgentId, fileInfo.getAgentId())
+//                    .eq(Output::getApplicationId, applicationId)
+//                    .eq(Output::getHash, fileHash);
+//            Output queryOutput = outputMapper.selectOne(queryWrapper1);
+//            if (queryOutput != null) {
+//                jdbcTemplate.execute("SET FOREIGN_KEY_CHECKS = 0");
+//                outputMapper.deleteById(queryOutput.getUid());
+//                jdbcTemplate.execute("SET FOREIGN_KEY_CHECKS = 1");
+//            }
+//
+//            Output newOutput = new Output();
+//            String fileName = fileInfo.getName();
+//            newOutput.setName(fileInfo.getName());
+//            newOutput.setType(fileInfo.getType());
+//            newOutput.setUploadDate(Timestamp.valueOf(LocalDateTime.now()));
+//            newOutput.setAttribute(fileInfo.getAttribute());
+//            newOutput.setSize(fileInfo.getSize());
+//            newOutput.setDescription(fileInfo.getDescription());
+//            newOutput.setPath(
+//                    Paths.get(my.getBase_path()).resolve("result").resolve("common").resolve(fileHash + "_appid_" + applicationId).toString());
+//            newOutput.setExpiredTime(expiredTime);
+//            newOutput.setHash(fileHash);
+//            newOutput.setFileId(fileInfo.getUid());
+//            newOutput.setAgentId(fileInfo.getAgentId());
+//            newOutput.setApplicationId(applicationId);
+//            outputMapper.insert(newOutput);
+//            String filePath = newOutput.getPath();
+//
+//            // 存储文件到结果管理区
+//            try {
+//                saveFileToPath(file, filePath);
+//                results.add(String.format("保存成功，文件id: %s，代理id: %s，文件名: %s",
+//                        fileInfo.getUid(), fileInfo.getAgentId(), fileName));
+//            } catch (IOException e) {
+//                e.printStackTrace();
+//                results.add(String.format("保存失败: 文件id %s，代理id: %s，文件名: %s，错误信息: %s",
+//                        fileInfo.getUid(), fileInfo.getAgentId(), fileName, e.getMessage()));
+//                flag = false;
+//            }
+//        }
+//
+//        if (flag == false) {
+//            return Body.error(results, "部分文件保存失败");
+//        }
+//        return Body.success(results, "文件保存处理完成");
+//    }
 
     public Body<String> fetchFileByHttp(Long outputId, String applicationId, HttpServletResponse response) {
 
