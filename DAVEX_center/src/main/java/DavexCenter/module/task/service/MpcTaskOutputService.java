@@ -139,8 +139,9 @@ public class MpcTaskOutputService {
 
         // 直接通过路径访问文件
         try {
+//            fileService.copyFile(filePath, fileName, downloadPath.toString());
             Files.createDirectories(downloadPath);
-            fileService.copyFile(filePath, fileName, downloadPath.toString());
+            Files.copy(Paths.get(filePath), downloadPath.resolve(fileName), StandardCopyOption.REPLACE_EXISTING);
         } catch (Exception e) {
             e.printStackTrace();
             return Body.error(String.format("获取失败: 结果id %d，文件名: %s，错误信息: %s", mpcOutputId, fileName, e.getMessage()));
