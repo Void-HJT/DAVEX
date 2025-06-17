@@ -116,7 +116,7 @@ public class QueryFileService {
         // 添加下载任务记录到任务表
         String filePath = queryQueryOutput.getPath();
         String fileName = queryQueryOutput.getName();
-        Path downloadPath = Paths.get(my.getBase_path()).resolve("download").resolve("query");
+        Path downloadPath = Paths.get(my.getBase_path()).resolve("download").resolve(applicationId).resolve("query");
         DownloadTask newDownloadTask = new DownloadTask();
         newDownloadTask.setApplicationId(applicationId);
         newDownloadTask.setOutputId(queryQueryOutput.getUid());

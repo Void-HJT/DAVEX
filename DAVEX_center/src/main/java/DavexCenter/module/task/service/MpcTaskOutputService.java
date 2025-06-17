@@ -128,7 +128,7 @@ public class MpcTaskOutputService {
         // 添加下载任务记录到任务表
         String filePath = queryMpcOutput.getPath();
         String fileName = queryMpcOutput.getName();
-        Path downloadPath = Paths.get(my.getBase_path()).resolve("download").resolve("mpc");
+        Path downloadPath = Paths.get(my.getBase_path()).resolve("download").resolve(applicationId).resolve("mpc");
         DownloadTask newDownloadTask = new DownloadTask();
         newDownloadTask.setApplicationId(applicationId);
         newDownloadTask.setOutputId(queryMpcOutput.getUid());

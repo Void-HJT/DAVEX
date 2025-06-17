@@ -111,7 +111,7 @@ public class ComparisonFileService {
         // 添加下载任务记录到任务表
         String filePath = queryComparisonOutput.getPath();
         String fileName = queryComparisonOutput.getName();
-        Path downloadPath = Paths.get(my.getBase_path()).resolve("download").resolve("comparison");
+        Path downloadPath = Paths.get(my.getBase_path()).resolve("download").resolve(applicationId).resolve("comparison");
         DownloadTask newDownloadTask = new DownloadTask();
         newDownloadTask.setApplicationId(applicationId);
         newDownloadTask.setOutputId(queryComparisonOutput.getUid());

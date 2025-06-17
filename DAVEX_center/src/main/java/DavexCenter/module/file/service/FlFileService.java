@@ -107,7 +107,7 @@ public class FlFileService {
         // 添加下载任务记录到任务表
         String filePath = queryFlOutput.getPath();
         String fileName = queryFlOutput.getName();
-        Path downloadPath = Paths.get(my.getBase_path()).resolve("download").resolve("fl");
+        Path downloadPath = Paths.get(my.getBase_path()).resolve("download").resolve(applicationId).resolve("fl");
         DownloadTask newDownloadTask = new DownloadTask();
         newDownloadTask.setApplicationId(applicationId);
         newDownloadTask.setOutputId(queryFlOutput.getUid());

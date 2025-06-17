@@ -289,7 +289,7 @@ public class FileService {
         // 添加下载任务记录到任务表
         String filePath = queryOutput.getPath();
         String fileName = queryOutput.getName();
-        Path downloadPath = Paths.get(my.getBase_path()).resolve("download").resolve("common");
+        Path downloadPath = Paths.get(my.getBase_path()).resolve("download").resolve(applicationId).resolve("common");
         DownloadTask newDownloadTask = new DownloadTask();
         newDownloadTask.setApplicationId(applicationId);
         newDownloadTask.setOutputId(queryOutput.getUid());
