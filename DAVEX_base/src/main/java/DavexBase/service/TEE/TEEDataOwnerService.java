@@ -5,9 +5,7 @@ import lombok.Data;
 import org.springframework.stereotype.Service;
 import org.yaml.snakeyaml.Yaml;
 
-import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 
@@ -57,16 +55,16 @@ public class TEEDataOwnerService {
 
     /**
      * 上传数据密钥
-     * @param yamlFilePath    配置文件路径，传入指定的 .yaml 文件路径
+     * @param yamlFile    配置文件名，传入指定的 .yaml 文件名
      * @param partyId         party ID，需根据证书生成
      * @param certPemsFile   List[str]，证书文件路径
      * @param privateKeyFile  私钥文件路径
      * @param dataKey      数据密钥
      * @throws Exception 执行命令时的异常
      */
-    public void uploadDataKey(String cwd, String yamlFilePath, String partyId, String certPemsFile,
-                              String privateKeyFile,String resourceUri, String dataKey) throws Exception {
-        String yamlPath = cwd +"/"+ yamlFilePath;
+    public void uploadDataKey(String cwd, String yamlFile, String partyId, String certPemsFile,
+                              String privateKeyFile, String resourceUri, String dataKey) throws Exception {
+        String yamlPath = cwd +"/"+ yamlFile;
         // 先更新 YAML 文件
         yamlService.updateYamlRegister(yamlPath, partyId, certPemsFile, privateKeyFile, resourceUri, dataKey);
 
@@ -74,12 +72,11 @@ public class TEEDataOwnerService {
         List<String> command = new ArrayList<>();
         command.add("/root/miniconda3/bin/cms");
         command.add("--config-file");
-        command.add(yamlFilePath);
+        command.add(yamlFile);
         command.add("register-data-keys");
 
         // 执行命令上传密钥
         dockerExecutor.exec(Container_Id, Docker_capsule_sdk_Path+"/"+cwd, command);
-        System.out.println("数据密钥上传成功!" );
 
     }
 
@@ -109,7 +106,6 @@ public class TEEDataOwnerService {
 
         // 执行命令上传数据授权
         dockerExecutor.exec(Container_Id, Docker_capsule_sdk_Path+"/"+cwd, command);
-        System.out.println("数据授权成功！" );
 
     }
 
@@ -140,7 +136,6 @@ public class TEEDataOwnerService {
         command.add("--signed-vote-request-file");
         command.add(signedFilePath);
         dockerExecutor.exec(Container_Id, Docker_capsule_sdk_Path+"/"+cwd, command);
-        System.out.println("已成功签名");
 
         // 读取 signed-vote-request.yaml 文件并提取 vote_request_signature
         Yaml yaml = new Yaml();
@@ -153,7 +148,7 @@ public class TEEDataOwnerService {
 
     }
 
-    public String toVote(String cwd, String voterYamlFilePath, String voteRequestSignature, String action,
+    public void toVote(String cwd, String voterYamlFilePath, String voteRequestSignature, String action,
                          List<String> certChainFile, String privateKeyFile, String signedFilePath) throws Exception {
         String yamlPath = cwd +"/"+ voterYamlFilePath;
         byte[] decodedBytes = Base64.getDecoder().decode(voteRequestSignature);
@@ -169,15 +164,13 @@ public class TEEDataOwnerService {
         command.add("--signed-voter-file");
         command.add(signedFilePath);
         dockerExecutor.exec(Container_Id, Docker_capsule_sdk_Path+"/"+cwd, command);
-        System.out.println("已成功签名");
 
-        return cwd +"/"+ signedFilePath;
     }
 
-    public void voteResult(String cwd, String signedVoteRequestYaml, String signedVoterYaml, String voterCwd, String voteResultFile) throws Exception{
+    public void voteResult(String cwd, String signedVoteRequestYaml, String signedVoterYaml, String voterFilePath, String voteResultFile) throws Exception{
         List<String> command0 = new ArrayList<>();
         command0.add("cp");
-        command0.add(voterCwd+"/"+signedVoterYaml);
+        command0.add(voterFilePath+"/"+signedVoterYaml);
         command0.add(cwd);
         ProcessBuilder pb = new ProcessBuilder(command0);
         pb.start().waitFor();
@@ -227,7 +220,6 @@ public class TEEDataOwnerService {
         command.add("--dest-file");
         command.add(destFile);
         dockerExecutor.exec(Container_Id, Docker_capsule_sdk_Path+"/"+cwd, command);
-        System.out.println("已成功解密");
     }
 
 }

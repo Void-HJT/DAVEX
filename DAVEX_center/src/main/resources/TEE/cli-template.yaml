@@ -36,23 +36,18 @@ cert_chain_file: null
 
 common:
   # (required) str, should be generated from cert
-  party_id: "alice"
+  party_id:
   # (required) List[str], cert chain files, the order is [cert, mid_ca_cert, root_ca_cert]
   # file num can be 1 if the cert is self-signed
-  cert_pems_file: null
+  cert_pems_file:
   # (required) str, keep it be "RSA" here
-  scheme: "RSA"
+  scheme:
   # (required) str, file contains private key
-  private_key_file: null
+  private_key_file:
 
 
 register_data_keys:
   data_keys:
-    -
-      # (required) str
-      resource_uri:
-      # (required) str
-      data_key_b64:
 
 get_data_policys:
   # (required) str
@@ -64,22 +59,6 @@ register_data_policy:
   # (required) str
   data_uuid:
   rules:
-    -
-      # (required) str
-      rule_id:
-      # (required) List[str]
-      grantee_party_ids:
-      # (required) List[str]
-      columns:
-      # (optional) List[str]
-      global_constraints:
-      # (required) List[dict]
-      op_constraints:
-        -
-          # (required) str
-          op_name:
-          # (optional) List[str]
-          constraints:
 
 delete_data_policy:
   # (required) str

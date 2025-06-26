@@ -62,7 +62,6 @@ public class YamlService {
             yaml.dump(yamlConfig, writer);
         }
 
-        System.out.println("YAML 密钥注册更新成功：" + yamlFilePath);
     }
 
     public void updateYamlDataPolicy(String yamlFilePath, String scope, String dataUuid, String ruleId,
@@ -115,7 +114,6 @@ public class YamlService {
             yaml.dump(yamlConfig, writer);
         }
 
-        System.out.println("YAML 数据授权更新成功：" + yamlFilePath);
     }
 
     public void updateYamlExportDataKey(String yamlFilePath, String partyId, String resourceUri,
@@ -146,7 +144,6 @@ public class YamlService {
             yaml.dump(yamlConfig, writer);
         }
 
-        System.out.println("YAML 结果数据密钥更新成功：" + yamlFilePath);
     }
 
 
@@ -178,7 +175,6 @@ public class YamlService {
             yaml.dump(voteRequestConfig, writer);
         }
 
-        System.out.println("投票请求文件更新成功：" + yamlFilePath);
     }
 
     public void updateVoteYaml(String yamlFilePath, String voteRequestSignature, String action,
@@ -204,7 +200,6 @@ public class YamlService {
             yaml.dump(voterConfig, writer);
         }
 
-        System.out.println("投票文件更新成功：" + yamlFilePath);
     }
 
 

@@ -1,7 +1,7 @@
 !!DavexBase.service.TEE.models.VoteRequestConfig
 vote_request:
-  approved_action: tee/download,psi_result_uuid
-  approved_threshold: 1
-  cert_chain_file: [center.crt]
-  private_key_file: center.key
-  type: TEE_DOWNLOAD
+  approved_action:
+  approved_threshold:
+  cert_chain_file:
+  private_key_file:
+  type:

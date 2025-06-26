@@ -18,7 +18,7 @@ public class TEEMachineService {
     private static final String CONTAINER_NAME = "teeapps-sim";
     private static final String CONTAINER_TEEAPPS_PATH = "/home/teeapp/sim/teeapps";
 
-    public void uploadJsonKeyCert(String localPsiJsonPath, String privateKeyPath, String certFilePath, String testPath) throws Exception {
+    public void uploadJsonKeyCert(String localTaskJsonPath, String privateKeyPath, String certFilePath, String testPath) throws Exception {
 
         //复制convert.py到测试数据文件夹
         List<String> command0 = new ArrayList<>();
@@ -31,7 +31,7 @@ public class TEEMachineService {
         List<String> command = new ArrayList<>();
         command.add("docker");
         command.add("cp");
-        command.add(localPsiJsonPath);
+        command.add(localTaskJsonPath);
 //        command.add(CONTAINER_NAME + ":" + CONTAINER_INTEGRATION_PATH + "/psi.json");
         command.add(CONTAINER_NAME + ":" + testPath + "psi.json");
 
@@ -56,7 +56,6 @@ public class TEEMachineService {
         pb1.start().waitFor();
         pb2.start().waitFor();
 
-        System.out.println("psi.json ，私钥和证书上传成功到容器 " );
     }
 
     /**
@@ -95,7 +94,6 @@ public class TEEMachineService {
         pb1.start().waitFor();
         pb2.start().waitFor();
 
-        System.out.println("加密数据文件上传成功到 " + testPath);
     }
 
     /**
@@ -119,7 +117,6 @@ public class TEEMachineService {
         command.add(teeTaskConfigPath);
 
         dockerExecutor.exec(CONTAINER_NAME,testPath,command);
-        System.out.println("任务签名完成");
     }
 
     /**
@@ -129,7 +126,6 @@ public class TEEMachineService {
         List<String> command = new ArrayList<>(Arrays.asList("./main", "--plat=sim", "--enable_console_logger=true", "--enable_capsule_tls=false", "--entry_task_config_path=" + testPath+teeTaskConfigPath));
 
         dockerExecutor.exec(CONTAINER_NAME, CONTAINER_TEEAPPS_PATH,command);
-        System.out.println("可信 App 执行成功");
     }
 
 }
