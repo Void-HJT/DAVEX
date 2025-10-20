@@ -105,6 +105,14 @@ const router = createRouter({
           path: 'user/notification',
           component: () => import('@/views/user/notification.vue'),
         },
+        {
+          path: 'case/transfer',
+          component: () => import('@/views/case/transfer.vue'),
+        },
+        {
+          path: 'caseResult/transfer',
+          component: () => import('@/views/caseResult/transfer.vue'),
+        },
         // {
         //   path: 'auth/tokens',
         //   component: () => import('@/views/auth/tokens.vue'),

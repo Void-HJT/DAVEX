@@ -112,6 +112,26 @@ import {
               <span class="centered-text">联邦学习</span>
             </el-menu-item>
           </el-sub-menu>
+          <el-sub-menu index="/case">
+            <template #title>
+              <el-icon><Promotion /></el-icon>
+              <span class="centered-text">判决书流通模块</span>
+            </template>
+            <el-menu-item index="/case/transfer">
+              <el-icon><EditPen /></el-icon>
+              <span class="centered-text">判决书直接获取</span>
+            </el-menu-item>
+          </el-sub-menu>
+          <el-sub-menu index="/caseResult">
+            <template #title>
+              <el-icon><Promotion /></el-icon>
+              <span class="centered-text">判决书流通结果</span>
+            </template>
+            <el-menu-item index="/caseResult/transfer">
+              <el-icon><EditPen /></el-icon>
+              <span class="centered-text">判决书直接获取</span>
+            </el-menu-item>
+          </el-sub-menu>
 <!--          <el-sub-menu index="/auth">-->
 <!--            <template #title>-->
 <!--              <el-icon><UserFilled /></el-icon>-->
