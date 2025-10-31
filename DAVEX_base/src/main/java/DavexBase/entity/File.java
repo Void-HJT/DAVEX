@@ -32,5 +32,8 @@ public class File {
     private String hash;
     private String example;
     private String type;
-
+    private java.sql.Timestamp judgeTime;
+    private String judgeType;
+    private String judgeDistrict;
+    private String judgeCause;
 }
