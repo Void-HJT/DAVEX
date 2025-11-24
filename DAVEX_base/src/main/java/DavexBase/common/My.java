@@ -66,6 +66,9 @@ public class My {
     @Value("${my.env_path}")
     protected String env_path;
 
+    @Value("${my.core_path}")
+    protected String core_path;
+
 //    @Value("${my.python_path}")
 //    protected String python_path;
 
@@ -266,8 +269,16 @@ public class My {
         return base_path;
     }
 
+    public String getCore_path() {
+        return core_path;
+    }
+
     public void setBase_path(String base_path) {
         this.base_path = base_path;
+    }
+
+    public void setCore_path(String core_path) {
+        this.core_path = core_path;
     }
 
     public DavexType getDavexType() {
