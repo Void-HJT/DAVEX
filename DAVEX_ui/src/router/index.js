@@ -106,12 +106,20 @@ const router = createRouter({
           component: () => import('@/views/user/notification.vue'),
         },
         {
-          path: 'case/transfer',
-          component: () => import('@/views/case/transfer.vue'),
+          path: 'verdict/transfer',
+          component: () => import('@/views/verdict/transfer.vue'),
         },
         {
-          path: 'caseResult/transfer',
-          component: () => import('@/views/caseResult/transfer.vue'),
+          path: 'verdict/query',
+          component: () => import('@/views/verdict/query.vue'),
+        },
+        {
+          path: 'verdictResult/transfer',
+          component: () => import('@/views/verdictResult/transfer.vue'),
+        },
+        {
+          path: 'verdictResult/query',
+          component: () => import('@/views/verdictResult/query.vue'),
         },
         // {
         //   path: 'auth/tokens',

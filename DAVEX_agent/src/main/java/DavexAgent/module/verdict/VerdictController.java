@@ -33,4 +33,14 @@ public class VerdictController {
     public Body<String> getDataEmbeddings(@RequestBody List<String> fileIds) {
         return verdictService.getDataEmbeddings(fileIds);
     }
+
+    /**
+     * @param filterDTO 筛选条件
+     * @return 生成的vectorizer.pkl文件路径
+     */
+    @PostMapping("/query2Embeddings")
+    public Body<String> query2Embeddings(@RequestBody(required = false) VerdictFilterDTO filterDTO) {
+        // 直接调用Service层的新方法
+        return verdictService.query2Embeddings(filterDTO);
+    }
 }

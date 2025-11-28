@@ -112,24 +112,32 @@ import {
               <span class="centered-text">联邦学习</span>
             </el-menu-item>
           </el-sub-menu>
-          <el-sub-menu index="/case">
+          <el-sub-menu index="/verdict">
             <template #title>
               <el-icon><Promotion /></el-icon>
               <span class="centered-text">判决书流通模块</span>
             </template>
-            <el-menu-item index="/case/transfer">
+            <el-menu-item index="/verdict/transfer">
               <el-icon><EditPen /></el-icon>
               <span class="centered-text">判决书直接获取</span>
             </el-menu-item>
+            <el-menu-item index="/verdict/query">
+              <el-icon><EditPen /></el-icon>
+              <span class="centered-text">类案查询</span>
+            </el-menu-item>
           </el-sub-menu>
-          <el-sub-menu index="/caseResult">
+          <el-sub-menu index="/verdictResult">
             <template #title>
               <el-icon><Promotion /></el-icon>
               <span class="centered-text">判决书流通结果</span>
             </template>
-            <el-menu-item index="/caseResult/transfer">
+            <el-menu-item index="/verdictResult/transfer">
               <el-icon><EditPen /></el-icon>
               <span class="centered-text">判决书直接获取</span>
+            </el-menu-item>
+            <el-menu-item index="/verdictResult/query">
+              <el-icon><EditPen /></el-icon>
+              <span class="centered-text">类案查询</span>
             </el-menu-item>
           </el-sub-menu>
 <!--          <el-sub-menu index="/auth">-->
