@@ -174,6 +174,15 @@ public class VerdictService {
                 return embeddingBody; // 直接返回失败信息
             }
 
+            // 3. 补充校验：确保返回的是有效文件路径
+            String pklFilePath = embeddingBody.getData();
+            java.io.File pklFile = new java.io.File(pklFilePath);
+            if (!pklFile.exists() || !pklFile.isFile()) {
+                String errorMsg = "生成的pkl文件不存在或不是有效文件：" + pklFilePath;
+                logger.error(errorMsg);
+                return Body.error(errorMsg);
+            }
+
             logger.info("一站式Embedding生成服务成功完成。");
             return embeddingBody; // 返回.pkl文件路径
 
