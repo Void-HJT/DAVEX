@@ -32,6 +32,26 @@
           </el-select>
         </el-form-item>
 
+        <!-- 新增：查询文件上传框 -->
+        <el-form-item label="查询文件" required>
+          <el-upload
+              class="query-file-upload"
+              :auto-upload="false"
+              :on-change="handleFileChange"
+              :file-list="fileList"
+              accept=".txt"
+              drag
+          >
+            <el-icon class="el-icon--upload"><UploadFilled /></el-icon>
+            <div class="el-upload__text">
+              拖拽文件到此处上传，或<em>点击上传</em>
+            </div>
+            <div class="el-upload__tip" slot="tip">
+              仅支持 .txt 格式文本文件
+            </div>
+          </el-upload>
+        </el-form-item>
+
         <!-- 判决时间范围 -->
         <el-form-item label="判决时间范围">
           <el-date-picker
@@ -85,9 +105,9 @@
               class="start-button"
               @click="handleTargetPreprocess"
               :loading="preprocessLoading"
-              :disabled="!agentId"
+              :disabled="!agentId || !selectedFile"
           >
-          <el-icon><Loading /></el-icon> 目标集合预处理
+            <el-icon><Loading /></el-icon> 目标集合预处理&生成Emb
           </el-button>
         </el-form-item>
       </el-form>
@@ -97,7 +117,7 @@
   <!-- 预处理结果对话框 -->
   <el-dialog
       v-model="preprocessDialogVisible"
-      :title="preprocessSuccess ? '预处理成功' : '预处理失败'"
+      :title="preprocessSuccess ? '处理成功' : '处理失败'"
       width="30%"
       :close-on-click-modal="false"
   >
@@ -107,13 +127,13 @@
         <template v-else><Close /></template>
       </el-icon>
       <p class="result-message">{{ preprocessMessage }}</p>
-      <!-- 成功时显示pkl文件路径 -->
-      <div v-if="preprocessSuccess && pklFilePath" class="pkl-path-container">
-        <span class="path-label">生成的pkl文件路径：</span>
+      <!-- 成功时显示emb文件路径（替换原pkl路径） -->
+      <div v-if="preprocessSuccess && embFilePath" class="emb-path-container">
+        <span class="path-label">生成的emb文件路径：</span>
         <el-input
-            v-model="pklFilePath"
+            v-model="embFilePath"
             readonly
-            class="pkl-path-input"
+            class="emb-path-input"
         />
       </div>
     </div>
@@ -133,14 +153,17 @@
 <script lang="ts" setup>
 import { getAgent } from '../../api/testDve.js'
 import { ref, reactive, onMounted } from "vue";
-import { sendQuery } from "../../api/verdict.js"; // 引入Center转发接口
+// 替换为sendAndCompute接口
+import { sendAndCompute } from "../../api/verdict.js";
 import {
   Filter,
   Loading,
   RefreshLeft,
   Check,
-  Close
+  Close,
+  UploadFilled // 新增上传图标
 } from "@element-plus/icons-vue";
+import { UploadProps } from "element-plus"; // 上传组件类型定义
 
 onMounted(() => {
   getAgentMethod() // 页面加载时获取Agent列表
@@ -150,6 +173,10 @@ onMounted(() => {
 const agents = ref([]) // Agent列表
 const agentId = ref('') // 选中的AgentID
 const agentLoading = ref(false) // Agent下拉框加载状态
+
+// 文件上传相关状态
+const fileList = ref<UploadProps['fileList']>([]) // 上传文件列表
+const selectedFile = ref<File | null>(null) // 选中的文件对象
 
 // 筛选表单数据（映射后端VerdictFilterDTO）
 const filterForm = reactive({
@@ -164,7 +191,7 @@ const preprocessLoading = ref(false); // 预处理按钮加载状态
 const preprocessDialogVisible = ref(false); // 结果对话框显示状态
 const preprocessSuccess = ref(false); // 预处理是否成功
 const preprocessMessage = ref(""); // 预处理结果消息
-const pklFilePath = ref(""); // 生成的pkl文件路径
+const embFilePath = ref(""); // 生成的emb文件路径（替换原pkl路径）
 
 /**
  * 获取Agent列表
@@ -199,6 +226,17 @@ const handleSelectAgent = (value: string) => {
 };
 
 /**
+ * 处理文件上传变更
+ */
+const handleFileChange = (file: UploadProps['fileList'][0]) => {
+  // 清空原有文件列表，只保留当前选中文件
+  fileList.value = [file];
+  // 保存文件对象（用于接口传递）
+  selectedFile.value = file.raw as File;
+  console.log("选中的查询文件：", selectedFile.value?.name);
+};
+
+/**
  * 重置筛选表单
  */
 const resetFilterForm = () => {
@@ -207,18 +245,27 @@ const resetFilterForm = () => {
   filterForm.judgeType = undefined;
   filterForm.judgeDistrict = undefined;
   filterForm.judgeCause = undefined;
+  // 重置文件上传
+  fileList.value = [];
+  selectedFile.value = null;
   // 可选：是否重置Agent选择（根据业务需求决定）
   // agentId.value = '';
 };
 
 /**
- * 处理目标集合预处理（调用Center转发接口sendQuery）
+ * 处理目标集合预处理+生成Emb（调用sendAndCompute接口）
  */
 const handleTargetPreprocess = async () => {
   try {
-    // 1. 校验Agent是否选择
+    // 1. 校验参数
     if (!agentId.value) {
       preprocessMessage.value = "请先选择目标Agent";
+      preprocessSuccess.value = false;
+      preprocessDialogVisible.value = true;
+      return;
+    }
+    if (!selectedFile.value) {
+      preprocessMessage.value = "请先上传查询文件";
       preprocessSuccess.value = false;
       preprocessDialogVisible.value = true;
       return;
@@ -235,25 +282,26 @@ const handleTargetPreprocess = async () => {
       judgeCause: filterForm.judgeCause?.trim() || undefined
     };
 
-    // 3. 调用Center转发接口：传递agentId（query参数）和筛选条件（body参数）
-    const res = await sendQuery({
-      agentId: agentId.value, // 目标AgentID（必传）
-      filterParams: filterParams // 筛选条件（可选）
+    // 3. 调用sendAndCompute接口：传递agentId、筛选条件、查询文件
+    const res = await sendAndCompute({
+      agentId: agentId.value,
+      filterParams: filterParams,
+      inputFile: selectedFile.value
     });
 
     // 4. 处理接口返回结果（适配后端统一Body格式）
     if (res.data.code === 1 && res.data.data) {
       preprocessSuccess.value = true;
-      preprocessMessage.value = `目标集合预处理成功，已生成vectorizer.pkl文件！`;
-      pklFilePath.value = res.data.data; // 保存返回的pkl文件路径
+      preprocessMessage.value = `目标集合预处理+Emb生成成功！`;
+      embFilePath.value = res.data.data; // 保存返回的emb文件路径
     } else {
       preprocessSuccess.value = false;
-      preprocessMessage.value = res.data.message || "目标集合预处理失败，请重试！";
+      preprocessMessage.value = res.data.message || "目标集合预处理+Emb生成失败，请重试！";
     }
   } catch (error) {
-    console.error("目标集合预处理异常：", error);
+    console.error("目标集合预处理+Emb生成异常：", error);
     preprocessSuccess.value = false;
-    preprocessMessage.value = "系统异常，预处理失败，请检查日志或联系管理员！";
+    preprocessMessage.value = "系统异常，处理失败，请检查日志或联系管理员！";
   } finally {
     preprocessLoading.value = false;
     preprocessDialogVisible.value = true; // 显示结果对话框
@@ -304,6 +352,11 @@ const handleTargetPreprocess = async () => {
 
 /* Agent选择下拉框样式 */
 .agent-select {
+  width: 100%;
+}
+
+/* 查询文件上传样式 */
+.query-file-upload {
   width: 100%;
 }
 
@@ -364,7 +417,8 @@ const handleTargetPreprocess = async () => {
   text-align: center;
 }
 
-.pkl-path-container {
+/* Emb路径样式（替换原pkl路径） */
+.emb-path-container {
   width: 100%;
   margin-top: 8px;
 }
@@ -376,7 +430,7 @@ const handleTargetPreprocess = async () => {
   margin-bottom: 4px;
 }
 
-.pkl-path-input {
+.emb-path-input {
   font-size: 13px;
   background-color: #f9fafb;
   color: #1f2937;

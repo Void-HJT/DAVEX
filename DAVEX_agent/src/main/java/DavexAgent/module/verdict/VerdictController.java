@@ -38,8 +38,9 @@ public class VerdictController {
     }
 
     @PostMapping("/getDataEmbeddings")
-    public Body<String> getDataEmbeddings(@RequestBody List<String> fileIds) {
-        return verdictService.getDataEmbeddings(fileIds);
+    public Body<String> getDataEmbeddings(@RequestBody List<String> fileIds,
+                                          @RequestParam("outputPrefix") String outputPrefix) {
+        return verdictService.getDataEmbeddings(fileIds, outputPrefix);
     }
 
     /**
@@ -48,10 +49,11 @@ public class VerdictController {
      * @return ResponseEntity<Resource>：data返回文件流，响应头返回文件路径和状态码
      */
     @PostMapping("/query2Embeddings")
-    public ResponseEntity<Resource> query2Embeddings(@RequestBody(required = false) VerdictFilterDTO filterDTO) {
+    public ResponseEntity<Resource> query2Embeddings(@RequestBody(required = false) VerdictFilterDTO filterDTO,
+                                                     @RequestParam("outputPrefix") String outputPrefix) {
         try {
             // 调用Service层方法，获取pkl文件路径（Service层返回格式不变，仅复用原有逻辑）
-            Body<String> serviceResult = verdictService.query2Embeddings(filterDTO);
+            Body<String> serviceResult = verdictService.query2Embeddings(filterDTO, outputPrefix);
 
             // 1. 处理失败场景（沿用原有错误码和提示）
             if (serviceResult.getCode() != 1 || serviceResult.getData() == null) {

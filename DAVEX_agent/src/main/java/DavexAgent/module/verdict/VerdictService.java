@@ -29,9 +29,10 @@ public class VerdictService {
 
     // 配置参数（可根据实际需求调整，如输出前缀、缩放系数）
     private static final String PY_SCRIPT_NAME = "p1preprocess.py"; // Python脚本文件名
-    private static final String OUTPUT_PREFIX = "dataset_embeddings"; // 输出文件前缀（对应Python脚本的--prefix参数）
-    private static final int SCALE_FACTOR = 10000; // 缩放系数（对应Python脚本的--scale参数）
+//    private static final String OUTPUT_PREFIX = "dataset_embeddings"; // 输出文件前缀（对应Python脚本的--prefix参数）
     private static final long TIMEOUT_MINUTES = 30; // 脚本执行超时时间（防止无限阻塞）
+    // 新增：用于提取D后面数字的正则表达式
+    private static final String D_NUM_PATTERN = "D(\\d+)";
 
     @Autowired
     private My my;
@@ -85,11 +86,16 @@ public class VerdictService {
     /**
      * 生成数据集Embeddings并返回vectorizer.pkl文件路径
      * @param fileIds 待处理的文件ID列表
+     * @param outputPrefix 输出文件前缀（新增参数，替代原有硬编码常量）
      * @return 成功：Body.data为pkl文件绝对路径；失败：Body包含错误信息
      */
-    public Body<String> getDataEmbeddings(List<String> fileIds) {
+    public Body<String> getDataEmbeddings(List<String> fileIds, String outputPrefix) {
         if (fileIds == null || fileIds.isEmpty()) {
             return Body.error("文件ID列表不能为空");
+        }
+        // 新增：校验输出前缀参数
+        if (outputPrefix == null || outputPrefix.trim().isEmpty()) {
+            return Body.error("输出文件前缀不能为空");
         }
 
         String corePath = my.getCore_path();
@@ -101,8 +107,12 @@ public class VerdictService {
             return Body.error("数据集处理脚本不存在：" + pyScriptPath);
         }
 
+        // 原有文件路径、数字ID收集逻辑不变...
         StringJoiner filePathsJoiner = new StringJoiner(" ");
+        StringJoiner fileNumIdsJoiner = new StringJoiner(" ");
+        java.util.regex.Pattern pattern = java.util.regex.Pattern.compile(D_NUM_PATTERN);
         for (String fileId : fileIds) {
+            // 循环内逻辑完全不变，此处省略...
             File file = fileMapper.selectById(fileId);
             if (file == null) {
                 logger.warn("文件ID {} 不存在，已跳过", fileId);
@@ -114,30 +124,41 @@ public class VerdictService {
                 continue;
             }
             filePathsJoiner.add("\"" + filePath + "\"");
+
+            java.util.regex.Matcher matcher = pattern.matcher(fileId);
+            if (matcher.find()) {
+                String numId = matcher.group(1);
+                fileNumIdsJoiner.add(numId);
+            } else {
+                logger.warn("文件ID {} 格式异常，无法提取D后数字，已跳过", fileId);
+                continue;
+            }
         }
 
         String filePathsStr = filePathsJoiner.toString();
+        String fileNumIdsStr = fileNumIdsJoiner.toString();
         if (filePathsStr.trim().isEmpty()) {
             return Body.error("所有文件ID对应路径无效，无可用文件");
         }
+        if (fileNumIdsStr.trim().isEmpty()) {
+            return Body.error("所有文件ID格式异常，无法提取有效数字ID");
+        }
 
-        // 修复后代码（指定conda base环境的Python路径）
-        String pythonPath = "/home/zkx/miniconda3/bin/python"; // 已定义的conda Python路径
-        // 移除原pythonCmd获取逻辑，直接使用指定的pythonPath
-        // String pythonCmd = getPythonCommand();
+        // 命令拼接：使用传入的 outputPrefix 参数
+        String pythonPath = "/home/zkx/miniconda3/bin/python";
         String outputDir = Paths.get(corePath, "output").toString();
         String fullCmd = String.format(
-                "%s \"%s\" %s -p \"%s\" -s %d",
-                pythonPath, // 替换为指定的conda Python路径
+                "%s \"%s\" %s --file-ids %s -p \"%s\"",
+                pythonPath,
                 pyScriptPath,
                 filePathsStr,
-                Paths.get(outputDir, OUTPUT_PREFIX).toString(),
-                SCALE_FACTOR
+                fileNumIdsStr,
+                Paths.get(outputDir, outputPrefix).toString() // 使用传入的前缀
         );
         logger.info("执行命令：{}", fullCmd);
 
-        // 重构：将执行Python脚本的逻辑封装到 executePythonScript 方法中
-        String pklFilePath = Paths.get(outputDir, OUTPUT_PREFIX + "_vectorizer.pkl").toString();
+        // pkl文件路径：使用传入的 outputPrefix 参数
+        String pklFilePath = Paths.get(outputDir, outputPrefix + "_vectorizer.pkl").toString();
         Body<String> executeResult = executePythonScript(fullCmd, pklFilePath);
 
         if (executeResult.getCode() == 1) {
@@ -149,13 +170,14 @@ public class VerdictService {
 
     /**
      * @param filterDTO 筛选条件
+     * @param outputPrefix 输出文件前缀（新增参数）
      * @return .pkl文件路径
      */
-    public Body<String> query2Embeddings(VerdictFilterDTO filterDTO) {
+    public Body<String> query2Embeddings(VerdictFilterDTO filterDTO, String outputPrefix) {
         try {
             logger.info("开始执行一站式Embedding生成服务...");
 
-            // 1. 第一步：根据筛选条件获取文件ID列表
+            // 1. 第一步：根据筛选条件获取文件ID列表（逻辑不变）
             logger.info("步骤 1/2: 根据筛选条件获取文件ID...");
             Body<List<String>> fileIdsBody = this.getDestIds(filterDTO);
             if (fileIdsBody.getCode() != 1 || fileIdsBody.getData() == null || fileIdsBody.getData().isEmpty()) {
@@ -166,15 +188,15 @@ public class VerdictService {
             List<String> fileIds = fileIdsBody.getData();
             logger.info("成功获取 {} 个文件ID。", fileIds.size());
 
-            // 2. 第二步：根据文件ID列表生成Embedding
+            // 2. 第二步：传递 outputPrefix 参数给 getDataEmbeddings
             logger.info("步骤 2/2: 根据文件ID生成Embedding...");
-            Body<String> embeddingBody = this.getDataEmbeddings(fileIds);
+            Body<String> embeddingBody = this.getDataEmbeddings(fileIds, outputPrefix);
             if (embeddingBody.getCode() != 1) {
                 logger.error("生成Embedding失败: {}", embeddingBody.getMessage());
-                return embeddingBody; // 直接返回失败信息
+                return embeddingBody;
             }
 
-            // 3. 补充校验：确保返回的是有效文件路径
+            // 3. 补充校验（逻辑不变）
             String pklFilePath = embeddingBody.getData();
             java.io.File pklFile = new java.io.File(pklFilePath);
             if (!pklFile.exists() || !pklFile.isFile()) {
@@ -184,7 +206,7 @@ public class VerdictService {
             }
 
             logger.info("一站式Embedding生成服务成功完成。");
-            return embeddingBody; // 返回.pkl文件路径
+            return embeddingBody;
 
         } catch (Exception e) {
             logger.error("一站式Embedding生成服务发生未知异常", e);
