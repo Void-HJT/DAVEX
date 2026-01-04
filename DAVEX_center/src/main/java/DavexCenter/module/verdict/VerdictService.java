@@ -95,7 +95,7 @@ public class VerdictService {
             String outputPrefix = taskId.get() + "_" + timeSuffix; // 对应Agent接口的outputPrefix参数
             logger.info("构建输出前缀outputPrefix：{}，将传递给Agent端", outputPrefix);
 
-            // 3. 调用Agent端接口（修改：新增outputPrefix请求参数）
+            // 3. 调用Agent端接口（逻辑不变）
             WebClient webClient = centerWebClientService.center2AgentWebClient(agentId);
             if (webClient == null) {
                 logger.error("Center端发送查询失败：创建Agent通信客户端失败，agentId={}", agentId);
@@ -103,7 +103,6 @@ public class VerdictService {
                 return Body.error("创建Agent通信连接失败，请检查Agent状态");
             }
 
-            // 关键修改：在uri中拼接outputPrefix请求参数，适配Agent新接口
             WebClient.ResponseSpec responseSpec = webClient.post()
                     .uri(uriBuilder -> uriBuilder
                             .path("/verdict/query2Embeddings")
@@ -113,7 +112,7 @@ public class VerdictService {
                     .accept(MediaType.APPLICATION_OCTET_STREAM)
                     .retrieve();
 
-            // 4. 解析响应并处理文件（修改：重构文件命名逻辑）
+            // 4. 解析响应并处理文件（修改：创建任务专属文件夹+调整pkl保存路径）
             Mono<Body<String>> resultMono = responseSpec.toEntity(Resource.class)
                     .map(responseEntity -> {
                         HttpHeaders headers = responseEntity.getHeaders();
@@ -138,14 +137,33 @@ public class VerdictService {
                         if (corePath == null || corePath.trim().isEmpty()) {
                             throw new RuntimeException("Center端核心路径未配置，无法保存文件");
                         }
-                        java.io.File saveDir = new java.io.File(corePath, PKL_SAVE_DIR);
-                        if (!saveDir.exists()) {
-                            saveDir.mkdirs();
+                        // 关键修改1：构建output根目录和任务专属文件夹路径
+                        File outputRootDir = new File(corePath, PKL_SAVE_DIR);
+                        File taskFolder = new File(outputRootDir, outputPrefix); // 文件夹名=outputPrefix
+
+                        // 关键修改2：创建任务专属文件夹（若不存在）
+                        if (!outputRootDir.exists()) {
+                            outputRootDir.mkdirs();
+                        }
+                        if (!taskFolder.exists()) {
+                            boolean mkdirSuccess = taskFolder.mkdirs();
+                            if (!mkdirSuccess) {
+                                String errorMsg = "创建任务专属文件夹失败，路径：" + taskFolder.getAbsolutePath();
+                                logger.error(errorMsg);
+                                throw new RuntimeException(errorMsg);
+                            }
+                            logger.info("成功创建Center端任务专属文件夹：{}", taskFolder.getAbsolutePath());
+                        }
+                        // 校验：确保任务路径是文件夹（防止被文件占用）
+                        if (taskFolder.exists() && !taskFolder.isDirectory()) {
+                            String errorMsg = "任务专属文件夹路径被文件占用，路径：" + taskFolder.getAbsolutePath();
+                            logger.error(errorMsg);
+                            throw new RuntimeException(errorMsg);
                         }
 
-                        // 关键修改：按新命名规则构建文件名：任务id_时间戳-P0-pkl
-                        String newFileName = outputPrefix + FILE_SEPARATOR + PKL_SUFFIX_TAG; // 不再使用原有前缀
-                        java.io.File localFile = new java.io.File(saveDir, newFileName);
+                        // 关键修改3：pkl文件保存到任务专属文件夹，文件名不变
+                        String newFileName = outputPrefix + FILE_SEPARATOR + PKL_SUFFIX_TAG; // 文件名保持原有规则不变
+                        File localFile = new File(taskFolder, newFileName); // 路径改为任务专属文件夹
 
                         try (OutputStream outputStream = new FileOutputStream(localFile)) {
                             FileCopyUtils.copy(fileResource.getInputStream(), outputStream);
@@ -156,7 +174,6 @@ public class VerdictService {
                         }
 
                         String localFilePath = localFile.getAbsolutePath();
-                        // 注意：baseFileName即为outputPrefix（任务id_时间戳），保持原有数据结构
                         String resultData = localFilePath + "|" + outputPrefix + "|" + taskId.get();
                         logger.info("Center端成功保存文件到本地：{}，基础文件名：{}，任务ID：{}", localFilePath, outputPrefix, taskId.get());
                         return Body.success(resultData, "Agent端预处理成功，文件已保存到Center：" + localFilePath);
@@ -289,14 +306,36 @@ public class VerdictService {
                 updateTaskStatusAndRemark(taskId, "输入处理失败", errorMsg);
                 return Body.error(errorMsg);
             }
-            File outputDir = new File(corePath, PKL_SAVE_DIR);
-            if (!outputDir.exists()) {
-                outputDir.mkdirs();
+
+            // 关键修改1：构建output根目录和任务专属文件夹路径（文件夹名=baseFileName）
+            File outputRootDir = new File(corePath, PKL_SAVE_DIR);
+            File taskFolder = new File(outputRootDir, baseFileName); // 文件夹名=baseFileName（即outputPrefix）
+
+            // 关键修改2：确保任务专属文件夹存在（无需重复创建，兼容sendQuery已创建的情况）
+            if (!outputRootDir.exists()) {
+                outputRootDir.mkdirs();
+            }
+            if (!taskFolder.exists()) {
+                boolean mkdirSuccess = taskFolder.mkdirs();
+                if (!mkdirSuccess) {
+                    String errorMsg = "创建任务专属文件夹失败，路径：" + taskFolder.getAbsolutePath();
+                    logger.error(errorMsg);
+                    updateTaskStatusAndRemark(taskId, "输入处理失败", errorMsg);
+                    return Body.error(errorMsg);
+                }
+                logger.info("成功创建Center端任务专属文件夹：{}", taskFolder.getAbsolutePath());
+            }
+            // 校验：确保任务路径是文件夹
+            if (taskFolder.exists() && !taskFolder.isDirectory()) {
+                String errorMsg = "任务专属文件夹路径被文件占用，路径：" + taskFolder.getAbsolutePath();
+                logger.error(errorMsg);
+                updateTaskStatusAndRemark(taskId, "输入处理失败", errorMsg);
+                return Body.error(errorMsg);
             }
 
-            // 关键修改：按新命名规则构建emb文件名：baseFileName（任务id_时间戳）-P0-queries
-            String embFileName = baseFileName + FILE_SEPARATOR + EMB_SUFFIX_TAG; // 不再使用原有前缀
-            File embOutputFile = new File(outputDir, embFileName);
+            // 关键修改3：emb文件保存到任务专属文件夹，文件名不变
+            String embFileName = baseFileName + FILE_SEPARATOR + EMB_SUFFIX_TAG; // 文件名保持原有规则不变
+            File embOutputFile = new File(taskFolder, embFileName); // 路径改为任务专属文件夹
             String embOutputFilePath = embOutputFile.getAbsolutePath();
 
             // 原有Python命令拼接、脚本执行逻辑不变...

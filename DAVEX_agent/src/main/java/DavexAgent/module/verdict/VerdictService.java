@@ -112,7 +112,6 @@ public class VerdictService {
         StringJoiner fileNumIdsJoiner = new StringJoiner(" ");
         java.util.regex.Pattern pattern = java.util.regex.Pattern.compile(D_NUM_PATTERN);
         for (String fileId : fileIds) {
-            // 循环内逻辑完全不变，此处省略...
             File file = fileMapper.selectById(fileId);
             if (file == null) {
                 logger.warn("文件ID {} 不存在，已跳过", fileId);
@@ -144,21 +143,23 @@ public class VerdictService {
             return Body.error("所有文件ID格式异常，无法提取有效数字ID");
         }
 
-        // 命令拼接：使用传入的 outputPrefix 参数
+        // 命令拼接：修改Python脚本的-p参数，指向任务专属文件夹（文件名不变）
+        String outputRootDir = Paths.get(corePath, "output").toString(); // 仅保留输出根目录
         String pythonPath = "/home/zkx/miniconda3/bin/python";
-        String outputDir = Paths.get(corePath, "output").toString();
+        String fullOutputPrefix = Paths.get(outputRootDir, outputPrefix).toString();
         String fullCmd = String.format(
                 "%s \"%s\" %s --file-ids %s -p \"%s\"",
                 pythonPath,
                 pyScriptPath,
                 filePathsStr,
                 fileNumIdsStr,
-                Paths.get(outputDir, outputPrefix).toString() // 使用传入的前缀
+                fullOutputPrefix // 传递完整路径前缀，而非纯outputPrefix
         );
         logger.info("执行命令：{}", fullCmd);
 
-        // pkl文件路径：使用传入的 outputPrefix 参数
-        String pklFilePath = Paths.get(outputDir, outputPrefix + "_vectorizer.pkl").toString();
+        // 关键修改2：（可选，保持原有逻辑不变，此处已匹配Python脚本输出）
+        String pklFileName = outputPrefix + "_vectorizer.pkl";
+        String pklFilePath = Paths.get(fullOutputPrefix, pklFileName).toString();
         Body<String> executeResult = executePythonScript(fullCmd, pklFilePath);
 
         if (executeResult.getCode() == 1) {
