@@ -26,17 +26,31 @@ import java.nio.file.Paths;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 @Service
 public class VerdictService {
     private static final Logger logger = LoggerFactory.getLogger(VerdictService.class);
     private static final String PKL_SAVE_DIR = "output";
-//    private static final String PKL_FILE_NAME_PREFIX = "center_vectorizer_";
+    //    private static final String PKL_FILE_NAME_PREFIX = "center_vectorizer_";
     // 简化后的状态常量
     private static final String TASK_STATUS_FILTERING = "数据筛选中";
     private static final String TASK_STATUS_COMPLETED = "筛选完成";
+    private static final String TASK_STATUS_OFFLINE_RUNNING = "P1离线阶段执行中";
+    private static final String TASK_STATUS_OFFLINE_COMPLETED = "P1离线阶段执行完成";
+    private static final String TASK_STATUS_FILE_TRANSFERRING = "P0数据文件传输中";
+    private static final String TASK_STATUS_FILE_TRANSFER_COMPLETED = "P0数据文件传输完成";
+    private static final String TASK_STATUS_SSL_GENERATING = "SSL证书生成/传输中";
+    private static final String TASK_STATUS_SSL_COMPLETED = "SSL证书生成/传输完成";
+    private static final String TASK_STATUS_ONLINE_RUNNING = "在线阶段执行中";
+    private static final String TASK_STATUS_ONLINE_COMPLETED = "在线阶段执行完成";
+    private static final String TASK_STATUS_FINISHED = "任务完成";
+    private static final String TASK_STATUS_FAILED = "任务失败";
     // 固定应用ID
     private static final String FIXED_APPLICATION_ID = "DAVEX-C1-A1";
 
@@ -51,6 +65,15 @@ public class VerdictService {
     private static final String PKL_SUFFIX_TAG = "pkl";
     private static final String EMB_SUFFIX_TAG = "queries";
     private static final String FILE_SEPARATOR = "-P0-"; // 命名分隔符
+
+    // 新增Garnet相关配置
+    private static final String GARNET_DIR_P1 = "/home/zkx/Garnet";
+    private static final String GARNET_DIR_P0 = "/disk/zkx/Garnet";
+    private static final int GARNET_CLUSTERS = 10;
+    private static final int GARNET_TOP_K = 5;
+    private static final int GARNET_PORT = 11126;
+    private static final String P1_IP = "10.176.34.171";
+    private static final String P0_IP = "10.176.37.50";
 
     @Autowired
     private My my;
@@ -372,55 +395,491 @@ public class VerdictService {
     }
 
     /**
-     * 串联流程：先发送查询获取pkl文件，再上传输入文件执行脚本生成emb文件
-     * @param agentId 目标AgentID
-     * @param filterDTO 筛选条件
-     * @param inputFile 上传的输入文本文件
-     * @return Body<String>：code=1成功（data=emb文件绝对路径），code≠1失败
+     * 扩展串联流程：包含Garnet离线/在线阶段+文件传输+状态管理
      */
     public Body<String> sendAndCompute(String agentId, VerdictFilterDTO filterDTO, MultipartFile inputFile) {
+        AtomicLong taskId = new AtomicLong(0);
+        String baseFileName = null;
+        String embFilePath = null;
         try {
-            logger.info("开始执行sendAndCompute串联流程，AgentID：{}，上传文件名称：{}", agentId, inputFile.getOriginalFilename());
+            logger.info("开始执行sendAndCompute全流程，AgentID：{}，上传文件名称：{}", agentId, inputFile.getOriginalFilename());
 
-            // 1. 第一步：调用sendQuery获取pkl文件本地路径
+            // 1. 调用sendQuery获取pkl文件
             Body<String> sendQueryResult = sendQuery(agentId, filterDTO);
             if (sendQueryResult.getCode() != 1) {
-                String errorMsg = "sendQuery执行失败，无法继续生成emb文件：" + sendQueryResult.getMessage();
+                String errorMsg = "sendQuery执行失败：" + sendQueryResult.getMessage();
                 logger.error(errorMsg);
                 return Body.error(errorMsg);
             }
-//            String pklFilePath = sendQueryResult.getData();
-//            logger.info("sendQuery执行成功，获取到pkl文件路径：{}", pklFilePath);
-            // 新增：拆分pkl路径和基础文件名
             String[] resultArr = sendQueryResult.getData().split("\\|");
-            if (resultArr.length != 3) { // 原2个元素改为3个
-                logger.error("sendQuery返回数据格式异常，无法解析pkl路径、基础文件名和任务ID");
-                return Body.error("获取pkl文件信息失败，无法生成emb文件");
+            if (resultArr.length != 3) {
+                logger.error("sendQuery返回数据格式异常");
+                return Body.error("获取pkl文件信息失败");
             }
             String pklFilePath = resultArr[0];
-            String baseFileName = resultArr[1];
-            Long taskId = Long.parseLong(resultArr[2]); // 新增：获取任务ID
-            logger.info("sendQuery执行成功，获取到pkl文件路径：{}，基础文件名：{}，任务ID：{}", pklFilePath, baseFileName, taskId);
+            baseFileName = resultArr[1];
+            taskId.set(Long.parseLong(resultArr[2]));
+            logger.info("sendQuery执行成功，taskId={}, baseFileName={}", taskId.get(), baseFileName);
 
-            // 2. 第二步：调用computeInput生成emb文件
-//            Body<String> computeInputResult = computeInput(inputFile, pklFilePath);
-            Body<String> computeInputResult = computeInput(inputFile, pklFilePath, baseFileName, taskId);
+            // 2. 调用computeInput生成emb文件
+            Body<String> computeInputResult = computeInput(inputFile, pklFilePath, baseFileName, taskId.get());
             if (computeInputResult.getCode() != 1) {
                 String errorMsg = "computeInput执行失败：" + computeInputResult.getMessage();
                 logger.error(errorMsg);
+                updateTaskStatusAndRemark(taskId.get(), TASK_STATUS_FAILED, errorMsg);
                 return Body.error(errorMsg);
             }
-            String embFilePath = computeInputResult.getData();
-            logger.info("sendAndCompute串联流程执行成功，最终生成emb文件路径：{}", embFilePath);
+            embFilePath = computeInputResult.getData();
+            logger.info("computeInput执行成功，embFilePath={}", embFilePath);
 
-            // 3. 返回最终结果
-            return Body.success(embFilePath, "串联流程执行成功，emb文件已生成：" + embFilePath);
+            // 3. 执行P1离线阶段（调用Agent端接口执行Garnet离线命令）
+            updateTaskStatusAndRemark(taskId.get(), TASK_STATUS_OFFLINE_RUNNING,
+                    "开始在P1执行Garnet离线阶段，baseFileName=" + baseFileName);
+            Body<String> offlineResult = executeP1OfflineStage(agentId, baseFileName);
+            if (offlineResult.getCode() != 1) {
+                String errorMsg = "P1离线阶段执行失败：" + offlineResult.getMessage();
+                logger.error(errorMsg);
+                updateTaskStatusAndRemark(taskId.get(), TASK_STATUS_FAILED, errorMsg);
+                return Body.error(errorMsg);
+            }
+            updateTaskStatusAndRemark(taskId.get(), TASK_STATUS_OFFLINE_COMPLETED,
+                    "P1离线阶段执行完成，生成文件已保存至P1服务器");
+
+            // 4. 传输P0所需文件（复用WebClient流传输，替代scp命令）
+            updateTaskStatusAndRemark(taskId.get(), TASK_STATUS_FILE_TRANSFERRING,
+                    "开始传输P0所需数据文件，baseFileName=" + baseFileName);
+            Body<String> transferResult = transferP0FilesFromP1(agentId, baseFileName);
+            if (transferResult.getCode() != 1) {
+                String errorMsg = "P0文件传输失败：" + transferResult.getMessage();
+                logger.error(errorMsg);
+                updateTaskStatusAndRemark(taskId.get(), TASK_STATUS_FAILED, errorMsg);
+                return Body.error(errorMsg);
+            }
+            updateTaskStatusAndRemark(taskId.get(), TASK_STATUS_FILE_TRANSFER_COMPLETED,
+                    "P0数据文件传输完成，保存路径=" + transferResult.getData());
+
+            // 5. 生成并传输SSL证书（调用Agent端生成证书，再传输到P0）
+            updateTaskStatusAndRemark(taskId.get(), TASK_STATUS_SSL_GENERATING,
+                    "开始生成并传输SSL证书");
+            Body<String> sslResult = generateAndTransferSSL(agentId);
+            if (sslResult.getCode() != 1) {
+                String errorMsg = "SSL证书生成/传输失败：" + sslResult.getMessage();
+                logger.error(errorMsg);
+                updateTaskStatusAndRemark(taskId.get(), TASK_STATUS_FAILED, errorMsg);
+                return Body.error(errorMsg);
+            }
+            updateTaskStatusAndRemark(taskId.get(), TASK_STATUS_SSL_COMPLETED,
+                    "SSL证书生成/传输完成，保存路径=" + sslResult.getData());
+
+            // 6. 同时启动在线阶段
+            updateTaskStatusAndRemark(taskId.get(), TASK_STATUS_ONLINE_RUNNING,
+                    "开始执行Garnet在线阶段，topK=" + GARNET_TOP_K);
+            Body<String> onlineResult = executeOnlineStage(agentId, baseFileName);
+            if (onlineResult.getCode() != 1) {
+                String errorMsg = "在线阶段执行失败：" + onlineResult.getMessage();
+                logger.error(errorMsg);
+                updateTaskStatusAndRemark(taskId.get(), TASK_STATUS_FAILED, errorMsg);
+                return Body.error(errorMsg);
+            }
+            updateTaskStatusAndRemark(taskId.get(), TASK_STATUS_ONLINE_COMPLETED,
+                    "在线阶段执行完成，查询结果=" + onlineResult.getData());
+
+            // 7. 最终状态更新
+            updateTaskStatusAndRemark(taskId.get(), TASK_STATUS_FINISHED,
+                    "全流程执行完成，最终结果=" + onlineResult.getData());
+            logger.info("sendAndCompute全流程执行成功，taskId={}，最终结果={}", taskId.get(), onlineResult.getData());
+            return Body.success(onlineResult.getData(), "全流程执行成功，已获取Top-K结果");
 
         } catch (Exception e) {
-            String errorMsg = "sendAndCompute串联流程执行异常：" + e.getMessage();
+            String errorMsg = "sendAndCompute全流程异常：" + e.getMessage();
             logger.error(errorMsg, e);
+            if (taskId.get() > 0) {
+                updateTaskStatusAndRemark(taskId.get(), TASK_STATUS_FAILED, errorMsg);
+            }
             return Body.error(errorMsg);
         }
+    }
+
+    /**
+     * 调用Agent端执行P1离线阶段命令
+     */
+    private Body<String> executeP1OfflineStage(String agentId, String baseFileName) {
+        try {
+            WebClient webClient = centerWebClientService.center2AgentWebClient(agentId);
+            if (webClient == null) {
+                return Body.error("创建Agent通信客户端失败");
+            }
+
+            // 构建P1离线命令参数
+            Map<String, String> params = new HashMap<>();
+            params.put("garnetDir", GARNET_DIR_P1);
+            params.put("dataDir", "/home/zkx/DAVEX/Core/output/" + baseFileName);
+            params.put("dataset", baseFileName);
+            params.put("clusters", String.valueOf(GARNET_CLUSTERS));
+
+            Body<String> result = webClient.post()
+                    .uri("/verdict/executeP1Offline")
+                    .bodyValue(params)
+                    .retrieve()
+                    .bodyToMono(Body.class)
+                    .block();
+
+            if (result == null || result.getCode() != 1) {
+                String msg = result != null ? result.getMessage() : "P1离线阶段执行无响应";
+                return Body.error(msg);
+            }
+            return Body.success(result.getData(), "P1离线阶段执行成功");
+
+        } catch (Exception e) {
+            logger.error("执行P1离线阶段异常", e);
+            return Body.error("P1离线阶段执行异常：" + e.getMessage());
+        }
+    }
+
+    /**
+     * 从P1传输P0所需文件到P0服务器（适配文件/目录传输）
+     */
+    private Body<String> transferP0FilesFromP1(String agentId, String baseFileName) {
+        try {
+            WebClient webClient = centerWebClientService.center2AgentWebClient(agentId);
+            if (webClient == null) {
+                return Body.error("创建Agent通信客户端失败");
+            }
+
+            // 需要传输的文件列表（包含目录2-fss）
+            List<String> p0Files = Arrays.asList(
+                    baseFileName + "-P0-shares",
+                    baseFileName + "-P0-triples",
+                    baseFileName + "-P0-centroid-shares",
+                    baseFileName + "-P0-cluster-triples",
+                    baseFileName + "-meta",
+                    "2-fss"
+            );
+
+            // P0保存目录
+            String p0SaveDir = Paths.get(my.getCore_path(), PKL_SAVE_DIR, baseFileName).toString();
+            File dir = new File(p0SaveDir);
+            if (!dir.exists()) {
+                dir.mkdirs();
+            }
+
+            // 逐个传输文件/目录
+            for (String fileName : p0Files) {
+                String sourceFilePath = "/home/zkx/DAVEX/Core/output/" + baseFileName + "/" + fileName;
+                // 调用新增的接口（支持文件/目录）
+                Mono<Resource> resourceMono = webClient.get()
+                        .uri(uriBuilder -> uriBuilder
+                                .path("/verdict/getP1FileOrDir") // 改为新接口
+                                .queryParam("filePath", sourceFilePath)
+                                .build())
+                        .retrieve()
+                        .bodyToMono(Resource.class);
+
+                Resource resource = resourceMono.block();
+                if (resource == null || !resource.exists()) {
+                    logger.warn("获取P1文件/目录失败：{}，跳过该文件", fileName);
+                    continue;
+                }
+
+                // 处理文件/目录
+                String targetPath = Paths.get(p0SaveDir, fileName).toString();
+                if (fileName.equals("2-fss")) {
+                    // 处理2-fss目录（ZIP解压）
+                    File zipFile = new File(targetPath + ".zip");
+                    // 保存ZIP文件
+                    try (OutputStream os = new FileOutputStream(zipFile)) {
+                        FileCopyUtils.copy(resource.getInputStream(), os);
+                    }
+                    // 解压ZIP到目标目录
+                    unzip(zipFile, new File(p0SaveDir));
+                    // 删除临时ZIP文件
+                    zipFile.delete();
+                    logger.info("成功接收并解压P1目录：{}，保存至：{}", fileName, targetPath);
+                } else {
+                    // 处理普通文件
+                    File targetFile = new File(targetPath);
+                    try (OutputStream os = new FileOutputStream(targetFile)) {
+                        FileCopyUtils.copy(resource.getInputStream(), os);
+                    }
+                    logger.info("成功接收P1文件：{}，保存至：{}", fileName, targetFile.getAbsolutePath());
+                }
+            }
+
+            return Body.success(p0SaveDir, "P0文件传输完成");
+
+        } catch (Exception e) {
+            logger.error("传输P0文件异常", e);
+            return Body.error("P0文件传输异常：" + e.getMessage());
+        }
+    }
+
+    /**
+     * 新增辅助方法：解压ZIP文件到指定目录
+     */
+    private void unzip(File zipFile, File targetDir) throws IOException {
+        try (ZipInputStream zis = new ZipInputStream(new FileInputStream(zipFile))) {
+            ZipEntry entry;
+            while ((entry = zis.getNextEntry()) != null) {
+                File entryFile = new File(targetDir, entry.getName());
+                // 创建父目录
+                if (!entryFile.getParentFile().exists()) {
+                    entryFile.getParentFile().mkdirs();
+                }
+                // 写入文件
+                try (OutputStream os = new FileOutputStream(entryFile)) {
+                    byte[] buffer = new byte[1024];
+                    int len;
+                    while ((len = zis.read(buffer)) > 0) {
+                        os.write(buffer, 0, len);
+                    }
+                }
+                zis.closeEntry();
+            }
+        }
+    }
+
+    /**
+     * 生成并传输SSL证书（修复通配符问题）
+     */
+    private Body<String> generateAndTransferSSL(String agentId) {
+        try {
+            WebClient webClient = centerWebClientService.center2AgentWebClient(agentId);
+            if (webClient == null) {
+                return Body.error("创建Agent通信客户端失败");
+            }
+
+            // 1. 调用P1生成SSL证书
+            Body<String> sslGenResult = webClient.post()
+                    .uri("/verdict/generateSSL")
+                    .bodyValue(Collections.singletonMap("garnetDir", GARNET_DIR_P1))
+                    .retrieve()
+                    .bodyToMono(Body.class)
+                    .block();
+
+            if (sslGenResult == null || sslGenResult.getCode() != 1) {
+                String msg = sslGenResult != null ? sslGenResult.getMessage() : "SSL证书生成无响应";
+                return Body.error(msg);
+            }
+
+            // 2. 调用Agent接口获取具体的证书文件名（替代通配符）
+            String certDir = Paths.get(GARNET_DIR_P1, "Player-Data").toString();
+            Body<List<String>> certListResult = webClient.get()
+                    .uri(uriBuilder -> uriBuilder
+                            .path("/verdict/listSSLCerts")
+                            .queryParam("certDir", certDir)
+                            .build())
+                    .retrieve()
+                    .bodyToMono(Body.class)
+                    .block();
+
+            if (certListResult == null || certListResult.getCode() != 1 || certListResult.getData().isEmpty()) {
+                String msg = certListResult != null ? certListResult.getMessage() : "未获取到证书文件列表";
+                logger.warn("{}，跳过证书传输", msg);
+                return Body.success("", "未获取到证书文件，跳过传输");
+            }
+            List<String> certFilePaths = certListResult.getData();
+
+            // 3. P0证书保存目录
+            String p0SslDir = Paths.get(GARNET_DIR_P0, "Player-Data").toString();
+            File sslDir = new File(p0SslDir);
+            if (!sslDir.exists()) {
+                sslDir.mkdirs();
+            }
+
+            // 4. 逐个传输具体的证书文件（调用新接口）
+            for (String certFilePath : certFilePaths) {
+                // 调用支持文件/目录的新接口
+                Mono<Resource> resourceMono = webClient.get()
+                        .uri(uriBuilder -> uriBuilder
+                                .path("/verdict/getP1FileOrDir") // 改用新接口
+                                .queryParam("filePath", certFilePath)
+                                .build())
+                        .retrieve()
+                        .bodyToMono(Resource.class);
+
+                Resource resource = resourceMono.block();
+                if (resource == null || !resource.exists()) {
+                    logger.warn("获取证书文件失败：{}，跳过该文件", certFilePath);
+                    continue;
+                }
+
+                // 获取文件名（如 "player0.pem"）
+                String fileName = Optional.ofNullable(resource.getFilename()).orElse(Paths.get(certFilePath).getFileName().toString());
+                File targetFile = new File(p0SslDir, fileName);
+                // 保存证书文件
+                try (OutputStream os = new FileOutputStream(targetFile)) {
+                    FileCopyUtils.copy(resource.getInputStream(), os);
+                }
+                logger.info("成功接收SSL证书：{}，保存至：{}", fileName, targetFile.getAbsolutePath());
+            }
+
+            return Body.success(p0SslDir, "SSL证书生成/传输完成");
+
+        } catch (Exception e) {
+            logger.error("SSL证书生成/传输异常", e);
+            return Body.error("SSL证书生成/传输异常：" + e.getMessage());
+        }
+    }
+
+    /**
+     * 执行在线阶段（Center端执行P0命令，调用Agent接口执行P1命令）
+     */
+    private Body<String> executeOnlineStage(String agentId, String baseFileName) { // 新增agentId参数
+        try {
+            // 1. 调用Agent端接口执行P1在线阶段命令（同步调用，确保P1先启动）
+            Body<String> p1OnlineResult = executeP1OnlineStage(agentId, baseFileName);
+            if (p1OnlineResult.getCode() != 1) {
+                return Body.error("P1在线阶段执行失败：" + p1OnlineResult.getMessage());
+            }
+
+            // 2. 等待P1启动完成（3秒）
+            TimeUnit.SECONDS.sleep(3);
+
+            // 3. Center端执行P0在线阶段命令（本地执行）
+            String p0Cmd = String.format(
+                    "%s/ann-party.x 0 -pn %d -h %s -d %s -n %s -k %d",
+                    GARNET_DIR_P0,
+                    GARNET_PORT,
+                    P1_IP,
+                    Paths.get(my.getCore_path(), PKL_SAVE_DIR, baseFileName).toString(),
+                    baseFileName,
+                    GARNET_TOP_K
+            );
+            Body<String> p0Result = executeLocalCommand(p0Cmd, "P0在线阶段");
+            if (p0Result.getCode() != 1) {
+                return Body.error("P0在线阶段执行失败：" + p0Result.getMessage());
+            }
+
+            // 解析P0输出中的Top-K结果
+            String topKResult = parseTopKResult(p0Result.getData());
+            return Body.success(topKResult, "在线阶段执行成功");
+
+        } catch (Exception e) {
+            logger.error("执行在线阶段异常", e);
+            return Body.error("在线阶段执行异常：" + e.getMessage());
+        }
+    }
+
+    /**
+     * 新增：调用Agent端执行P1在线阶段命令
+     */
+    private Body<String> executeP1OnlineStage(String agentId, String baseFileName) {
+        try {
+            WebClient webClient = centerWebClientService.center2AgentWebClient(agentId);
+            if (webClient == null) {
+                return Body.error("创建Agent通信客户端失败");
+            }
+
+            // 构建P1在线命令参数
+            Map<String, String> params = new HashMap<>();
+            params.put("garnetDir", GARNET_DIR_P1);
+            params.put("port", String.valueOf(GARNET_PORT));
+            params.put("targetIp", P0_IP); // P1的-h参数是P0的IP
+            params.put("dataDir", "/home/zkx/DAVEX/Core/output/" + baseFileName);
+            params.put("dataset", baseFileName);
+            params.put("topK", String.valueOf(GARNET_TOP_K));
+
+            Body<String> result = webClient.post()
+                    .uri("/verdict/executeP1Online") // Agent端新增的接口
+                    .bodyValue(params)
+                    .retrieve()
+                    .bodyToMono(Body.class)
+                    .block();
+
+            if (result == null || result.getCode() != 1) {
+                String msg = result != null ? result.getMessage() : "P1在线阶段执行无响应";
+                return Body.error(msg);
+            }
+            return Body.success(result.getData(), "P1在线阶段执行成功");
+
+        } catch (Exception e) {
+            logger.error("调用Agent执行P1在线阶段异常", e);
+            return Body.error("P1在线阶段执行异常：" + e.getMessage());
+        }
+    }
+
+    /**
+     * 执行本地命令（封装Garnet脚本执行逻辑）
+     */
+    private Body<String> executeLocalCommand(String fullCmd, String stageName) {
+        // 关键修改1：用AtomicReference包装Process，解决lambda变量引用问题
+        AtomicReference<Process> processRef = new AtomicReference<>();
+        try {
+            logger.info("执行{}命令：{}", stageName, fullCmd);
+            ProcessBuilder processBuilder = new ProcessBuilder();
+            if (System.getProperty("os.name").toLowerCase().contains("windows")) {
+                processBuilder.command("cmd.exe", "/c", fullCmd);
+            } else {
+                processBuilder.command("/bin/bash", "-c", fullCmd);
+            }
+            processBuilder.redirectErrorStream(true);
+            Process process = processBuilder.start();
+            processRef.set(process); // 将process存入AtomicReference
+
+            // 读取输出
+            StringBuilder output = new StringBuilder();
+            new Thread(() -> {
+                // 关键修改2：从AtomicReference中获取process对象
+                Process innerProcess = processRef.get();
+                if (innerProcess == null) {
+                    logger.error("{}执行线程中Process对象为空", stageName);
+                    return;
+                }
+                try (BufferedReader reader = new BufferedReader(new InputStreamReader(innerProcess.getInputStream()))) {
+                    String line;
+                    while ((line = reader.readLine()) != null) {
+                        output.append(line).append("\n");
+                        logger.info("{}输出：{}", stageName, line);
+                    }
+                } catch (IOException e) {
+                    logger.error("读取{}输出异常", stageName, e);
+                }
+            }).start();
+
+            // 等待执行完成
+            boolean isCompleted = process.waitFor(TIMEOUT_MINUTES, TimeUnit.MINUTES);
+            if (!isCompleted) {
+                process.destroyForcibly();
+                return Body.error(stageName + "执行超时");
+            }
+
+            int exitCode = process.exitValue();
+            if (exitCode != 0) {
+                return Body.error(stageName + "执行失败，退出码：" + exitCode);
+            }
+
+            return Body.success(output.toString(), stageName + "执行成功");
+
+        } catch (Exception e) {
+            logger.error("执行{}命令异常", stageName, e);
+            return Body.error(stageName + "执行异常：" + e.getMessage());
+        } finally {
+            // 关键修改3：从AtomicReference中获取process并销毁
+            Process process = processRef.get();
+            if (process != null && process.isAlive()) {
+                process.destroyForcibly();
+            }
+        }
+    }
+
+    /**
+     * 解析P0输出中的Top-K结果
+     */
+    private String parseTopKResult(String p0Output) {
+        StringBuilder topKResult = new StringBuilder();
+        String[] lines = p0Output.split("\n");
+        boolean inResult = false;
+        for (String line : lines) {
+            if (line.contains("[Result] 查询") && line.contains("Top-5 结果:")) {
+                inResult = true;
+                topKResult.append(line).append("\n");
+            } else if (inResult && line.trim().startsWith("#")) {
+                topKResult.append(line).append("\n");
+            } else if (inResult && line.trim().isEmpty()) {
+                inResult = false;
+            }
+        }
+        return topKResult.toString();
     }
 
     private Body<String> executePythonScript(String fullCmd, String expectedOutputFilePath) {

@@ -10,14 +10,22 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/verdict")
 public class VerdictController {
+
+    private static final Logger logger = LoggerFactory.getLogger(VerdictController.class);
+
     @Autowired
     VerdictService verdictService;
 
@@ -94,5 +102,126 @@ public class VerdictController {
             exceptionHeaders.add("X-Code", "0");
             return new ResponseEntity<>(exceptionHeaders, HttpStatus.INTERNAL_SERVER_ERROR);
         }
+    }
+
+    /**
+     * 执行P1离线阶段命令
+     */
+    @PostMapping("/executeP1Offline")
+    public Body<String> executeP1Offline(@RequestBody Map<String, String> params) {
+        String garnetDir = params.get("garnetDir");
+        String dataDir = params.get("dataDir");
+        String dataset = params.get("dataset");
+        String clusters = params.get("clusters");
+
+        String cmd = String.format(
+                "%s/ann-party-offline.x --data-dir %s --dataset %s --clusters %s",
+                garnetDir, dataDir, dataset, clusters
+        );
+        return verdictService.executeLocalCommand(cmd, "P1离线阶段");
+    }
+
+    /**
+     * 获取P1服务器文件
+     */
+    @GetMapping("/getP1File")
+    public ResponseEntity<Resource> getP1File(@RequestParam("filePath") String filePath) {
+        java.io.File file = new java.io.File(filePath);
+        if (!file.exists()) {
+            return ResponseEntity.notFound().build();
+        }
+        Resource resource = new FileSystemResource(file);
+        return ResponseEntity.ok()
+                .contentType(org.springframework.http.MediaType.APPLICATION_OCTET_STREAM)
+                .body(resource);
+    }
+
+    /**
+     * 生成SSL证书
+     */
+    @PostMapping("/generateSSL")
+    public Body<String> generateSSL(@RequestBody Map<String, String> params) {
+        String garnetDir = params.get("garnetDir");
+        String cmd = String.format("cd %s && ./Scripts/setup-ssl.sh 2", garnetDir);
+        return verdictService.executeLocalCommand(cmd, "SSL证书生成");
+    }
+
+    /**
+     * 新增：获取P1服务器的文件/目录（目录会自动压缩为ZIP）
+     */
+    @GetMapping("/getP1FileOrDir")
+    public ResponseEntity<Resource> getP1FileOrDir(@RequestParam("filePath") String filePath) throws IOException {
+        java.io.File target = new java.io.File(filePath);
+        if (!target.exists()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        // 如果是目录：压缩为ZIP后返回
+        if (target.isDirectory()) {
+            // 创建临时ZIP文件
+            String zipFileName = target.getName() + ".zip";
+            java.io.File zipFile = new java.io.File(target.getParent(), zipFileName);
+            verdictService.zipDirectory(target, zipFile);
+
+            // 返回ZIP文件流
+            Resource resource = new FileSystemResource(zipFile);
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + zipFileName + "\"")
+                    .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                    .body(resource);
+        } else {
+            // 如果是文件：直接返回（复用原有逻辑）
+            Resource resource = new FileSystemResource(target);
+            return ResponseEntity.ok()
+                    .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                    .body(resource);
+        }
+    }
+
+    /**
+     * 新增：列出P1服务器指定目录下的证书文件（pem/key）
+     */
+    @GetMapping("/listSSLCerts")
+    public Body<List<String>> listSSLCerts(@RequestParam("certDir") String certDir) {
+        try {
+            java.io.File dir = new java.io.File(certDir);
+            if (!dir.exists() || !dir.isDirectory()) {
+                return Body.error("证书目录不存在或不是目录：" + certDir);
+            }
+
+            // 列出所有pem/key文件
+            List<String> certFiles = new ArrayList<>();
+            java.io.File[] files = dir.listFiles((d, name) -> name.endsWith(".pem") || name.endsWith(".key"));
+            if (files != null) {
+                for (java.io.File file : files) {
+                    certFiles.add(file.getAbsolutePath());
+                }
+            }
+
+            return Body.success(certFiles, "获取证书文件列表成功");
+        } catch (Exception e) {
+            logger.error("列出证书文件失败", e);
+            return Body.error("列出证书文件异常：" + e.getMessage());
+        }
+    }
+
+    /**
+     * 新增：执行P1在线阶段命令
+     */
+    @PostMapping("/executeP1Online")
+    public Body<String> executeP1Online(@RequestBody Map<String, String> params) {
+        String garnetDir = params.get("garnetDir");
+        String port = params.get("port");
+        String targetIp = params.get("targetIp");
+        String dataDir = params.get("dataDir");
+        String dataset = params.get("dataset");
+        String topK = params.get("topK");
+
+        // 拼接P1在线命令
+        String cmd = String.format(
+                "cd %s && ./ann-party.x 1 -pn %s -h %s -d %s -n %s -k %s",
+                garnetDir, port, targetIp, dataDir, dataset, topK
+        );
+        return verdictService.executeLocalCommand(cmd, "P1在线阶段");
     }
 }

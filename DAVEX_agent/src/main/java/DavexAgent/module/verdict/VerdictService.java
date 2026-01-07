@@ -13,14 +13,19 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.io.BufferedReader;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.StringJoiner;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 @Service
 public class VerdictService {
@@ -29,7 +34,7 @@ public class VerdictService {
 
     // 配置参数（可根据实际需求调整，如输出前缀、缩放系数）
     private static final String PY_SCRIPT_NAME = "p1preprocess.py"; // Python脚本文件名
-//    private static final String OUTPUT_PREFIX = "dataset_embeddings"; // 输出文件前缀（对应Python脚本的--prefix参数）
+    //    private static final String OUTPUT_PREFIX = "dataset_embeddings"; // 输出文件前缀（对应Python脚本的--prefix参数）
     private static final long TIMEOUT_MINUTES = 30; // 脚本执行超时时间（防止无限阻塞）
     // 新增：用于提取D后面数字的正则表达式
     private static final String D_NUM_PATTERN = "D(\\d+)";
@@ -312,5 +317,89 @@ public class VerdictService {
                 logger.error("读取Python脚本输出时发生异常", e);
             }
         }).start();
+    }
+
+    /**
+     * 执行本地命令（Agent端）
+     */
+    public Body<String> executeLocalCommand(String fullCmd, String stageName) {
+        // 关键修改：用AtomicReference包装Process对象
+        AtomicReference<Process> processRef = new AtomicReference<>();
+        try {
+            logger.info("执行{}命令：{}", stageName, fullCmd);
+            ProcessBuilder processBuilder = new ProcessBuilder();
+            if (System.getProperty("os.name").toLowerCase().contains("windows")) {
+                processBuilder.command("cmd.exe", "/c", fullCmd);
+            } else {
+                processBuilder.command("/bin/bash", "-c", fullCmd);
+            }
+            processBuilder.redirectErrorStream(true);
+            Process process = processBuilder.start();
+            processRef.set(process); // 将process存入AtomicReference
+
+            StringBuilder output = new StringBuilder();
+            new Thread(() -> {
+                // 关键修改：从AtomicReference中获取process
+                Process innerProcess = processRef.get();
+                try (BufferedReader reader = new BufferedReader(new InputStreamReader(innerProcess.getInputStream()))) {
+                    String line;
+                    while ((line = reader.readLine()) != null) {
+                        output.append(line).append("\n");
+                        logger.info("{}输出：{}", stageName, line);
+                    }
+                } catch (IOException e) {
+                    logger.error("读取{}输出异常", stageName, e);
+                }
+            }).start();
+
+            // 原有逻辑不变（后续操作process变量）
+            boolean isCompleted = process.waitFor(30, TimeUnit.MINUTES);
+            if (!isCompleted) {
+                process.destroyForcibly();
+                return Body.error(stageName + "执行超时");
+            }
+
+            int exitCode = process.exitValue();
+            if (exitCode != 0) {
+                return Body.error(stageName + "执行失败，退出码：" + exitCode);
+            }
+
+            return Body.success(output.toString(), stageName + "执行成功");
+
+        } catch (Exception e) {
+            logger.error("执行{}命令异常", stageName, e);
+            return Body.error(stageName + "执行异常：" + e.getMessage());
+        } finally {
+            // 关键修改：从AtomicReference中获取process并销毁
+            Process process = processRef.get();
+            if (process != null && process.isAlive()) {
+                process.destroyForcibly();
+            }
+        }
+    }
+
+    /**
+     * 辅助方法：压缩目录为ZIP文件
+     */
+    public void zipDirectory(java.io.File dir, java.io.File zipFile) throws IOException {
+        try (ZipOutputStream zos = new ZipOutputStream(Files.newOutputStream(zipFile.toPath()))) {
+            Path sourcePath = dir.toPath();
+            Files.walk(sourcePath)
+                    .filter(path -> !Files.isDirectory(path))
+                    .forEach(path -> {
+                        ZipEntry zipEntry = new ZipEntry(sourcePath.relativize(path).toString());
+                        try (FileInputStream fis = new FileInputStream(path.toFile())) {
+                            zos.putNextEntry(zipEntry);
+                            byte[] buffer = new byte[1024];
+                            int len;
+                            while ((len = fis.read(buffer)) > 0) {
+                                zos.write(buffer, 0, len);
+                            }
+                            zos.closeEntry();
+                        } catch (IOException e) {
+                            throw new RuntimeException("压缩目录失败：" + e.getMessage(), e);
+                        }
+                    });
+        }
     }
 }

@@ -20,7 +20,7 @@ public class VerdictController {
      */
     @PostMapping("/sendQuery")
     public Body<String> sendQuery(@RequestParam("agentId") String agentId,
-            @RequestBody(required = false) VerdictFilterDTO filterDTO) {
+                                  @RequestBody(required = false) VerdictFilterDTO filterDTO) {
         return verdictService.sendQuery(agentId, filterDTO);
     }
 
