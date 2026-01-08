@@ -722,38 +722,54 @@ public class VerdictService {
     }
 
     /**
-     * 执行在线阶段（Center端执行P0命令，调用Agent接口执行P1命令）
+     * 执行在线阶段（调整执行顺序：先启动P0，再启动P1，确保P0能接收P1数据并输出结果）
      */
-    private Body<String> executeOnlineStage(String agentId, String baseFileName) { // 新增agentId参数
+    private Body<String> executeOnlineStage(String agentId, String baseFileName) {
         try {
-            // 1. 调用Agent端接口执行P1在线阶段命令（同步调用，确保P1先启动）
+            // 1. 异步启动P0在线阶段（Center端本地执行，先处于监听状态）
+            AtomicReference<Body<String>> p0ResultRef = new AtomicReference<>();
+            Thread p0Thread = new Thread(() -> {
+                String p0Cmd = String.format(
+                        "%s/ann-party.x 0 -pn %d -h %s -d %s -n %s -k %d",
+                        GARNET_DIR_P0,
+                        GARNET_PORT,
+                        P0_IP,
+                        Paths.get(my.getCore_path(), PKL_SAVE_DIR, baseFileName).toString(),
+                        baseFileName,
+                        GARNET_TOP_K
+                );
+                Body<String> p0Result = executeLocalCommand(p0Cmd, "P0在线阶段");
+                p0ResultRef.set(p0Result);
+            });
+            p0Thread.start();
+
+            // 2. 等待P0启动完成（1秒，确保P0已进入监听状态）
+            TimeUnit.SECONDS.sleep(1);
+
+            // 3. 调用Agent端执行P1在线阶段命令（同步调用，确保P1正常启动）
             Body<String> p1OnlineResult = executeP1OnlineStage(agentId, baseFileName);
             if (p1OnlineResult.getCode() != 1) {
+                // 若P1启动失败，终止P0线程
+                p0Thread.interrupt();
                 return Body.error("P1在线阶段执行失败：" + p1OnlineResult.getMessage());
             }
 
-            // 2. 等待P1启动完成（3秒）
-            TimeUnit.SECONDS.sleep(3);
-
-            // 3. Center端执行P0在线阶段命令（本地执行）
-            String p0Cmd = String.format(
-                    "%s/ann-party.x 0 -pn %d -h %s -d %s -n %s -k %d",
-                    GARNET_DIR_P0,
-                    GARNET_PORT,
-                    P1_IP,
-                    Paths.get(my.getCore_path(), PKL_SAVE_DIR, baseFileName).toString(),
-                    baseFileName,
-                    GARNET_TOP_K
-            );
-            Body<String> p0Result = executeLocalCommand(p0Cmd, "P0在线阶段");
-            if (p0Result.getCode() != 1) {
-                return Body.error("P0在线阶段执行失败：" + p0Result.getMessage());
+            // 4. 等待P0线程执行完成，获取P0输出结果
+            p0Thread.join(TIMEOUT_MINUTES * 60 * 1000); // 超时时间与命令执行一致
+            Body<String> p0Result = p0ResultRef.get();
+            if (p0Result == null || p0Result.getCode() != 1) {
+                String errorMsg = p0Result != null ? p0Result.getMessage() : "P0在线阶段执行超时/无结果";
+                return Body.error("P0在线阶段执行失败：" + errorMsg);
             }
 
-            // 解析P0输出中的Top-K结果
+            // 5. 解析P0输出中的Top-K结果（核心：仅解析P0的输出）
             String topKResult = parseTopKResult(p0Result.getData());
-            return Body.success(topKResult, "在线阶段执行成功");
+            return Body.success(topKResult, "在线阶段执行成功，解析P0输出结果完成");
 
+        } catch (InterruptedException e) {
+            logger.error("在线阶段执行被中断", e);
+            Thread.currentThread().interrupt();
+            return Body.error("在线阶段执行被中断：" + e.getMessage());
         } catch (Exception e) {
             logger.error("执行在线阶段异常", e);
             return Body.error("在线阶段执行异常：" + e.getMessage());

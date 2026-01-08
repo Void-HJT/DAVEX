@@ -210,18 +210,27 @@ public class VerdictController {
      */
     @PostMapping("/executeP1Online")
     public Body<String> executeP1Online(@RequestBody Map<String, String> params) {
-        String garnetDir = params.get("garnetDir");
-        String port = params.get("port");
-        String targetIp = params.get("targetIp");
-        String dataDir = params.get("dataDir");
-        String dataset = params.get("dataset");
-        String topK = params.get("topK");
+        try {
+            // 异步执行P1命令，避免阻塞Center端
+            new Thread(() -> {
+                String garnetDir = params.get("garnetDir");
+                String port = params.get("port");
+                String targetIp = params.get("targetIp");
+                String dataDir = params.get("dataDir");
+                String dataset = params.get("dataset");
+                String topK = params.get("topK");
 
-        // 拼接P1在线命令
-        String cmd = String.format(
-                "cd %s && ./ann-party.x 1 -pn %s -h %s -d %s -n %s -k %s",
-                garnetDir, port, targetIp, dataDir, dataset, topK
-        );
-        return verdictService.executeLocalCommand(cmd, "P1在线阶段");
+                // 拼接P1在线命令（与MD文档完全一致）
+                String cmd = String.format(
+                        "cd %s && ./ann-party.x 1 -pn %s -h %s -d %s -n %s -k %s",
+                        garnetDir, port, targetIp, dataDir, dataset, topK
+                );
+                verdictService.executeLocalCommand(cmd, "P1在线阶段");
+            }).start();
+            return Body.success("", "P1在线阶段命令已提交执行");
+        } catch (Exception e) {
+            logger.error("提交P1在线命令失败", e);
+            return Body.error("P1在线阶段命令提交失败：" + e.getMessage());
+        }
     }
 }
