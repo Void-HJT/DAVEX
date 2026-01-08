@@ -313,7 +313,7 @@ public class FileFolderService {
     }
 
     // 上传文件
-    public Body<String> uploadFile(String agentId, String folderId, MultipartFile file, String baseDirectory) {
+    public Body<String> uploadFile(String agentId, String folderId, MultipartFile file, String baseDirectory, Integer privacy) {
         // 查找是否存在该文件夹
         LambdaQueryWrapper<Folder> queryFolderWrapper = Wrappers.<Folder>lambdaQuery()
                 .eq(Folder::getUid, folderId);
@@ -372,6 +372,11 @@ public class FileFolderService {
         fileRecord.setFolderId(folderId);
         fileRecord.setName(fileName);
         fileRecord.setSize(file.getSize());
+        if (privacy == 1) {
+            fileRecord.setType("private"); // 传1时置为private
+        } else {
+            fileRecord.setType("default"); // 默认/传0时置为default
+        }
 
         fileRecord.setCreateDate(new Timestamp(System.currentTimeMillis()));
         fileRecord.setLastUpdate(new Timestamp(System.currentTimeMillis()));

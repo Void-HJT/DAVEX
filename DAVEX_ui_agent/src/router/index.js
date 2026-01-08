@@ -38,6 +38,10 @@ const router = createRouter({
           component: () => import('@/views/dve/folderController.vue'),
         },
         {
+          path: 'dve/privateFolderController',
+          component: () => import('@/views/dve/privateFolderController.vue'),
+        },
+        {
           path: 'datashare/comPare',
           component: () => import('@/views/datashare/comPare.vue'),
         },

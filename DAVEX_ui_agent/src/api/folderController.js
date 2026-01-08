@@ -108,12 +108,13 @@ export const createFolder = ({ name, agentId, parentId }) => {
   return res
 }
 
-export const uploadFile = ({ agentId, folderId, file }) => {
+export const uploadFile = ({ agentId, folderId, file, privacy = 0 }) => {
   // 使用 FormData 来处理文件上传
   const formData = new FormData()
   formData.append('file', file)
   formData.append('agentId', agentId)
   formData.append('folderId', folderId)
+  formData.append('privacy', privacy)
   let res = request.post(
       '/directory/fileFolder/uploadFile',
       formData,  // 传递 FormData 对象

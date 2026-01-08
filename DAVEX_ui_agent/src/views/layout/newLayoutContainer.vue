@@ -6,6 +6,7 @@ import {
   EditPen,
   SwitchButton,
   CaretBottom,
+  Files,
 } from '@element-plus/icons-vue' //crop
 // import avatar from '@/assets/default.png'
 import { useUserStore } from '../../stores'
@@ -42,30 +43,38 @@ const handleCommand = (key) => {
             text-color="#bac9df"
             router
         >
-          <el-sub-menu index="/dve">
-            <template #title>
-              <el-icon><UserFilled /></el-icon>
-              <span class="centered-text">用户与文件管理</span>
-            </template>
-            <el-menu-item index="/dve/testTrans">
-              <el-icon><User /></el-icon>
-              <span class="centered-text">用户管理</span>
-            </el-menu-item>
-            <el-menu-item index="/dve/folderController">
-              <el-icon><User /></el-icon>
-              <span class="centered-text">文件管理</span>
-            </el-menu-item>
-          </el-sub-menu>
-          <el-sub-menu index="/auth">
-            <template #title>
-              <el-icon><UserFilled /></el-icon>
-              <span class="centered-text">认证管理</span>
-            </template>
-            <el-menu-item index="/auth/tokens">
-              <el-icon><EditPen /></el-icon>
-              <span class="centered-text">Token管理</span>
-            </el-menu-item>
-          </el-sub-menu>
+          <el-menu-item index="/dve/folderController">
+            <el-icon><Files /></el-icon>
+            <span class="centered-text">一般文件管理</span>
+          </el-menu-item>
+          <el-menu-item index="/dve/privateFolderController">
+            <el-icon><Files /></el-icon>
+            <span class="centered-text">隐私文件管理</span>
+          </el-menu-item>
+<!--          <el-sub-menu index="/dve">-->
+<!--            <template #title>-->
+<!--              <el-icon><UserFilled /></el-icon>-->
+<!--              <span class="centered-text">用户与文件管理</span>-->
+<!--            </template>-->
+<!--            <el-menu-item index="/dve/testTrans">-->
+<!--              <el-icon><User /></el-icon>-->
+<!--              <span class="centered-text">用户管理</span>-->
+<!--            </el-menu-item>-->
+<!--            <el-menu-item index="/dve/folderController">-->
+<!--              <el-icon><User /></el-icon>-->
+<!--              <span class="centered-text">文件管理</span>-->
+<!--            </el-menu-item>-->
+<!--          </el-sub-menu>-->
+<!--          <el-sub-menu index="/auth">-->
+<!--            <template #title>-->
+<!--              <el-icon><UserFilled /></el-icon>-->
+<!--              <span class="centered-text">认证管理</span>-->
+<!--            </template>-->
+<!--            <el-menu-item index="/auth/tokens">-->
+<!--              <el-icon><EditPen /></el-icon>-->
+<!--              <span class="centered-text">Token管理</span>-->
+<!--            </el-menu-item>-->
+<!--          </el-sub-menu>-->
         </el-menu>
       </el-aside>
       <el-main>
