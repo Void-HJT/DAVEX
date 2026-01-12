@@ -10,7 +10,7 @@ const baseURL = (window.env && window.env.VUE_APP_API_BASE_URL) || 'http://10.17
 const instance = axios.create({
   // TODO 1. 基础地址，超时时间
   baseURL,
-  timeout: 20000,
+  timeout: 300000,
 })
 //请求拦截器
 // instance.interceptors.request.use(

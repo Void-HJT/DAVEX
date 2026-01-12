@@ -11,12 +11,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
+import org.springframework.core.io.buffer.DataBuffer;
+import org.springframework.core.io.buffer.DataBufferUtils;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.util.FileCopyUtils;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.io.*;
@@ -24,10 +27,12 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.sql.Timestamp;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.zip.ZipEntry;
@@ -541,12 +546,11 @@ public class VerdictService {
      */
     private Body<String> transferP0FilesFromP1(String agentId, String baseFileName) {
         try {
-            WebClient webClient = centerWebClientService.center2AgentWebClient(agentId);
+            WebClient webClient = centerWebClientService.center2AgentWebClientCustomize(agentId);
             if (webClient == null) {
                 return Body.error("创建Agent通信客户端失败");
             }
 
-            // 需要传输的文件列表（包含目录2-fss）
             List<String> p0Files = Arrays.asList(
                     baseFileName + "-P0-shares",
                     baseFileName + "-P0-triples",
@@ -556,52 +560,67 @@ public class VerdictService {
                     "2-fss"
             );
 
-            // P0保存目录
             String p0SaveDir = Paths.get(my.getCore_path(), PKL_SAVE_DIR, baseFileName).toString();
             File dir = new File(p0SaveDir);
             if (!dir.exists()) {
                 dir.mkdirs();
             }
 
-            // 逐个传输文件/目录
             for (String fileName : p0Files) {
                 String sourceFilePath = "/home/zkx/DAVEX/Core/output/" + baseFileName + "/" + fileName;
-                // 调用新增的接口（支持文件/目录）
-                Mono<Resource> resourceMono = webClient.get()
-                        .uri(uriBuilder -> uriBuilder
-                                .path("/verdict/getP1FileOrDir") // 改为新接口
-                                .queryParam("filePath", sourceFilePath)
-                                .build())
-                        .retrieve()
-                        .bodyToMono(Resource.class);
+                // 修复1：给2-fss文件添加.zip后缀，避免与文件夹重名
+                String targetFileName = fileName.equals("2-fss") ? fileName + ".zip" : fileName;
+                String targetPath = Paths.get(p0SaveDir, targetFileName).toString();
+                File targetFile = new File(targetPath);
 
-                Resource resource = resourceMono.block();
-                if (resource == null || !resource.exists()) {
-                    logger.warn("获取P1文件/目录失败：{}，跳过该文件", fileName);
+                AtomicBoolean transferSuccess = new AtomicBoolean(false);
+                AtomicReference<Exception> transferException = new AtomicReference<>();
+
+                try (OutputStream outputStream = new FileOutputStream(targetFile)) {
+                    Flux<DataBuffer> dataBufferFlux = webClient.get()
+                            .uri(uriBuilder -> uriBuilder
+                                    .path("/verdict/getP1FileOrDir")
+                                    .queryParam("filePath", sourceFilePath)
+                                    .build())
+                            .retrieve()
+                            .bodyToFlux(DataBuffer.class);
+
+                    DataBufferUtils.write(dataBufferFlux, outputStream)
+                            .doOnComplete(() -> {
+                                logger.info("文件传输完成：{}", targetFile.getAbsolutePath());
+                                transferSuccess.set(true);
+                            })
+                            .doOnError(e -> {
+                                logger.error("文件传输失败：{}", fileName, e);
+                                transferException.set(new RuntimeException("文件传输失败：" + fileName, e));
+                            })
+                            .doOnNext(DataBufferUtils::release)
+                            .blockLast(Duration.ofMinutes(5));
+
+                    if (transferException.get() != null) {
+                        throw transferException.get();
+                    }
+                    if (!transferSuccess.get()) {
+                        throw new RuntimeException("文件传输未完成：" + fileName);
+                    }
+                } catch (Exception e) {
+                    logger.warn("传输文件{}失败，跳过该文件", fileName, e);
                     continue;
                 }
 
-                // 处理文件/目录
-                String targetPath = Paths.get(p0SaveDir, fileName).toString();
+                // 修复2：解压带.zip后缀的2-fss文件
                 if (fileName.equals("2-fss")) {
-                    // 处理2-fss目录（ZIP解压）
-                    File zipFile = new File(targetPath + ".zip");
-                    // 保存ZIP文件
-                    try (OutputStream os = new FileOutputStream(zipFile)) {
-                        FileCopyUtils.copy(resource.getInputStream(), os);
-                    }
-                    // 解压ZIP到目标目录
+                    File zipFile = new File(p0SaveDir, "2-fss.zip");
                     unzip(zipFile, new File(p0SaveDir));
-                    // 删除临时ZIP文件
-                    zipFile.delete();
-                    logger.info("成功接收并解压P1目录：{}，保存至：{}", fileName, targetPath);
-                } else {
-                    // 处理普通文件
-                    File targetFile = new File(targetPath);
-                    try (OutputStream os = new FileOutputStream(targetFile)) {
-                        FileCopyUtils.copy(resource.getInputStream(), os);
+                    if (zipFile.exists()) {
+                        boolean deleteSuccess = zipFile.delete();
+                        if (!deleteSuccess) {
+                            logger.warn("删除2-fss临时ZIP文件失败：{}", zipFile.getAbsolutePath());
+                        }
                     }
-                    logger.info("成功接收P1文件：{}，保存至：{}", fileName, targetFile.getAbsolutePath());
+                    logger.info("成功接收并解压P1目录：{}，保存至：{}", fileName, new File(p0SaveDir, "2-fss").getAbsolutePath());
+                } else {
+                    logger.info("成功接收P1文件：{}，保存至：{}", fileName, targetPath);
                 }
             }
 
@@ -617,24 +636,58 @@ public class VerdictService {
      * 新增辅助方法：解压ZIP文件到指定目录
      */
     private void unzip(File zipFile, File targetDir) throws IOException {
+        // 核心修复1：检查2-fss路径是否已存在且是文件，若存在则删除
+        File fssDir = new File(targetDir, "2-fss");
+        if (fssDir.exists() && !fssDir.isDirectory()) {
+            boolean deleteSuccess = fssDir.delete();
+            if (!deleteSuccess) {
+                logger.error("删除已存在的2-fss文件失败，路径：{}", fssDir.getAbsolutePath());
+                throw new IOException("删除2-fss文件失败，无法创建文件夹");
+            }
+            logger.info("已删除占用2-fss路径的文件，路径：{}", fssDir.getAbsolutePath());
+        }
+
+        // 强制创建2-fss子文件夹
+        if (!fssDir.exists()) {
+            boolean mkdirSuccess = fssDir.mkdirs();
+            if (!mkdirSuccess) {
+                logger.error("创建2-fss子文件夹失败，路径：{}", fssDir.getAbsolutePath());
+                throw new IOException("创建2-fss子文件夹失败");
+            }
+        }
+
         try (ZipInputStream zis = new ZipInputStream(new FileInputStream(zipFile))) {
             ZipEntry entry;
             while ((entry = zis.getNextEntry()) != null) {
-                File entryFile = new File(targetDir, entry.getName());
-                // 创建父目录
+                if (entry.isDirectory()) {
+                    zis.closeEntry();
+                    continue;
+                }
+
+                String entryFileName = new File(entry.getName()).getName();
+                File entryFile = new File(fssDir, entryFileName);
+
+                // 核心修复2：再次检查目标文件的父目录是否为目录（防御性编程）
+                if (entryFile.getParentFile().exists() && !entryFile.getParentFile().isDirectory()) {
+                    throw new IOException("父路径不是目录：" + entryFile.getParentFile().getAbsolutePath());
+                }
                 if (!entryFile.getParentFile().exists()) {
                     entryFile.getParentFile().mkdirs();
                 }
-                // 写入文件
+
                 try (OutputStream os = new FileOutputStream(entryFile)) {
-                    byte[] buffer = new byte[1024];
+                    byte[] buffer = new byte[4096];
                     int len;
                     while ((len = zis.read(buffer)) > 0) {
                         os.write(buffer, 0, len);
                     }
                 }
+                logger.info("成功解压文件到2-fss目录：{}", entryFile.getAbsolutePath());
                 zis.closeEntry();
             }
+        } catch (IOException e) {
+            logger.error("解压2-fss ZIP包失败，ZIP路径：{}", zipFile.getAbsolutePath(), e);
+            throw e;
         }
     }
 

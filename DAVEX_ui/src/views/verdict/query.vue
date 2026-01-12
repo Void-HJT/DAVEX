@@ -107,7 +107,7 @@
               :loading="preprocessLoading"
               :disabled="!agentId || !selectedFile"
           >
-            <el-icon><Loading /></el-icon> 目标集合预处理&生成Emb
+            <el-icon><Search /></el-icon> 类案检索
           </el-button>
         </el-form-item>
       </el-form>
@@ -127,9 +127,9 @@
         <template v-else><Close /></template>
       </el-icon>
       <p class="result-message">{{ preprocessMessage }}</p>
-      <!-- 成功时显示emb文件路径（替换原pkl路径） -->
+      <!-- 成功时显示检索结果 -->
       <div v-if="preprocessSuccess && embFilePath" class="emb-path-container">
-        <span class="path-label">生成的emb文件路径：</span>
+        <span class="path-label">检索结果：</span>
         <el-input
             v-model="embFilePath"
             readonly
