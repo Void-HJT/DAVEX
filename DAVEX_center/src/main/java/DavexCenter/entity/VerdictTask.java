@@ -20,4 +20,5 @@ public class VerdictTask {
     private String filterCause;
     private String status;
     private String remark;
+    private String resultIds;
 }

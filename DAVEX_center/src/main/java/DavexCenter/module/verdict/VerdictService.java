@@ -486,6 +486,7 @@ public class VerdictService {
                 updateTaskStatusAndRemark(taskId.get(), TASK_STATUS_FAILED, errorMsg);
                 return Body.error(errorMsg);
             }
+            updateTaskResultIds(taskId.get(), onlineResult.getData()); // 调用新增方法更新resultIds
             updateTaskStatusAndRemark(taskId.get(), TASK_STATUS_ONLINE_COMPLETED,
                     "在线阶段执行完成，查询结果=" + onlineResult.getData());
 
@@ -502,6 +503,27 @@ public class VerdictService {
                 updateTaskStatusAndRemark(taskId.get(), TASK_STATUS_FAILED, errorMsg);
             }
             return Body.error(errorMsg);
+        }
+    }
+
+    /**
+     * 更新任务的resultIds字段
+     * @param taskId 任务ID
+     * @param resultIds 拼接后的fileIds字符串
+     */
+    private void updateTaskResultIds(Long taskId, String resultIds) {
+        if (taskId == null || taskId <= 0 || resultIds == null) {
+            logger.warn("更新resultIds失败：任务ID无效或resultIds为空");
+            return;
+        }
+        try {
+            LambdaUpdateWrapper<VerdictTask> updateWrapper = new LambdaUpdateWrapper<VerdictTask>()
+                    .eq(VerdictTask::getUid, taskId)
+                    .set(VerdictTask::getResultIds, resultIds); // 设置resultIds字段
+            verdictTaskMapper.update(null, updateWrapper);
+            logger.info("任务resultIds更新完成，任务ID：{}，resultIds：{}", taskId, resultIds);
+        } catch (Exception e) {
+            logger.error("更新任务resultIds异常，任务ID：{}", taskId, e);
         }
     }
 
@@ -932,23 +954,51 @@ public class VerdictService {
     }
 
     /**
-     * 解析P0输出中的Top-K结果
+     * 解析P0输出中的Top-K结果，并拼接前缀生成完整fileIds
+     * @param p0Output P0在线阶段的输出内容
+     * @return 拼接后的完整fileIds字符串（如 "DAVEX-C1-G1-D133,DAVEX-C1-G1-D87"）
      */
     private String parseTopKResult(String p0Output) {
-        StringBuilder topKResult = new StringBuilder();
+        StringBuilder resultIds = new StringBuilder();
+        String prefix = "DAVEX-C1-G1-D";
         String[] lines = p0Output.split("\n");
         boolean inResult = false;
+
         for (String line : lines) {
+            // 匹配结果开始行，标记进入结果解析阶段
             if (line.contains("[Result] 查询") && line.contains("Top-5 结果:")) {
                 inResult = true;
-                topKResult.append(line).append("\n");
-            } else if (inResult && line.trim().startsWith("#")) {
-                topKResult.append(line).append("\n");
-            } else if (inResult && line.trim().isEmpty()) {
-                inResult = false;
+                continue; // 跳过该行，直接解析后续的fileId行
+            }
+
+            // 仅在结果阶段解析fileId行
+            if (inResult) {
+                // 匹配格式：  #1: fileId=133
+                line = line.trim();
+                // 检查是否包含fileId=，且是Top-N结果行
+                if (line.startsWith("#") && line.contains("fileId=")) {
+                    // 提取fileId=后的数字
+                    String[] parts = line.split("fileId=");
+                    if (parts.length >= 2) {
+                        String idStr = parts[1].trim();
+                        // 校验是否为纯数字（过滤可能的多余字符）
+                        if (idStr.matches("\\d+")) {
+                            if (resultIds.length() > 0) {
+                                resultIds.append(","); // 多个ID用逗号分隔
+                            }
+                            resultIds.append(prefix).append(idStr);
+                        }
+                    }
+                }
+                // 遇到空行，结束结果解析（避免解析性能统计等内容）
+                else if (line.isEmpty()) {
+                    inResult = false;
+                }
             }
         }
-        return topKResult.toString();
+
+        // 若未提取到任何fileId，返回空字符串（避免存入错误内容）
+        return resultIds.length() > 0 ? resultIds.toString() : "";
     }
 
     private Body<String> executePythonScript(String fullCmd, String expectedOutputFilePath) {
