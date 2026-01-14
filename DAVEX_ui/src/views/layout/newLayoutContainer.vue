@@ -18,7 +18,7 @@ import {
 <!--      <div>-->
 <!--        <img src="@/assets/DAVEX.png" class="logo-img" />-->
 <!--      </div>-->
-      <div class="header-text">隐私计算平台 (DAVEX) - Center 操作界面</div>
+      <div class="header-text">跨部门类案类判平台 - Center 操作界面</div>
     </el-header>
     <el-container>
       <el-aside style="background-color: #010927; margin-right: 10px">
@@ -30,9 +30,13 @@ import {
             text-color="#bac9df"
             router
         >
+<!--          <el-menu-item index="/user/notification">-->
+<!--            <el-icon><Message /></el-icon>-->
+<!--            <span class="centered-text">消息中心</span>-->
+<!--          </el-menu-item>-->
           <el-menu-item index="/user/notification">
             <el-icon><Message /></el-icon>
-            <span class="centered-text">消息中心</span>
+            <span class="centered-text">历史记录</span>
           </el-menu-item>
           <el-sub-menu index="/dve">
             <template #title>

@@ -21,4 +21,5 @@ public class VerdictTask {
     private String status;
     private String remark;
     private String resultIds;
+    private Integer hasRead;
 }
