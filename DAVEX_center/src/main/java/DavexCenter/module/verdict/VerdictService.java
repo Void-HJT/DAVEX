@@ -26,6 +26,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.io.*;
+import java.io.FileWriter;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -34,6 +35,8 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
@@ -332,6 +335,22 @@ public class VerdictService {
                 return Body.error(errorMsg);
             }
             logger.info("上传文件已成功保存到：{}", savedInputFile.getAbsolutePath());
+            
+            // 保存输入文件路径到任务备注中
+            String inputFilePath = savedInputFile.getAbsolutePath();
+            VerdictTask task = verdictTaskMapper.selectById(taskId);
+            if (task != null) {
+                String remark = task.getRemark();
+                if (remark == null || remark.isEmpty()) {
+                    remark = "inputFilePath:" + inputFilePath;
+                } else if (!remark.contains("inputFilePath:")) {
+                    remark += "\ninputFilePath:" + inputFilePath;
+                }
+                LambdaUpdateWrapper<VerdictTask> updateWrapper = new LambdaUpdateWrapper<VerdictTask>()
+                        .eq(VerdictTask::getUid, taskId)
+                        .set(VerdictTask::getRemark, remark);
+                verdictTaskMapper.update(null, updateWrapper);
+            }
 
             // 原有Python脚本路径校验逻辑不变...
             java.io.File pyScriptFile = new java.io.File(corePath, PY_SCRIPT_NAME);
@@ -1286,6 +1305,278 @@ public class VerdictService {
             String errorMsg = "读取文件异常：" + e.getMessage();
             logger.error("读取文件异常，文件ID：{}，代理ID：{}", fileId, agentId, e);
             return Body.error(errorMsg);
+        }
+    }
+
+    /**
+     * 提取文件中的证据或判决内容
+     * @param filePath 文件路径
+     * @param extractType 提取类型（evidence或verdict）
+     * @return 提取的内容
+     */
+    public Body<String> extractContent(String filePath, String extractType) {
+        try {
+            logger.info("开始提取文件内容，文件路径：{}，提取类型：{}", filePath, extractType);
+            
+            if (filePath == null || filePath.trim().isEmpty()) {
+                return Body.error("文件路径不能为空");
+            }
+            if (!extractType.equals("evidence") && !extractType.equals("verdict")) {
+                return Body.error("提取类型必须是evidence或verdict");
+            }
+
+            java.io.File file = new java.io.File(filePath);
+            if (!file.exists()) {
+                return Body.error("文件不存在，文件路径: " + filePath);
+            }
+
+            String corePath = my.getCore_path();
+            if (corePath == null || corePath.trim().isEmpty()) {
+                return Body.error("系统核心路径未配置");
+            }
+
+            // 构建Python脚本路径
+            String pyScriptPath = Paths.get(corePath, "p0analyze.py").toString();
+            java.io.File pyScriptFile = new java.io.File(pyScriptPath);
+            if (!pyScriptFile.exists() || !pyScriptFile.isFile()) {
+                return Body.error("Python脚本不存在，路径：" + pyScriptPath);
+            }
+
+            // 执行Python脚本提取内容
+            String pythonPath = "/disk/zkx/miniconda3/bin/python";
+            String fullCmd = String.format(
+                    "%s \"%s\" \"%s\" %s",
+                    pythonPath,
+                    pyScriptFile.getAbsolutePath(),
+                    filePath,
+                    extractType
+            );
+            logger.info("执行Python命令：{}", fullCmd);
+
+            Body<String> scriptResult = executePythonScriptForExtract(fullCmd);
+            if (scriptResult.getCode() != 1) {
+                logger.error("Python脚本执行失败，错误信息：{}", scriptResult.getMessage());
+                return Body.error("提取内容失败：" + scriptResult.getMessage());
+            }
+
+            logger.info("成功提取文件内容，提取类型：{}", extractType);
+            return Body.success(scriptResult.getData(), "提取内容成功");
+
+        } catch (Exception e) {
+            String errorMsg = "提取内容异常：" + e.getMessage();
+            logger.error("提取内容异常，文件路径：{}，提取类型：{}", filePath, extractType, e);
+            return Body.error(errorMsg);
+        }
+    }
+
+    /**
+     * 执行Python脚本提取内容（返回标准输出）
+     */
+    private Body<String> executePythonScriptForExtract(String fullCmd) {
+        Process process = null;
+        try {
+            ProcessBuilder processBuilder = new ProcessBuilder();
+            if (System.getProperty("os.name").toLowerCase().contains("windows")) {
+                processBuilder.command("cmd.exe", "/c", fullCmd);
+            } else {
+                processBuilder.command("/bin/bash", "-c", fullCmd);
+            }
+            processBuilder.redirectErrorStream(true);
+            process = processBuilder.start();
+
+            // 读取输出
+            StringBuilder output = new StringBuilder();
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    output.append(line).append("\n");
+                    logger.info("Python脚本输出：{}", line);
+                }
+            }
+
+            // 等待执行完成
+            boolean isCompleted = process.waitFor(TIMEOUT_MINUTES, TimeUnit.MINUTES);
+            if (!isCompleted) {
+                process.destroyForcibly();
+                return Body.error("脚本执行超时");
+            }
+
+            int exitCode = process.exitValue();
+            if (exitCode != 0) {
+                return Body.error("脚本执行失败，退出码：" + exitCode + "，输出：" + output.toString());
+            }
+
+            return Body.success(output.toString().trim(), "脚本执行成功");
+
+        } catch (Exception e) {
+            logger.error("执行Python脚本异常", e);
+            return Body.error("执行脚本异常：" + e.getMessage());
+        } finally {
+            if (process != null && process.isAlive()) {
+                process.destroyForcibly();
+            }
+        }
+    }
+
+    /**
+     * 获取任务的输入文件内容
+     * @param taskId 任务ID
+     * @return 输入文件内容
+     */
+    public Body<String> getTaskInputFile(Long taskId) {
+        try {
+            logger.info("开始获取任务输入文件，任务ID：{}", taskId);
+            
+            if (taskId == null || taskId <= 0) {
+                return Body.error("任务ID无效");
+            }
+
+            // 获取任务信息
+            VerdictTask task = verdictTaskMapper.selectById(taskId);
+            if (task == null) {
+                return Body.error("未找到指定任务");
+            }
+
+            // 从remark中解析输入文件路径（格式：inputFilePath:xxx）
+            String remark = task.getRemark();
+            String inputFilePath = null;
+            if (remark != null && remark.contains("inputFilePath:")) {
+                String[] parts = remark.split("inputFilePath:");
+                if (parts.length > 1) {
+                    inputFilePath = parts[1].split("\n")[0].trim();
+                }
+            }
+
+            // 如果remark中没有，尝试根据任务信息推断
+            if (inputFilePath == null || inputFilePath.isEmpty()) {
+                String corePath = my.getCore_path();
+                if (corePath == null || corePath.trim().isEmpty()) {
+                    return Body.error("系统核心路径未配置");
+                }
+                // 根据任务创建时间查找query目录下最近的文件
+                java.io.File queryDir = new java.io.File(corePath, QUERY_DIR);
+                if (!queryDir.exists() || !queryDir.isDirectory()) {
+                    return Body.error("查询目录不存在");
+                }
+                java.io.File[] files = queryDir.listFiles((dir, name) -> name.endsWith(".txt"));
+                if (files == null || files.length == 0) {
+                    return Body.error("未找到输入文件");
+                }
+                // 获取最近修改的文件
+                java.util.Arrays.sort(files, (f1, f2) -> Long.compare(f2.lastModified(), f1.lastModified()));
+                inputFilePath = files[0].getAbsolutePath();
+            }
+
+            // 读取文件内容
+            java.io.File inputFile = new java.io.File(inputFilePath);
+            if (!inputFile.exists()) {
+                return Body.error("输入文件不存在，路径: " + inputFilePath);
+            }
+
+            StringBuilder content = new StringBuilder();
+            try (BufferedReader reader = new BufferedReader(new FileReader(inputFile, StandardCharsets.UTF_8))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    content.append(line).append("\n");
+                }
+            }
+
+            logger.info("成功获取任务输入文件，任务ID：{}", taskId);
+            return Body.success(content.toString(), "获取输入文件成功");
+
+        } catch (Exception e) {
+            String errorMsg = "获取输入文件异常：" + e.getMessage();
+            logger.error("获取输入文件异常，任务ID：{}", taskId, e);
+            return Body.error(errorMsg);
+        }
+    }
+
+    /**
+     * 对比两个文件的证据或判决内容
+     * @param taskId 任务ID
+     * @param resultFileId 结果文件ID
+     * @param agentId 代理ID
+     * @param extractType 提取类型（evidence或verdict）
+     * @return 对比结果（包含两个文件的内容）
+     */
+    public Body<Map<String, String>> compareContent(Long taskId, String resultFileId, String agentId, String extractType) {
+        java.io.File tempInputFile = null;
+        java.io.File tempResultFile = null;
+        try {
+            logger.info("开始对比内容，任务ID：{}，结果文件ID：{}，提取类型：{}", taskId, resultFileId, extractType);
+            
+            if (taskId == null || taskId <= 0) {
+                return Body.error("任务ID无效");
+            }
+            if (resultFileId == null || resultFileId.trim().isEmpty()) {
+                return Body.error("结果文件ID不能为空");
+            }
+            if (agentId == null || agentId.trim().isEmpty()) {
+                return Body.error("代理ID不能为空");
+            }
+            if (!extractType.equals("evidence") && !extractType.equals("verdict")) {
+                return Body.error("提取类型必须是evidence或verdict");
+            }
+
+            // 1. 获取输入文件内容并提取
+            Body<String> inputFileResult = getTaskInputFile(taskId);
+            if (inputFileResult.getCode() != 1) {
+                return Body.error("获取输入文件失败：" + inputFileResult.getMessage());
+            }
+
+            // 保存输入文件到临时文件
+            String corePath = my.getCore_path();
+            tempInputFile = java.io.File.createTempFile("input_", ".txt", new java.io.File(corePath));
+            try (FileWriter writer = new FileWriter(tempInputFile, StandardCharsets.UTF_8)) {
+                writer.write(inputFileResult.getData());
+            }
+
+            // 提取输入文件的内容
+            Body<String> inputExtractResult = extractContent(tempInputFile.getAbsolutePath(), extractType);
+            if (inputExtractResult.getCode() != 1) {
+                return Body.error("提取输入文件内容失败：" + inputExtractResult.getMessage());
+            }
+            String inputContent = inputExtractResult.getData();
+
+            // 2. 获取结果文件内容并提取
+            Body<String> resultFileResult = readFile(resultFileId, agentId);
+            if (resultFileResult.getCode() != 1) {
+                return Body.error("获取结果文件失败：" + resultFileResult.getMessage());
+            }
+
+            // 保存结果文件到临时文件
+            tempResultFile = java.io.File.createTempFile("result_", ".txt", new java.io.File(corePath));
+            try (FileWriter writer = new FileWriter(tempResultFile, StandardCharsets.UTF_8)) {
+                writer.write(resultFileResult.getData());
+            }
+
+            // 提取结果文件的内容
+            Body<String> resultExtractResult = extractContent(tempResultFile.getAbsolutePath(), extractType);
+            if (resultExtractResult.getCode() != 1) {
+                return Body.error("提取结果文件内容失败：" + resultExtractResult.getMessage());
+            }
+            String resultContent = resultExtractResult.getData();
+
+            // 3. 构建对比结果
+            Map<String, String> compareResult = new HashMap<>();
+            compareResult.put("inputContent", inputContent);
+            compareResult.put("resultContent", resultContent);
+
+            logger.info("成功对比内容，任务ID：{}", taskId);
+            return Body.success(compareResult, "对比成功");
+
+        } catch (Exception e) {
+            String errorMsg = "对比内容异常：" + e.getMessage();
+            logger.error("对比内容异常，任务ID：{}，结果文件ID：{}", taskId, resultFileId, e);
+            return Body.error(errorMsg);
+        } finally {
+            // 清理临时文件
+            if (tempInputFile != null && tempInputFile.exists()) {
+                tempInputFile.delete();
+            }
+            if (tempResultFile != null && tempResultFile.exists()) {
+                tempResultFile.delete();
+            }
         }
     }
 }

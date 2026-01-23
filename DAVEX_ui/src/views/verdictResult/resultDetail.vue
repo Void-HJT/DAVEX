@@ -33,7 +33,7 @@
         <el-table-column
           fixed="right"
           label="操作"
-          min-width="150"
+          min-width="300"
           header-align="center"
         >
           <template #default="scope">
@@ -44,6 +44,22 @@
               size="small"
             >
               预览
+            </el-button>
+            <el-button
+              link
+              type="success"
+              @click="compareEvidence(scope.row)"
+              size="small"
+            >
+              证据对比
+            </el-button>
+            <el-button
+              link
+              type="warning"
+              @click="compareVerdict(scope.row)"
+              size="small"
+            >
+              判决对比
             </el-button>
           </template>
         </el-table-column>
@@ -60,12 +76,35 @@
       </div>
     </template>
   </el-dialog>
+
+  <!-- 证据/判决对比对话框 -->
+  <el-dialog v-model="compareVisible" :title="compareTitle" width="90%">
+    <div class="compare-container">
+      <div class="compare-panel">
+        <div class="panel-header">
+          <h3>输入文件（{{ compareType === 'evidence' ? '证据' : '判决' }}部分）</h3>
+        </div>
+        <div class="panel-content" v-html="inputContent"></div>
+      </div>
+      <div class="compare-panel">
+        <div class="panel-header">
+          <h3>结果文件（{{ compareType === 'evidence' ? '证据' : '判决' }}部分）</h3>
+        </div>
+        <div class="panel-content" v-html="resultContent"></div>
+      </div>
+    </div>
+    <template #footer>
+      <div class="dialog-footer">
+        <el-button @click="compareVisible = false">关闭</el-button>
+      </div>
+    </template>
+  </el-dialog>
 </template>
 
 <script lang="ts" setup>
 import { onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { getFileInfo, readFileContent } from '../../api/verdict.js'
+import { getFileInfo, readFileContent, compareContent } from '../../api/verdict.js'
 import { Document, Timer } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 
@@ -76,6 +115,13 @@ const router = useRouter()
 const loading = ref(false)
 const previewVisible = ref(false)
 const previewContent = ref('')
+
+// 对比相关状态
+const compareVisible = ref(false)
+const compareTitle = ref('')
+const compareType = ref('') // 'evidence' 或 'verdict'
+const inputContent = ref('')
+const resultContent = ref('')
 
 // 文件列表数据
 const fileList = ref([])
@@ -159,6 +205,49 @@ const previewFile = async (file) => {
   }
 }
 
+// 证据对比
+const compareEvidence = async (file) => {
+  await compareFile(file, 'evidence', '证据对比')
+}
+
+// 判决对比
+const compareVerdict = async (file) => {
+  await compareFile(file, 'verdict', '判决对比')
+}
+
+// 对比文件
+const compareFile = async (file, type, title) => {
+  try {
+    compareVisible.value = true
+    compareTitle.value = title
+    compareType.value = type
+    inputContent.value = '加载中...'
+    resultContent.value = '加载中...'
+    
+    const res = await compareContent(taskId, file.uid, agentId, type)
+    if (res.data && res.data.code === 1) {
+      const compareData = res.data.data
+      // 将换行符转换为 HTML 换行
+      inputContent.value = (compareData.inputContent || '').replace(/\n/g, '<br>')
+      resultContent.value = (compareData.resultContent || '').replace(/\n/g, '<br>')
+      
+      if (!inputContent.value || inputContent.value === '') {
+        inputContent.value = '<span style="color: #999;">未提取到内容</span>'
+      }
+      if (!resultContent.value || resultContent.value === '') {
+        resultContent.value = '<span style="color: #999;">未提取到内容</span>'
+      }
+    } else {
+      ElMessage.error(res.data?.message || '对比失败')
+      compareVisible.value = false
+    }
+  } catch (error) {
+    console.error('对比文件失败:', error)
+    ElMessage.error('对比文件失败，请稍后重试')
+    compareVisible.value = false
+  }
+}
+
 // 格式化日期时间
 const formatDate = (cellValue) => {
   if (!cellValue) return ''
@@ -215,5 +304,45 @@ onMounted(() => {
   word-wrap: break-word;
   font-family: 'Courier New', monospace;
   line-height: 1.6;
+}
+
+.compare-container {
+  display: flex;
+  gap: 20px;
+  height: 600px;
+}
+
+.compare-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid #e4e7ed;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.panel-header {
+  background-color: #f5f7fa;
+  padding: 12px 16px;
+  border-bottom: 1px solid #e4e7ed;
+}
+
+.panel-header h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 500;
+  color: #303133;
+}
+
+.panel-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+  background-color: #fff;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  font-family: 'Courier New', monospace;
+  line-height: 1.8;
+  font-size: 14px;
 }
 </style>

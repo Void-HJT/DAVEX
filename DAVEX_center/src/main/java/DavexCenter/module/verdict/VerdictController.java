@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/verdict")
@@ -86,5 +87,42 @@ public class VerdictController {
     public Body<String> readFile(@RequestParam("fileId") String fileId,
                                  @RequestParam("agentId") String agentId) {
         return verdictService.readFile(fileId, agentId);
+    }
+
+    /**
+     * 提取文件中的证据或判决内容
+     * @param filePath 文件路径
+     * @param extractType 提取类型（evidence或verdict）
+     * @return 提取的内容
+     */
+    @PostMapping("/extractContent")
+    public Body<String> extractContent(@RequestParam("filePath") String filePath,
+                                       @RequestParam("extractType") String extractType) {
+        return verdictService.extractContent(filePath, extractType);
+    }
+
+    /**
+     * 获取任务的输入文件内容
+     * @param taskId 任务ID
+     * @return 输入文件内容
+     */
+    @GetMapping("/tasks/{taskId}/inputFile")
+    public Body<String> getTaskInputFile(@PathVariable Long taskId) {
+        return verdictService.getTaskInputFile(taskId);
+    }
+
+    /**
+     * 对比两个文件的证据或判决内容
+     * @param taskId 任务ID
+     * @param resultFileId 结果文件ID
+     * @param extractType 提取类型（evidence或verdict）
+     * @return 对比结果（包含两个文件的内容）
+     */
+    @PostMapping("/tasks/{taskId}/compare")
+    public Body<Map<String, String>> compareContent(@PathVariable Long taskId,
+                                                     @RequestParam("resultFileId") String resultFileId,
+                                                     @RequestParam("agentId") String agentId,
+                                                     @RequestParam("extractType") String extractType) {
+        return verdictService.compareContent(taskId, resultFileId, agentId, extractType);
     }
 }

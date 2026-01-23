@@ -143,3 +143,31 @@ export const readFileContent = (fileId, agentId) => {
     params.append('agentId', agentId)
     return request.post('verdict/readFile', params.toString())
 }
+
+/**
+ * 对比两个文件的证据或判决内容
+ * @param {Number|String} taskId - 任务ID
+ * @param {String} resultFileId - 结果文件ID
+ * @param {String} agentId - 代理ID
+ * @param {String} extractType - 提取类型（evidence或verdict）
+ * @returns {Promise} - 请求Promise对象（成功返回对比结果，包含inputContent和resultContent）
+ */
+export const compareContent = (taskId, resultFileId, agentId, extractType) => {
+    if (!taskId) {
+        return Promise.reject(new Error('任务ID不能为空'))
+    }
+    if (!resultFileId) {
+        return Promise.reject(new Error('结果文件ID不能为空'))
+    }
+    if (!agentId) {
+        return Promise.reject(new Error('代理ID不能为空'))
+    }
+    if (!extractType || (extractType !== 'evidence' && extractType !== 'verdict')) {
+        return Promise.reject(new Error('提取类型必须是evidence或verdict'))
+    }
+    const params = new URLSearchParams()
+    params.append('resultFileId', resultFileId)
+    params.append('agentId', agentId)
+    params.append('extractType', extractType)
+    return request.post(`verdict/tasks/${taskId}/compare`, params.toString())
+}
