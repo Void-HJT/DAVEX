@@ -139,7 +139,7 @@
     </div>
     <template #footer>
       <div class="dialog-footer">
-        <router-link to="/caseResult/query">
+        <router-link to="/verdictResult/query">
           <el-button class="default-button">
             查看结果管理区
           </el-button>

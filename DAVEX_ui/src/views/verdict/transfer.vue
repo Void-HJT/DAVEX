@@ -138,7 +138,7 @@
         <template #footer>
           <div class="dialog-footer">
             <el-button class="close-button" @click="transSuccessVisible = false" style="margin-right: 10px;">返回</el-button>
-            <router-link to="/caseResult/transfer">
+            <router-link to="/verdictResult/transfer">
               <el-button class="default-button">
                 查看结果管理区
               </el-button>
