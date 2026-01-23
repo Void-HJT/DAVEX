@@ -129,7 +129,7 @@
       <p class="result-message">{{ preprocessMessage }}</p>
       <!-- 成功时显示检索结果 -->
       <div v-if="preprocessSuccess && embFilePath" class="emb-path-container">
-        <span class="path-label">检索结果：</span>
+        <span class="path-label">任务ID：</span>
         <el-input
             v-model="embFilePath"
             readonly
@@ -139,6 +139,11 @@
     </div>
     <template #footer>
       <div class="dialog-footer">
+        <router-link to="/caseResult/query">
+          <el-button class="default-button">
+            查看结果管理区
+          </el-button>
+        </router-link>
         <el-button
             class="close-button"
             @click="preprocessDialogVisible = false"
@@ -292,11 +297,11 @@ const handleTargetPreprocess = async () => {
     // 4. 处理接口返回结果（适配后端统一Body格式）
     if (res.data.code === 1 && res.data.data) {
       preprocessSuccess.value = true;
-      preprocessMessage.value = `目标集合预处理+Emb生成成功！`;
-      embFilePath.value = res.data.data; // 保存返回的emb文件路径
+      preprocessMessage.value = `任务执行成功，请到结果管理区查看执行结果！`;
+      embFilePath.value = res.data.data;
     } else {
       preprocessSuccess.value = false;
-      preprocessMessage.value = res.data.message || "目标集合预处理+Emb生成失败，请重试！";
+      preprocessMessage.value = res.data.message || "处理失败，请重试！";
     }
   } catch (error) {
     console.error("目标集合预处理+Emb生成异常：", error);

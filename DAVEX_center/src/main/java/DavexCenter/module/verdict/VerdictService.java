@@ -494,7 +494,8 @@ public class VerdictService {
             updateTaskStatusAndRemark(taskId.get(), TASK_STATUS_FINISHED,
                     "全流程执行完成，最终结果=" + onlineResult.getData());
             logger.info("sendAndCompute全流程执行成功，taskId={}，最终结果={}", taskId.get(), onlineResult.getData());
-            return Body.success(onlineResult.getData(), "全流程执行成功，已获取Top-K结果");
+//            return Body.success(onlineResult.getData(), "全流程执行成功，已获取Top-K结果");
+            return Body.success(String.valueOf(taskId.get()), "全流程执行成功，任务ID=" + taskId.get());
 
         } catch (Exception e) {
             String errorMsg = "sendAndCompute全流程异常：" + e.getMessage();

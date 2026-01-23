@@ -14,9 +14,9 @@
         v-loading="loading"
         max-height="600"
       >
-        <el-table-column label="任务ID" prop="uid" width="180"></el-table-column>
-        <el-table-column label="目标代理" prop="agentId" width="200"></el-table-column>
-        <el-table-column label="任务发起时间" width="300">
+        <el-table-column label="任务ID" prop="uid" min-width="180"></el-table-column>
+        <el-table-column label="目标代理" prop="agentId" min-width="200"></el-table-column>
+        <el-table-column label="任务发起时间" min-width="300">
           <template #default="scope">
             <div style="display: flex; align-items: center">
               <el-icon><Timer /></el-icon>
@@ -27,7 +27,7 @@
         <el-table-column
           fixed="right"
           label="操作"
-          width="150"
+          min-width="150"
           header-align="center"
         >
           <template #default="scope">
