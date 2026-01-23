@@ -106,6 +106,10 @@ const router = createRouter({
           component: () => import('@/views/user/notification.vue'),
         },
         {
+          path: 'user/operationHistory',
+          component: () => import('@/views/user/operationHistory.vue'),
+        },
+        {
           path: 'verdict/transfer',
           component: () => import('@/views/verdict/transfer.vue'),
         },

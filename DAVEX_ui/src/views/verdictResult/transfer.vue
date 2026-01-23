@@ -117,6 +117,7 @@
 import {onMounted, ref, computed} from "vue";
 import {getResult, fetchFile, deleteFile, readFile} from "../../api/direct.js"
 import {Delete, Document, Download} from "@element-plus/icons-vue";
+import { addOperationHistory } from '../../api/operationHistory.js'
 
 onMounted(() => {
   getResultDataMethod()
@@ -182,14 +183,34 @@ const fetchFileMethod = async (outputId) => {
     if (res.data.code == 1) {
       fetchSuccessMessage.value = res.data.message;
       fetchSuccessVisible.value = true
+      // 记录操作历史
+      await addOperationHistory({
+        operationType: '获取文件',
+        operationObject: outputId,
+        result: '成功',
+        remark: '从传输结果中获取文件'
+      })
     }
     else {
       fetchFailedMessage.value = res.data.message;
       fetchFailedVisible.value = true
+      // 记录失败操作
+      await addOperationHistory({
+        operationType: '获取文件',
+        operationObject: outputId,
+        result: '失败',
+        remark: res.data.message || '获取文件失败'
+      })
     }
   }
   catch (error) {
     console.error('Failed to fetch file:', error)
+    await addOperationHistory({
+      operationType: '获取文件',
+      operationObject: outputId,
+      result: '失败',
+      remark: error.message || '获取文件失败'
+    })
   }
 }
 
@@ -201,14 +222,34 @@ const deleteFileMethod = async (outputId) => {
       deleteSuccessMessage.value = res.data.message;
       deleteSuccessVisible.value = true
       await getResultDataMethod()
+      // 记录操作历史
+      await addOperationHistory({
+        operationType: '删除文件',
+        operationObject: outputId,
+        result: '成功',
+        remark: '从传输结果中删除文件'
+      })
     }
     else {
       deleteFailedMessage.value = res.data.message;
       deleteFailedVisible.value = true
+      // 记录失败操作
+      await addOperationHistory({
+        operationType: '删除文件',
+        operationObject: outputId,
+        result: '失败',
+        remark: res.data.message || '删除文件失败'
+      })
     }
   }
   catch (error) {
     console.error('Failed to delete file:', error)
+    await addOperationHistory({
+      operationType: '删除文件',
+      operationObject: outputId,
+      result: '失败',
+      remark: error.message || '删除文件失败'
+    })
   }
 }
 
@@ -219,14 +260,34 @@ const readFileMethod = async (outputId) => {
     if (res.data.code == 1) {
       readSuccessMessage.value = res.data.data.replace(/\n/g, '<br>')
       readSuccessVisible.value = true
+      // 记录操作历史
+      await addOperationHistory({
+        operationType: '预览文件',
+        operationObject: outputId,
+        result: '成功',
+        remark: '预览传输结果文件'
+      })
     }
     else {
       readFailedMessage.value = res.data.message
       readFailedVisible.value = true
+      // 记录失败操作
+      await addOperationHistory({
+        operationType: '预览文件',
+        operationObject: outputId,
+        result: '失败',
+        remark: res.data.message || '预览文件失败'
+      })
     }
   }
   catch (error) {
     console.error('Failed to read file:', error)
+    await addOperationHistory({
+      operationType: '预览文件',
+      operationObject: outputId,
+      result: '失败',
+      remark: error.message || '预览文件失败'
+    })
   }
 }
 

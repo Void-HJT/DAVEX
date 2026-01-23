@@ -160,6 +160,7 @@ import { getAgent } from '../../api/testDve.js'
 import { ref, reactive, onMounted } from "vue";
 // 替换为sendAndCompute接口
 import { sendAndCompute } from "../../api/verdict.js";
+import { addOperationHistory } from '../../api/operationHistory.js'
 import {
   Filter,
   Loading,
@@ -299,14 +300,38 @@ const handleTargetPreprocess = async () => {
       preprocessSuccess.value = true;
       preprocessMessage.value = `任务执行成功，请到结果管理区查看执行结果！`;
       embFilePath.value = res.data.data;
+      // 记录操作历史
+      await addOperationHistory({
+        agentId: agentId.value,
+        operationType: '类案检索',
+        operationObject: selectedFile.value?.name || '查询文件',
+        result: '成功',
+        remark: `任务ID: ${res.data.data}，目标代理: ${agentId.value}`
+      });
     } else {
       preprocessSuccess.value = false;
       preprocessMessage.value = res.data.message || "处理失败，请重试！";
+      // 记录失败操作
+      await addOperationHistory({
+        agentId: agentId.value,
+        operationType: '类案检索',
+        operationObject: selectedFile.value?.name || '查询文件',
+        result: '失败',
+        remark: res.data.message || '类案检索失败'
+      });
     }
   } catch (error) {
     console.error("目标集合预处理+Emb生成异常：", error);
     preprocessSuccess.value = false;
     preprocessMessage.value = "系统异常，处理失败，请检查日志或联系管理员！";
+    // 记录失败操作
+    await addOperationHistory({
+      agentId: agentId.value,
+      operationType: '类案检索',
+      operationObject: selectedFile.value?.name || '查询文件',
+      result: '失败',
+      remark: error.message || '系统异常'
+    });
   } finally {
     preprocessLoading.value = false;
     preprocessDialogVisible.value = true; // 显示结果对话框

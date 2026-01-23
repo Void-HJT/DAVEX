@@ -107,6 +107,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { getFileInfo, readFileContent, compareContent } from '../../api/verdict.js'
 import { Document, Timer } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
+import { addOperationHistory } from '../../api/operationHistory.js'
 
 const route = useRoute()
 const router = useRouter()
@@ -194,14 +195,38 @@ const previewFile = async (file) => {
     if (res.data && res.data.code === 1) {
       // 将换行符转换为 HTML 换行
       previewContent.value = res.data.data.replace(/\n/g, '<br>')
+      // 记录操作历史
+      await addOperationHistory({
+        agentId: agentId,
+        operationType: '预览文件',
+        operationObject: file.name || file.uid,
+        result: '成功',
+        remark: `预览任务 ${taskId} 的结果文件`
+      })
     } else {
       previewContent.value = res.data?.message || '读取文件失败'
       ElMessage.error(res.data?.message || '读取文件失败')
+      // 记录失败操作
+      await addOperationHistory({
+        agentId: agentId,
+        operationType: '预览文件',
+        operationObject: file.name || file.uid,
+        result: '失败',
+        remark: res.data?.message || '读取文件失败'
+      })
     }
   } catch (error) {
     console.error('预览文件失败:', error)
     previewContent.value = '预览文件失败，请稍后重试'
     ElMessage.error('预览文件失败，请稍后重试')
+    // 记录失败操作
+    await addOperationHistory({
+      agentId: agentId,
+      operationType: '预览文件',
+      operationObject: file.name || file.uid,
+      result: '失败',
+      remark: error.message || '预览文件失败'
+    })
   }
 }
 
@@ -237,14 +262,38 @@ const compareFile = async (file, type, title) => {
       if (!resultContent.value || resultContent.value === '') {
         resultContent.value = '<span style="color: #999;">未提取到内容</span>'
       }
+      // 记录操作历史
+      await addOperationHistory({
+        agentId: agentId,
+        operationType: type === 'evidence' ? '证据对比' : '判决对比',
+        operationObject: file.name || file.uid,
+        result: '成功',
+        remark: `任务 ${taskId} 的${type === 'evidence' ? '证据' : '判决'}对比`
+      })
     } else {
       ElMessage.error(res.data?.message || '对比失败')
       compareVisible.value = false
+      // 记录失败操作
+      await addOperationHistory({
+        agentId: agentId,
+        operationType: type === 'evidence' ? '证据对比' : '判决对比',
+        operationObject: file.name || file.uid,
+        result: '失败',
+        remark: res.data?.message || '对比失败'
+      })
     }
   } catch (error) {
     console.error('对比文件失败:', error)
     ElMessage.error('对比文件失败，请稍后重试')
     compareVisible.value = false
+    // 记录失败操作
+    await addOperationHistory({
+      agentId: agentId,
+      operationType: type === 'evidence' ? '证据对比' : '判决对比',
+      operationObject: file.name || file.uid,
+      result: '失败',
+      remark: error.message || '对比文件失败'
+    })
   }
 }
 

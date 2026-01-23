@@ -164,6 +164,7 @@ import {getDirectory, getRootByAgent} from '../../api/folderController.js'
 import {getFile} from "../../api/direct.js";
 import {onMounted, ref} from "vue";
 import {Download} from "@element-plus/icons-vue";
+import { addOperationHistory } from '../../api/operationHistory.js'
 
 onMounted(() => {
   getAgentMethod()
@@ -215,23 +216,47 @@ const getDirectoryMethod = async () => {
   }
 }
 
-const getFileMethod = async (uid, agentId, folderId) => {
+const getFileMethod = async (uid, targetAgentId, folderId) => {
   try {
     getFileBody.value.fileId = uid
-    getFileBody.value.agentId = agentId
+    getFileBody.value.agentId = targetAgentId
     getFileBody.value.folderId = folderId
     console.log(getFileBody.value)
     const res = await getFile(getFileBody.value)
     if (res.data.code == 1) {
       transSuccessVisible.value = true
+      // 记录操作历史
+      await addOperationHistory({
+        agentId: targetAgentId,
+        operationType: '获取文件',
+        operationObject: uid,
+        result: '成功',
+        remark: `从代理 ${targetAgentId} 获取案件文本文件 ${uid}`
+      })
     }
     else {
       transFailedMessage.value = res.data.message;
       transFailedVisible.value = true
+      // 记录失败操作
+      await addOperationHistory({
+        agentId: targetAgentId,
+        operationType: '获取文件',
+        operationObject: uid,
+        result: '失败',
+        remark: res.data.message || '获取文件失败'
+      })
     }
   }
   catch (error) {
     console.error('Failed to get file:', error)
+    // 记录失败操作
+    await addOperationHistory({
+      agentId: targetAgentId,
+      operationType: '获取文件',
+      operationObject: uid,
+      result: '失败',
+      remark: error.message || '获取文件失败'
+    })
   }
 }
 

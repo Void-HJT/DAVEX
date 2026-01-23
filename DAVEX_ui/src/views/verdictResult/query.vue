@@ -52,6 +52,7 @@ import { useRouter } from 'vue-router'
 import { getAllTasks } from '../../api/verdict.js'
 import { Document, Timer } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
+import { addOperationHistory } from '../../api/operationHistory.js'
 
 const router = useRouter()
 
@@ -94,7 +95,15 @@ const refreshTasks = () => {
 }
 
 // 查看结果
-const viewResult = (row) => {
+const viewResult = async (row) => {
+  // 记录操作历史
+  await addOperationHistory({
+    agentId: row.agentId,
+    operationType: '查看结果',
+    operationObject: `任务 ${row.uid}`,
+    result: '成功',
+    remark: `查看类案检索任务 ${row.uid} 的结果`
+  })
   // 跳转到结果详情页，传递任务信息
   router.push({
     name: 'verdictResultDetail',

@@ -34,7 +34,7 @@ import {
 <!--            <el-icon><Message /></el-icon>-->
 <!--            <span class="centered-text">消息中心</span>-->
 <!--          </el-menu-item>-->
-          <el-menu-item index="/user/notification">
+          <el-menu-item index="/user/operationHistory">
             <el-icon><Message /></el-icon>
             <span class="centered-text">历史记录</span>
           </el-menu-item>
