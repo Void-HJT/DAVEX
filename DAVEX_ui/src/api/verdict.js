@@ -105,3 +105,41 @@ export const updateTask = (taskId, task) => {
         }
     )
 }
+
+/**
+ * 根据fileId和agentId获取文件信息
+ * @param {String} fileId - 文件ID
+ * @param {String} agentId - 代理ID
+ * @returns {Promise} - 请求Promise对象（成功返回文件信息）
+ */
+export const getFileInfo = (fileId, agentId) => {
+    if (!fileId) {
+        return Promise.reject(new Error('文件ID不能为空'))
+    }
+    if (!agentId) {
+        return Promise.reject(new Error('代理ID不能为空'))
+    }
+    const params = new URLSearchParams()
+    params.append('fileId', fileId)
+    params.append('agentId', agentId)
+    return request.post('/directory/fileFolder/getFile', params.toString())
+}
+
+/**
+ * 根据fileId和agentId读取文件内容
+ * @param {String} fileId - 文件ID
+ * @param {String} agentId - 代理ID
+ * @returns {Promise} - 请求Promise对象（成功返回文件内容）
+ */
+export const readFileContent = (fileId, agentId) => {
+    if (!fileId) {
+        return Promise.reject(new Error('文件ID不能为空'))
+    }
+    if (!agentId) {
+        return Promise.reject(new Error('代理ID不能为空'))
+    }
+    const params = new URLSearchParams()
+    params.append('fileId', fileId)
+    params.append('agentId', agentId)
+    return request.post('verdict/readFile', params.toString())
+}

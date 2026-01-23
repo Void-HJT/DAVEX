@@ -36,6 +36,7 @@ import org.springframework.web.multipart.MultipartFile;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
@@ -1188,5 +1189,100 @@ public class FileFolderService {
         }
         result += tempNum;
         return String.valueOf(result);
+    }
+
+    /**
+     * 根据fileId和agentId读取文件内容
+     * @param fileId 文件ID
+     * @param agentId 代理ID
+     * @param baseDirectory 基础目录路径
+     * @return 文件内容
+     */
+    public Body<String> readFileContent(String fileId, String agentId, String baseDirectory) {
+        try {
+            // 1. 获取文件信息
+            LambdaQueryWrapper<File> queryWrapper = Wrappers.<File>lambdaQuery()
+                    .eq(File::getUid, fileId);
+            File file = fileMapper.selectOne(queryWrapper);
+            
+            if (file == null) {
+                return Body.error("文件不存在，文件ID: " + fileId);
+            }
+
+            // 2. 获取文件路径
+            String filePath = getFilePath(file, baseDirectory);
+            String fileName = file.getName();
+            
+            // 3. 读取文件内容
+            java.io.File fileObj = new java.io.File(filePath);
+            if (!fileObj.exists()) {
+                return Body.error("文件不存在，文件路径: " + filePath);
+            }
+
+            // 根据文件扩展名选择读取方式
+            String extension = "";
+            if (fileName != null && fileName.contains(".")) {
+                extension = fileName.substring(fileName.lastIndexOf(".") + 1).toLowerCase();
+            }
+
+            String content;
+            switch (extension) {
+                case "txt":
+                case "text":
+                    content = readTxtFile(fileObj);
+                    break;
+                case "csv":
+                    content = readCsvFile(fileObj);
+                    break;
+                case "json":
+                    content = readJsonFile(fileObj);
+                    break;
+                default:
+                    // 默认按文本文件读取
+                    content = readTxtFile(fileObj);
+                    break;
+            }
+
+            return Body.success(content, "读取成功");
+
+        } catch (Exception e) {
+            return Body.error("读取文件失败: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 读取文本文件
+     */
+    private String readTxtFile(java.io.File file) throws IOException {
+        StringBuilder content = new StringBuilder();
+        try (BufferedReader reader = new BufferedReader(new FileReader(file, StandardCharsets.UTF_8))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                content.append(line).append("\n");
+            }
+        }
+        return content.toString();
+    }
+
+    /**
+     * 读取CSV文件（简化版本，按文本读取）
+     */
+    private String readCsvFile(java.io.File file) throws IOException {
+        // 简化实现：按文本文件读取
+        // 如果需要更复杂的CSV解析，可以添加Apache Commons CSV依赖
+        return readTxtFile(file);
+    }
+
+    /**
+     * 读取JSON文件
+     */
+    private String readJsonFile(java.io.File file) throws IOException {
+        try {
+            JsonNode jsonNode = objectMapper.readTree(file);
+            return objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(jsonNode);
+        } catch (Exception e) {
+            // 如果JSON解析失败，按文本文件读取
+            return readTxtFile(file);
+        }
     }
 }

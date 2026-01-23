@@ -2,10 +2,13 @@ package DavexCenter.module.verdict;
 
 import DavexCenter.entity.VerdictTask;
 import DavexCenter.mapper.VerdictTaskMapper;
+import DavexCenter.module.file.service.FileService;
 import DavexBase.common.Body;
 import DavexBase.common.My;
+import DavexBase.entity.File;
 import DavexBase.info.VerdictFilterDTO;
 import DavexBase.service.auth.CenterWebClientService;
+import DavexBase.service.directory.FileFolderService;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -86,6 +89,10 @@ public class VerdictService {
     private CenterWebClientService centerWebClientService;
     @Autowired
     private VerdictTaskMapper verdictTaskMapper;
+    @Autowired
+    private FileFolderService fileFolderService;
+    @Autowired
+    private FileService fileService;
 
     /**
      * Center端转发查询到Agent端，记录任务状态（仅筛选中/筛选完成）
@@ -1225,6 +1232,59 @@ public class VerdictService {
         } catch (Exception e) {
             String errorMsg = "更新任务异常：" + e.getMessage();
             logger.error("更新任务异常，任务ID：{}", taskId, e);
+            return Body.error(errorMsg);
+        }
+    }
+
+    /**
+     * 根据fileId和agentId读取文件内容
+     * @param fileId 文件ID
+     * @param agentId 代理ID
+     * @return 文件内容
+     */
+    public Body<String> readFile(String fileId, String agentId) {
+        try {
+            logger.info("开始读取文件内容，文件ID：{}，代理ID：{}", fileId, agentId);
+            
+            if (fileId == null || fileId.trim().isEmpty()) {
+                logger.warn("文件ID无效：{}", fileId);
+                return Body.error("文件ID不能为空");
+            }
+            if (agentId == null || agentId.trim().isEmpty()) {
+                logger.warn("代理ID无效：{}", agentId);
+                return Body.error("代理ID不能为空");
+            }
+
+            // 通过 Agent 端接口读取文件内容
+            WebClient webClient = centerWebClientService.center2AgentWebClient(agentId);
+            if (webClient == null) {
+                logger.error("创建Agent通信客户端失败，agentId={}", agentId);
+                return Body.error("创建Agent通信连接失败，请检查Agent状态");
+            }
+
+            // 调用 Agent 端的读取文件接口
+            Body<String> result = webClient.post()
+                    .uri(uriBuilder -> uriBuilder
+                            .path("/directory/fileFolder/readFile")
+                            .queryParam("fileId", fileId)
+                            .queryParam("agentId", agentId)
+                            .build())
+                    .retrieve()
+                    .bodyToMono(Body.class)
+                    .block();
+
+            if (result == null || result.getCode() != 1) {
+                String errorMsg = result != null ? result.getMessage() : "读取文件内容失败";
+                logger.error("读取文件内容失败，文件ID：{}，代理ID：{}，错误：{}", fileId, agentId, errorMsg);
+                return Body.error("读取文件内容失败：" + errorMsg);
+            }
+
+            logger.info("成功读取文件内容，文件ID：{}", fileId);
+            return Body.success(result.getData(), "读取文件内容成功");
+
+        } catch (Exception e) {
+            String errorMsg = "读取文件异常：" + e.getMessage();
+            logger.error("读取文件异常，文件ID：{}，代理ID：{}", fileId, agentId, e);
             return Body.error(errorMsg);
         }
     }

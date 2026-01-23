@@ -48,9 +48,12 @@
 
 <script lang="ts" setup>
 import { onMounted, ref, computed } from 'vue'
+import { useRouter } from 'vue-router'
 import { getAllTasks } from '../../api/verdict.js'
 import { Document, Timer } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
+
+const router = useRouter()
 
 // 加载状态
 const loading = ref(false)
@@ -90,10 +93,19 @@ const refreshTasks = () => {
   getTasks()
 }
 
-// 查看结果（暂时无功能）
+// 查看结果
 const viewResult = (row) => {
-  ElMessage.info('查看结果功能待实现')
-  console.log('查看任务结果:', row)
+  // 跳转到结果详情页，传递任务信息
+  router.push({
+    name: 'verdictResultDetail',
+    params: {
+      taskId: row.uid
+    },
+    query: {
+      agentId: row.agentId,
+      resultIds: row.resultIds
+    }
+  })
 }
 
 // 格式化日期时间

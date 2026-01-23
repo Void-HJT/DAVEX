@@ -75,4 +75,16 @@ public class VerdictController {
     public Body<String> updateTask(@PathVariable Long taskId, @RequestBody VerdictTask task) {
         return verdictService.updateTask(taskId, task);
     }
+
+    /**
+     * 根据fileId和agentId读取文件内容
+     * @param fileId 文件ID
+     * @param agentId 代理ID
+     * @return 文件内容
+     */
+    @PostMapping("/readFile")
+    public Body<String> readFile(@RequestParam("fileId") String fileId,
+                                 @RequestParam("agentId") String agentId) {
+        return verdictService.readFile(fileId, agentId);
+    }
 }
