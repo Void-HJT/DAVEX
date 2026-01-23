@@ -19,6 +19,7 @@ import {
 <!--        <img src="@/assets/DAVEX.png" class="logo-img" />-->
 <!--      </div>-->
       <div class="header-text">跨部门类案类判平台 - Center 操作界面</div>
+      <div class="user-info">您好，C1-A1</div>
     </el-header>
     <el-container>
       <el-aside style="background-color: #010927; margin-right: 10px">
@@ -176,7 +177,9 @@ import {
   background-color: #165ac6;
   display: flex;
   align-items: center;
+  justify-content: space-between; // 新增这一行，实现左右对齐
   margin-bottom: 10px;
+  padding: 0 20px; // 可选：添加左右内边距，避免文字贴边
 }
 .header-text {
   background-color: #165ac6;
@@ -184,6 +187,11 @@ import {
   font-size: 24px;
   padding: 10px;
   font-weight: bold;
+}
+.user-info {
+  color: white; // 和标题同色，保持视觉统一
+  font-size: 18px; // 字号略小于标题，区分层级
+  font-weight: 500;
 }
 .logo-img {
   width: 120px;

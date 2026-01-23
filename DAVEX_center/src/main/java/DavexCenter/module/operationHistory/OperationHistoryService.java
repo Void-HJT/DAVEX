@@ -1,6 +1,6 @@
 package DavexCenter.module.operationHistory;
 
-import DavexBase.body.Body;
+import DavexBase.common.Body;
 import DavexCenter.entity.OperationHistory;
 import DavexCenter.mapper.OperationHistoryMapper;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;

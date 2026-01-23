@@ -1,6 +1,6 @@
 package DavexCenter.module.operationHistory;
 
-import DavexBase.body.Body;
+import DavexBase.common.Body;
 import DavexCenter.entity.OperationHistory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
