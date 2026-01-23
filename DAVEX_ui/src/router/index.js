@@ -121,6 +121,12 @@ const router = createRouter({
           path: 'verdictResult/query',
           component: () => import('@/views/verdictResult/query.vue'),
         },
+        {
+          path: 'verdictResult/detail/:taskId', // 动态接收taskId参数
+          name: 'verdictResultDetail', // 必须和vue页面中router.push的name完全一致
+          component: () => import('@/views/verdictResult/resultDetail.vue'),
+          props: true // 可选：开启后组件可通过props接收taskId参数
+        },
         // {
         //   path: 'auth/tokens',
         //   component: () => import('@/views/auth/tokens.vue'),

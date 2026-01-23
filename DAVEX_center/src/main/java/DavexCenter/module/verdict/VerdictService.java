@@ -173,8 +173,8 @@ public class VerdictService {
                             throw new RuntimeException("Center端核心路径未配置，无法保存文件");
                         }
                         // 关键修改1：构建output根目录和任务专属文件夹路径
-                        File outputRootDir = new File(corePath, PKL_SAVE_DIR);
-                        File taskFolder = new File(outputRootDir, outputPrefix); // 文件夹名=outputPrefix
+                        java.io.File outputRootDir = new java.io.File(corePath, PKL_SAVE_DIR);
+                        java.io.File taskFolder = new java.io.File(outputRootDir, outputPrefix); // 文件夹名=outputPrefix
 
                         // 关键修改2：创建任务专属文件夹（若不存在）
                         if (!outputRootDir.exists()) {
@@ -198,7 +198,7 @@ public class VerdictService {
 
                         // 关键修改3：pkl文件保存到任务专属文件夹，文件名不变
                         String newFileName = outputPrefix + FILE_SEPARATOR + PKL_SUFFIX_TAG; // 文件名保持原有规则不变
-                        File localFile = new File(taskFolder, newFileName); // 路径改为任务专属文件夹
+                        java.io.File localFile = new java.io.File(taskFolder, newFileName); // 路径改为任务专属文件夹
 
                         try (OutputStream outputStream = new FileOutputStream(localFile)) {
                             FileCopyUtils.copy(fileResource.getInputStream(), outputStream);
@@ -306,7 +306,7 @@ public class VerdictService {
             logger.info("任务ID：{}，状态更新为“输入处理中”", taskId);
 
             // 原有query目录创建、上传文件保存逻辑不变...
-            File queryDir = new File(corePath, QUERY_DIR);
+            java.io.File queryDir = new java.io.File(corePath, QUERY_DIR);
             if (!queryDir.exists()) {
                 boolean mkdirSuccess = queryDir.mkdirs();
                 if (!mkdirSuccess) {
@@ -323,7 +323,7 @@ public class VerdictService {
             }
 
             String originalFileName = inputFile.getOriginalFilename();
-            File savedInputFile = new File(queryDir, originalFileName);
+            java.io.File savedInputFile = new java.io.File(queryDir, originalFileName);
             try (OutputStream outputStream = new FileOutputStream(savedInputFile)) {
                 FileCopyUtils.copy(inputFile.getInputStream(), outputStream);
             } catch (IOException e) {
@@ -334,7 +334,7 @@ public class VerdictService {
             logger.info("上传文件已成功保存到：{}", savedInputFile.getAbsolutePath());
 
             // 原有Python脚本路径校验逻辑不变...
-            File pyScriptFile = new File(corePath, PY_SCRIPT_NAME);
+            java.io.File pyScriptFile = new java.io.File(corePath, PY_SCRIPT_NAME);
             if (!pyScriptFile.exists() || !pyScriptFile.isFile()) {
                 String errorMsg = "Python脚本不存在，路径：" + pyScriptFile.getAbsolutePath();
                 logger.error(errorMsg);
@@ -343,8 +343,8 @@ public class VerdictService {
             }
 
             // 关键修改1：构建output根目录和任务专属文件夹路径（文件夹名=baseFileName）
-            File outputRootDir = new File(corePath, PKL_SAVE_DIR);
-            File taskFolder = new File(outputRootDir, baseFileName); // 文件夹名=baseFileName（即outputPrefix）
+            java.io.File outputRootDir = new java.io.File(corePath, PKL_SAVE_DIR);
+            java.io.File taskFolder = new java.io.File(outputRootDir, baseFileName); // 文件夹名=baseFileName（即outputPrefix）
 
             // 关键修改2：确保任务专属文件夹存在（无需重复创建，兼容sendQuery已创建的情况）
             if (!outputRootDir.exists()) {
@@ -370,7 +370,7 @@ public class VerdictService {
 
             // 关键修改3：emb文件保存到任务专属文件夹，文件名不变
             String embFileName = baseFileName + FILE_SEPARATOR + EMB_SUFFIX_TAG; // 文件名保持原有规则不变
-            File embOutputFile = new File(taskFolder, embFileName); // 路径改为任务专属文件夹
+            java.io.File embOutputFile = new java.io.File(taskFolder, embFileName); // 路径改为任务专属文件夹
             String embOutputFilePath = embOutputFile.getAbsolutePath();
 
             // 原有Python命令拼接、脚本执行逻辑不变...
@@ -591,7 +591,7 @@ public class VerdictService {
             );
 
             String p0SaveDir = Paths.get(my.getCore_path(), PKL_SAVE_DIR, baseFileName).toString();
-            File dir = new File(p0SaveDir);
+            java.io.File dir = new java.io.File(p0SaveDir);
             if (!dir.exists()) {
                 dir.mkdirs();
             }
@@ -601,7 +601,7 @@ public class VerdictService {
                 // 修复1：给2-fss文件添加.zip后缀，避免与文件夹重名
                 String targetFileName = fileName.equals("2-fss") ? fileName + ".zip" : fileName;
                 String targetPath = Paths.get(p0SaveDir, targetFileName).toString();
-                File targetFile = new File(targetPath);
+                java.io.File targetFile = new java.io.File(targetPath);
 
                 AtomicBoolean transferSuccess = new AtomicBoolean(false);
                 AtomicReference<Exception> transferException = new AtomicReference<>();
@@ -640,15 +640,15 @@ public class VerdictService {
 
                 // 修复2：解压带.zip后缀的2-fss文件
                 if (fileName.equals("2-fss")) {
-                    File zipFile = new File(p0SaveDir, "2-fss.zip");
-                    unzip(zipFile, new File(p0SaveDir));
+                    java.io.File zipFile = new java.io.File(p0SaveDir, "2-fss.zip");
+                    unzip(zipFile, new java.io.File(p0SaveDir));
                     if (zipFile.exists()) {
                         boolean deleteSuccess = zipFile.delete();
                         if (!deleteSuccess) {
                             logger.warn("删除2-fss临时ZIP文件失败：{}", zipFile.getAbsolutePath());
                         }
                     }
-                    logger.info("成功接收并解压P1目录：{}，保存至：{}", fileName, new File(p0SaveDir, "2-fss").getAbsolutePath());
+                    logger.info("成功接收并解压P1目录：{}，保存至：{}", fileName, new java.io.File(p0SaveDir, "2-fss").getAbsolutePath());
                 } else {
                     logger.info("成功接收P1文件：{}，保存至：{}", fileName, targetPath);
                 }
@@ -665,9 +665,9 @@ public class VerdictService {
     /**
      * 新增辅助方法：解压ZIP文件到指定目录
      */
-    private void unzip(File zipFile, File targetDir) throws IOException {
+    private void unzip(java.io.File zipFile, java.io.File targetDir) throws IOException {
         // 核心修复1：检查2-fss路径是否已存在且是文件，若存在则删除
-        File fssDir = new File(targetDir, "2-fss");
+        java.io.File fssDir = new java.io.File(targetDir, "2-fss");
         if (fssDir.exists() && !fssDir.isDirectory()) {
             boolean deleteSuccess = fssDir.delete();
             if (!deleteSuccess) {
@@ -694,8 +694,8 @@ public class VerdictService {
                     continue;
                 }
 
-                String entryFileName = new File(entry.getName()).getName();
-                File entryFile = new File(fssDir, entryFileName);
+                String entryFileName = new java.io.File(entry.getName()).getName();
+                java.io.File entryFile = new java.io.File(fssDir, entryFileName);
 
                 // 核心修复2：再次检查目标文件的父目录是否为目录（防御性编程）
                 if (entryFile.getParentFile().exists() && !entryFile.getParentFile().isDirectory()) {
@@ -764,7 +764,7 @@ public class VerdictService {
 
             // 3. P0证书保存目录
             String p0SslDir = Paths.get(GARNET_DIR_P0, "Player-Data").toString();
-            File sslDir = new File(p0SslDir);
+            java.io.File sslDir = new java.io.File(p0SslDir);
             if (!sslDir.exists()) {
                 sslDir.mkdirs();
             }
@@ -788,7 +788,7 @@ public class VerdictService {
 
                 // 获取文件名（如 "player0.pem"）
                 String fileName = Optional.ofNullable(resource.getFilename()).orElse(Paths.get(certFilePath).getFileName().toString());
-                File targetFile = new File(p0SslDir, fileName);
+                java.io.File targetFile = new java.io.File(p0SslDir, fileName);
                 // 保存证书文件
                 try (OutputStream os = new FileOutputStream(targetFile)) {
                     FileCopyUtils.copy(resource.getInputStream(), os);
