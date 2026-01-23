@@ -61,3 +61,47 @@ export const sendAndCompute = ({ agentId, filterParams = {}, inputFile }) => {
         }
     )
 }
+
+/**
+ * 获取所有类案检索任务
+ * @returns {Promise} - 请求Promise对象（成功返回所有任务列表）
+ */
+export const getAllTasks = () => {
+    return request.get('verdict/tasks')
+}
+
+/**
+ * 根据任务id获取某个任务
+ * @param {Number|String} taskId - 任务ID
+ * @returns {Promise} - 请求Promise对象（成功返回任务详细信息）
+ */
+export const getTaskById = (taskId) => {
+    if (!taskId) {
+        return Promise.reject(new Error('任务ID不能为空'))
+    }
+    return request.get(`verdict/tasks/${taskId}`)
+}
+
+/**
+ * 根据任务id编辑某个任务
+ * @param {Number|String} taskId - 任务ID
+ * @param {Object} task - 要更新的任务信息（支持部分字段更新）
+ * @returns {Promise} - 请求Promise对象（成功返回更新结果）
+ */
+export const updateTask = (taskId, task) => {
+    if (!taskId) {
+        return Promise.reject(new Error('任务ID不能为空'))
+    }
+    if (!task) {
+        return Promise.reject(new Error('任务信息不能为空'))
+    }
+    return request.put(
+        `verdict/tasks/${taskId}`,
+        task,
+        {
+            headers: {
+                'Content-Type': 'application/json;charset=UTF-8'
+            }
+        }
+    )
+}

@@ -1099,4 +1099,132 @@ public class VerdictService {
             }
         }).start();
     }
+
+    /**
+     * 获取所有类案检索任务
+     * @return 所有任务列表
+     */
+    public Body<List<VerdictTask>> getAllTasks() {
+        try {
+            logger.info("开始获取所有类案检索任务");
+            List<VerdictTask> tasks = verdictTaskMapper.selectList(null);
+            logger.info("成功获取所有类案检索任务，共{}条", tasks.size());
+            return Body.success(tasks, "获取任务列表成功");
+        } catch (Exception e) {
+            String errorMsg = "获取所有任务异常：" + e.getMessage();
+            logger.error(errorMsg, e);
+            return Body.error(errorMsg);
+        }
+    }
+
+    /**
+     * 根据任务id获取某个任务
+     * @param taskId 任务ID
+     * @return 任务信息
+     */
+    public Body<VerdictTask> getTaskById(Long taskId) {
+        try {
+            logger.info("开始根据任务ID获取任务，任务ID：{}", taskId);
+            if (taskId == null || taskId <= 0) {
+                logger.warn("任务ID无效：{}", taskId);
+                return Body.error("任务ID无效");
+            }
+            VerdictTask task = verdictTaskMapper.selectById(taskId);
+            if (task == null) {
+                logger.warn("未找到任务，任务ID：{}", taskId);
+                return Body.error("未找到指定任务");
+            }
+            logger.info("成功获取任务，任务ID：{}", taskId);
+            return Body.success(task, "获取任务成功");
+        } catch (Exception e) {
+            String errorMsg = "获取任务异常：" + e.getMessage();
+            logger.error("获取任务异常，任务ID：{}", taskId, e);
+            return Body.error(errorMsg);
+        }
+    }
+
+    /**
+     * 根据任务id编辑某个任务
+     * @param taskId 任务ID
+     * @param task 要更新的任务信息
+     * @return 更新结果
+     */
+    public Body<String> updateTask(Long taskId, VerdictTask task) {
+        try {
+            logger.info("开始更新任务，任务ID：{}", taskId);
+            if (taskId == null || taskId <= 0) {
+                logger.warn("任务ID无效：{}", taskId);
+                return Body.error("任务ID无效");
+            }
+            if (task == null) {
+                logger.warn("任务信息为空");
+                return Body.error("任务信息不能为空");
+            }
+            
+            // 检查任务是否存在
+            VerdictTask existingTask = verdictTaskMapper.selectById(taskId);
+            if (existingTask == null) {
+                logger.warn("未找到要更新的任务，任务ID：{}", taskId);
+                return Body.error("未找到指定任务");
+            }
+
+            // 设置任务ID，确保更新的是正确的任务
+            task.setUid(taskId);
+            
+            // 使用LambdaUpdateWrapper构建更新条件
+            LambdaUpdateWrapper<VerdictTask> updateWrapper = new LambdaUpdateWrapper<VerdictTask>()
+                    .eq(VerdictTask::getUid, taskId);
+            
+            // 只更新非空字段
+            if (task.getAgentId() != null) {
+                updateWrapper.set(VerdictTask::getAgentId, task.getAgentId());
+            }
+            if (task.getApplicationId() != null) {
+                updateWrapper.set(VerdictTask::getApplicationId, task.getApplicationId());
+            }
+            if (task.getStartTime() != null) {
+                updateWrapper.set(VerdictTask::getStartTime, task.getStartTime());
+            }
+            if (task.getFilterStart() != null) {
+                updateWrapper.set(VerdictTask::getFilterStart, task.getFilterStart());
+            }
+            if (task.getFilterEnd() != null) {
+                updateWrapper.set(VerdictTask::getFilterEnd, task.getFilterEnd());
+            }
+            if (task.getFilterType() != null) {
+                updateWrapper.set(VerdictTask::getFilterType, task.getFilterType());
+            }
+            if (task.getFilterDistrict() != null) {
+                updateWrapper.set(VerdictTask::getFilterDistrict, task.getFilterDistrict());
+            }
+            if (task.getFilterCause() != null) {
+                updateWrapper.set(VerdictTask::getFilterCause, task.getFilterCause());
+            }
+            if (task.getStatus() != null) {
+                updateWrapper.set(VerdictTask::getStatus, task.getStatus());
+            }
+            if (task.getRemark() != null) {
+                updateWrapper.set(VerdictTask::getRemark, task.getRemark());
+            }
+            if (task.getResultIds() != null) {
+                updateWrapper.set(VerdictTask::getResultIds, task.getResultIds());
+            }
+            if (task.getHasRead() != null) {
+                updateWrapper.set(VerdictTask::getHasRead, task.getHasRead());
+            }
+
+            int updateCount = verdictTaskMapper.update(null, updateWrapper);
+            if (updateCount > 0) {
+                logger.info("成功更新任务，任务ID：{}", taskId);
+                return Body.success("任务更新成功", "任务更新成功");
+            } else {
+                logger.warn("更新任务失败，任务ID：{}", taskId);
+                return Body.error("任务更新失败");
+            }
+        } catch (Exception e) {
+            String errorMsg = "更新任务异常：" + e.getMessage();
+            logger.error("更新任务异常，任务ID：{}", taskId, e);
+            return Body.error(errorMsg);
+        }
+    }
 }

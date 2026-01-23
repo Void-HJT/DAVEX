@@ -44,7 +44,7 @@
         <el-table
             :data="directoryData"
             @row-dblclick="handleCellDoubleClick"
-            max-height="400"
+            max-height="800"
         >
           <el-table-column fixed label="" width="50" align="center">
             <template #default="scope">
