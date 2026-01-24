@@ -280,13 +280,15 @@ public class VerdictService {
 
     /**
      * 上传输入文件并执行Python脚本生成emb文件
+     * 【性能测试版本】：记录Python脚本执行时间
      * @param inputFile 上传的输入文本文件
      * @param pklPath pkl文件的绝对路径
      * @return Body<String>：code=1成功（data=emb文件绝对路径），code≠1失败
      */
     public Body<String> computeInput(MultipartFile inputFile, String pklPath, String baseFileName, Long taskId) {
+        long methodStartTime = System.currentTimeMillis();
         try {
-            logger.info("开始执行computeInput：上传文件名称={}，pkl文件路径={}", inputFile.getOriginalFilename(), pklPath);
+            logger.info("[性能] computeInput开始执行：上传文件名称={}，pkl文件路径={}", inputFile.getOriginalFilename(), pklPath);
 
             // 原有参数校验逻辑不变...
             if (inputFile == null || inputFile.isEmpty()) {
@@ -404,15 +406,22 @@ public class VerdictService {
             );
             logger.info("拼接后的Python执行命令：{}", fullCmd);
 
+            // 性能测试：记录Python脚本执行时间
+            long scriptStartTime = System.currentTimeMillis();
             Body<String> scriptResult = executePythonScript(fullCmd, embOutputFilePath);
+            long scriptTime = System.currentTimeMillis() - scriptStartTime;
+            logger.info("[性能] P0 Python脚本(p0preprocess.py)执行耗时: {}ms", scriptTime);
+            
             if (scriptResult.getCode() != 1) {
                 logger.error("Python脚本执行失败，错误信息：{}", scriptResult.getMessage());
                 updateTaskStatusAndRemark(taskId, "输入处理失败", scriptResult.getMessage());
                 return Body.error("脚本执行失败：" + scriptResult.getMessage());
             }
 
+            long methodTime = System.currentTimeMillis() - methodStartTime;
+            logger.info("[性能] computeInput总耗时: {}ms (其中Python脚本: {}ms)", methodTime, scriptTime);
             logger.info("computeInput执行成功，生成的emb文件路径：{}", embOutputFilePath);
-            updateTaskStatusAndRemark(taskId, "输入处理完成", "上传文件处理成功，emb文件路径：" + embOutputFilePath + "，脚本执行成功");
+            updateTaskStatusAndRemark(taskId, "输入处理完成", "上传文件处理成功，emb文件路径：" + embOutputFilePath + "，Python脚本耗时：" + scriptTime + "ms");
             logger.info("任务ID：{}，状态更新为“输入处理完成”", taskId);
             return Body.success(embOutputFilePath, "emb文件生成成功，路径：" + embOutputFilePath);
 
@@ -427,16 +436,30 @@ public class VerdictService {
 
     /**
      * 扩展串联流程：包含Garnet离线/在线阶段+文件传输+状态管理
+     * 【性能测试版本】：记录每个阶段的执行时间
      */
     public Body<String> sendAndCompute(String agentId, VerdictFilterDTO filterDTO, MultipartFile inputFile) {
         AtomicLong taskId = new AtomicLong(0);
         String baseFileName = null;
         String embFilePath = null;
+        
+        // 性能测试：记录各阶段耗时
+        long totalStartTime = System.currentTimeMillis();
+        long stageStartTime;
+        StringBuilder perfLog = new StringBuilder();
+        perfLog.append("\n╔══════════════════════════════════════════════════════════════╗\n");
+        perfLog.append("║           类案检索全流程性能测试报告 (Center端)                  ║\n");
+        perfLog.append("╠══════════════════════════════════════════════════════════════╣\n");
+        
         try {
             logger.info("开始执行sendAndCompute全流程，AgentID：{}，上传文件名称：{}", agentId, inputFile.getOriginalFilename());
 
             // 1. 调用sendQuery获取pkl文件
+            stageStartTime = System.currentTimeMillis();
             Body<String> sendQueryResult = sendQuery(agentId, filterDTO);
+            long sendQueryTime = System.currentTimeMillis() - stageStartTime;
+            perfLog.append(String.format("║ [阶段1] P1数据筛选+Embedding生成: %8d ms              ║\n", sendQueryTime));
+            
             if (sendQueryResult.getCode() != 1) {
                 String errorMsg = "sendQuery执行失败：" + sendQueryResult.getMessage();
                 logger.error(errorMsg);
@@ -450,10 +473,14 @@ public class VerdictService {
             String pklFilePath = resultArr[0];
             baseFileName = resultArr[1];
             taskId.set(Long.parseLong(resultArr[2]));
-            logger.info("sendQuery执行成功，taskId={}, baseFileName={}", taskId.get(), baseFileName);
+            logger.info("[性能] sendQuery耗时: {}ms, taskId={}, baseFileName={}", sendQueryTime, taskId.get(), baseFileName);
 
             // 2. 调用computeInput生成emb文件
+            stageStartTime = System.currentTimeMillis();
             Body<String> computeInputResult = computeInput(inputFile, pklFilePath, baseFileName, taskId.get());
+            long computeInputTime = System.currentTimeMillis() - stageStartTime;
+            perfLog.append(String.format("║ [阶段2] P0查询文件处理+Embedding生成: %8d ms          ║\n", computeInputTime));
+            
             if (computeInputResult.getCode() != 1) {
                 String errorMsg = "computeInput执行失败：" + computeInputResult.getMessage();
                 logger.error(errorMsg);
@@ -461,12 +488,16 @@ public class VerdictService {
                 return Body.error(errorMsg);
             }
             embFilePath = computeInputResult.getData();
-            logger.info("computeInput执行成功，embFilePath={}", embFilePath);
+            logger.info("[性能] computeInput耗时: {}ms, embFilePath={}", computeInputTime, embFilePath);
 
             // 3. 执行P1离线阶段（调用Agent端接口执行Garnet离线命令）
+            stageStartTime = System.currentTimeMillis();
             updateTaskStatusAndRemark(taskId.get(), TASK_STATUS_OFFLINE_RUNNING,
                     "开始在P1执行Garnet离线阶段，baseFileName=" + baseFileName);
             Body<String> offlineResult = executeP1OfflineStage(agentId, baseFileName);
+            long offlineTime = System.currentTimeMillis() - stageStartTime;
+            perfLog.append(String.format("║ [阶段3] Garnet P1离线阶段(KMeans+秘密共享): %8d ms    ║\n", offlineTime));
+            
             if (offlineResult.getCode() != 1) {
                 String errorMsg = "P1离线阶段执行失败：" + offlineResult.getMessage();
                 logger.error(errorMsg);
@@ -475,11 +506,16 @@ public class VerdictService {
             }
             updateTaskStatusAndRemark(taskId.get(), TASK_STATUS_OFFLINE_COMPLETED,
                     "P1离线阶段执行完成，生成文件已保存至P1服务器");
+            logger.info("[性能] P1离线阶段耗时: {}ms", offlineTime);
 
             // 4. 传输P0所需文件（复用WebClient流传输，替代scp命令）
+            stageStartTime = System.currentTimeMillis();
             updateTaskStatusAndRemark(taskId.get(), TASK_STATUS_FILE_TRANSFERRING,
                     "开始传输P0所需数据文件，baseFileName=" + baseFileName);
             Body<String> transferResult = transferP0FilesFromP1(agentId, baseFileName);
+            long transferTime = System.currentTimeMillis() - stageStartTime;
+            perfLog.append(String.format("║ [阶段4] P0数据文件传输(P1→P0): %8d ms                 ║\n", transferTime));
+            
             if (transferResult.getCode() != 1) {
                 String errorMsg = "P0文件传输失败：" + transferResult.getMessage();
                 logger.error(errorMsg);
@@ -488,11 +524,16 @@ public class VerdictService {
             }
             updateTaskStatusAndRemark(taskId.get(), TASK_STATUS_FILE_TRANSFER_COMPLETED,
                     "P0数据文件传输完成，保存路径=" + transferResult.getData());
+            logger.info("[性能] P0文件传输耗时: {}ms", transferTime);
 
             // 5. 生成并传输SSL证书（调用Agent端生成证书，再传输到P0）
+            stageStartTime = System.currentTimeMillis();
             updateTaskStatusAndRemark(taskId.get(), TASK_STATUS_SSL_GENERATING,
                     "开始生成并传输SSL证书");
             Body<String> sslResult = generateAndTransferSSL(agentId);
+            long sslTime = System.currentTimeMillis() - stageStartTime;
+            perfLog.append(String.format("║ [阶段5] SSL证书生成+传输: %8d ms                      ║\n", sslTime));
+            
             if (sslResult.getCode() != 1) {
                 String errorMsg = "SSL证书生成/传输失败：" + sslResult.getMessage();
                 logger.error(errorMsg);
@@ -501,11 +542,16 @@ public class VerdictService {
             }
             updateTaskStatusAndRemark(taskId.get(), TASK_STATUS_SSL_COMPLETED,
                     "SSL证书生成/传输完成，保存路径=" + sslResult.getData());
+            logger.info("[性能] SSL证书生成/传输耗时: {}ms", sslTime);
 
             // 6. 同时启动在线阶段
+            stageStartTime = System.currentTimeMillis();
             updateTaskStatusAndRemark(taskId.get(), TASK_STATUS_ONLINE_RUNNING,
                     "开始执行Garnet在线阶段，topK=" + GARNET_TOP_K);
             Body<String> onlineResult = executeOnlineStage(agentId, baseFileName);
+            long onlineTime = System.currentTimeMillis() - stageStartTime;
+            perfLog.append(String.format("║ [阶段6] Garnet在线阶段(MPC安全计算): %8d ms            ║\n", onlineTime));
+            
             if (onlineResult.getCode() != 1) {
                 String errorMsg = "在线阶段执行失败：" + onlineResult.getMessage();
                 logger.error(errorMsg);
@@ -515,17 +561,36 @@ public class VerdictService {
             updateTaskResultIds(taskId.get(), onlineResult.getData()); // 调用新增方法更新resultIds
             updateTaskStatusAndRemark(taskId.get(), TASK_STATUS_ONLINE_COMPLETED,
                     "在线阶段执行完成，查询结果=" + onlineResult.getData());
+            logger.info("[性能] 在线阶段耗时: {}ms", onlineTime);
 
             // 7. 最终状态更新
+            long totalTime = System.currentTimeMillis() - totalStartTime;
+            perfLog.append("╠══════════════════════════════════════════════════════════════╣\n");
+            perfLog.append(String.format("║ [总计] 全流程总耗时: %8d ms (%.2f 秒)                  ║\n", totalTime, totalTime / 1000.0));
+            perfLog.append("╠══════════════════════════════════════════════════════════════╣\n");
+            perfLog.append("║ 各阶段耗时占比:                                              ║\n");
+            perfLog.append(String.format("║   - P1数据筛选+Embedding: %.1f%%                             ║\n", sendQueryTime * 100.0 / totalTime));
+            perfLog.append(String.format("║   - P0查询处理: %.1f%%                                       ║\n", computeInputTime * 100.0 / totalTime));
+            perfLog.append(String.format("║   - Garnet离线阶段: %.1f%%                                   ║\n", offlineTime * 100.0 / totalTime));
+            perfLog.append(String.format("║   - 文件传输: %.1f%%                                         ║\n", transferTime * 100.0 / totalTime));
+            perfLog.append(String.format("║   - SSL证书: %.1f%%                                          ║\n", sslTime * 100.0 / totalTime));
+            perfLog.append(String.format("║   - Garnet在线阶段: %.1f%%                                   ║\n", onlineTime * 100.0 / totalTime));
+            perfLog.append("╚══════════════════════════════════════════════════════════════╝\n");
+            
+            // 输出性能测试报告
+            logger.info(perfLog.toString());
+            
             updateTaskStatusAndRemark(taskId.get(), TASK_STATUS_FINISHED,
-                    "全流程执行完成，最终结果=" + onlineResult.getData());
-            logger.info("sendAndCompute全流程执行成功，taskId={}，最终结果={}", taskId.get(), onlineResult.getData());
+                    "全流程执行完成，最终结果=" + onlineResult.getData() + "，总耗时=" + totalTime + "ms");
+            logger.info("sendAndCompute全流程执行成功，taskId={}，最终结果={}，总耗时={}ms", taskId.get(), onlineResult.getData(), totalTime);
 //            return Body.success(onlineResult.getData(), "全流程执行成功，已获取Top-K结果");
             return Body.success(String.valueOf(taskId.get()), "全流程执行成功，任务ID=" + taskId.get());
 
         } catch (Exception e) {
             String errorMsg = "sendAndCompute全流程异常：" + e.getMessage();
             logger.error(errorMsg, e);
+            long totalTime = System.currentTimeMillis() - totalStartTime;
+            logger.error("[性能] 全流程异常终止，已执行时间: {}ms", totalTime);
             if (taskId.get() > 0) {
                 updateTaskStatusAndRemark(taskId.get(), TASK_STATUS_FAILED, errorMsg);
             }

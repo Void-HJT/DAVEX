@@ -89,12 +89,15 @@ public class VerdictService {
     }
 
     /**
-     * 生成数据集Embeddings并返回vectorizer.pkl文件路径
+     * 生成数据集Embeddings并返回vectorizer.pkl文件路径【性能测试版本】
      * @param fileIds 待处理的文件ID列表
      * @param outputPrefix 输出文件前缀（新增参数，替代原有硬编码常量）
      * @return 成功：Body.data为pkl文件绝对路径；失败：Body包含错误信息
      */
     public Body<String> getDataEmbeddings(List<String> fileIds, String outputPrefix) {
+        long methodStartTime = System.currentTimeMillis();
+        logger.info("[性能] getDataEmbeddings开始执行, 文件数量: {}", fileIds != null ? fileIds.size() : 0);
+        
         if (fileIds == null || fileIds.isEmpty()) {
             return Body.error("文件ID列表不能为空");
         }
@@ -165,42 +168,68 @@ public class VerdictService {
         // 关键修改2：（可选，保持原有逻辑不变，此处已匹配Python脚本输出）
         String pklFileName = outputPrefix + "_vectorizer.pkl";
         String pklFilePath = Paths.get(fullOutputPrefix, pklFileName).toString();
+        
+        // 性能测试：记录Python脚本执行时间
+        long scriptStartTime = System.currentTimeMillis();
         Body<String> executeResult = executePythonScript(fullCmd, pklFilePath);
+        long scriptTime = System.currentTimeMillis() - scriptStartTime;
+        logger.info("[性能] P1 Python脚本(p1preprocess.py)执行耗时: {}ms", scriptTime);
 
+        long methodTime = System.currentTimeMillis() - methodStartTime;
         if (executeResult.getCode() == 1) {
-            return Body.success(pklFilePath, "Embedding生成成功");
+            logger.info("[性能] getDataEmbeddings总耗时: {}ms (其中Python脚本: {}ms), 处理文件数: {}", 
+                       methodTime, scriptTime, fileIds.size());
+            return Body.success(pklFilePath, "Embedding生成成功，耗时：" + scriptTime + "ms");
         } else {
+            logger.error("[性能] getDataEmbeddings执行失败，已执行时间: {}ms", methodTime);
             return executeResult;
         }
     }
 
     /**
+     * 【性能测试版本】一站式服务：筛选+Embedding生成
      * @param filterDTO 筛选条件
      * @param outputPrefix 输出文件前缀（新增参数）
      * @return .pkl文件路径
      */
     public Body<String> query2Embeddings(VerdictFilterDTO filterDTO, String outputPrefix) {
+        long totalStartTime = System.currentTimeMillis();
         try {
-            logger.info("开始执行一站式Embedding生成服务...");
+            logger.info("[性能] 开始执行一站式Embedding生成服务...");
+            
+            StringBuilder perfLog = new StringBuilder();
+            perfLog.append("\n╔══════════════════════════════════════════════════════════════╗\n");
+            perfLog.append("║         P1 数据筛选+Embedding生成 性能测试报告 (Agent端)       ║\n");
+            perfLog.append("╠══════════════════════════════════════════════════════════════╣\n");
 
             // 1. 第一步：根据筛选条件获取文件ID列表（逻辑不变）
+            long filterStartTime = System.currentTimeMillis();
             logger.info("步骤 1/2: 根据筛选条件获取文件ID...");
             Body<List<String>> fileIdsBody = this.getDestIds(filterDTO);
+            long filterTime = System.currentTimeMillis() - filterStartTime;
+            perfLog.append(String.format("║ [步骤1] 数据库筛选查询: %8d ms                          ║\n", filterTime));
+            
             if (fileIdsBody.getCode() != 1 || fileIdsBody.getData() == null || fileIdsBody.getData().isEmpty()) {
                 String errorMsg = "未能获取有效文件ID，无法生成Embedding。原因: " + fileIdsBody.getMessage();
                 logger.error(errorMsg);
                 return Body.error(errorMsg);
             }
             List<String> fileIds = fileIdsBody.getData();
-            logger.info("成功获取 {} 个文件ID。", fileIds.size());
+            logger.info("[性能] 数据库筛选耗时: {}ms, 成功获取 {} 个文件ID", filterTime, fileIds.size());
+            perfLog.append(String.format("║         筛选结果: %d 个文件                                 ║\n", fileIds.size()));
 
             // 2. 第二步：传递 outputPrefix 参数给 getDataEmbeddings
+            long embStartTime = System.currentTimeMillis();
             logger.info("步骤 2/2: 根据文件ID生成Embedding...");
             Body<String> embeddingBody = this.getDataEmbeddings(fileIds, outputPrefix);
+            long embTime = System.currentTimeMillis() - embStartTime;
+            perfLog.append(String.format("║ [步骤2] P1 Embedding生成(Python脚本): %8d ms            ║\n", embTime));
+            
             if (embeddingBody.getCode() != 1) {
                 logger.error("生成Embedding失败: {}", embeddingBody.getMessage());
                 return embeddingBody;
             }
+            logger.info("[性能] Embedding生成耗时: {}ms", embTime);
 
             // 3. 补充校验（逻辑不变）
             String pklFilePath = embeddingBody.getData();
@@ -211,10 +240,18 @@ public class VerdictService {
                 return Body.error(errorMsg);
             }
 
-            logger.info("一站式Embedding生成服务成功完成。");
+            long totalTime = System.currentTimeMillis() - totalStartTime;
+            perfLog.append("╠══════════════════════════════════════════════════════════════╣\n");
+            perfLog.append(String.format("║ [总计] query2Embeddings总耗时: %8d ms (%.2f 秒)         ║\n", totalTime, totalTime / 1000.0));
+            perfLog.append("╚══════════════════════════════════════════════════════════════╝\n");
+            
+            logger.info(perfLog.toString());
+            logger.info("[性能] 一站式Embedding生成服务成功完成，总耗时: {}ms", totalTime);
             return embeddingBody;
 
         } catch (Exception e) {
+            long totalTime = System.currentTimeMillis() - totalStartTime;
+            logger.error("[性能] 一站式Embedding生成服务异常，已执行时间: {}ms", totalTime);
             logger.error("一站式Embedding生成服务发生未知异常", e);
             return Body.error("系统内部错误：" + e.getMessage());
         }
@@ -320,13 +357,14 @@ public class VerdictService {
     }
 
     /**
-     * 执行本地命令（Agent端）
+     * 执行本地命令（Agent端）【性能测试版本】
      */
     public Body<String> executeLocalCommand(String fullCmd, String stageName) {
         // 关键修改：用AtomicReference包装Process对象
         AtomicReference<Process> processRef = new AtomicReference<>();
+        long startTime = System.currentTimeMillis();
         try {
-            logger.info("执行{}命令：{}", stageName, fullCmd);
+            logger.info("[性能] 开始执行{}命令：{}", stageName, fullCmd);
             ProcessBuilder processBuilder = new ProcessBuilder();
             if (System.getProperty("os.name").toLowerCase().contains("windows")) {
                 processBuilder.command("cmd.exe", "/c", fullCmd);
@@ -354,19 +392,26 @@ public class VerdictService {
 
             // 原有逻辑不变（后续操作process变量）
             boolean isCompleted = process.waitFor(30, TimeUnit.MINUTES);
+            long executeTime = System.currentTimeMillis() - startTime;
+            
             if (!isCompleted) {
                 process.destroyForcibly();
+                logger.error("[性能] {}执行超时，已执行时间: {}ms", stageName, executeTime);
                 return Body.error(stageName + "执行超时");
             }
 
             int exitCode = process.exitValue();
             if (exitCode != 0) {
+                logger.error("[性能] {}执行失败，耗时: {}ms, 退出码：{}", stageName, executeTime, exitCode);
                 return Body.error(stageName + "执行失败，退出码：" + exitCode);
             }
 
-            return Body.success(output.toString(), stageName + "执行成功");
+            logger.info("[性能] {}执行成功，耗时: {}ms", stageName, executeTime);
+            return Body.success(output.toString(), stageName + "执行成功，耗时：" + executeTime + "ms");
 
         } catch (Exception e) {
+            long executeTime = System.currentTimeMillis() - startTime;
+            logger.error("[性能] {}命令异常，已执行时间: {}ms", stageName, executeTime);
             logger.error("执行{}命令异常", stageName, e);
             return Body.error(stageName + "执行异常：" + e.getMessage());
         } finally {
