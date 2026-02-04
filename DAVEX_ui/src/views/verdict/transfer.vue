@@ -10,26 +10,26 @@
       />
     </el-select>
     <el-header class="custom-header">
-<!--      <div-->
-<!--          style="-->
-<!--          background-color: antiquewhite;-->
-<!--          height: 40px;-->
-<!--          display: flex;-->
-<!--          justify-content: center;-->
-<!--          align-items: center;-->
-<!--        "-->
-<!--      >-->
-<!--        <p-->
-<!--            style="-->
-<!--            font-size: 20px;-->
-<!--            color: black;-->
-<!--            opacity: 100%;-->
-<!--            text-align: center;-->
-<!--          "-->
-<!--        >-->
-<!--          文件列表-->
-<!--        </p>-->
-<!--      </div>-->
+      <!--      <div-->
+      <!--          style="-->
+      <!--          background-color: antiquewhite;-->
+      <!--          height: 40px;-->
+      <!--          display: flex;-->
+      <!--          justify-content: center;-->
+      <!--          align-items: center;-->
+      <!--        "-->
+      <!--      >-->
+      <!--        <p-->
+      <!--            style="-->
+      <!--            font-size: 20px;-->
+      <!--            color: black;-->
+      <!--            opacity: 100%;-->
+      <!--            text-align: center;-->
+      <!--          "-->
+      <!--        >-->
+      <!--          文件列表-->
+      <!--        </p>-->
+      <!--      </div>-->
       <div class="icon-text">
         <el-icon><Folder /></el-icon>
         <span>文件列表</span>
@@ -44,7 +44,7 @@
         <el-table
             :data="directoryData"
             @row-dblclick="handleCellDoubleClick"
-            max-height="400"
+            max-height="800"
         >
           <el-table-column fixed label="" width="50" align="center">
             <template #default="scope">
@@ -108,7 +108,7 @@
             <template v-slot="scope">
               <el-button
                   class="small-default-button"
-                  v-if="scope.row.type === 'file'"
+                  v-if="scope.row.type === 'file' && scope.row.fileType?.includes('trans')"
                   @click="
                   getFileMethod(
                     scope.row.uid,
@@ -119,15 +119,15 @@
               >
                 <el-icon><Download /></el-icon> 获取文件
               </el-button>
-<!--              <el-button-->
-<!--                  v-if="scope.row.type === 'file' && !isAccessible(scope.row.ruleList)"-->
-<!--                  link-->
-<!--                  type="danger"-->
-<!--                  size="small"-->
-<!--                  disabled-->
-<!--              >-->
-<!--                无权获取文件-->
-<!--              </el-button>-->
+              <!--              <el-button-->
+              <!--                  v-if="scope.row.type === 'file' && !isAccessible(scope.row.ruleList)"-->
+              <!--                  link-->
+              <!--                  type="danger"-->
+              <!--                  size="small"-->
+              <!--                  disabled-->
+              <!--              >-->
+              <!--                无权获取文件-->
+              <!--              </el-button>-->
             </template>
           </el-table-column>
         </el-table>
@@ -138,9 +138,9 @@
         <template #footer>
           <div class="dialog-footer">
             <el-button class="close-button" @click="transSuccessVisible = false" style="margin-right: 10px;">返回</el-button>
-            <router-link to="/result/fileTrans">
+            <router-link to="/verdictResult/transfer">
               <el-button class="default-button">
-                  查看结果管理区
+                查看结果管理区
               </el-button>
             </router-link>
           </div>
@@ -164,6 +164,7 @@ import {getDirectory, getRootByAgent} from '../../api/folderController.js'
 import {getFile} from "../../api/direct.js";
 import {onMounted, ref} from "vue";
 import {Download} from "@element-plus/icons-vue";
+import { addOperationHistory } from '../../api/operationHistory.js'
 
 onMounted(() => {
   getAgentMethod()
@@ -215,23 +216,47 @@ const getDirectoryMethod = async () => {
   }
 }
 
-const getFileMethod = async (uid, agentId, folderId) => {
+const getFileMethod = async (uid, targetAgentId, folderId) => {
   try {
     getFileBody.value.fileId = uid
-    getFileBody.value.agentId = agentId
+    getFileBody.value.agentId = targetAgentId
     getFileBody.value.folderId = folderId
     console.log(getFileBody.value)
     const res = await getFile(getFileBody.value)
     if (res.data.code == 1) {
       transSuccessVisible.value = true
+      // 记录操作历史
+      await addOperationHistory({
+        agentId: targetAgentId,
+        operationType: '获取文件',
+        operationObject: uid,
+        result: '成功',
+        remark: `从代理 ${targetAgentId} 获取案件文本文件 ${uid}`
+      })
     }
     else {
       transFailedMessage.value = res.data.message;
       transFailedVisible.value = true
+      // 记录失败操作
+      await addOperationHistory({
+        agentId: targetAgentId,
+        operationType: '获取文件',
+        operationObject: uid,
+        result: '失败',
+        remark: res.data.message || '获取文件失败'
+      })
     }
   }
   catch (error) {
     console.error('Failed to get file:', error)
+    // 记录失败操作
+    await addOperationHistory({
+      agentId: targetAgentId,
+      operationType: '获取文件',
+      operationObject: uid,
+      result: '失败',
+      remark: error.message || '获取文件失败'
+    })
   }
 }
 

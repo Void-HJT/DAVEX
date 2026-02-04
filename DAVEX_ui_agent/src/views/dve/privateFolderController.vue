@@ -11,27 +11,27 @@
         <el-button class="default-button" @click="getDirectoryMethod">返回根目录</el-button>
         <el-button class="default-button" @click="returnFrontDirectory">返回上一级目录</el-button>
         <el-popover
-          placement="top-start"
-          title="此处输入新文件夹名"
-          :width="400"
-          trigger="click"
+            placement="top-start"
+            title="此处输入新文件夹名"
+            :width="400"
+            trigger="click"
         >
           <template #reference>
             <el-button class="default-button">在当前目录下新建文件夹</el-button>
           </template>
           <el-form
-            :model="createFolderBody"
-            label-width="80px"
-            label-position="left"
+              :model="createFolderBody"
+              label-width="80px"
+              label-position="left"
           >
             <el-form-item label="文件夹名">
               <el-input v-model="createFolderBody.name"></el-input>
             </el-form-item>
             <el-button
-              class="default-button"
-              @click="createFolderMethod"
-              calss="el-button mt-4"
-              style="width: 100%"
+                class="default-button"
+                @click="createFolderMethod"
+                calss="el-button mt-4"
+                style="width: 100%"
             >
               新建文件夹
             </el-button>
@@ -74,9 +74,9 @@
       </div>
       <div>
         <el-table
-          :data="filteredDirectoryData"
-          @row-dblclick="handleCellDoubleClick"
-          max-height="800"
+            :data="filteredDirectoryData"
+            @row-dblclick="handleCellDoubleClick"
+            max-height="800"
         >
           <el-table-column fixed label="" width="50" align="center">
             <template #default="scope">
@@ -91,55 +91,55 @@
             </template>
           </el-table-column>
           <el-table-column
-            label="文件ID"
-            prop="uid"
-            width="200"
-            align="center"
+              label="文件ID"
+              prop="uid"
+              width="200"
+              align="center"
           ></el-table-column>
           <el-table-column
-            label="名称"
-            prop="name"
-            width="180"
-            align="center"
+              label="名称"
+              prop="name"
+              width="180"
+              align="center"
           ></el-table-column>
           <el-table-column
-            label="所属代理"
-            prop="agentId"
-            width="200"
-            align="center"
+              label="所属代理"
+              prop="agentId"
+              width="200"
+              align="center"
           ></el-table-column>
 
           <el-table-column
-            label="类型"
-            prop="type"
-            width="180"
-            align="center"
+              label="类型"
+              prop="type"
+              width="180"
+              align="center"
           ></el-table-column>
           <el-table-column
-            label="创建时间"
-            prop="createDate"
-            width="300"
-            :formatter="formatDate"
-            align="center"
+              label="创建时间"
+              prop="createDate"
+              width="300"
+              :formatter="formatDate"
+              align="center"
           ></el-table-column>
           <el-table-column
-            label="更新时间"
-            prop="lastUpdate"
-            width="300"
-            :formatter="formatDate"
-            align="center"
+              label="更新时间"
+              prop="lastUpdate"
+              width="300"
+              :formatter="formatDate"
+              align="center"
           ></el-table-column>
           <el-table-column
-            fixed="right"
-            label="操作"
-            mid-width="300"
-            header-align="center"
-            align="center"
+              fixed="right"
+              label="操作"
+              mid-width="300"
+              header-align="center"
+              align="center"
           >
             <template v-slot="scope">
               <el-button
-                class="small-delete-button"
-                @click="
+                  class="small-delete-button"
+                  @click="
                   deleteFolderMethod(
                     scope.row.uid,
                     scope.row.agentId,
@@ -151,8 +151,8 @@
                 <el-icon><Delete /></el-icon> 删除
               </el-button>
               <el-button
-                class="small-default-button"
-                @click="
+                  class="small-default-button"
+                  @click="
                   scope.row.type === 'folder'
                     ? openFolderRenameBlock(
                         scope.row.uid,
@@ -166,199 +166,199 @@
               >
                 <el-icon><Edit /></el-icon> 重命名
               </el-button>
-<!--              <el-button-->
-<!--                  v-if="scope.row.type === 'file'"-->
-<!--                  class="small-default-button"-->
-<!--                  @click="-->
-<!--                  openFileFuncEditBlockMethod(-->
-<!--                        scope.row-->
-<!--                      )-->
-<!--                "-->
-<!--              >-->
-<!--                <el-icon><Edit /></el-icon> 功能权限-->
-<!--              </el-button>-->
-<!--              <el-button-->
-<!--                v-if="scope.row.type === 'file'"-->
-<!--                link-->
-<!--                type="primary"-->
-<!--                @click="-->
-<!--                  getFileInfoMethod(-->
-<!--                    scope.row.uid,-->
-<!--                    scope.row.agentId,-->
-<!--                    scope.row.parentId,-->
-<!--                    scope.row.type,-->
-<!--                  )-->
-<!--                "-->
-<!--                size="small"-->
-<!--              >-->
-<!--                权限管理-->
-<!--              </el-button>-->
-<!--              <el-button-->
-<!--                v-if="scope.row.type === 'folder'"-->
-<!--                link-->
-<!--                type="primary"-->
-<!--                @click="-->
-<!--                  (folderVisibleDialogVisible = true),-->
-<!--                    (folderVisibleBody.folderId = scope.row.uid)-->
-<!--                "-->
-<!--                size="small"-->
-<!--              >-->
-<!--                可见性管理-->
-<!--              </el-button>-->
+              <el-button
+                  v-if="scope.row.type === 'file'"
+                  class="small-default-button"
+                  @click="
+                  openFileFuncEditBlockMethod(
+                        scope.row
+                      )
+                "
+              >
+                <el-icon><Edit /></el-icon> 功能权限
+              </el-button>
+              <!--              <el-button-->
+              <!--                v-if="scope.row.type === 'file'"-->
+              <!--                link-->
+              <!--                type="primary"-->
+              <!--                @click="-->
+              <!--                  getFileInfoMethod(-->
+              <!--                    scope.row.uid,-->
+              <!--                    scope.row.agentId,-->
+              <!--                    scope.row.parentId,-->
+              <!--                    scope.row.type,-->
+              <!--                  )-->
+              <!--                "-->
+              <!--                size="small"-->
+              <!--              >-->
+              <!--                权限管理-->
+              <!--              </el-button>-->
+              <!--              <el-button-->
+              <!--                v-if="scope.row.type === 'folder'"-->
+              <!--                link-->
+              <!--                type="primary"-->
+              <!--                @click="-->
+              <!--                  (folderVisibleDialogVisible = true),-->
+              <!--                    (folderVisibleBody.folderId = scope.row.uid)-->
+              <!--                "-->
+              <!--                size="small"-->
+              <!--              >-->
+              <!--                可见性管理-->
+              <!--              </el-button>-->
             </template>
           </el-table-column>
         </el-table>
       </div>
-<!--      <el-dialog v-model="fileInfoVisible" title="文件详细信息" width="60%">-->
-<!--        <span-->
-<!--          style="-->
-<!--            display: block;-->
-<!--            text-align: center;-->
-<!--            font-size: 16px;-->
-<!--            line-height: 3;-->
-<!--          "-->
-<!--        >-->
-<!--          该文件拥有的权限-->
-<!--        </span>-->
-<!--        <el-table-->
-<!--          :data="fileRuleListData"-->
-<!--          style="width: 100%"-->
-<!--          stripe-->
-<!--          max-height="300"-->
-<!--        >-->
-<!--          <el-table-column-->
-<!--            label="序号"-->
-<!--            prop="uid"-->
-<!--            width="80"-->
-<!--            align="center"-->
-<!--          ></el-table-column>-->
-<!--          <el-table-column-->
-<!--            label="所属代理"-->
-<!--            prop="agentId"-->
-<!--            width="80"-->
-<!--            align="center"-->
-<!--          ></el-table-column>-->
-<!--          <el-table-column-->
-<!--            label="代理名"-->
-<!--            prop="agentName"-->
-<!--            width="80"-->
-<!--            align="center"-->
-<!--          ></el-table-column>-->
-<!--          <el-table-column-->
-<!--            label="组别"-->
-<!--            prop="groupId"-->
-<!--            width="100"-->
-<!--            align="center"-->
-<!--          ></el-table-column>-->
-<!--          <el-table-column-->
-<!--            label="组别名"-->
-<!--            prop="groupName"-->
-<!--            width="180"-->
-<!--            align="center"-->
-<!--          ></el-table-column>-->
-<!--          <el-table-column-->
-<!--            label="拥有权限"-->
-<!--            prop="allowedMethod"-->
-<!--            mid-width="180"-->
-<!--            align="center"-->
-<!--          ></el-table-column>-->
-<!--        </el-table>-->
-<!--        <span-->
-<!--          style="-->
-<!--            display: block;-->
-<!--            text-align: center;-->
-<!--            font-size: 16px;-->
-<!--            line-height: 3;-->
-<!--          "-->
-<!--        >-->
-<!--          更新文件权限-->
-<!--        </span>-->
-<!--        <div class="form-container">-->
-<!--          <el-form-->
-<!--            :model="setFileRuleBody"-->
-<!--            style="max-width: 600px"-->
-<!--            class="styled-form"-->
-<!--          >-->
-<!--            &lt;!&ndash; 第一个选择框：选择需要管理的分组 &ndash;&gt;-->
-<!--            <el-form-item label="选择分组">-->
-<!--              <el-select-->
-<!--                v-model="selectedGroupUid"-->
-<!--                placeholder="请选择需要管理的分组"-->
-<!--                @change="updateGroupId"-->
-<!--              >-->
-<!--                <el-option-->
-<!--                  v-for="item in userGroupData"-->
-<!--                  :key="item.uid"-->
-<!--                  :label="item.name"-->
-<!--                  :value="item.uid"-->
-<!--                />-->
-<!--              </el-select>-->
-<!--            </el-form-item>-->
-<!--            &lt;!&ndash; 第二个选择框：选择对应的权限 &ndash;&gt;-->
-<!--            <el-form-item label="选择权限">-->
-<!--              <el-select-->
-<!--                v-model="selectedAllowedMethod"-->
-<!--                placeholder="请选择对应的权限"-->
-<!--                @change="updateAllowedMethod"-->
-<!--              >-->
-<!--                <el-option-->
-<!--                  v-for="method in currentAllowedMethods"-->
-<!--                  :key="method"-->
-<!--                  :label="method"-->
-<!--                  :value="method"-->
-<!--                />-->
-<!--              </el-select>-->
-<!--            </el-form-item>-->
-<!--  -->
-<!--            <el-form-item>-->
-<!--              <el-button @click="setFileRuleMethod">赋予文件权限</el-button>-->
-<!--              <el-button @click="deleteFileRuleMethod">移除文件权限</el-button>-->
-<!--            </el-form-item>-->
-<!--          </el-form>-->
-<!--        </div>-->
-<!--        <template #footer>-->
-<!--          <span class="dialog-footer">-->
-<!--            <el-button type="primary" @click="closeFileInfo">确认</el-button>-->
-<!--          </span>-->
-<!--        </template>-->
-<!--      </el-dialog>-->
+      <!--      <el-dialog v-model="fileInfoVisible" title="文件详细信息" width="60%">-->
+      <!--        <span-->
+      <!--          style="-->
+      <!--            display: block;-->
+      <!--            text-align: center;-->
+      <!--            font-size: 16px;-->
+      <!--            line-height: 3;-->
+      <!--          "-->
+      <!--        >-->
+      <!--          该文件拥有的权限-->
+      <!--        </span>-->
+      <!--        <el-table-->
+      <!--          :data="fileRuleListData"-->
+      <!--          style="width: 100%"-->
+      <!--          stripe-->
+      <!--          max-height="300"-->
+      <!--        >-->
+      <!--          <el-table-column-->
+      <!--            label="序号"-->
+      <!--            prop="uid"-->
+      <!--            width="80"-->
+      <!--            align="center"-->
+      <!--          ></el-table-column>-->
+      <!--          <el-table-column-->
+      <!--            label="所属代理"-->
+      <!--            prop="agentId"-->
+      <!--            width="80"-->
+      <!--            align="center"-->
+      <!--          ></el-table-column>-->
+      <!--          <el-table-column-->
+      <!--            label="代理名"-->
+      <!--            prop="agentName"-->
+      <!--            width="80"-->
+      <!--            align="center"-->
+      <!--          ></el-table-column>-->
+      <!--          <el-table-column-->
+      <!--            label="组别"-->
+      <!--            prop="groupId"-->
+      <!--            width="100"-->
+      <!--            align="center"-->
+      <!--          ></el-table-column>-->
+      <!--          <el-table-column-->
+      <!--            label="组别名"-->
+      <!--            prop="groupName"-->
+      <!--            width="180"-->
+      <!--            align="center"-->
+      <!--          ></el-table-column>-->
+      <!--          <el-table-column-->
+      <!--            label="拥有权限"-->
+      <!--            prop="allowedMethod"-->
+      <!--            mid-width="180"-->
+      <!--            align="center"-->
+      <!--          ></el-table-column>-->
+      <!--        </el-table>-->
+      <!--        <span-->
+      <!--          style="-->
+      <!--            display: block;-->
+      <!--            text-align: center;-->
+      <!--            font-size: 16px;-->
+      <!--            line-height: 3;-->
+      <!--          "-->
+      <!--        >-->
+      <!--          更新文件权限-->
+      <!--        </span>-->
+      <!--        <div class="form-container">-->
+      <!--          <el-form-->
+      <!--            :model="setFileRuleBody"-->
+      <!--            style="max-width: 600px"-->
+      <!--            class="styled-form"-->
+      <!--          >-->
+      <!--            &lt;!&ndash; 第一个选择框：选择需要管理的分组 &ndash;&gt;-->
+      <!--            <el-form-item label="选择分组">-->
+      <!--              <el-select-->
+      <!--                v-model="selectedGroupUid"-->
+      <!--                placeholder="请选择需要管理的分组"-->
+      <!--                @change="updateGroupId"-->
+      <!--              >-->
+      <!--                <el-option-->
+      <!--                  v-for="item in userGroupData"-->
+      <!--                  :key="item.uid"-->
+      <!--                  :label="item.name"-->
+      <!--                  :value="item.uid"-->
+      <!--                />-->
+      <!--              </el-select>-->
+      <!--            </el-form-item>-->
+      <!--            &lt;!&ndash; 第二个选择框：选择对应的权限 &ndash;&gt;-->
+      <!--            <el-form-item label="选择权限">-->
+      <!--              <el-select-->
+      <!--                v-model="selectedAllowedMethod"-->
+      <!--                placeholder="请选择对应的权限"-->
+      <!--                @change="updateAllowedMethod"-->
+      <!--              >-->
+      <!--                <el-option-->
+      <!--                  v-for="method in currentAllowedMethods"-->
+      <!--                  :key="method"-->
+      <!--                  :label="method"-->
+      <!--                  :value="method"-->
+      <!--                />-->
+      <!--              </el-select>-->
+      <!--            </el-form-item>-->
+      <!--  -->
+      <!--            <el-form-item>-->
+      <!--              <el-button @click="setFileRuleMethod">赋予文件权限</el-button>-->
+      <!--              <el-button @click="deleteFileRuleMethod">移除文件权限</el-button>-->
+      <!--            </el-form-item>-->
+      <!--          </el-form>-->
+      <!--        </div>-->
+      <!--        <template #footer>-->
+      <!--          <span class="dialog-footer">-->
+      <!--            <el-button type="primary" @click="closeFileInfo">确认</el-button>-->
+      <!--          </span>-->
+      <!--        </template>-->
+      <!--      </el-dialog>-->
 
-<!--      <el-dialog-->
-<!--        v-model="folderVisibleDialogVisible"-->
-<!--        title="可见性管理"-->
-<!--        width="500"-->
-<!--        :before-close="folderVisibleDialogClose"-->
-<!--      >-->
-<!--        <el-form-item label="选择分组">-->
-<!--          <el-select-->
-<!--            v-model="folderVisibleBody.groupId"-->
-<!--            placeholder="请选择需要管理的分组"-->
-<!--          >-->
-<!--            <el-option-->
-<!--              v-for="item in userGroupData"-->
-<!--              :key="item.uid"-->
-<!--              :label="item.name"-->
-<!--              :value="item.uid"-->
-<!--            />-->
-<!--          </el-select>-->
-<!--        </el-form-item>-->
-<!--        <template #footer>-->
-<!--          <div class="dialog-footer">-->
-<!--            <el-button type="primary" @click="setFolderVisibleMethod">-->
-<!--              设置该组可见该文件夹-->
-<!--            </el-button>-->
-<!--            <el-button type="primary" @click="setFolderInvisibleMethod">-->
-<!--              设置该组不可见该文件夹-->
-<!--            </el-button>-->
-<!--          </div>-->
-<!--        </template>-->
-<!--      </el-dialog>-->
+      <!--      <el-dialog-->
+      <!--        v-model="folderVisibleDialogVisible"-->
+      <!--        title="可见性管理"-->
+      <!--        width="500"-->
+      <!--        :before-close="folderVisibleDialogClose"-->
+      <!--      >-->
+      <!--        <el-form-item label="选择分组">-->
+      <!--          <el-select-->
+      <!--            v-model="folderVisibleBody.groupId"-->
+      <!--            placeholder="请选择需要管理的分组"-->
+      <!--          >-->
+      <!--            <el-option-->
+      <!--              v-for="item in userGroupData"-->
+      <!--              :key="item.uid"-->
+      <!--              :label="item.name"-->
+      <!--              :value="item.uid"-->
+      <!--            />-->
+      <!--          </el-select>-->
+      <!--        </el-form-item>-->
+      <!--        <template #footer>-->
+      <!--          <div class="dialog-footer">-->
+      <!--            <el-button type="primary" @click="setFolderVisibleMethod">-->
+      <!--              设置该组可见该文件夹-->
+      <!--            </el-button>-->
+      <!--            <el-button type="primary" @click="setFolderInvisibleMethod">-->
+      <!--              设置该组不可见该文件夹-->
+      <!--            </el-button>-->
+      <!--          </div>-->
+      <!--        </template>-->
+      <!--      </el-dialog>-->
 
       <el-dialog v-model="folderRenameVisible" title="文件夹重命名" width="30%">
         <el-form
-          :model="folderRenameBody"
-          label-width="20%"
-          style="max-width: 80%"
+            :model="folderRenameBody"
+            label-width="20%"
+            style="max-width: 80%"
         >
           <el-form-item label="新文件夹名">
             <el-input v-model="folderRenameBody.name"></el-input>
@@ -410,158 +410,158 @@
     </el-main>
   </el-container>
 
-<!--  <el-container>-->
-<!--    <el-header style="height: 50px">-->
-<!--      <div-->
-<!--        style="-->
-<!--          background-color: antiquewhite;-->
-<!--          height: 40px;-->
-<!--          display: flex;-->
-<!--          justify-content: center;-->
-<!--          align-items: center;-->
-<!--        "-->
-<!--      >-->
-<!--        <p-->
-<!--          style="-->
-<!--            font-size: 20px;-->
-<!--            color: black;-->
-<!--            opacity: 100%;-->
-<!--            text-align: center;-->
-<!--          "-->
-<!--        >-->
-<!--          条件筛选列表-->
-<!--        </p>-->
-<!--      </div>-->
-<!--    </el-header>-->
-<!--    <el-main>-->
-<!--      <el-popover-->
-<!--        placement="top-start"-->
-<!--        title="按分组查看文件目录"-->
-<!--        :width="400"-->
-<!--        trigger="click"-->
-<!--      >-->
-<!--        <template #reference>-->
-<!--          <el-button>按分组查看文件目录</el-button>-->
-<!--        </template>-->
-<!--        <el-form-->
-<!--          :model="getDirectoryByGroupBody"-->
-<!--          label-width="80px"-->
-<!--          style="max-width: 600px"-->
-<!--        >-->
-<!--          <el-form-item label="选择分组">-->
-<!--            <el-select-->
-<!--              v-model="getDirectoryByGroupBody.groupId"-->
-<!--              placeholder="请选择分组"-->
-<!--            >-->
-<!--              <el-option-->
-<!--                v-for="item in userGroupData"-->
-<!--                :key="item.uid"-->
-<!--                :label="item.name"-->
-<!--                :value="item.uid"-->
-<!--              />-->
-<!--            </el-select>-->
-<!--          </el-form-item>-->
-<!--          <el-form-item>-->
-<!--            <el-button @click="getDirectoryByGroupMethod">-->
-<!--              按照分组获取文件列表-->
-<!--            </el-button>-->
-<!--          </el-form-item>-->
-<!--        </el-form>-->
-<!--      </el-popover>-->
-<!--      <el-popover-->
-<!--        placement="top-start"-->
-<!--        title="按用户查看文件目录"-->
-<!--        :width="400"-->
-<!--        trigger="click"-->
-<!--      >-->
-<!--        <template #reference>-->
-<!--          <el-button>按用户查看文件目录</el-button>-->
-<!--        </template>-->
-<!--        <el-form-->
-<!--          :model="getDirectoryByApplicationBody"-->
-<!--          label-width="80px"-->
-<!--          style="max-width: 600px"-->
-<!--        >-->
-<!--          <el-form-item label="选择用户">-->
-<!--            <el-select-->
-<!--              v-model="getDirectoryByApplicationBody.applicationId"-->
-<!--              placeholder="请选择用户"-->
-<!--            >-->
-<!--              <el-option-->
-<!--                v-for="item in applicationData"-->
-<!--                :key="item.uid"-->
-<!--                :label="item.name"-->
-<!--                :value="item.uid"-->
-<!--              />-->
-<!--            </el-select>-->
-<!--          </el-form-item>-->
-<!--          <el-form-item>-->
-<!--            <el-button @click="getDirectoryByApplicationMethod">-->
-<!--              按照用户获取文件列表-->
-<!--            </el-button>-->
-<!--          </el-form-item>-->
-<!--        </el-form>-->
-<!--      </el-popover>-->
-<!--      <el-table-->
-<!--        stripe-->
-<!--        :data="directorySelectedData"-->
-<!--        style="width: 100%"-->
-<!--        @row-dblclick="nextFileGroup"-->
-<!--        max-height="300"-->
-<!--      >-->
-<!--        <el-table-column fixed label="" width="50" align="center">-->
-<!--          <template #default="scope">-->
-<!--            <el-icon>-->
-<!--              <template v-if="scope.row.type === 'folder'">-->
-<!--                <el-icon color="#409efc"><Folder /></el-icon>-->
-<!--              </template>-->
-<!--              <template v-else-if="scope.row.type === 'file'">-->
-<!--                <el-icon><Files /></el-icon>-->
-<!--              </template>-->
-<!--            </el-icon>-->
-<!--          </template>-->
-<!--        </el-table-column>-->
-<!--        <el-table-column-->
-<!--          label="Uid"-->
-<!--          prop="uid"-->
-<!--          width="80"-->
-<!--          align="center"-->
-<!--        ></el-table-column>-->
-<!--        <el-table-column-->
-<!--          label="名称"-->
-<!--          prop="name"-->
-<!--          width="180"-->
-<!--          align="center"-->
-<!--        ></el-table-column>-->
-<!--        <el-table-column-->
-<!--          label="所属代理"-->
-<!--          prop="agentId"-->
-<!--          width="80"-->
-<!--        ></el-table-column>-->
+  <!--  <el-container>-->
+  <!--    <el-header style="height: 50px">-->
+  <!--      <div-->
+  <!--        style="-->
+  <!--          background-color: antiquewhite;-->
+  <!--          height: 40px;-->
+  <!--          display: flex;-->
+  <!--          justify-content: center;-->
+  <!--          align-items: center;-->
+  <!--        "-->
+  <!--      >-->
+  <!--        <p-->
+  <!--          style="-->
+  <!--            font-size: 20px;-->
+  <!--            color: black;-->
+  <!--            opacity: 100%;-->
+  <!--            text-align: center;-->
+  <!--          "-->
+  <!--        >-->
+  <!--          条件筛选列表-->
+  <!--        </p>-->
+  <!--      </div>-->
+  <!--    </el-header>-->
+  <!--    <el-main>-->
+  <!--      <el-popover-->
+  <!--        placement="top-start"-->
+  <!--        title="按分组查看文件目录"-->
+  <!--        :width="400"-->
+  <!--        trigger="click"-->
+  <!--      >-->
+  <!--        <template #reference>-->
+  <!--          <el-button>按分组查看文件目录</el-button>-->
+  <!--        </template>-->
+  <!--        <el-form-->
+  <!--          :model="getDirectoryByGroupBody"-->
+  <!--          label-width="80px"-->
+  <!--          style="max-width: 600px"-->
+  <!--        >-->
+  <!--          <el-form-item label="选择分组">-->
+  <!--            <el-select-->
+  <!--              v-model="getDirectoryByGroupBody.groupId"-->
+  <!--              placeholder="请选择分组"-->
+  <!--            >-->
+  <!--              <el-option-->
+  <!--                v-for="item in userGroupData"-->
+  <!--                :key="item.uid"-->
+  <!--                :label="item.name"-->
+  <!--                :value="item.uid"-->
+  <!--              />-->
+  <!--            </el-select>-->
+  <!--          </el-form-item>-->
+  <!--          <el-form-item>-->
+  <!--            <el-button @click="getDirectoryByGroupMethod">-->
+  <!--              按照分组获取文件列表-->
+  <!--            </el-button>-->
+  <!--          </el-form-item>-->
+  <!--        </el-form>-->
+  <!--      </el-popover>-->
+  <!--      <el-popover-->
+  <!--        placement="top-start"-->
+  <!--        title="按用户查看文件目录"-->
+  <!--        :width="400"-->
+  <!--        trigger="click"-->
+  <!--      >-->
+  <!--        <template #reference>-->
+  <!--          <el-button>按用户查看文件目录</el-button>-->
+  <!--        </template>-->
+  <!--        <el-form-->
+  <!--          :model="getDirectoryByApplicationBody"-->
+  <!--          label-width="80px"-->
+  <!--          style="max-width: 600px"-->
+  <!--        >-->
+  <!--          <el-form-item label="选择用户">-->
+  <!--            <el-select-->
+  <!--              v-model="getDirectoryByApplicationBody.applicationId"-->
+  <!--              placeholder="请选择用户"-->
+  <!--            >-->
+  <!--              <el-option-->
+  <!--                v-for="item in applicationData"-->
+  <!--                :key="item.uid"-->
+  <!--                :label="item.name"-->
+  <!--                :value="item.uid"-->
+  <!--              />-->
+  <!--            </el-select>-->
+  <!--          </el-form-item>-->
+  <!--          <el-form-item>-->
+  <!--            <el-button @click="getDirectoryByApplicationMethod">-->
+  <!--              按照用户获取文件列表-->
+  <!--            </el-button>-->
+  <!--          </el-form-item>-->
+  <!--        </el-form>-->
+  <!--      </el-popover>-->
+  <!--      <el-table-->
+  <!--        stripe-->
+  <!--        :data="directorySelectedData"-->
+  <!--        style="width: 100%"-->
+  <!--        @row-dblclick="nextFileGroup"-->
+  <!--        max-height="300"-->
+  <!--      >-->
+  <!--        <el-table-column fixed label="" width="50" align="center">-->
+  <!--          <template #default="scope">-->
+  <!--            <el-icon>-->
+  <!--              <template v-if="scope.row.type === 'folder'">-->
+  <!--                <el-icon color="#409efc"><Folder /></el-icon>-->
+  <!--              </template>-->
+  <!--              <template v-else-if="scope.row.type === 'file'">-->
+  <!--                <el-icon><Files /></el-icon>-->
+  <!--              </template>-->
+  <!--            </el-icon>-->
+  <!--          </template>-->
+  <!--        </el-table-column>-->
+  <!--        <el-table-column-->
+  <!--          label="Uid"-->
+  <!--          prop="uid"-->
+  <!--          width="80"-->
+  <!--          align="center"-->
+  <!--        ></el-table-column>-->
+  <!--        <el-table-column-->
+  <!--          label="名称"-->
+  <!--          prop="name"-->
+  <!--          width="180"-->
+  <!--          align="center"-->
+  <!--        ></el-table-column>-->
+  <!--        <el-table-column-->
+  <!--          label="所属代理"-->
+  <!--          prop="agentId"-->
+  <!--          width="80"-->
+  <!--        ></el-table-column>-->
 
-<!--        <el-table-column-->
-<!--          label="类型"-->
-<!--          prop="type"-->
-<!--          width="180"-->
-<!--          align="center"-->
-<!--        ></el-table-column>-->
-<!--        <el-table-column-->
-<!--          label="创建时间"-->
-<!--          prop="createDate"-->
-<!--          width="380"-->
-<!--          :formatter="formatDate"-->
-<!--          align="center"-->
-<!--        ></el-table-column>-->
-<!--        <el-table-column-->
-<!--          label="更新时间"-->
-<!--          prop="lastUpdate"-->
-<!--          mid-width="380"-->
-<!--          :formatter="formatDate"-->
-<!--          align="center"-->
-<!--        ></el-table-column>-->
-<!--      </el-table>-->
-<!--    </el-main>-->
-<!--  </el-container>-->
+  <!--        <el-table-column-->
+  <!--          label="类型"-->
+  <!--          prop="type"-->
+  <!--          width="180"-->
+  <!--          align="center"-->
+  <!--        ></el-table-column>-->
+  <!--        <el-table-column-->
+  <!--          label="创建时间"-->
+  <!--          prop="createDate"-->
+  <!--          width="380"-->
+  <!--          :formatter="formatDate"-->
+  <!--          align="center"-->
+  <!--        ></el-table-column>-->
+  <!--        <el-table-column-->
+  <!--          label="更新时间"-->
+  <!--          prop="lastUpdate"-->
+  <!--          mid-width="380"-->
+  <!--          :formatter="formatDate"-->
+  <!--          align="center"-->
+  <!--        ></el-table-column>-->
+  <!--      </el-table>-->
+  <!--    </el-main>-->
+  <!--  </el-container>-->
 </template>
 
 <script lang="ts" setup>
@@ -705,6 +705,7 @@ const uploadFileBody = ref({
   agentId: '',
   folderId: '',
   file: null as File | null,
+  privacy: 1,
 })
 
 const getGroupBody = ref({
@@ -772,14 +773,14 @@ const setFileRuleMethod = async () => {
     if (res.data.data.ruleList != null) {
       for (let j = 0; j < res.data.data.ruleList.length; j++) {
         getGroupInfoByGroupIdBody.value.groupId =
-          res.data.data.ruleList[j].groupId
+            res.data.data.ruleList[j].groupId
         getAgentInfoByAgentIdBody.value.agentId =
-          res.data.data.ruleList[j].agentId
+            res.data.data.ruleList[j].agentId
         const gName = await getGroupInfoByGroupId(
-          getGroupInfoByGroupIdBody.value,
+            getGroupInfoByGroupIdBody.value,
         )
         const aName = await getAgentInfoByAgentId(
-          getAgentInfoByAgentIdBody.value,
+            getAgentInfoByAgentIdBody.value,
         )
         res.data.data.ruleList[j].agentName = aName.data.data.name
         res.data.data.ruleList[j].groupName = gName.data.data.name
@@ -798,14 +799,14 @@ const deleteFileRuleMethod = async () => {
     if (res.data.data.ruleList != null) {
       for (let j = 0; j < res.data.data.ruleList.length; j++) {
         getGroupInfoByGroupIdBody.value.groupId =
-          res.data.data.ruleList[j].groupId
+            res.data.data.ruleList[j].groupId
         getAgentInfoByAgentIdBody.value.agentId =
-          res.data.data.ruleList[j].agentId
+            res.data.data.ruleList[j].agentId
         const gName = await getGroupInfoByGroupId(
-          getGroupInfoByGroupIdBody.value,
+            getGroupInfoByGroupIdBody.value,
         )
         const aName = await getAgentInfoByAgentId(
-          getAgentInfoByAgentIdBody.value,
+            getAgentInfoByAgentIdBody.value,
         )
         res.data.data.ruleList[j].agentName = aName.data.data.name
         res.data.data.ruleList[j].groupName = gName.data.data.name
@@ -832,14 +833,14 @@ const getFileInfoMethod = async (uid, agentId, parentId, type) => {
       if (res.data.data.ruleList != null) {
         for (let j = 0; j < res.data.data.ruleList.length; j++) {
           getGroupInfoByGroupIdBody.value.groupId =
-            res.data.data.ruleList[j].groupId
+              res.data.data.ruleList[j].groupId
           getAgentInfoByAgentIdBody.value.agentId =
-            res.data.data.ruleList[j].agentId
+              res.data.data.ruleList[j].agentId
           const gName = await getGroupInfoByGroupId(
-            getGroupInfoByGroupIdBody.value,
+              getGroupInfoByGroupIdBody.value,
           )
           const aName = await getAgentInfoByAgentId(
-            getAgentInfoByAgentIdBody.value,
+              getAgentInfoByAgentIdBody.value,
           )
           res.data.data.ruleList[j].agentName = aName.data.data.name
           res.data.data.ruleList[j].groupName = gName.data.data.name
@@ -1043,7 +1044,7 @@ const getDirectoryByGroupMethod = async () => {
 const getDirectoryByApplicationMethod = async () => {
   try {
     const res = await getDirectoryByApplication(
-      getDirectoryByApplicationBody.value,
+        getDirectoryByApplicationBody.value,
     )
     const res1 = res.data.data.children
     directorySelectedData.value = res1
@@ -1134,7 +1135,7 @@ const returnFrontDirectory = async () => {
 // 计算属性，返回当前选中组的 allowedMethod 列表
 const currentAllowedMethods = computed(() => {
   const selectedGroup = userGroupData.value.find(
-    (group) => group.uid === selectedGroupUid.value,
+      (group) => group.uid === selectedGroupUid.value,
   )
   if (selectedGroup && selectedGroup.rule) {
     // 将 allowedMethod 字符串按空格分割成数组
@@ -1171,7 +1172,7 @@ const filteredDirectoryData = computed(() => {
     if (item.type === 'folder') {
       return true;
     } else if (item.type === 'file') {
-      return item.fileType === 'default';
+      return item.fileType === 'private';
     }
     return false;
   });

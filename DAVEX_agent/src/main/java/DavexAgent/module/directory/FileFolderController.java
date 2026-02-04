@@ -75,14 +75,17 @@ public class FileFolderController {
     }
 
     @PostMapping("/uploadFile")
-    public Body<String> uploadFile(@RequestParam("agentId") String agentId,
+    public Body<String> uploadFile(
+            @RequestParam("agentId") String agentId,
             @RequestParam("folderId") String folderId,
-            @RequestPart("file") MultipartFile file) {
+            @RequestPart("file") MultipartFile file,
+            @RequestParam(value = "privacy", defaultValue = "0") Integer privacy
+    ) {
         if (file.isEmpty()) {
             return Body.error("上传文件为空");
         }
 
-        return fileFolderService.uploadFile(agentId, folderId, file, my.getBase_path());
+        return fileFolderService.uploadFile(agentId, folderId, file, my.getBase_path(), privacy);
     }
 
     @PostMapping("/updateFile")
@@ -184,5 +187,18 @@ public class FileFolderController {
     @PostMapping("/getRoot")
     public Body<Folder> getRoot() {
         return fileFolderService.getRoot();
+    }
+
+    /**
+     * 根据fileId和agentId读取文件内容
+     * @param fileId 文件ID
+     * @param agentId 代理ID
+     * @return 文件内容
+     */
+    @PostMapping("/readFile")
+    public Body<String> readFile(@RequestParam("fileId") String fileId,
+                                @RequestParam("agentId") String agentId) {
+        String basePath = my.getBase_path();
+        return fileFolderService.readFileContent(fileId, agentId, basePath);
     }
 }

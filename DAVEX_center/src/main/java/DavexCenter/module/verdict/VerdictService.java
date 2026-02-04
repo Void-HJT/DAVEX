@@ -1,0 +1,1647 @@
+package DavexCenter.module.verdict;
+
+import DavexCenter.entity.VerdictTask;
+import DavexCenter.mapper.VerdictTaskMapper;
+import DavexCenter.module.file.service.FileService;
+import DavexBase.common.Body;
+import DavexBase.common.My;
+import DavexBase.entity.File;
+import DavexBase.info.VerdictFilterDTO;
+import DavexBase.service.auth.CenterWebClientService;
+import DavexBase.service.directory.FileFolderService;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.buffer.DataBuffer;
+import org.springframework.core.io.buffer.DataBufferUtils;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.stereotype.Service;
+import org.springframework.util.FileCopyUtils;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+
+import java.io.*;
+import java.io.FileWriter;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.sql.Timestamp;
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
+
+@Service
+public class VerdictService {
+    private static final Logger logger = LoggerFactory.getLogger(VerdictService.class);
+    private static final String PKL_SAVE_DIR = "output";
+    //    private static final String PKL_FILE_NAME_PREFIX = "center_vectorizer_";
+    // 简化后的状态常量
+    private static final String TASK_STATUS_FILTERING = "数据筛选中";
+    private static final String TASK_STATUS_COMPLETED = "筛选完成";
+    private static final String TASK_STATUS_OFFLINE_RUNNING = "P1离线阶段执行中";
+    private static final String TASK_STATUS_OFFLINE_COMPLETED = "P1离线阶段执行完成";
+    private static final String TASK_STATUS_FILE_TRANSFERRING = "P0数据文件传输中";
+    private static final String TASK_STATUS_FILE_TRANSFER_COMPLETED = "P0数据文件传输完成";
+    private static final String TASK_STATUS_SSL_GENERATING = "SSL证书生成/传输中";
+    private static final String TASK_STATUS_SSL_COMPLETED = "SSL证书生成/传输完成";
+    private static final String TASK_STATUS_ONLINE_RUNNING = "在线阶段执行中";
+    private static final String TASK_STATUS_ONLINE_COMPLETED = "在线阶段执行完成";
+    private static final String TASK_STATUS_FINISHED = "任务完成";
+    private static final String TASK_STATUS_FAILED = "任务失败";
+    // 固定应用ID
+    private static final String FIXED_APPLICATION_ID = "DAVEX-C1-A1";
+
+    private static final long TIMEOUT_MINUTES = 30; // 脚本执行超时时间（防止无限阻塞）
+    // 新增：query目录名称（保存上传文件）
+    private static final String QUERY_DIR = "query";
+    // 新增：Python脚本名称（p0preprocess.py，需确保在my.core_path下）
+    private static final String PY_SCRIPT_NAME = "p0preprocess.py";
+    // 新增：生成的emb文件名称（固定输出名称，可根据需求调整）
+//    private static final String EMB_OUTPUT_FILE_NAME = "query_emb.txt";
+    // 新增：文件后缀标识常量（便于维护）
+    private static final String PKL_SUFFIX_TAG = "pkl";
+    private static final String EMB_SUFFIX_TAG = "queries";
+    private static final String FILE_SEPARATOR = "-P0-"; // 命名分隔符
+
+    // 新增Garnet相关配置
+    private static final String GARNET_DIR_P1 = "/home/zkx/Garnet";
+    private static final String GARNET_DIR_P0 = "/disk/zkx/Garnet";
+    private static final int GARNET_CLUSTERS = 10;
+    private static final int GARNET_TOP_K = 5;
+    private static final int GARNET_PORT = 11126;
+    private static final String P1_IP = "10.176.34.171";
+    private static final String P0_IP = "10.176.37.50";
+
+    @Autowired
+    private My my;
+    @Autowired
+    private CenterWebClientService centerWebClientService;
+    @Autowired
+    private VerdictTaskMapper verdictTaskMapper;
+    @Autowired
+    private FileFolderService fileFolderService;
+    @Autowired
+    private FileService fileService;
+
+    /**
+     * Center端转发查询到Agent端，记录任务状态（仅筛选中/筛选完成）
+     * @param agentId 目标AgentID
+     * @param filterDTO 筛选条件
+     * @return Body<String>：code=1成功，code≠1失败
+     */
+    public Body<String> sendQuery(String agentId, VerdictFilterDTO filterDTO) {
+        AtomicLong taskId = new AtomicLong();
+        try {
+            logger.info("Center端开始转发查询条件到Agent端，AgentID：{}，筛选条件：{}", agentId, filterDTO);
+
+            if (agentId == null || agentId.trim().isEmpty()) {
+                logger.error("Center端发送查询失败：目标AgentId未配置");
+                return Body.error("目标Agent未配置，无法发起预处理请求");
+            }
+
+            // 1. 创建任务记录（逻辑不变）
+            VerdictTask task = new VerdictTask();
+            task.setAgentId(agentId);
+            task.setApplicationId(FIXED_APPLICATION_ID);
+            task.setStartTime(new Timestamp(System.currentTimeMillis()));
+            task.setFilterStart(filterDTO.getJudgeTimeStart());
+            task.setFilterEnd(filterDTO.getJudgeTimeEnd());
+            task.setFilterType(filterDTO.getJudgeType());
+            task.setFilterDistrict(filterDTO.getJudgeDistrict());
+            task.setFilterCause(filterDTO.getJudgeCause());
+            task.setStatus(TASK_STATUS_FILTERING);
+            verdictTaskMapper.insert(task);
+            taskId.set(task.getUid());
+            logger.info("Center端创建任务记录成功，任务ID：{}，AgentID：{}", taskId.get(), agentId);
+
+            // 2. 构建outputPrefix（核心：任务id_时间戳，作为传递给Agent的前缀）
+            String timeSuffix = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
+            String outputPrefix = taskId.get() + "_" + timeSuffix; // 对应Agent接口的outputPrefix参数
+            logger.info("构建输出前缀outputPrefix：{}，将传递给Agent端", outputPrefix);
+
+            // 3. 调用Agent端接口（逻辑不变）
+            WebClient webClient = centerWebClientService.center2AgentWebClient(agentId);
+            if (webClient == null) {
+                logger.error("Center端发送查询失败：创建Agent通信客户端失败，agentId={}", agentId);
+                updateTaskStatus(taskId.get(), TASK_STATUS_COMPLETED);
+                return Body.error("创建Agent通信连接失败，请检查Agent状态");
+            }
+
+            WebClient.ResponseSpec responseSpec = webClient.post()
+                    .uri(uriBuilder -> uriBuilder
+                            .path("/verdict/query2Embeddings")
+                            .queryParam("outputPrefix", outputPrefix) // 传递outputPrefix参数
+                            .build())
+                    .bodyValue(filterDTO)
+                    .accept(MediaType.APPLICATION_OCTET_STREAM)
+                    .retrieve();
+
+            // 4. 解析响应并处理文件（修改：创建任务专属文件夹+调整pkl保存路径）
+            Mono<Body<String>> resultMono = responseSpec.toEntity(Resource.class)
+                    .map(responseEntity -> {
+                        HttpHeaders headers = responseEntity.getHeaders();
+                        Resource fileResource = responseEntity.getBody();
+
+                        String codeStr = headers.getFirst("X-Code");
+                        String message = headers.getFirst("X-Message");
+                        if (message != null) {
+                            message = decodeURIComponent(message);
+                        }
+                        int code = (codeStr != null && !codeStr.isEmpty()) ? Integer.parseInt(codeStr) : 0;
+
+                        updateTaskStatus(taskId.get(), TASK_STATUS_COMPLETED);
+
+                        if (code != 1 || fileResource == null || !fileResource.exists()) {
+                            String errorMsg = message != null ? message : "Agent端预处理失败，未返回有效文件";
+                            logger.error("Center端接收Agent文件失败：{}，任务ID：{}", errorMsg, taskId.get());
+                            return Body.error("Agent端预处理失败：" + errorMsg);
+                        }
+
+                        String corePath = my.getCore_path();
+                        if (corePath == null || corePath.trim().isEmpty()) {
+                            throw new RuntimeException("Center端核心路径未配置，无法保存文件");
+                        }
+                        // 关键修改1：构建output根目录和任务专属文件夹路径
+                        java.io.File outputRootDir = new java.io.File(corePath, PKL_SAVE_DIR);
+                        java.io.File taskFolder = new java.io.File(outputRootDir, outputPrefix); // 文件夹名=outputPrefix
+
+                        // 关键修改2：创建任务专属文件夹（若不存在）
+                        if (!outputRootDir.exists()) {
+                            outputRootDir.mkdirs();
+                        }
+                        if (!taskFolder.exists()) {
+                            boolean mkdirSuccess = taskFolder.mkdirs();
+                            if (!mkdirSuccess) {
+                                String errorMsg = "创建任务专属文件夹失败，路径：" + taskFolder.getAbsolutePath();
+                                logger.error(errorMsg);
+                                throw new RuntimeException(errorMsg);
+                            }
+                            logger.info("成功创建Center端任务专属文件夹：{}", taskFolder.getAbsolutePath());
+                        }
+                        // 校验：确保任务路径是文件夹（防止被文件占用）
+                        if (taskFolder.exists() && !taskFolder.isDirectory()) {
+                            String errorMsg = "任务专属文件夹路径被文件占用，路径：" + taskFolder.getAbsolutePath();
+                            logger.error(errorMsg);
+                            throw new RuntimeException(errorMsg);
+                        }
+
+                        // 关键修改3：pkl文件保存到任务专属文件夹，文件名不变
+                        String newFileName = outputPrefix + FILE_SEPARATOR + PKL_SUFFIX_TAG; // 文件名保持原有规则不变
+                        java.io.File localFile = new java.io.File(taskFolder, newFileName); // 路径改为任务专属文件夹
+
+                        try (OutputStream outputStream = new FileOutputStream(localFile)) {
+                            FileCopyUtils.copy(fileResource.getInputStream(), outputStream);
+                        } catch (IOException e) {
+                            String errorMsg = "文件保存失败：" + localFile.getAbsolutePath() + "，原因：" + e.getMessage();
+                            logger.error(errorMsg, e);
+                            throw new RuntimeException(errorMsg, e);
+                        }
+
+                        String localFilePath = localFile.getAbsolutePath();
+                        String resultData = localFilePath + "|" + outputPrefix + "|" + taskId.get();
+                        logger.info("Center端成功保存文件到本地：{}，基础文件名：{}，任务ID：{}", localFilePath, outputPrefix, taskId.get());
+                        return Body.success(resultData, "Agent端预处理成功，文件已保存到Center：" + localFilePath);
+                    });
+
+            return resultMono.block();
+
+        } catch (Exception e) {
+            String errorMsg = "跨Center-Agent通信异常：" + e.getMessage();
+            logger.error("Center端转发查询异常，AgentID：{}，任务ID：{}", agentId, taskId.get(), e);
+            if (taskId.get() > 0) {
+                updateTaskStatus(taskId.get(), TASK_STATUS_COMPLETED);
+            }
+            return Body.error(errorMsg);
+        }
+    }
+
+    /**
+     * 最简版：仅更新任务状态为指定值
+     */
+    private void updateTaskStatus(Long taskId, String status) {
+        if (taskId == null || taskId <= 0) {
+            logger.warn("更新任务状态失败：任务ID为空或无效");
+            return;
+        }
+        try {
+            LambdaUpdateWrapper<VerdictTask> updateWrapper = new LambdaUpdateWrapper<VerdictTask>()
+                    .eq(VerdictTask::getUid, taskId)
+                    .set(VerdictTask::getStatus, status);
+            verdictTaskMapper.update(null, updateWrapper);
+            logger.info("任务状态更新完成，任务ID：{}，状态：{}", taskId, status);
+        } catch (Exception e) {
+            logger.error("更新任务状态异常，任务ID：{}", taskId, e);
+        }
+    }
+
+    // 原updateTaskStatus方法保留，新增重载方法：更新状态+备注
+    private void updateTaskStatusAndRemark(Long taskId, String status, String remark) {
+        if (taskId == null || taskId <= 0) {
+            logger.warn("更新任务状态和备注失败：任务ID为空或无效");
+            return;
+        }
+        try {
+            LambdaUpdateWrapper<VerdictTask> updateWrapper = new LambdaUpdateWrapper<VerdictTask>()
+                    .eq(VerdictTask::getUid, taskId)
+                    .set(VerdictTask::getStatus, status)
+                    .set(VerdictTask::getRemark, remark); // 新增：更新remark字段 // 可选：新增结束时间（若VerdictTask有该字段）
+            verdictTaskMapper.update(null, updateWrapper);
+            logger.info("任务状态和备注更新完成，任务ID：{}，状态：{}，备注：{}", taskId, status, remark);
+        } catch (Exception e) {
+            logger.error("更新任务状态和备注异常，任务ID：{}", taskId, e);
+        }
+    }
+
+    /**
+     * 解码URL编码字符串
+     */
+    private String decodeURIComponent(String encodedStr) {
+        try {
+            return java.net.URLDecoder.decode(encodedStr, StandardCharsets.UTF_8.name());
+        } catch (Exception e) {
+            logger.warn("解码字符串失败：{}", encodedStr, e);
+            return encodedStr;
+        }
+    }
+
+    /**
+     * 上传输入文件并执行Python脚本生成emb文件
+     * 【性能测试版本】：记录Python脚本执行时间
+     * @param inputFile 上传的输入文本文件
+     * @param pklPath pkl文件的绝对路径
+     * @return Body<String>：code=1成功（data=emb文件绝对路径），code≠1失败
+     */
+    public Body<String> computeInput(MultipartFile inputFile, String pklPath, String baseFileName, Long taskId) {
+        long methodStartTime = System.currentTimeMillis();
+        try {
+            logger.info("[性能] computeInput开始执行：上传文件名称={}，pkl文件路径={}", inputFile.getOriginalFilename(), pklPath);
+
+            // 原有参数校验逻辑不变...
+            if (inputFile == null || inputFile.isEmpty()) {
+                logger.error("computeInput失败：上传的输入文件为空");
+                updateTaskStatusAndRemark(taskId, "输入处理失败", "上传的输入文件为空");
+                return Body.error("输入文件不能为空，请重新上传");
+            }
+            if (pklPath == null || pklPath.trim().isEmpty() || !Files.exists(Paths.get(pklPath))) {
+                logger.error("computeInput失败：pkl文件路径无效或文件不存在，pklPath={}", pklPath);
+                updateTaskStatusAndRemark(taskId, "输入处理失败", "pkl文件路径无效或文件不存在：" + pklPath);
+                return Body.error("pkl文件路径无效或文件不存在，请检查");
+            }
+            String corePath = my.getCore_path();
+            if (corePath == null || corePath.trim().isEmpty()) {
+                logger.error("computeInput失败：Center端核心路径未配置");
+                return Body.error("系统核心路径未配置，无法执行脚本");
+            }
+
+            updateTaskStatusAndRemark(taskId, "输入处理中", "开始处理上传文件：" + inputFile.getOriginalFilename() + "，pkl文件路径：" + pklPath);
+            logger.info("任务ID：{}，状态更新为“输入处理中”", taskId);
+
+            // 原有query目录创建、上传文件保存逻辑不变...
+            java.io.File queryDir = new java.io.File(corePath, QUERY_DIR);
+            if (!queryDir.exists()) {
+                boolean mkdirSuccess = queryDir.mkdirs();
+                if (!mkdirSuccess) {
+                    String errorMsg = "创建query目录失败，路径：" + queryDir.getAbsolutePath();
+                    logger.error(errorMsg);
+                    updateTaskStatusAndRemark(taskId, "输入处理失败", errorMsg);
+                    return Body.error(errorMsg);
+                }
+            }
+            if (queryDir.exists() && !queryDir.isDirectory()) {
+                String errorMsg = "query目录路径被文件占用，路径：" + queryDir.getAbsolutePath();
+                logger.error(errorMsg);
+                return Body.error(errorMsg);
+            }
+
+            String originalFileName = inputFile.getOriginalFilename();
+            java.io.File savedInputFile = new java.io.File(queryDir, originalFileName);
+            try (OutputStream outputStream = new FileOutputStream(savedInputFile)) {
+                FileCopyUtils.copy(inputFile.getInputStream(), outputStream);
+            } catch (IOException e) {
+                String errorMsg = "保存上传文件失败：" + savedInputFile.getAbsolutePath() + "，原因：" + e.getMessage();
+                logger.error(errorMsg, e);
+                return Body.error(errorMsg);
+            }
+            logger.info("上传文件已成功保存到：{}", savedInputFile.getAbsolutePath());
+            
+            // 保存输入文件路径到任务备注中
+            String inputFilePath = savedInputFile.getAbsolutePath();
+            VerdictTask task = verdictTaskMapper.selectById(taskId);
+            if (task != null) {
+                String remark = task.getRemark();
+                if (remark == null || remark.isEmpty()) {
+                    remark = "inputFilePath:" + inputFilePath;
+                } else if (!remark.contains("inputFilePath:")) {
+                    remark += "\ninputFilePath:" + inputFilePath;
+                }
+                LambdaUpdateWrapper<VerdictTask> updateWrapper = new LambdaUpdateWrapper<VerdictTask>()
+                        .eq(VerdictTask::getUid, taskId)
+                        .set(VerdictTask::getRemark, remark);
+                verdictTaskMapper.update(null, updateWrapper);
+            }
+
+            // 原有Python脚本路径校验逻辑不变...
+            java.io.File pyScriptFile = new java.io.File(corePath, PY_SCRIPT_NAME);
+            if (!pyScriptFile.exists() || !pyScriptFile.isFile()) {
+                String errorMsg = "Python脚本不存在，路径：" + pyScriptFile.getAbsolutePath();
+                logger.error(errorMsg);
+                updateTaskStatusAndRemark(taskId, "输入处理失败", errorMsg);
+                return Body.error(errorMsg);
+            }
+
+            // 关键修改1：构建output根目录和任务专属文件夹路径（文件夹名=baseFileName）
+            java.io.File outputRootDir = new java.io.File(corePath, PKL_SAVE_DIR);
+            java.io.File taskFolder = new java.io.File(outputRootDir, baseFileName); // 文件夹名=baseFileName（即outputPrefix）
+
+            // 关键修改2：确保任务专属文件夹存在（无需重复创建，兼容sendQuery已创建的情况）
+            if (!outputRootDir.exists()) {
+                outputRootDir.mkdirs();
+            }
+            if (!taskFolder.exists()) {
+                boolean mkdirSuccess = taskFolder.mkdirs();
+                if (!mkdirSuccess) {
+                    String errorMsg = "创建任务专属文件夹失败，路径：" + taskFolder.getAbsolutePath();
+                    logger.error(errorMsg);
+                    updateTaskStatusAndRemark(taskId, "输入处理失败", errorMsg);
+                    return Body.error(errorMsg);
+                }
+                logger.info("成功创建Center端任务专属文件夹：{}", taskFolder.getAbsolutePath());
+            }
+            // 校验：确保任务路径是文件夹
+            if (taskFolder.exists() && !taskFolder.isDirectory()) {
+                String errorMsg = "任务专属文件夹路径被文件占用，路径：" + taskFolder.getAbsolutePath();
+                logger.error(errorMsg);
+                updateTaskStatusAndRemark(taskId, "输入处理失败", errorMsg);
+                return Body.error(errorMsg);
+            }
+
+            // 关键修改3：emb文件保存到任务专属文件夹，文件名不变
+            String embFileName = baseFileName + FILE_SEPARATOR + EMB_SUFFIX_TAG; // 文件名保持原有规则不变
+            java.io.File embOutputFile = new java.io.File(taskFolder, embFileName); // 路径改为任务专属文件夹
+            String embOutputFilePath = embOutputFile.getAbsolutePath();
+
+            // 原有Python命令拼接、脚本执行逻辑不变...
+            String pythonPath = "/disk/zkx/miniconda3/bin/python";
+            String fullCmd = String.format(
+                    "%s \"%s\" \"%s\" \"%s\" -o \"%s\"",
+                    pythonPath,
+                    pyScriptFile.getAbsolutePath(),
+                    savedInputFile.getAbsolutePath(),
+                    pklPath,
+                    embOutputFilePath
+            );
+            logger.info("拼接后的Python执行命令：{}", fullCmd);
+
+            // 性能测试：记录Python脚本执行时间
+            long scriptStartTime = System.currentTimeMillis();
+            Body<String> scriptResult = executePythonScript(fullCmd, embOutputFilePath);
+            long scriptTime = System.currentTimeMillis() - scriptStartTime;
+            logger.info("[性能] P0 Python脚本(p0preprocess.py)执行耗时: {}ms", scriptTime);
+            
+            if (scriptResult.getCode() != 1) {
+                logger.error("Python脚本执行失败，错误信息：{}", scriptResult.getMessage());
+                updateTaskStatusAndRemark(taskId, "输入处理失败", scriptResult.getMessage());
+                return Body.error("脚本执行失败：" + scriptResult.getMessage());
+            }
+
+            long methodTime = System.currentTimeMillis() - methodStartTime;
+            logger.info("[性能] computeInput总耗时: {}ms (其中Python脚本: {}ms)", methodTime, scriptTime);
+            logger.info("computeInput执行成功，生成的emb文件路径：{}", embOutputFilePath);
+            updateTaskStatusAndRemark(taskId, "输入处理完成", "上传文件处理成功，emb文件路径：" + embOutputFilePath + "，Python脚本耗时：" + scriptTime + "ms");
+            logger.info("任务ID：{}，状态更新为“输入处理完成”", taskId);
+            return Body.success(embOutputFilePath, "emb文件生成成功，路径：" + embOutputFilePath);
+
+        } catch (Exception e) {
+            String errorMsg = "computeInput执行异常：" + e.getMessage();
+            logger.error(errorMsg, e);
+            updateTaskStatusAndRemark(taskId, "输入处理失败", "上传文件处理失败，原因：" + errorMsg);
+            logger.info("任务ID：{}，状态更新为“输入处理失败”", taskId);
+            return Body.error(errorMsg);
+        }
+    }
+
+    /**
+     * 扩展串联流程：包含Garnet离线/在线阶段+文件传输+状态管理
+     * 【性能测试版本】：记录每个阶段的执行时间
+     */
+    public Body<String> sendAndCompute(String agentId, VerdictFilterDTO filterDTO, MultipartFile inputFile) {
+        AtomicLong taskId = new AtomicLong(0);
+        String baseFileName = null;
+        String embFilePath = null;
+        
+        // 性能测试：记录各阶段耗时
+        long totalStartTime = System.currentTimeMillis();
+        long stageStartTime;
+        StringBuilder perfLog = new StringBuilder();
+        perfLog.append("\n╔══════════════════════════════════════════════════════════════╗\n");
+        perfLog.append("║           类案检索全流程性能测试报告 (Center端)                  ║\n");
+        perfLog.append("╠══════════════════════════════════════════════════════════════╣\n");
+        
+        try {
+            logger.info("开始执行sendAndCompute全流程，AgentID：{}，上传文件名称：{}", agentId, inputFile.getOriginalFilename());
+
+            // 1. 调用sendQuery获取pkl文件
+            stageStartTime = System.currentTimeMillis();
+            Body<String> sendQueryResult = sendQuery(agentId, filterDTO);
+            long sendQueryTime = System.currentTimeMillis() - stageStartTime;
+            perfLog.append(String.format("║ [阶段1] P1数据筛选+Embedding生成: %8d ms              ║\n", sendQueryTime));
+            
+            if (sendQueryResult.getCode() != 1) {
+                String errorMsg = "sendQuery执行失败：" + sendQueryResult.getMessage();
+                logger.error(errorMsg);
+                return Body.error(errorMsg);
+            }
+            String[] resultArr = sendQueryResult.getData().split("\\|");
+            if (resultArr.length != 3) {
+                logger.error("sendQuery返回数据格式异常");
+                return Body.error("获取pkl文件信息失败");
+            }
+            String pklFilePath = resultArr[0];
+            baseFileName = resultArr[1];
+            taskId.set(Long.parseLong(resultArr[2]));
+            logger.info("[性能] sendQuery耗时: {}ms, taskId={}, baseFileName={}", sendQueryTime, taskId.get(), baseFileName);
+
+            // 2. 调用computeInput生成emb文件
+            stageStartTime = System.currentTimeMillis();
+            Body<String> computeInputResult = computeInput(inputFile, pklFilePath, baseFileName, taskId.get());
+            long computeInputTime = System.currentTimeMillis() - stageStartTime;
+            perfLog.append(String.format("║ [阶段2] P0查询文件处理+Embedding生成: %8d ms          ║\n", computeInputTime));
+            
+            if (computeInputResult.getCode() != 1) {
+                String errorMsg = "computeInput执行失败：" + computeInputResult.getMessage();
+                logger.error(errorMsg);
+                updateTaskStatusAndRemark(taskId.get(), TASK_STATUS_FAILED, errorMsg);
+                return Body.error(errorMsg);
+            }
+            embFilePath = computeInputResult.getData();
+            logger.info("[性能] computeInput耗时: {}ms, embFilePath={}", computeInputTime, embFilePath);
+
+            // 3. 执行P1离线阶段（调用Agent端接口执行Garnet离线命令）
+            stageStartTime = System.currentTimeMillis();
+            updateTaskStatusAndRemark(taskId.get(), TASK_STATUS_OFFLINE_RUNNING,
+                    "开始在P1执行Garnet离线阶段，baseFileName=" + baseFileName);
+            Body<String> offlineResult = executeP1OfflineStage(agentId, baseFileName);
+            long offlineTime = System.currentTimeMillis() - stageStartTime;
+            perfLog.append(String.format("║ [阶段3] Garnet P1离线阶段(KMeans+秘密共享): %8d ms    ║\n", offlineTime));
+            
+            if (offlineResult.getCode() != 1) {
+                String errorMsg = "P1离线阶段执行失败：" + offlineResult.getMessage();
+                logger.error(errorMsg);
+                updateTaskStatusAndRemark(taskId.get(), TASK_STATUS_FAILED, errorMsg);
+                return Body.error(errorMsg);
+            }
+            updateTaskStatusAndRemark(taskId.get(), TASK_STATUS_OFFLINE_COMPLETED,
+                    "P1离线阶段执行完成，生成文件已保存至P1服务器");
+            logger.info("[性能] P1离线阶段耗时: {}ms", offlineTime);
+
+            // 4. 传输P0所需文件（复用WebClient流传输，替代scp命令）
+            stageStartTime = System.currentTimeMillis();
+            updateTaskStatusAndRemark(taskId.get(), TASK_STATUS_FILE_TRANSFERRING,
+                    "开始传输P0所需数据文件，baseFileName=" + baseFileName);
+            Body<String> transferResult = transferP0FilesFromP1(agentId, baseFileName);
+            long transferTime = System.currentTimeMillis() - stageStartTime;
+            perfLog.append(String.format("║ [阶段4] P0数据文件传输(P1→P0): %8d ms                 ║\n", transferTime));
+            
+            if (transferResult.getCode() != 1) {
+                String errorMsg = "P0文件传输失败：" + transferResult.getMessage();
+                logger.error(errorMsg);
+                updateTaskStatusAndRemark(taskId.get(), TASK_STATUS_FAILED, errorMsg);
+                return Body.error(errorMsg);
+            }
+            updateTaskStatusAndRemark(taskId.get(), TASK_STATUS_FILE_TRANSFER_COMPLETED,
+                    "P0数据文件传输完成，保存路径=" + transferResult.getData());
+            logger.info("[性能] P0文件传输耗时: {}ms", transferTime);
+
+            // 5. 生成并传输SSL证书（调用Agent端生成证书，再传输到P0）
+            stageStartTime = System.currentTimeMillis();
+            updateTaskStatusAndRemark(taskId.get(), TASK_STATUS_SSL_GENERATING,
+                    "开始生成并传输SSL证书");
+            Body<String> sslResult = generateAndTransferSSL(agentId);
+            long sslTime = System.currentTimeMillis() - stageStartTime;
+            perfLog.append(String.format("║ [阶段5] SSL证书生成+传输: %8d ms                      ║\n", sslTime));
+            
+            if (sslResult.getCode() != 1) {
+                String errorMsg = "SSL证书生成/传输失败：" + sslResult.getMessage();
+                logger.error(errorMsg);
+                updateTaskStatusAndRemark(taskId.get(), TASK_STATUS_FAILED, errorMsg);
+                return Body.error(errorMsg);
+            }
+            updateTaskStatusAndRemark(taskId.get(), TASK_STATUS_SSL_COMPLETED,
+                    "SSL证书生成/传输完成，保存路径=" + sslResult.getData());
+            logger.info("[性能] SSL证书生成/传输耗时: {}ms", sslTime);
+
+            // 6. 同时启动在线阶段
+            stageStartTime = System.currentTimeMillis();
+            updateTaskStatusAndRemark(taskId.get(), TASK_STATUS_ONLINE_RUNNING,
+                    "开始执行Garnet在线阶段，topK=" + GARNET_TOP_K);
+            Body<String> onlineResult = executeOnlineStage(agentId, baseFileName);
+            long onlineTime = System.currentTimeMillis() - stageStartTime;
+            perfLog.append(String.format("║ [阶段6] Garnet在线阶段(MPC安全计算): %8d ms            ║\n", onlineTime));
+            
+            if (onlineResult.getCode() != 1) {
+                String errorMsg = "在线阶段执行失败：" + onlineResult.getMessage();
+                logger.error(errorMsg);
+                updateTaskStatusAndRemark(taskId.get(), TASK_STATUS_FAILED, errorMsg);
+                return Body.error(errorMsg);
+            }
+            updateTaskResultIds(taskId.get(), onlineResult.getData()); // 调用新增方法更新resultIds
+            updateTaskStatusAndRemark(taskId.get(), TASK_STATUS_ONLINE_COMPLETED,
+                    "在线阶段执行完成，查询结果=" + onlineResult.getData());
+            logger.info("[性能] 在线阶段耗时: {}ms", onlineTime);
+
+            // 7. 最终状态更新
+            long totalTime = System.currentTimeMillis() - totalStartTime;
+            perfLog.append("╠══════════════════════════════════════════════════════════════╣\n");
+            perfLog.append(String.format("║ [总计] 全流程总耗时: %8d ms (%.2f 秒)                  ║\n", totalTime, totalTime / 1000.0));
+            perfLog.append("╠══════════════════════════════════════════════════════════════╣\n");
+            perfLog.append("║ 各阶段耗时占比:                                              ║\n");
+            perfLog.append(String.format("║   - P1数据筛选+Embedding: %.1f%%                             ║\n", sendQueryTime * 100.0 / totalTime));
+            perfLog.append(String.format("║   - P0查询处理: %.1f%%                                       ║\n", computeInputTime * 100.0 / totalTime));
+            perfLog.append(String.format("║   - Garnet离线阶段: %.1f%%                                   ║\n", offlineTime * 100.0 / totalTime));
+            perfLog.append(String.format("║   - 文件传输: %.1f%%                                         ║\n", transferTime * 100.0 / totalTime));
+            perfLog.append(String.format("║   - SSL证书: %.1f%%                                          ║\n", sslTime * 100.0 / totalTime));
+            perfLog.append(String.format("║   - Garnet在线阶段: %.1f%%                                   ║\n", onlineTime * 100.0 / totalTime));
+            perfLog.append("╚══════════════════════════════════════════════════════════════╝\n");
+            
+            // 输出性能测试报告
+            logger.info(perfLog.toString());
+            
+            updateTaskStatusAndRemark(taskId.get(), TASK_STATUS_FINISHED,
+                    "全流程执行完成，最终结果=" + onlineResult.getData() + "，总耗时=" + totalTime + "ms");
+            logger.info("sendAndCompute全流程执行成功，taskId={}，最终结果={}，总耗时={}ms", taskId.get(), onlineResult.getData(), totalTime);
+//            return Body.success(onlineResult.getData(), "全流程执行成功，已获取Top-K结果");
+            return Body.success(String.valueOf(taskId.get()), "全流程执行成功，任务ID=" + taskId.get());
+
+        } catch (Exception e) {
+            String errorMsg = "sendAndCompute全流程异常：" + e.getMessage();
+            logger.error(errorMsg, e);
+            long totalTime = System.currentTimeMillis() - totalStartTime;
+            logger.error("[性能] 全流程异常终止，已执行时间: {}ms", totalTime);
+            if (taskId.get() > 0) {
+                updateTaskStatusAndRemark(taskId.get(), TASK_STATUS_FAILED, errorMsg);
+            }
+            return Body.error(errorMsg);
+        }
+    }
+
+    /**
+     * 更新任务的resultIds字段
+     * @param taskId 任务ID
+     * @param resultIds 拼接后的fileIds字符串
+     */
+    private void updateTaskResultIds(Long taskId, String resultIds) {
+        if (taskId == null || taskId <= 0 || resultIds == null) {
+            logger.warn("更新resultIds失败：任务ID无效或resultIds为空");
+            return;
+        }
+        try {
+            LambdaUpdateWrapper<VerdictTask> updateWrapper = new LambdaUpdateWrapper<VerdictTask>()
+                    .eq(VerdictTask::getUid, taskId)
+                    .set(VerdictTask::getResultIds, resultIds); // 设置resultIds字段
+            verdictTaskMapper.update(null, updateWrapper);
+            logger.info("任务resultIds更新完成，任务ID：{}，resultIds：{}", taskId, resultIds);
+        } catch (Exception e) {
+            logger.error("更新任务resultIds异常，任务ID：{}", taskId, e);
+        }
+    }
+
+    /**
+     * 调用Agent端执行P1离线阶段命令
+     */
+    private Body<String> executeP1OfflineStage(String agentId, String baseFileName) {
+        try {
+            WebClient webClient = centerWebClientService.center2AgentWebClient(agentId);
+            if (webClient == null) {
+                return Body.error("创建Agent通信客户端失败");
+            }
+
+            // 构建P1离线命令参数
+            Map<String, String> params = new HashMap<>();
+            params.put("garnetDir", GARNET_DIR_P1);
+            params.put("dataDir", "/home/zkx/DAVEX/Core/output/" + baseFileName);
+            params.put("dataset", baseFileName);
+            params.put("clusters", String.valueOf(GARNET_CLUSTERS));
+
+            Body<String> result = webClient.post()
+                    .uri("/verdict/executeP1Offline")
+                    .bodyValue(params)
+                    .retrieve()
+                    .bodyToMono(Body.class)
+                    .block();
+
+            if (result == null || result.getCode() != 1) {
+                String msg = result != null ? result.getMessage() : "P1离线阶段执行无响应";
+                return Body.error(msg);
+            }
+            return Body.success(result.getData(), "P1离线阶段执行成功");
+
+        } catch (Exception e) {
+            logger.error("执行P1离线阶段异常", e);
+            return Body.error("P1离线阶段执行异常：" + e.getMessage());
+        }
+    }
+
+    /**
+     * 从P1传输P0所需文件到P0服务器（适配文件/目录传输）
+     */
+    private Body<String> transferP0FilesFromP1(String agentId, String baseFileName) {
+        try {
+            WebClient webClient = centerWebClientService.center2AgentWebClientCustomize(agentId);
+            if (webClient == null) {
+                return Body.error("创建Agent通信客户端失败");
+            }
+
+            List<String> p0Files = Arrays.asList(
+                    baseFileName + "-P0-shares",
+                    baseFileName + "-P0-triples",
+                    baseFileName + "-P0-centroid-shares",
+                    baseFileName + "-P0-cluster-triples",
+                    baseFileName + "-meta",
+                    "2-fss"
+            );
+
+            String p0SaveDir = Paths.get(my.getCore_path(), PKL_SAVE_DIR, baseFileName).toString();
+            java.io.File dir = new java.io.File(p0SaveDir);
+            if (!dir.exists()) {
+                dir.mkdirs();
+            }
+
+            for (String fileName : p0Files) {
+                String sourceFilePath = "/home/zkx/DAVEX/Core/output/" + baseFileName + "/" + fileName;
+                // 修复1：给2-fss文件添加.zip后缀，避免与文件夹重名
+                String targetFileName = fileName.equals("2-fss") ? fileName + ".zip" : fileName;
+                String targetPath = Paths.get(p0SaveDir, targetFileName).toString();
+                java.io.File targetFile = new java.io.File(targetPath);
+
+                AtomicBoolean transferSuccess = new AtomicBoolean(false);
+                AtomicReference<Exception> transferException = new AtomicReference<>();
+
+                try (OutputStream outputStream = new FileOutputStream(targetFile)) {
+                    Flux<DataBuffer> dataBufferFlux = webClient.get()
+                            .uri(uriBuilder -> uriBuilder
+                                    .path("/verdict/getP1FileOrDir")
+                                    .queryParam("filePath", sourceFilePath)
+                                    .build())
+                            .retrieve()
+                            .bodyToFlux(DataBuffer.class);
+
+                    DataBufferUtils.write(dataBufferFlux, outputStream)
+                            .doOnComplete(() -> {
+                                logger.info("文件传输完成：{}", targetFile.getAbsolutePath());
+                                transferSuccess.set(true);
+                            })
+                            .doOnError(e -> {
+                                logger.error("文件传输失败：{}", fileName, e);
+                                transferException.set(new RuntimeException("文件传输失败：" + fileName, e));
+                            })
+                            .doOnNext(DataBufferUtils::release)
+                            .blockLast(Duration.ofMinutes(5));
+
+                    if (transferException.get() != null) {
+                        throw transferException.get();
+                    }
+                    if (!transferSuccess.get()) {
+                        throw new RuntimeException("文件传输未完成：" + fileName);
+                    }
+                } catch (Exception e) {
+                    logger.warn("传输文件{}失败，跳过该文件", fileName, e);
+                    continue;
+                }
+
+                // 修复2：解压带.zip后缀的2-fss文件
+                if (fileName.equals("2-fss")) {
+                    java.io.File zipFile = new java.io.File(p0SaveDir, "2-fss.zip");
+                    unzip(zipFile, new java.io.File(p0SaveDir));
+                    if (zipFile.exists()) {
+                        boolean deleteSuccess = zipFile.delete();
+                        if (!deleteSuccess) {
+                            logger.warn("删除2-fss临时ZIP文件失败：{}", zipFile.getAbsolutePath());
+                        }
+                    }
+                    logger.info("成功接收并解压P1目录：{}，保存至：{}", fileName, new java.io.File(p0SaveDir, "2-fss").getAbsolutePath());
+                } else {
+                    logger.info("成功接收P1文件：{}，保存至：{}", fileName, targetPath);
+                }
+            }
+
+            return Body.success(p0SaveDir, "P0文件传输完成");
+
+        } catch (Exception e) {
+            logger.error("传输P0文件异常", e);
+            return Body.error("P0文件传输异常：" + e.getMessage());
+        }
+    }
+
+    /**
+     * 新增辅助方法：解压ZIP文件到指定目录
+     */
+    private void unzip(java.io.File zipFile, java.io.File targetDir) throws IOException {
+        // 核心修复1：检查2-fss路径是否已存在且是文件，若存在则删除
+        java.io.File fssDir = new java.io.File(targetDir, "2-fss");
+        if (fssDir.exists() && !fssDir.isDirectory()) {
+            boolean deleteSuccess = fssDir.delete();
+            if (!deleteSuccess) {
+                logger.error("删除已存在的2-fss文件失败，路径：{}", fssDir.getAbsolutePath());
+                throw new IOException("删除2-fss文件失败，无法创建文件夹");
+            }
+            logger.info("已删除占用2-fss路径的文件，路径：{}", fssDir.getAbsolutePath());
+        }
+
+        // 强制创建2-fss子文件夹
+        if (!fssDir.exists()) {
+            boolean mkdirSuccess = fssDir.mkdirs();
+            if (!mkdirSuccess) {
+                logger.error("创建2-fss子文件夹失败，路径：{}", fssDir.getAbsolutePath());
+                throw new IOException("创建2-fss子文件夹失败");
+            }
+        }
+
+        try (ZipInputStream zis = new ZipInputStream(new FileInputStream(zipFile))) {
+            ZipEntry entry;
+            while ((entry = zis.getNextEntry()) != null) {
+                if (entry.isDirectory()) {
+                    zis.closeEntry();
+                    continue;
+                }
+
+                String entryFileName = new java.io.File(entry.getName()).getName();
+                java.io.File entryFile = new java.io.File(fssDir, entryFileName);
+
+                // 核心修复2：再次检查目标文件的父目录是否为目录（防御性编程）
+                if (entryFile.getParentFile().exists() && !entryFile.getParentFile().isDirectory()) {
+                    throw new IOException("父路径不是目录：" + entryFile.getParentFile().getAbsolutePath());
+                }
+                if (!entryFile.getParentFile().exists()) {
+                    entryFile.getParentFile().mkdirs();
+                }
+
+                try (OutputStream os = new FileOutputStream(entryFile)) {
+                    byte[] buffer = new byte[4096];
+                    int len;
+                    while ((len = zis.read(buffer)) > 0) {
+                        os.write(buffer, 0, len);
+                    }
+                }
+                logger.info("成功解压文件到2-fss目录：{}", entryFile.getAbsolutePath());
+                zis.closeEntry();
+            }
+        } catch (IOException e) {
+            logger.error("解压2-fss ZIP包失败，ZIP路径：{}", zipFile.getAbsolutePath(), e);
+            throw e;
+        }
+    }
+
+    /**
+     * 生成并传输SSL证书（修复通配符问题）
+     */
+    private Body<String> generateAndTransferSSL(String agentId) {
+        try {
+            WebClient webClient = centerWebClientService.center2AgentWebClient(agentId);
+            if (webClient == null) {
+                return Body.error("创建Agent通信客户端失败");
+            }
+
+            // 1. 调用P1生成SSL证书
+            Body<String> sslGenResult = webClient.post()
+                    .uri("/verdict/generateSSL")
+                    .bodyValue(Collections.singletonMap("garnetDir", GARNET_DIR_P1))
+                    .retrieve()
+                    .bodyToMono(Body.class)
+                    .block();
+
+            if (sslGenResult == null || sslGenResult.getCode() != 1) {
+                String msg = sslGenResult != null ? sslGenResult.getMessage() : "SSL证书生成无响应";
+                return Body.error(msg);
+            }
+
+            // 2. 调用Agent接口获取具体的证书文件名（替代通配符）
+            String certDir = Paths.get(GARNET_DIR_P1, "Player-Data").toString();
+            Body<List<String>> certListResult = webClient.get()
+                    .uri(uriBuilder -> uriBuilder
+                            .path("/verdict/listSSLCerts")
+                            .queryParam("certDir", certDir)
+                            .build())
+                    .retrieve()
+                    .bodyToMono(Body.class)
+                    .block();
+
+            if (certListResult == null || certListResult.getCode() != 1 || certListResult.getData().isEmpty()) {
+                String msg = certListResult != null ? certListResult.getMessage() : "未获取到证书文件列表";
+                logger.warn("{}，跳过证书传输", msg);
+                return Body.success("", "未获取到证书文件，跳过传输");
+            }
+            List<String> certFilePaths = certListResult.getData();
+
+            // 3. P0证书保存目录
+            String p0SslDir = Paths.get(GARNET_DIR_P0, "Player-Data").toString();
+            java.io.File sslDir = new java.io.File(p0SslDir);
+            if (!sslDir.exists()) {
+                sslDir.mkdirs();
+            }
+
+            // 4. 逐个传输具体的证书文件（调用新接口）
+            for (String certFilePath : certFilePaths) {
+                // 调用支持文件/目录的新接口
+                Mono<Resource> resourceMono = webClient.get()
+                        .uri(uriBuilder -> uriBuilder
+                                .path("/verdict/getP1FileOrDir") // 改用新接口
+                                .queryParam("filePath", certFilePath)
+                                .build())
+                        .retrieve()
+                        .bodyToMono(Resource.class);
+
+                Resource resource = resourceMono.block();
+                if (resource == null || !resource.exists()) {
+                    logger.warn("获取证书文件失败：{}，跳过该文件", certFilePath);
+                    continue;
+                }
+
+                // 获取文件名（如 "player0.pem"）
+                String fileName = Optional.ofNullable(resource.getFilename()).orElse(Paths.get(certFilePath).getFileName().toString());
+                java.io.File targetFile = new java.io.File(p0SslDir, fileName);
+                // 保存证书文件
+                try (OutputStream os = new FileOutputStream(targetFile)) {
+                    FileCopyUtils.copy(resource.getInputStream(), os);
+                }
+                logger.info("成功接收SSL证书：{}，保存至：{}", fileName, targetFile.getAbsolutePath());
+            }
+
+            return Body.success(p0SslDir, "SSL证书生成/传输完成");
+
+        } catch (Exception e) {
+            logger.error("SSL证书生成/传输异常", e);
+            return Body.error("SSL证书生成/传输异常：" + e.getMessage());
+        }
+    }
+
+    /**
+     * 执行在线阶段（调整执行顺序：先启动P0，再启动P1，确保P0能接收P1数据并输出结果）
+     */
+    private Body<String> executeOnlineStage(String agentId, String baseFileName) {
+        try {
+            // 1. 异步启动P0在线阶段（Center端本地执行，先处于监听状态）
+            AtomicReference<Body<String>> p0ResultRef = new AtomicReference<>();
+            Thread p0Thread = new Thread(() -> {
+                String p0Cmd = String.format(
+                        "%s/ann-party.x 0 -pn %d -h %s -d %s -n %s -k %d",
+                        GARNET_DIR_P0,
+                        GARNET_PORT,
+                        P0_IP,
+                        Paths.get(my.getCore_path(), PKL_SAVE_DIR, baseFileName).toString(),
+                        baseFileName,
+                        GARNET_TOP_K
+                );
+                Body<String> p0Result = executeLocalCommand(p0Cmd, "P0在线阶段");
+                p0ResultRef.set(p0Result);
+            });
+            p0Thread.start();
+
+            // 2. 等待P0启动完成（1秒，确保P0已进入监听状态）
+            TimeUnit.SECONDS.sleep(1);
+
+            // 3. 调用Agent端执行P1在线阶段命令（同步调用，确保P1正常启动）
+            Body<String> p1OnlineResult = executeP1OnlineStage(agentId, baseFileName);
+            if (p1OnlineResult.getCode() != 1) {
+                // 若P1启动失败，终止P0线程
+                p0Thread.interrupt();
+                return Body.error("P1在线阶段执行失败：" + p1OnlineResult.getMessage());
+            }
+
+            // 4. 等待P0线程执行完成，获取P0输出结果
+            p0Thread.join(TIMEOUT_MINUTES * 60 * 1000); // 超时时间与命令执行一致
+            Body<String> p0Result = p0ResultRef.get();
+            if (p0Result == null || p0Result.getCode() != 1) {
+                String errorMsg = p0Result != null ? p0Result.getMessage() : "P0在线阶段执行超时/无结果";
+                return Body.error("P0在线阶段执行失败：" + errorMsg);
+            }
+
+            // 5. 解析P0输出中的Top-K结果（核心：仅解析P0的输出）
+            String topKResult = parseTopKResult(p0Result.getData());
+            return Body.success(topKResult, "在线阶段执行成功，解析P0输出结果完成");
+
+        } catch (InterruptedException e) {
+            logger.error("在线阶段执行被中断", e);
+            Thread.currentThread().interrupt();
+            return Body.error("在线阶段执行被中断：" + e.getMessage());
+        } catch (Exception e) {
+            logger.error("执行在线阶段异常", e);
+            return Body.error("在线阶段执行异常：" + e.getMessage());
+        }
+    }
+
+    /**
+     * 新增：调用Agent端执行P1在线阶段命令
+     */
+    private Body<String> executeP1OnlineStage(String agentId, String baseFileName) {
+        try {
+            WebClient webClient = centerWebClientService.center2AgentWebClient(agentId);
+            if (webClient == null) {
+                return Body.error("创建Agent通信客户端失败");
+            }
+
+            // 构建P1在线命令参数
+            Map<String, String> params = new HashMap<>();
+            params.put("garnetDir", GARNET_DIR_P1);
+            params.put("port", String.valueOf(GARNET_PORT));
+            params.put("targetIp", P0_IP); // P1的-h参数是P0的IP
+            params.put("dataDir", "/home/zkx/DAVEX/Core/output/" + baseFileName);
+            params.put("dataset", baseFileName);
+            params.put("topK", String.valueOf(GARNET_TOP_K));
+
+            Body<String> result = webClient.post()
+                    .uri("/verdict/executeP1Online") // Agent端新增的接口
+                    .bodyValue(params)
+                    .retrieve()
+                    .bodyToMono(Body.class)
+                    .block();
+
+            if (result == null || result.getCode() != 1) {
+                String msg = result != null ? result.getMessage() : "P1在线阶段执行无响应";
+                return Body.error(msg);
+            }
+            return Body.success(result.getData(), "P1在线阶段执行成功");
+
+        } catch (Exception e) {
+            logger.error("调用Agent执行P1在线阶段异常", e);
+            return Body.error("P1在线阶段执行异常：" + e.getMessage());
+        }
+    }
+
+    /**
+     * 执行本地命令（封装Garnet脚本执行逻辑）
+     */
+    private Body<String> executeLocalCommand(String fullCmd, String stageName) {
+        // 关键修改1：用AtomicReference包装Process，解决lambda变量引用问题
+        AtomicReference<Process> processRef = new AtomicReference<>();
+        try {
+            logger.info("执行{}命令：{}", stageName, fullCmd);
+            ProcessBuilder processBuilder = new ProcessBuilder();
+            if (System.getProperty("os.name").toLowerCase().contains("windows")) {
+                processBuilder.command("cmd.exe", "/c", fullCmd);
+            } else {
+                processBuilder.command("/bin/bash", "-c", fullCmd);
+            }
+            processBuilder.redirectErrorStream(true);
+            Process process = processBuilder.start();
+            processRef.set(process); // 将process存入AtomicReference
+
+            // 读取输出
+            StringBuilder output = new StringBuilder();
+            new Thread(() -> {
+                // 关键修改2：从AtomicReference中获取process对象
+                Process innerProcess = processRef.get();
+                if (innerProcess == null) {
+                    logger.error("{}执行线程中Process对象为空", stageName);
+                    return;
+                }
+                try (BufferedReader reader = new BufferedReader(new InputStreamReader(innerProcess.getInputStream()))) {
+                    String line;
+                    while ((line = reader.readLine()) != null) {
+                        output.append(line).append("\n");
+                        logger.info("{}输出：{}", stageName, line);
+                    }
+                } catch (IOException e) {
+                    logger.error("读取{}输出异常", stageName, e);
+                }
+            }).start();
+
+            // 等待执行完成
+            boolean isCompleted = process.waitFor(TIMEOUT_MINUTES, TimeUnit.MINUTES);
+            if (!isCompleted) {
+                process.destroyForcibly();
+                return Body.error(stageName + "执行超时");
+            }
+
+            int exitCode = process.exitValue();
+            if (exitCode != 0) {
+                return Body.error(stageName + "执行失败，退出码：" + exitCode);
+            }
+
+            return Body.success(output.toString(), stageName + "执行成功");
+
+        } catch (Exception e) {
+            logger.error("执行{}命令异常", stageName, e);
+            return Body.error(stageName + "执行异常：" + e.getMessage());
+        } finally {
+            // 关键修改3：从AtomicReference中获取process并销毁
+            Process process = processRef.get();
+            if (process != null && process.isAlive()) {
+                process.destroyForcibly();
+            }
+        }
+    }
+
+    /**
+     * 解析P0输出中的Top-K结果，并拼接前缀生成完整fileIds
+     * @param p0Output P0在线阶段的输出内容
+     * @return 拼接后的完整fileIds字符串（如 "DAVEX-C1-G1-D133,DAVEX-C1-G1-D87"）
+     */
+    private String parseTopKResult(String p0Output) {
+        StringBuilder resultIds = new StringBuilder();
+        String prefix = "DAVEX-C1-G1-D";
+        String[] lines = p0Output.split("\n");
+        boolean inResult = false;
+
+        for (String line : lines) {
+            // 匹配结果开始行，标记进入结果解析阶段
+            if (line.contains("[Result] 查询") && line.contains("Top-5 结果:")) {
+                inResult = true;
+                continue; // 跳过该行，直接解析后续的fileId行
+            }
+
+            // 仅在结果阶段解析fileId行
+            if (inResult) {
+                // 匹配格式：  #1: fileId=133
+                line = line.trim();
+                // 检查是否包含fileId=，且是Top-N结果行
+                if (line.startsWith("#") && line.contains("fileId=")) {
+                    // 提取fileId=后的数字
+                    String[] parts = line.split("fileId=");
+                    if (parts.length >= 2) {
+                        String idStr = parts[1].trim();
+                        // 校验是否为纯数字（过滤可能的多余字符）
+                        if (idStr.matches("\\d+")) {
+                            if (resultIds.length() > 0) {
+                                resultIds.append(","); // 多个ID用逗号分隔
+                            }
+                            resultIds.append(prefix).append(idStr);
+                        }
+                    }
+                }
+                // 遇到空行，结束结果解析（避免解析性能统计等内容）
+                else if (line.isEmpty()) {
+                    inResult = false;
+                }
+            }
+        }
+
+        // 若未提取到任何fileId，返回空字符串（避免存入错误内容）
+        return resultIds.length() > 0 ? resultIds.toString() : "";
+    }
+
+    private Body<String> executePythonScript(String fullCmd, String expectedOutputFilePath) {
+        Process process = null;
+        try {
+            ProcessBuilder processBuilder = new ProcessBuilder();
+            if (System.getProperty("os.name").toLowerCase().contains("windows")) {
+                processBuilder.command("cmd.exe", "/c", fullCmd);
+            } else {
+                processBuilder.command("/bin/bash", "-c", fullCmd);
+            }
+            processBuilder.redirectErrorStream(true);
+            process = processBuilder.start();
+
+            readProcessOutput(process);
+
+            boolean isCompleted = process.waitFor(TIMEOUT_MINUTES, TimeUnit.MINUTES);
+            if (!isCompleted) {
+                process.destroyForcibly();
+                return Body.error("脚本执行超时，已强制终止");
+            }
+
+            int exitCode = process.exitValue();
+            if (exitCode != 0) {
+                return Body.error("脚本执行失败，退出码：" + exitCode);
+            }
+
+            if (!Files.exists(Paths.get(expectedOutputFilePath))) {
+                return Body.error("脚本执行成功，但未找到生成的文件：" + expectedOutputFilePath);
+            }
+
+            return Body.success(expectedOutputFilePath, "脚本执行成功");
+
+        } catch (IOException e) {
+            logger.error("执行脚本时发生IO异常", e);
+            return Body.error("执行脚本失败：" + e.getMessage());
+        } catch (InterruptedException e) {
+            logger.error("脚本执行被中断", e);
+            Thread.currentThread().interrupt();
+            return Body.error("脚本执行被中断：" + e.getMessage());
+        } finally {
+            if (process != null && process.isAlive()) {
+                process.destroyForcibly();
+            }
+        }
+    }
+
+    /**
+     * 获取系统可用的Python命令（优先python3，其次python）
+     * @return 可用的Python命令字符串（如"python3"或"python"）
+     */
+    private String getPythonCommand() {
+        // 测试python是否可用
+        if (isCommandAvailable("python")) {
+            return "python";
+        }
+        // 测试python3是否可用
+        if (isCommandAvailable("python3")) {
+            return "python3";
+        }
+        // 两者都不可用：抛出异常（需安装Python环境）
+        throw new RuntimeException("系统未找到Python环境（python/python3命令均不可用），请先安装Python并配置环境变量");
+    }
+
+    /**
+     * 检查系统命令是否可用（如python3、python）
+     * @param command 待检查的命令
+     * @return true=可用，false=不可用
+     */
+    private boolean isCommandAvailable(String command) {
+        Process process = null;
+        try {
+            // 执行命令：command --version（仅测试是否能启动，不关心输出）
+            process = new ProcessBuilder(command, "--version").start();
+            return process.waitFor(5, TimeUnit.SECONDS); // 5秒内返回视为可用
+        } catch (Exception e) {
+            return false;
+        } finally {
+            if (process != null) {
+                process.destroy();
+            }
+        }
+    }
+
+    /**
+     * 读取进程输出（stdout/stderr）并记录日志
+     * @param process 执行中的进程
+     */
+    private void readProcessOutput(Process process) {
+        new Thread(() -> {
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    logger.info("Python脚本输出：{}", line);
+                }
+            } catch (IOException e) {
+                logger.error("读取Python脚本输出时发生异常", e);
+            }
+        }).start();
+    }
+
+    /**
+     * 获取所有类案检索任务
+     * @return 所有任务列表
+     */
+    public Body<List<VerdictTask>> getAllTasks() {
+        try {
+            logger.info("开始获取所有类案检索任务");
+            List<VerdictTask> tasks = verdictTaskMapper.selectList(null);
+            logger.info("成功获取所有类案检索任务，共{}条", tasks.size());
+            return Body.success(tasks, "获取任务列表成功");
+        } catch (Exception e) {
+            String errorMsg = "获取所有任务异常：" + e.getMessage();
+            logger.error(errorMsg, e);
+            return Body.error(errorMsg);
+        }
+    }
+
+    /**
+     * 根据任务id获取某个任务
+     * @param taskId 任务ID
+     * @return 任务信息
+     */
+    public Body<VerdictTask> getTaskById(Long taskId) {
+        try {
+            logger.info("开始根据任务ID获取任务，任务ID：{}", taskId);
+            if (taskId == null || taskId <= 0) {
+                logger.warn("任务ID无效：{}", taskId);
+                return Body.error("任务ID无效");
+            }
+            VerdictTask task = verdictTaskMapper.selectById(taskId);
+            if (task == null) {
+                logger.warn("未找到任务，任务ID：{}", taskId);
+                return Body.error("未找到指定任务");
+            }
+            logger.info("成功获取任务，任务ID：{}", taskId);
+            return Body.success(task, "获取任务成功");
+        } catch (Exception e) {
+            String errorMsg = "获取任务异常：" + e.getMessage();
+            logger.error("获取任务异常，任务ID：{}", taskId, e);
+            return Body.error(errorMsg);
+        }
+    }
+
+    /**
+     * 根据任务id编辑某个任务
+     * @param taskId 任务ID
+     * @param task 要更新的任务信息
+     * @return 更新结果
+     */
+    public Body<String> updateTask(Long taskId, VerdictTask task) {
+        try {
+            logger.info("开始更新任务，任务ID：{}", taskId);
+            if (taskId == null || taskId <= 0) {
+                logger.warn("任务ID无效：{}", taskId);
+                return Body.error("任务ID无效");
+            }
+            if (task == null) {
+                logger.warn("任务信息为空");
+                return Body.error("任务信息不能为空");
+            }
+            
+            // 检查任务是否存在
+            VerdictTask existingTask = verdictTaskMapper.selectById(taskId);
+            if (existingTask == null) {
+                logger.warn("未找到要更新的任务，任务ID：{}", taskId);
+                return Body.error("未找到指定任务");
+            }
+
+            // 设置任务ID，确保更新的是正确的任务
+            task.setUid(taskId);
+            
+            // 使用LambdaUpdateWrapper构建更新条件
+            LambdaUpdateWrapper<VerdictTask> updateWrapper = new LambdaUpdateWrapper<VerdictTask>()
+                    .eq(VerdictTask::getUid, taskId);
+            
+            // 只更新非空字段
+            if (task.getAgentId() != null) {
+                updateWrapper.set(VerdictTask::getAgentId, task.getAgentId());
+            }
+            if (task.getApplicationId() != null) {
+                updateWrapper.set(VerdictTask::getApplicationId, task.getApplicationId());
+            }
+            if (task.getStartTime() != null) {
+                updateWrapper.set(VerdictTask::getStartTime, task.getStartTime());
+            }
+            if (task.getFilterStart() != null) {
+                updateWrapper.set(VerdictTask::getFilterStart, task.getFilterStart());
+            }
+            if (task.getFilterEnd() != null) {
+                updateWrapper.set(VerdictTask::getFilterEnd, task.getFilterEnd());
+            }
+            if (task.getFilterType() != null) {
+                updateWrapper.set(VerdictTask::getFilterType, task.getFilterType());
+            }
+            if (task.getFilterDistrict() != null) {
+                updateWrapper.set(VerdictTask::getFilterDistrict, task.getFilterDistrict());
+            }
+            if (task.getFilterCause() != null) {
+                updateWrapper.set(VerdictTask::getFilterCause, task.getFilterCause());
+            }
+            if (task.getStatus() != null) {
+                updateWrapper.set(VerdictTask::getStatus, task.getStatus());
+            }
+            if (task.getRemark() != null) {
+                updateWrapper.set(VerdictTask::getRemark, task.getRemark());
+            }
+            if (task.getResultIds() != null) {
+                updateWrapper.set(VerdictTask::getResultIds, task.getResultIds());
+            }
+            if (task.getHasRead() != null) {
+                updateWrapper.set(VerdictTask::getHasRead, task.getHasRead());
+            }
+
+            int updateCount = verdictTaskMapper.update(null, updateWrapper);
+            if (updateCount > 0) {
+                logger.info("成功更新任务，任务ID：{}", taskId);
+                return Body.success("任务更新成功", "任务更新成功");
+            } else {
+                logger.warn("更新任务失败，任务ID：{}", taskId);
+                return Body.error("任务更新失败");
+            }
+        } catch (Exception e) {
+            String errorMsg = "更新任务异常：" + e.getMessage();
+            logger.error("更新任务异常，任务ID：{}", taskId, e);
+            return Body.error(errorMsg);
+        }
+    }
+
+    /**
+     * 根据fileId和agentId读取文件内容
+     * @param fileId 文件ID
+     * @param agentId 代理ID
+     * @return 文件内容
+     */
+    public Body<String> readFile(String fileId, String agentId) {
+        try {
+            logger.info("开始读取文件内容，文件ID：{}，代理ID：{}", fileId, agentId);
+            
+            if (fileId == null || fileId.trim().isEmpty()) {
+                logger.warn("文件ID无效：{}", fileId);
+                return Body.error("文件ID不能为空");
+            }
+            if (agentId == null || agentId.trim().isEmpty()) {
+                logger.warn("代理ID无效：{}", agentId);
+                return Body.error("代理ID不能为空");
+            }
+
+            // 通过 Agent 端接口读取文件内容
+            WebClient webClient = centerWebClientService.center2AgentWebClient(agentId);
+            if (webClient == null) {
+                logger.error("创建Agent通信客户端失败，agentId={}", agentId);
+                return Body.error("创建Agent通信连接失败，请检查Agent状态");
+            }
+
+            // 调用 Agent 端的读取文件接口
+            Body<String> result = webClient.post()
+                    .uri(uriBuilder -> uriBuilder
+                            .path("/directory/fileFolder/readFile")
+                            .queryParam("fileId", fileId)
+                            .queryParam("agentId", agentId)
+                            .build())
+                    .retrieve()
+                    .bodyToMono(Body.class)
+                    .block();
+
+            if (result == null || result.getCode() != 1) {
+                String errorMsg = result != null ? result.getMessage() : "读取文件内容失败";
+                logger.error("读取文件内容失败，文件ID：{}，代理ID：{}，错误：{}", fileId, agentId, errorMsg);
+                return Body.error("读取文件内容失败：" + errorMsg);
+            }
+
+            logger.info("成功读取文件内容，文件ID：{}", fileId);
+            return Body.success(result.getData(), "读取文件内容成功");
+
+        } catch (Exception e) {
+            String errorMsg = "读取文件异常：" + e.getMessage();
+            logger.error("读取文件异常，文件ID：{}，代理ID：{}", fileId, agentId, e);
+            return Body.error(errorMsg);
+        }
+    }
+
+    /**
+     * 提取文件中的证据或判决内容
+     * @param filePath 文件路径
+     * @param extractType 提取类型（evidence或verdict）
+     * @return 提取的内容
+     */
+    public Body<String> extractContent(String filePath, String extractType) {
+        try {
+            logger.info("开始提取文件内容，文件路径：{}，提取类型：{}", filePath, extractType);
+            
+            if (filePath == null || filePath.trim().isEmpty()) {
+                return Body.error("文件路径不能为空");
+            }
+            if (!extractType.equals("evidence") && !extractType.equals("verdict")) {
+                return Body.error("提取类型必须是evidence或verdict");
+            }
+
+            java.io.File file = new java.io.File(filePath);
+            if (!file.exists()) {
+                return Body.error("文件不存在，文件路径: " + filePath);
+            }
+
+            String corePath = my.getCore_path();
+            if (corePath == null || corePath.trim().isEmpty()) {
+                return Body.error("系统核心路径未配置");
+            }
+
+            // 构建Python脚本路径
+            String pyScriptPath = Paths.get(corePath, "p0analyze.py").toString();
+            java.io.File pyScriptFile = new java.io.File(pyScriptPath);
+            if (!pyScriptFile.exists() || !pyScriptFile.isFile()) {
+                return Body.error("Python脚本不存在，路径：" + pyScriptPath);
+            }
+
+            // 执行Python脚本提取内容
+            String pythonPath = "/disk/zkx/miniconda3/bin/python";
+            String fullCmd = String.format(
+                    "%s \"%s\" \"%s\" %s",
+                    pythonPath,
+                    pyScriptFile.getAbsolutePath(),
+                    filePath,
+                    extractType
+            );
+            logger.info("执行Python命令：{}", fullCmd);
+
+            Body<String> scriptResult = executePythonScriptForExtract(fullCmd);
+            if (scriptResult.getCode() != 1) {
+                logger.error("Python脚本执行失败，错误信息：{}", scriptResult.getMessage());
+                return Body.error("提取内容失败：" + scriptResult.getMessage());
+            }
+
+            logger.info("成功提取文件内容，提取类型：{}", extractType);
+            return Body.success(scriptResult.getData(), "提取内容成功");
+
+        } catch (Exception e) {
+            String errorMsg = "提取内容异常：" + e.getMessage();
+            logger.error("提取内容异常，文件路径：{}，提取类型：{}", filePath, extractType, e);
+            return Body.error(errorMsg);
+        }
+    }
+
+    /**
+     * 执行Python脚本提取内容（返回标准输出）
+     */
+    private Body<String> executePythonScriptForExtract(String fullCmd) {
+        Process process = null;
+        try {
+            ProcessBuilder processBuilder = new ProcessBuilder();
+            if (System.getProperty("os.name").toLowerCase().contains("windows")) {
+                processBuilder.command("cmd.exe", "/c", fullCmd);
+            } else {
+                processBuilder.command("/bin/bash", "-c", fullCmd);
+            }
+            processBuilder.redirectErrorStream(true);
+            process = processBuilder.start();
+
+            // 读取输出
+            StringBuilder output = new StringBuilder();
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    output.append(line).append("\n");
+                    logger.info("Python脚本输出：{}", line);
+                }
+            }
+
+            // 等待执行完成
+            boolean isCompleted = process.waitFor(TIMEOUT_MINUTES, TimeUnit.MINUTES);
+            if (!isCompleted) {
+                process.destroyForcibly();
+                return Body.error("脚本执行超时");
+            }
+
+            int exitCode = process.exitValue();
+            if (exitCode != 0) {
+                return Body.error("脚本执行失败，退出码：" + exitCode + "，输出：" + output.toString());
+            }
+
+            return Body.success(output.toString().trim(), "脚本执行成功");
+
+        } catch (Exception e) {
+            logger.error("执行Python脚本异常", e);
+            return Body.error("执行脚本异常：" + e.getMessage());
+        } finally {
+            if (process != null && process.isAlive()) {
+                process.destroyForcibly();
+            }
+        }
+    }
+
+    /**
+     * 获取任务的输入文件内容
+     * @param taskId 任务ID
+     * @return 输入文件内容
+     */
+    public Body<String> getTaskInputFile(Long taskId) {
+        try {
+            logger.info("开始获取任务输入文件，任务ID：{}", taskId);
+            
+            if (taskId == null || taskId <= 0) {
+                return Body.error("任务ID无效");
+            }
+
+            // 获取任务信息
+            VerdictTask task = verdictTaskMapper.selectById(taskId);
+            if (task == null) {
+                return Body.error("未找到指定任务");
+            }
+
+            // 从remark中解析输入文件路径（格式：inputFilePath:xxx）
+            String remark = task.getRemark();
+            String inputFilePath = null;
+            if (remark != null && remark.contains("inputFilePath:")) {
+                String[] parts = remark.split("inputFilePath:");
+                if (parts.length > 1) {
+                    inputFilePath = parts[1].split("\n")[0].trim();
+                }
+            }
+
+            // 如果remark中没有，尝试根据任务信息推断
+            if (inputFilePath == null || inputFilePath.isEmpty()) {
+                String corePath = my.getCore_path();
+                if (corePath == null || corePath.trim().isEmpty()) {
+                    return Body.error("系统核心路径未配置");
+                }
+                // 根据任务创建时间查找query目录下最近的文件
+                java.io.File queryDir = new java.io.File(corePath, QUERY_DIR);
+                if (!queryDir.exists() || !queryDir.isDirectory()) {
+                    return Body.error("查询目录不存在");
+                }
+                java.io.File[] files = queryDir.listFiles((dir, name) -> name.endsWith(".txt"));
+                if (files == null || files.length == 0) {
+                    return Body.error("未找到输入文件");
+                }
+                // 获取最近修改的文件
+                java.util.Arrays.sort(files, (f1, f2) -> Long.compare(f2.lastModified(), f1.lastModified()));
+                inputFilePath = files[0].getAbsolutePath();
+            }
+
+            // 读取文件内容
+            java.io.File inputFile = new java.io.File(inputFilePath);
+            if (!inputFile.exists()) {
+                return Body.error("输入文件不存在，路径: " + inputFilePath);
+            }
+
+            StringBuilder content = new StringBuilder();
+            try (BufferedReader reader = new BufferedReader(new FileReader(inputFile, StandardCharsets.UTF_8))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    content.append(line).append("\n");
+                }
+            }
+
+            logger.info("成功获取任务输入文件，任务ID：{}", taskId);
+            return Body.success(content.toString(), "获取输入文件成功");
+
+        } catch (Exception e) {
+            String errorMsg = "获取输入文件异常：" + e.getMessage();
+            logger.error("获取输入文件异常，任务ID：{}", taskId, e);
+            return Body.error(errorMsg);
+        }
+    }
+
+    /**
+     * 对比两个文件的证据或判决内容
+     * @param taskId 任务ID
+     * @param resultFileId 结果文件ID
+     * @param agentId 代理ID
+     * @param extractType 提取类型（evidence或verdict）
+     * @return 对比结果（包含两个文件的内容）
+     */
+    public Body<Map<String, String>> compareContent(Long taskId, String resultFileId, String agentId, String extractType) {
+        java.io.File tempInputFile = null;
+        java.io.File tempResultFile = null;
+        try {
+            logger.info("开始对比内容，任务ID：{}，结果文件ID：{}，提取类型：{}", taskId, resultFileId, extractType);
+            
+            if (taskId == null || taskId <= 0) {
+                return Body.error("任务ID无效");
+            }
+            if (resultFileId == null || resultFileId.trim().isEmpty()) {
+                return Body.error("结果文件ID不能为空");
+            }
+            if (agentId == null || agentId.trim().isEmpty()) {
+                return Body.error("代理ID不能为空");
+            }
+            if (!extractType.equals("evidence") && !extractType.equals("verdict")) {
+                return Body.error("提取类型必须是evidence或verdict");
+            }
+
+            // 1. 获取输入文件内容并提取
+            Body<String> inputFileResult = getTaskInputFile(taskId);
+            if (inputFileResult.getCode() != 1) {
+                return Body.error("获取输入文件失败：" + inputFileResult.getMessage());
+            }
+
+            // 保存输入文件到临时文件
+            String corePath = my.getCore_path();
+            tempInputFile = java.io.File.createTempFile("input_", ".txt", new java.io.File(corePath));
+            try (FileWriter writer = new FileWriter(tempInputFile, StandardCharsets.UTF_8)) {
+                writer.write(inputFileResult.getData());
+            }
+
+            // 提取输入文件的内容
+            Body<String> inputExtractResult = extractContent(tempInputFile.getAbsolutePath(), extractType);
+            if (inputExtractResult.getCode() != 1) {
+                return Body.error("提取输入文件内容失败：" + inputExtractResult.getMessage());
+            }
+            String inputContent = inputExtractResult.getData();
+
+            // 2. 获取结果文件内容并提取
+            Body<String> resultFileResult = readFile(resultFileId, agentId);
+            if (resultFileResult.getCode() != 1) {
+                return Body.error("获取结果文件失败：" + resultFileResult.getMessage());
+            }
+
+            // 保存结果文件到临时文件
+            tempResultFile = java.io.File.createTempFile("result_", ".txt", new java.io.File(corePath));
+            try (FileWriter writer = new FileWriter(tempResultFile, StandardCharsets.UTF_8)) {
+                writer.write(resultFileResult.getData());
+            }
+
+            // 提取结果文件的内容
+            Body<String> resultExtractResult = extractContent(tempResultFile.getAbsolutePath(), extractType);
+            if (resultExtractResult.getCode() != 1) {
+                return Body.error("提取结果文件内容失败：" + resultExtractResult.getMessage());
+            }
+            String resultContent = resultExtractResult.getData();
+
+            // 3. 构建对比结果
+            Map<String, String> compareResult = new HashMap<>();
+            compareResult.put("inputContent", inputContent);
+            compareResult.put("resultContent", resultContent);
+
+            logger.info("成功对比内容，任务ID：{}", taskId);
+            return Body.success(compareResult, "对比成功");
+
+        } catch (Exception e) {
+            String errorMsg = "对比内容异常：" + e.getMessage();
+            logger.error("对比内容异常，任务ID：{}，结果文件ID：{}", taskId, resultFileId, e);
+            return Body.error(errorMsg);
+        } finally {
+            // 清理临时文件
+            if (tempInputFile != null && tempInputFile.exists()) {
+                tempInputFile.delete();
+            }
+            if (tempResultFile != null && tempResultFile.exists()) {
+                tempResultFile.delete();
+            }
+        }
+    }
+}

@@ -74,6 +74,10 @@ CREATE TABLE `file` (
     `hash` varchar(255) DEFAULT NULL,
     `example` varchar(255) DEFAULT NULL,
     `type` varchar(255) DEFAULT NULL,
+    `judge_time` timestamp NULL DEFAULT NULL,
+    `judge_type` varchar(255) NULL DEFAULT NULL,
+    `judge_district` varchar(255) NULL DEFAULT NULL,
+    `judge_cause` varchar(255) NULL DEFAULT NULL,
     PRIMARY KEY (`uid`)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci;
 

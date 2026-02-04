@@ -11,7 +11,7 @@ const router = createRouter({
     {
       path: '/',
       component: () => import('@/views/layout/newLayoutContainer.vue'),
-      redirect: '/datashare/fileTrans',
+      redirect: '/verdict/transfer',
       children: [
         {
           path: 'locate/locateCompute',
@@ -104,6 +104,32 @@ const router = createRouter({
         {
           path: 'user/notification',
           component: () => import('@/views/user/notification.vue'),
+        },
+        {
+          path: 'user/operationHistory',
+          component: () => import('@/views/user/operationHistory.vue'),
+        },
+        {
+          path: 'verdict/transfer',
+          component: () => import('@/views/verdict/transfer.vue'),
+        },
+        {
+          path: 'verdict/query',
+          component: () => import('@/views/verdict/query.vue'),
+        },
+        {
+          path: 'verdictResult/transfer',
+          component: () => import('@/views/verdictResult/transfer.vue'),
+        },
+        {
+          path: 'verdictResult/query',
+          component: () => import('@/views/verdictResult/query.vue'),
+        },
+        {
+          path: 'verdictResult/detail/:taskId', // 动态接收taskId参数
+          name: 'verdictResultDetail', // 必须和vue页面中router.push的name完全一致
+          component: () => import('@/views/verdictResult/resultDetail.vue'),
+          props: true // 可选：开启后组件可通过props接收taskId参数
         },
         // {
         //   path: 'auth/tokens',

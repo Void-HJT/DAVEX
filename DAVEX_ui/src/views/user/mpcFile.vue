@@ -488,6 +488,7 @@
 import { ref, onMounted } from 'vue'
 import { getMpcList, uploadMpc } from '../../api/mpC.js'
 import {genFileId, UploadInstance, UploadProps, UploadRawFile} from "element-plus";
+import { addOperationHistory } from '../../api/operationHistory.js'
 
 onMounted(() => {
   addcompileRarameter()
@@ -535,14 +536,35 @@ const uploadMethod = async () => {
       mpcSuccessMessage.value = `MPC文件上传成功`
       mpcSuccessVisible.value = true
       getMpcListMethod()
+      // 记录操作历史
+      await addOperationHistory({
+        operationType: '上传MPC文件',
+        operationObject: mpcTaskInfo.value.name,
+        result: '成功',
+        remark: `上传MPC程序 ${mpcTaskInfo.value.name}`
+      })
     }
     else {
       mpcFailedMessage.value = res.data.message
       mpcFailedVisible.value = true
+      // 记录失败操作
+      await addOperationHistory({
+        operationType: '上传MPC文件',
+        operationObject: mpcTaskInfo.value.name,
+        result: '失败',
+        remark: res.data.message || '上传失败'
+      })
     }
   }
   catch (error) {
     console.error('Failed to create MPC task:', error)
+    // 记录失败操作
+    await addOperationHistory({
+      operationType: '上传MPC文件',
+      operationObject: mpcTaskInfo.value.name,
+      result: '失败',
+      remark: error.message || '上传MPC文件失败'
+    })
   }
 }
 

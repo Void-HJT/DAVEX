@@ -86,9 +86,10 @@
               align="center"
           >
             <template v-slot="scope">
+<!--              v-if="scope.row.type === 'file' && scope.row.fileType?.includes('compare') && scope.row.name.endsWith('.csv')"-->
               <el-button
                   class="small-default-button"
-                  v-if="scope.row.type === 'file' && scope.row.fileType?.includes('compare') && scope.row.name.endsWith('.csv')"
+                  v-if="scope.row.type === 'file' && scope.row.name.endsWith('.csv')"
                   @click="
                   getTableHeaderMethod(
                     scope.row.agentId,
@@ -102,7 +103,7 @@
               </el-button>
               <el-button
                   class="small-default-button"
-                  v-if="scope.row.type === 'file' && scope.row.fileType?.includes('compare') && scope.row.name.endsWith('.txt')"
+                  v-if="scope.row.type === 'file' && scope.row.name.endsWith('.txt')"
                   @click="
                   getTXTExampleMethod(
                     scope.row.agentId,

@@ -49,6 +49,29 @@ public class CenterWebClientService {
                 .build();
     }
 
+    public WebClient center2AgentWebClientCustomize(String agentId) {
+        // 1. 自定义缓冲区大小（根据实际文件大小调整，比如设置为100MB）
+        int bufferSize = 100 * 1024 * 1024; // 100MB
+        ExchangeStrategies customizeStrategies = ExchangeStrategies.builder()
+                .codecs(configurer -> {
+                    // 增大默认的响应体缓存限制
+                    configurer.defaultCodecs().maxInMemorySize(bufferSize);
+                    // 禁用默认的DataBuffer缓存，改用流式传输
+                    configurer.defaultCodecs().enableLoggingRequestDetails(true);
+                })
+                .build();
+
+        LambdaQueryWrapper<Agent> queryWrapper = Wrappers.<Agent>lambdaQuery().eq(Agent::getUid, agentId);
+        Agent agent = agentMapper.selectOne(queryWrapper);
+        HttpClient httpClient = HttpClient.create();
+
+        // 3. 创建WebClient并应用配置
+        return WebClient.builder().clientConnector(new ReactorClientHttpConnector(httpClient))
+                .baseUrl("http://" + agent.getIp() + ":" + agent.getPort())
+                .exchangeStrategies(customizeStrategies)
+                .build();
+    }
+
 //    public WebClient center2AgentWebClientInAuth(String agent_id,String username,String password,String authId) throws Exception {
 //
 //        //判断是否有token

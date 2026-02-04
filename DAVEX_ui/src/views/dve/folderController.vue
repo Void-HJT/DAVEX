@@ -565,6 +565,7 @@ import {
   getRootByAgent
 } from '../../api/folderController.js'
 import { getGroup, getRuleByGroup, getApplication, getAgent } from '../../api/testDve.js'
+import { addOperationHistory } from '../../api/operationHistory.js'
 import { genFileId } from 'element-plus'
 import type { UploadInstance, UploadProps, UploadRawFile } from 'element-plus'
 import { nextTick, onMounted } from 'vue'
@@ -859,9 +860,25 @@ const uploadFileMethod = async () => {
     console.log(uploadFileBody.value)
     const res = await uploadFile(uploadFileBody.value)
     console.log(res.data)
+    // 记录操作历史
+    await addOperationHistory({
+      agentId: uploadFileBody.value.agentId,
+      operationType: '上传文件',
+      operationObject: uploadFileBody.value.file?.name || '未知文件',
+      result: '成功',
+      remark: `上传文件到目录 ${uploadFileBody.value.folderId}`
+    })
   }
   catch (error) {
-    console.error('Failed to create MPC task:', error)
+    console.error('Failed to upload file:', error)
+    // 记录失败操作
+    await addOperationHistory({
+      agentId: uploadFileBody.value.agentId,
+      operationType: '上传文件',
+      operationObject: uploadFileBody.value.file?.name || '未知文件',
+      result: '失败',
+      remark: error.message || '上传文件失败'
+    })
   }
 }
 
@@ -890,28 +907,68 @@ const createFolderMethod = async () => {
     console.log(createFolderBody.value.parentId)
     const res = await createFolder(createFolderBody.value)
     console.log(res)
+    // 记录操作历史
+    await addOperationHistory({
+      agentId: agentId.value,
+      operationType: '创建文件夹',
+      operationObject: createFolderBody.value.name,
+      result: '成功',
+      remark: `在目录 ${currentParentId.value} 下创建文件夹`
+    })
     findCurrentFolder()
   } catch (error) {
     console.error('Failed to create folder:', error)
+    // 记录失败操作
+    await addOperationHistory({
+      agentId: agentId.value,
+      operationType: '创建文件夹',
+      operationObject: createFolderBody.value.name,
+      result: '失败',
+      remark: error.message || '创建文件夹失败'
+    })
   }
 }
 
-const deleteFolderMethod = async (uid, agentId, type, parentId) => {
+const deleteFolderMethod = async (uid, targetAgentId, type, parentId) => {
   try {
     //如果是文件夹
     if (type === 'folder') {
-      deleteFolderBody.value.agentId = agentId
+      deleteFolderBody.value.agentId = targetAgentId
       deleteFolderBody.value.folderId = uid
       await deleteFolder(deleteFolderBody.value)
+      // 记录操作历史
+      await addOperationHistory({
+        agentId: targetAgentId,
+        operationType: '删除文件夹',
+        operationObject: uid,
+        result: '成功',
+        remark: `删除文件夹 ${uid}`
+      })
     } else {
-      deleteFileBody.value.agentId = agentId
+      deleteFileBody.value.agentId = targetAgentId
       deleteFileBody.value.fileId = uid
       deleteFileBody.value.folderId = parentId
       await deleteFile(deleteFileBody.value)
+      // 记录操作历史
+      await addOperationHistory({
+        agentId: targetAgentId,
+        operationType: '删除文件',
+        operationObject: uid,
+        result: '成功',
+        remark: `删除文件 ${uid}`
+      })
     }
     findCurrentFolder()
   } catch (error) {
     console.error('Failed to delete folder:', error)
+    // 记录失败操作
+    await addOperationHistory({
+      agentId: targetAgentId,
+      operationType: type === 'folder' ? '删除文件夹' : '删除文件',
+      operationObject: uid,
+      result: '失败',
+      remark: error.message || '删除失败'
+    })
   }
 }
 
@@ -1037,9 +1094,28 @@ const openFolderRenameBlock = (Uid, agentId, name) => {
 }
 
 const closeFolderRenameBlock = async () => {
-  await setFolderName(folderRenameBody.value)
-  folderRenameVisible.value = false
-  getDirectoryMethod()
+  try {
+    await setFolderName(folderRenameBody.value)
+    // 记录操作历史
+    await addOperationHistory({
+      agentId: folderRenameBody.value.agentId,
+      operationType: '重命名文件夹',
+      operationObject: folderRenameBody.value.folderId,
+      result: '成功',
+      remark: `重命名为 ${folderRenameBody.value.name}`
+    })
+    folderRenameVisible.value = false
+    getDirectoryMethod()
+  } catch (error) {
+    console.error('Failed to rename folder:', error)
+    await addOperationHistory({
+      agentId: folderRenameBody.value.agentId,
+      operationType: '重命名文件夹',
+      operationObject: folderRenameBody.value.folderId,
+      result: '失败',
+      remark: error.message || '重命名失败'
+    })
+  }
 }
 
 const openFileRenameBlockMethod = async (row) => {
@@ -1067,11 +1143,29 @@ const openFileRenameBlockMethod = async (row) => {
 }
 
 const closeFileRenameBlock = async () => {
-  const res = await updateFile(updateFileBody.value)
-  console.log(res)
-  fileRenameVisible.value = false
-  // getDirectoryMethod()
-  findCurrentFolder()
+  try {
+    const res = await updateFile(updateFileBody.value)
+    console.log(res)
+    // 记录操作历史
+    await addOperationHistory({
+      agentId: fileInfo.value.agentId,
+      operationType: '重命名文件',
+      operationObject: fileInfo.value.uid,
+      result: '成功',
+      remark: `重命名为 ${fileInfo.value.name}`
+    })
+    fileRenameVisible.value = false
+    findCurrentFolder()
+  } catch (error) {
+    console.error('Failed to rename file:', error)
+    await addOperationHistory({
+      agentId: fileInfo.value.agentId,
+      operationType: '重命名文件',
+      operationObject: fileInfo.value.uid,
+      result: '失败',
+      remark: error.message || '重命名失败'
+    })
+  }
 }
 
 const returnFrontDirectory = async () => {

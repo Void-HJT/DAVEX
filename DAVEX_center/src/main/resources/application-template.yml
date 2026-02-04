@@ -11,6 +11,7 @@ my:
   keycloak_password: ${MY_KEYCLOAK_PASSWORD:DAVEX_ADMIN}
   keycloak_id: ${MY_KEYCLOAK_ID:DAVEX-CXX50}
   env_path: ${MY_ENV_PATH:/home/drt/miniconda3/envs/sfenv}
+  core_path: ${MY_CORE_PATH:/disk/zkx/DAVEX/Core}
 
 garnet:
   enabled: ${GARNET_ENABLED:true}

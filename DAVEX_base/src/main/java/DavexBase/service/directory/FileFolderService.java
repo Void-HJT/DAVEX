@@ -7,15 +7,16 @@ import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
 import java.net.MalformedURLException;
 import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.MessageDigest;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import DavexBase.common.My;
 import DavexBase.entity.*;
@@ -35,6 +36,7 @@ import org.springframework.web.multipart.MultipartFile;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
@@ -312,7 +314,7 @@ public class FileFolderService {
     }
 
     // 上传文件
-    public Body<String> uploadFile(String agentId, String folderId, MultipartFile file, String baseDirectory) {
+    public Body<String> uploadFile(String agentId, String folderId, MultipartFile file, String baseDirectory, Integer privacy) {
         // 查找是否存在该文件夹
         LambdaQueryWrapper<Folder> queryFolderWrapper = Wrappers.<Folder>lambdaQuery()
                 .eq(Folder::getUid, folderId);
@@ -371,10 +373,156 @@ public class FileFolderService {
         fileRecord.setFolderId(folderId);
         fileRecord.setName(fileName);
         fileRecord.setSize(file.getSize());
+        if (privacy == 1) {
+            fileRecord.setType("private"); // 传1时置为private
+        } else {
+            fileRecord.setType("default"); // 默认/传0时置为default
+        }
 
         fileRecord.setCreateDate(new Timestamp(System.currentTimeMillis()));
         fileRecord.setLastUpdate(new Timestamp(System.currentTimeMillis()));
-        // 其他元数据设置
+
+        // 新增解析逻辑
+        if (privacy == 1) {
+            try {
+                String content = new String(file.getBytes(), StandardCharsets.UTF_8);
+
+                // 判决时间（中文数字日期）
+                String judgeTimeStr = null;
+                Pattern timePattern = Pattern.compile(
+                        "([〇一二三四五六七八九零十]{4})年" + // 匹配4位中文年份（如“二〇二四”）
+                                "([〇一二三四五六七八九零十]{1,3})月" +
+                                "([〇一二三四五六七八九零十]{1,3})日"
+                );
+                Matcher timeMatcher = timePattern.matcher(content);
+
+                if (timeMatcher.find()) {
+                    try {
+                        // 1. 提取中文年、月、日（重点确保年份是4个字符）
+                        String yearChinese = timeMatcher.group(1);
+                        String monthChinese = timeMatcher.group(2);
+                        String dayChinese = timeMatcher.group(3);
+
+                        // 新增：打印原始中文年份，验证是否为4个字符（如“二〇二四”）
+                        System.out.println("原始中文年份：" + yearChinese + "（长度：" + yearChinese.length() + "）");
+
+                        // 2. 中文转阿拉伯数字（重点修复年份转换逻辑）
+                        String yearArabic = chineseYearToArabic(yearChinese); // 专门处理年份
+                        String monthArabic = chineseNumToArabic(monthChinese);
+                        String dayArabic = chineseNumToArabic(dayChinese);
+
+                        // 3. 补零（确保月/日为2位，年份已确保4位）
+                        monthArabic = String.format("%02d", Integer.parseInt(monthArabic));
+                        dayArabic = String.format("%02d", Integer.parseInt(dayArabic));
+
+                        // 4. 构建标准格式（此时年份应为2024，而非4）
+                        judgeTimeStr = yearArabic + "-" + monthArabic + "-" + dayArabic;
+                        String fullTimeStr = judgeTimeStr + " 00:00:00"; // 完整时分秒
+                        System.out.println("待转换的完整时间：" + fullTimeStr);
+
+                        // 5. 转换为Timestamp（此时格式合法）
+                        Timestamp judgeTime = Timestamp.valueOf(fullTimeStr);
+                        fileRecord.setJudgeTime(judgeTime);
+                        System.out.println("成功解析日期：" + judgeTimeStr);
+
+                    } catch (NumberFormatException e) {
+                        System.err.println("数字转换错误：" + e.getMessage() + "（当前日期字符串：" + judgeTimeStr + "）");
+                    } catch (IllegalArgumentException e) {
+                        System.err.println("Timestamp格式错误：" + judgeTimeStr + "（需yyyy-MM-dd HH:mm:ss）");
+                    } catch (Exception e) {
+                        System.err.println("日期解析异常：" + e.getMessage());
+                    }
+                } else {
+                    System.out.println("未匹配到纯中文日期（格式：XXXX年XX月XX日）");
+                }
+
+                String titleArea = "";
+                if (content.length() > 200) {
+                    titleArea = content.substring(0, 200); // 截取前200字符（覆盖所有判决书标题）
+                } else {
+                    titleArea = content; // 文本过短时直接用全部内容
+                }
+                System.out.println("标题区域内容：" + titleArea); // 调试日志，确认标题区域是否正确
+
+                // 判决类型
+//            Matcher typeMatcher = Pattern.compile("刑\\s*事\\s*判\\s*决\\s*书").matcher(content);
+//            if (typeMatcher.find()) {
+//                fileRecord.setJudgeType(typeMatcher.group(0).replaceAll("\\s+", ""));
+//            }
+                String judgeDistrict = null;
+// 1. 优先匹配标题中的“中华人民共和国XX法院”（如最高人民法院）
+                Matcher nationalCourtMatcher = Pattern.compile("(中华人民共和国[\\u4e00-\\u9fa5]+人民法院)").matcher(titleArea);
+                if (nationalCourtMatcher.find()) {
+                    judgeDistrict = nationalCourtMatcher.group(1).replaceAll("\\s+", "");
+                } else {
+                    // 2. 若无国家级法院，再匹配标题中的“XX省/市+高级/中级/基层人民法院”
+                    Matcher localCourtMatcher = Pattern.compile("([\\u4e00-\\u9fa5]+?)(高级|中级|基层)[\\s\\r\\n]*人民法院").matcher(titleArea);
+                    if (localCourtMatcher.find()) {
+                        judgeDistrict = localCourtMatcher.group(1) + localCourtMatcher.group(2) + "人民法院";
+                    }
+                }
+// 赋值并验证（此时应得到“中华人民共和国最高人民法院”）
+                if (judgeDistrict != null) {
+                    fileRecord.setJudgeDistrict(judgeDistrict);
+                    System.out.println("成功解析标题中的法院：" + judgeDistrict);
+                } else {
+                    System.out.println("未在标题区域匹配到法院名称");
+                }
+
+                // 判决地点
+//            Matcher locMatcher = Pattern.compile("(中华人民共和国[\\u4e00-\\u9fa5]+法院)").matcher(content);
+//            if (locMatcher.find()) {
+//                fileRecord.setJudgeDistrict(locMatcher.group(1).replaceAll("\\s+", "").trim());
+//            }
+                String judgeType = null;
+// 匹配标题中的“XX判决书/裁定书”（支持分行/同行格式）
+                Matcher typeMatcher = Pattern.compile("(刑事|民事|行政)[\\s\\r\\n]*(判决|裁定)[\\s\\r\\n]*书").matcher(titleArea);
+                if (typeMatcher.find()) {
+                    judgeType = typeMatcher.group(1) + typeMatcher.group(2) + "书";
+                    fileRecord.setJudgeType(judgeType);
+                    System.out.println("成功解析标题中的判决类型：" + judgeType);
+                } else {
+                    System.out.println("未在标题区域匹配到判决类型");
+                }
+
+                // 案由
+                String judgeCause = null;
+// 1. 找“点击了解更多”这个固定锚点
+                int anchorIndex = titleArea.indexOf("点击了解更多");
+                if (anchorIndex != -1) {
+                    // 2. 截取锚点上方所有内容，再按换行分割成多行
+                    String contentBeforeAnchor = titleArea.substring(0, anchorIndex);
+                    String[] lines = contentBeforeAnchor.split("[\\r\\n]+"); // 按任意换行符切分
+
+                    // 3. 取上方最后一行（即“案  由	故意杀人”这行）
+                    if (lines.length > 0) {
+                        String targetLine = lines[lines.length - 1];
+                        // 4. 按空白字符分割该行，取最后一个非空片段（就是案由内容）
+                        String[] lineParts = targetLine.split("\\s+"); // 所有空白都能分割
+                        for (int i = lineParts.length - 1; i >= 0; i--) {
+                            String part = lineParts[i].trim();
+                            if (!part.isEmpty()) { // 找到最后一个非空白片段
+                                judgeCause = part;
+                                break;
+                            }
+                        }
+                    }
+                }
+
+// 赋值并日志
+                if (judgeCause != null) {
+                    fileRecord.setJudgeCause(judgeCause);
+                    System.out.println("成功解析案由：" + judgeCause);
+                } else {
+                    System.out.println("未找到有效案由内容");
+                }
+
+            } catch (Exception e) {
+                System.err.println("解析判决书信息失败：" + e.getMessage());
+            }
+        }
+
+        // 插入数据库
         fileMapper.insert(fileRecord);
 
         List<Center> centerList = centerMapper.selectList(new LambdaQueryWrapper<>());
@@ -971,5 +1119,172 @@ public class FileFolderService {
                 .eq(Folder::getAgentId, agentId);
         Folder folder = folderMapper.selectOne(queryWrapper);
         return Body.success(folder, "查询成功");
+    }
+
+    // 专门处理中文年份转换（确保“二〇二四”→2024，而非4）
+    public String chineseYearToArabic(String chineseYear) {
+        // 中文数字单字映射（每个字符对应1位阿拉伯数字）
+        Map<Character, String> yearMap = new HashMap<>();
+        yearMap.put('〇', "0");
+        yearMap.put('零', "0");
+        yearMap.put('一', "1");
+        yearMap.put('二', "2");
+        yearMap.put('三', "3");
+        yearMap.put('四', "4");
+        yearMap.put('五', "5");
+        yearMap.put('六', "6");
+        yearMap.put('七', "7");
+        yearMap.put('八', "8");
+        yearMap.put('九', "9");
+        // 年份中不会出现“十”，若出现直接抛出错误
+        if (chineseYear.contains("十")) {
+            throw new NumberFormatException("年份中不应包含“十”：" + chineseYear);
+        }
+
+        // 拼接4位年份（逐个字符转换，确保完整）
+        StringBuilder yearSb = new StringBuilder();
+        for (char c : chineseYear.toCharArray()) {
+            if (!yearMap.containsKey(c)) {
+                throw new NumberFormatException("无效年份字符：" + c);
+            }
+            yearSb.append(yearMap.get(c));
+        }
+
+        // 确保年份是4位（避免“二四”→“24”这类异常，但正则已限制4位，此处兜底）
+        if (yearSb.length() != 4) {
+            throw new NumberFormatException("年份不是4位：" + chineseYear + "→" + yearSb);
+        }
+        return yearSb.toString();
+    }
+
+    // 处理月份/日期的中文数字转换（如“三”→3，“十二”→12）
+    private String chineseNumToArabic(String chineseNum) {
+        Map<Character, Integer> numMap = new HashMap<>();
+        numMap.put('〇', 0);
+        numMap.put('零', 0);
+        numMap.put('一', 1);
+        numMap.put('二', 2);
+        numMap.put('三', 3);
+        numMap.put('四', 4);
+        numMap.put('五', 5);
+        numMap.put('六', 6);
+        numMap.put('七', 7);
+        numMap.put('八', 8);
+        numMap.put('九', 9);
+        numMap.put('十', 10);
+
+        int result = 0;
+        int tempNum = 0;
+        for (char c : chineseNum.toCharArray()) {
+            if (!numMap.containsKey(c)) {
+                throw new NumberFormatException("无效数字字符：" + c);
+            }
+            int currentNum = numMap.get(c);
+
+            if (currentNum == 10) {
+                tempNum = (tempNum == 0) ? 1 : tempNum;
+                result += tempNum * 10;
+                tempNum = 0;
+            } else {
+                tempNum = currentNum;
+            }
+        }
+        result += tempNum;
+        return String.valueOf(result);
+    }
+
+    /**
+     * 根据fileId和agentId读取文件内容
+     * @param fileId 文件ID
+     * @param agentId 代理ID
+     * @param baseDirectory 基础目录路径
+     * @return 文件内容
+     */
+    public Body<String> readFileContent(String fileId, String agentId, String baseDirectory) {
+        try {
+            // 1. 获取文件信息
+            LambdaQueryWrapper<File> queryWrapper = Wrappers.<File>lambdaQuery()
+                    .eq(File::getUid, fileId);
+            File file = fileMapper.selectOne(queryWrapper);
+            
+            if (file == null) {
+                return Body.error("文件不存在，文件ID: " + fileId);
+            }
+
+            // 2. 获取文件路径
+            String filePath = getFilePath(file, baseDirectory);
+            String fileName = file.getName();
+            
+            // 3. 读取文件内容
+            java.io.File fileObj = new java.io.File(filePath);
+            if (!fileObj.exists()) {
+                return Body.error("文件不存在，文件路径: " + filePath);
+            }
+
+            // 根据文件扩展名选择读取方式
+            String extension = "";
+            if (fileName != null && fileName.contains(".")) {
+                extension = fileName.substring(fileName.lastIndexOf(".") + 1).toLowerCase();
+            }
+
+            String content;
+            switch (extension) {
+                case "txt":
+                case "text":
+                    content = readTxtFile(fileObj);
+                    break;
+                case "csv":
+                    content = readCsvFile(fileObj);
+                    break;
+                case "json":
+                    content = readJsonFile(fileObj);
+                    break;
+                default:
+                    // 默认按文本文件读取
+                    content = readTxtFile(fileObj);
+                    break;
+            }
+
+            return Body.success(content, "读取成功");
+
+        } catch (Exception e) {
+            return Body.error("读取文件失败: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 读取文本文件
+     */
+    private String readTxtFile(java.io.File file) throws IOException {
+        StringBuilder content = new StringBuilder();
+        try (BufferedReader reader = new BufferedReader(new FileReader(file, StandardCharsets.UTF_8))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                content.append(line).append("\n");
+            }
+        }
+        return content.toString();
+    }
+
+    /**
+     * 读取CSV文件（简化版本，按文本读取）
+     */
+    private String readCsvFile(java.io.File file) throws IOException {
+        // 简化实现：按文本文件读取
+        // 如果需要更复杂的CSV解析，可以添加Apache Commons CSV依赖
+        return readTxtFile(file);
+    }
+
+    /**
+     * 读取JSON文件
+     */
+    private String readJsonFile(java.io.File file) throws IOException {
+        try {
+            JsonNode jsonNode = objectMapper.readTree(file);
+            return objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(jsonNode);
+        } catch (Exception e) {
+            // 如果JSON解析失败，按文本文件读取
+            return readTxtFile(file);
+        }
     }
 }

@@ -1,0 +1,450 @@
+package DavexAgent.module.verdict;
+
+import DavexBase.common.Body;
+import DavexBase.common.My;
+import DavexBase.entity.File;
+import DavexBase.info.VerdictFilterDTO;
+import DavexBase.mapper.FileMapper;
+import DavexBase.service.directory.FileFolderService;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import java.io.BufferedReader;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.List;
+import java.util.StringJoiner;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
+
+@Service
+public class VerdictService {
+    // 日志记录（便于问题排查）
+    private static final Logger logger = LoggerFactory.getLogger(VerdictService.class);
+
+    // 配置参数（可根据实际需求调整，如输出前缀、缩放系数）
+    private static final String PY_SCRIPT_NAME = "p1preprocess.py"; // Python脚本文件名
+    //    private static final String OUTPUT_PREFIX = "dataset_embeddings"; // 输出文件前缀（对应Python脚本的--prefix参数）
+    private static final long TIMEOUT_MINUTES = 30; // 脚本执行超时时间（防止无限阻塞）
+    // 新增：用于提取D后面数字的正则表达式
+    private static final String D_NUM_PATTERN = "D(\\d+)";
+
+    @Autowired
+    private My my;
+    @Autowired
+    private FileFolderService fileFolderService;
+    @Autowired
+    private FileMapper fileMapper;
+
+    /**
+     * 按条件筛选判决书文件ID
+     * @param filterDTO 筛选条件（可为null，null表示仅按基础条件筛选）
+     * @return 符合条件的fileId（即File.uid）列表
+     */
+    public Body<List<String>> getDestIds(VerdictFilterDTO filterDTO) {
+        try {
+            QueryWrapper<File> queryWrapper = new QueryWrapper<>();
+            queryWrapper.isNotNull("judge_time");
+
+            if (filterDTO != null) {
+                if (filterDTO.getJudgeTimeStart() != null) {
+                    queryWrapper.ge("judge_time", filterDTO.getJudgeTimeStart());
+                }
+                if (filterDTO.getJudgeTimeEnd() != null) {
+                    queryWrapper.le("judge_time", filterDTO.getJudgeTimeEnd());
+                }
+                if (filterDTO.getJudgeType() != null && !filterDTO.getJudgeType().trim().isEmpty()) {
+                    queryWrapper.like("judge_type", filterDTO.getJudgeType().trim());
+                }
+                if (filterDTO.getJudgeDistrict() != null && !filterDTO.getJudgeDistrict().trim().isEmpty()) {
+                    queryWrapper.like("judge_district", filterDTO.getJudgeDistrict().trim());
+                }
+                if (filterDTO.getJudgeCause() != null && !filterDTO.getJudgeCause().trim().isEmpty()) {
+                    queryWrapper.like("judge_cause", filterDTO.getJudgeCause().trim());
+                }
+            }
+
+            List<File> fileList = fileMapper.selectList(queryWrapper.select("uid"));
+            List<String> fileIdList = fileList.stream()
+                    .map(File::getUid)
+                    .collect(Collectors.toList());
+
+            logger.info("筛选完成，共匹配 {} 个文件ID", fileIdList.size());
+            return Body.success(fileIdList, "筛选成功");
+
+        } catch (Exception e) {
+            logger.error("筛选文件ID失败", e);
+            return Body.error("筛选文件ID异常：" + e.getMessage());
+        }
+    }
+
+    /**
+     * 生成数据集Embeddings并返回vectorizer.pkl文件路径【性能测试版本】
+     * @param fileIds 待处理的文件ID列表
+     * @param outputPrefix 输出文件前缀（新增参数，替代原有硬编码常量）
+     * @return 成功：Body.data为pkl文件绝对路径；失败：Body包含错误信息
+     */
+    public Body<String> getDataEmbeddings(List<String> fileIds, String outputPrefix) {
+        long methodStartTime = System.currentTimeMillis();
+        logger.info("[性能] getDataEmbeddings开始执行, 文件数量: {}", fileIds != null ? fileIds.size() : 0);
+        
+        if (fileIds == null || fileIds.isEmpty()) {
+            return Body.error("文件ID列表不能为空");
+        }
+        // 新增：校验输出前缀参数
+        if (outputPrefix == null || outputPrefix.trim().isEmpty()) {
+            return Body.error("输出文件前缀不能为空");
+        }
+
+        String corePath = my.getCore_path();
+        if (corePath == null || corePath.trim().isEmpty()) {
+            return Body.error("系统Core路径未配置");
+        }
+        String pyScriptPath = Paths.get(corePath, PY_SCRIPT_NAME).toString();
+        if (!Files.exists(Paths.get(pyScriptPath))) {
+            return Body.error("数据集处理脚本不存在：" + pyScriptPath);
+        }
+
+        // 原有文件路径、数字ID收集逻辑不变...
+        StringJoiner filePathsJoiner = new StringJoiner(" ");
+        StringJoiner fileNumIdsJoiner = new StringJoiner(" ");
+        java.util.regex.Pattern pattern = java.util.regex.Pattern.compile(D_NUM_PATTERN);
+        for (String fileId : fileIds) {
+            File file = fileMapper.selectById(fileId);
+            if (file == null) {
+                logger.warn("文件ID {} 不存在，已跳过", fileId);
+                continue;
+            }
+            String filePath = fileFolderService.getFilePath(file, my.getBase_path());
+            if (filePath == null || !Files.exists(Paths.get(filePath))) {
+                logger.warn("文件路径无效：fileId={}, filePath={}", fileId, filePath);
+                continue;
+            }
+            filePathsJoiner.add("\"" + filePath + "\"");
+
+            java.util.regex.Matcher matcher = pattern.matcher(fileId);
+            if (matcher.find()) {
+                String numId = matcher.group(1);
+                fileNumIdsJoiner.add(numId);
+            } else {
+                logger.warn("文件ID {} 格式异常，无法提取D后数字，已跳过", fileId);
+                continue;
+            }
+        }
+
+        String filePathsStr = filePathsJoiner.toString();
+        String fileNumIdsStr = fileNumIdsJoiner.toString();
+        if (filePathsStr.trim().isEmpty()) {
+            return Body.error("所有文件ID对应路径无效，无可用文件");
+        }
+        if (fileNumIdsStr.trim().isEmpty()) {
+            return Body.error("所有文件ID格式异常，无法提取有效数字ID");
+        }
+
+        // 命令拼接：修改Python脚本的-p参数，指向任务专属文件夹（文件名不变）
+        String outputRootDir = Paths.get(corePath, "output").toString(); // 仅保留输出根目录
+        String pythonPath = "/home/zkx/miniconda3/bin/python";
+        String fullOutputPrefix = Paths.get(outputRootDir, outputPrefix).toString();
+        String fullCmd = String.format(
+                "%s \"%s\" %s --file-ids %s -p \"%s\"",
+                pythonPath,
+                pyScriptPath,
+                filePathsStr,
+                fileNumIdsStr,
+                fullOutputPrefix // 传递完整路径前缀，而非纯outputPrefix
+        );
+        logger.info("执行命令：{}", fullCmd);
+
+        // 关键修改2：（可选，保持原有逻辑不变，此处已匹配Python脚本输出）
+        String pklFileName = outputPrefix + "_vectorizer.pkl";
+        String pklFilePath = Paths.get(fullOutputPrefix, pklFileName).toString();
+        
+        // 性能测试：记录Python脚本执行时间
+        long scriptStartTime = System.currentTimeMillis();
+        Body<String> executeResult = executePythonScript(fullCmd, pklFilePath);
+        long scriptTime = System.currentTimeMillis() - scriptStartTime;
+        logger.info("[性能] P1 Python脚本(p1preprocess.py)执行耗时: {}ms", scriptTime);
+
+        long methodTime = System.currentTimeMillis() - methodStartTime;
+        if (executeResult.getCode() == 1) {
+            logger.info("[性能] getDataEmbeddings总耗时: {}ms (其中Python脚本: {}ms), 处理文件数: {}", 
+                       methodTime, scriptTime, fileIds.size());
+            return Body.success(pklFilePath, "Embedding生成成功，耗时：" + scriptTime + "ms");
+        } else {
+            logger.error("[性能] getDataEmbeddings执行失败，已执行时间: {}ms", methodTime);
+            return executeResult;
+        }
+    }
+
+    /**
+     * 【性能测试版本】一站式服务：筛选+Embedding生成
+     * @param filterDTO 筛选条件
+     * @param outputPrefix 输出文件前缀（新增参数）
+     * @return .pkl文件路径
+     */
+    public Body<String> query2Embeddings(VerdictFilterDTO filterDTO, String outputPrefix) {
+        long totalStartTime = System.currentTimeMillis();
+        try {
+            logger.info("[性能] 开始执行一站式Embedding生成服务...");
+            
+            StringBuilder perfLog = new StringBuilder();
+            perfLog.append("\n╔══════════════════════════════════════════════════════════════╗\n");
+            perfLog.append("║         P1 数据筛选+Embedding生成 性能测试报告 (Agent端)       ║\n");
+            perfLog.append("╠══════════════════════════════════════════════════════════════╣\n");
+
+            // 1. 第一步：根据筛选条件获取文件ID列表（逻辑不变）
+            long filterStartTime = System.currentTimeMillis();
+            logger.info("步骤 1/2: 根据筛选条件获取文件ID...");
+            Body<List<String>> fileIdsBody = this.getDestIds(filterDTO);
+            long filterTime = System.currentTimeMillis() - filterStartTime;
+            perfLog.append(String.format("║ [步骤1] 数据库筛选查询: %8d ms                          ║\n", filterTime));
+            
+            if (fileIdsBody.getCode() != 1 || fileIdsBody.getData() == null || fileIdsBody.getData().isEmpty()) {
+                String errorMsg = "未能获取有效文件ID，无法生成Embedding。原因: " + fileIdsBody.getMessage();
+                logger.error(errorMsg);
+                return Body.error(errorMsg);
+            }
+            List<String> fileIds = fileIdsBody.getData();
+            logger.info("[性能] 数据库筛选耗时: {}ms, 成功获取 {} 个文件ID", filterTime, fileIds.size());
+            perfLog.append(String.format("║         筛选结果: %d 个文件                                 ║\n", fileIds.size()));
+
+            // 2. 第二步：传递 outputPrefix 参数给 getDataEmbeddings
+            long embStartTime = System.currentTimeMillis();
+            logger.info("步骤 2/2: 根据文件ID生成Embedding...");
+            Body<String> embeddingBody = this.getDataEmbeddings(fileIds, outputPrefix);
+            long embTime = System.currentTimeMillis() - embStartTime;
+            perfLog.append(String.format("║ [步骤2] P1 Embedding生成(Python脚本): %8d ms            ║\n", embTime));
+            
+            if (embeddingBody.getCode() != 1) {
+                logger.error("生成Embedding失败: {}", embeddingBody.getMessage());
+                return embeddingBody;
+            }
+            logger.info("[性能] Embedding生成耗时: {}ms", embTime);
+
+            // 3. 补充校验（逻辑不变）
+            String pklFilePath = embeddingBody.getData();
+            java.io.File pklFile = new java.io.File(pklFilePath);
+            if (!pklFile.exists() || !pklFile.isFile()) {
+                String errorMsg = "生成的pkl文件不存在或不是有效文件：" + pklFilePath;
+                logger.error(errorMsg);
+                return Body.error(errorMsg);
+            }
+
+            long totalTime = System.currentTimeMillis() - totalStartTime;
+            perfLog.append("╠══════════════════════════════════════════════════════════════╣\n");
+            perfLog.append(String.format("║ [总计] query2Embeddings总耗时: %8d ms (%.2f 秒)         ║\n", totalTime, totalTime / 1000.0));
+            perfLog.append("╚══════════════════════════════════════════════════════════════╝\n");
+            
+            logger.info(perfLog.toString());
+            logger.info("[性能] 一站式Embedding生成服务成功完成，总耗时: {}ms", totalTime);
+            return embeddingBody;
+
+        } catch (Exception e) {
+            long totalTime = System.currentTimeMillis() - totalStartTime;
+            logger.error("[性能] 一站式Embedding生成服务异常，已执行时间: {}ms", totalTime);
+            logger.error("一站式Embedding生成服务发生未知异常", e);
+            return Body.error("系统内部错误：" + e.getMessage());
+        }
+    }
+
+    private Body<String> executePythonScript(String fullCmd, String expectedOutputFilePath) {
+        Process process = null;
+        try {
+            ProcessBuilder processBuilder = new ProcessBuilder();
+            if (System.getProperty("os.name").toLowerCase().contains("windows")) {
+                processBuilder.command("cmd.exe", "/c", fullCmd);
+            } else {
+                processBuilder.command("/bin/bash", "-c", fullCmd);
+            }
+            processBuilder.redirectErrorStream(true);
+            process = processBuilder.start();
+
+            readProcessOutput(process);
+
+            boolean isCompleted = process.waitFor(TIMEOUT_MINUTES, TimeUnit.MINUTES);
+            if (!isCompleted) {
+                process.destroyForcibly();
+                return Body.error("脚本执行超时，已强制终止");
+            }
+
+            int exitCode = process.exitValue();
+            if (exitCode != 0) {
+                return Body.error("脚本执行失败，退出码：" + exitCode);
+            }
+
+            if (!Files.exists(Paths.get(expectedOutputFilePath))) {
+                return Body.error("脚本执行成功，但未找到生成的文件：" + expectedOutputFilePath);
+            }
+
+            return Body.success(expectedOutputFilePath, "脚本执行成功");
+
+        } catch (IOException e) {
+            logger.error("执行脚本时发生IO异常", e);
+            return Body.error("执行脚本失败：" + e.getMessage());
+        } catch (InterruptedException e) {
+            logger.error("脚本执行被中断", e);
+            Thread.currentThread().interrupt();
+            return Body.error("脚本执行被中断：" + e.getMessage());
+        } finally {
+            if (process != null && process.isAlive()) {
+                process.destroyForcibly();
+            }
+        }
+    }
+
+    /**
+     * 获取系统可用的Python命令（优先python3，其次python）
+     * @return 可用的Python命令字符串（如"python3"或"python"）
+     */
+    private String getPythonCommand() {
+        // 测试python是否可用
+        if (isCommandAvailable("python")) {
+            return "python";
+        }
+        // 测试python3是否可用
+        if (isCommandAvailable("python3")) {
+            return "python3";
+        }
+        // 两者都不可用：抛出异常（需安装Python环境）
+        throw new RuntimeException("系统未找到Python环境（python/python3命令均不可用），请先安装Python并配置环境变量");
+    }
+
+    /**
+     * 检查系统命令是否可用（如python3、python）
+     * @param command 待检查的命令
+     * @return true=可用，false=不可用
+     */
+    private boolean isCommandAvailable(String command) {
+        Process process = null;
+        try {
+            // 执行命令：command --version（仅测试是否能启动，不关心输出）
+            process = new ProcessBuilder(command, "--version").start();
+            return process.waitFor(5, TimeUnit.SECONDS); // 5秒内返回视为可用
+        } catch (Exception e) {
+            return false;
+        } finally {
+            if (process != null) {
+                process.destroy();
+            }
+        }
+    }
+
+    /**
+     * 读取进程输出（stdout/stderr）并记录日志
+     * @param process 执行中的进程
+     */
+    private void readProcessOutput(Process process) {
+        new Thread(() -> {
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    logger.info("Python脚本输出：{}", line);
+                }
+            } catch (IOException e) {
+                logger.error("读取Python脚本输出时发生异常", e);
+            }
+        }).start();
+    }
+
+    /**
+     * 执行本地命令（Agent端）【性能测试版本】
+     */
+    public Body<String> executeLocalCommand(String fullCmd, String stageName) {
+        // 关键修改：用AtomicReference包装Process对象
+        AtomicReference<Process> processRef = new AtomicReference<>();
+        long startTime = System.currentTimeMillis();
+        try {
+            logger.info("[性能] 开始执行{}命令：{}", stageName, fullCmd);
+            ProcessBuilder processBuilder = new ProcessBuilder();
+            if (System.getProperty("os.name").toLowerCase().contains("windows")) {
+                processBuilder.command("cmd.exe", "/c", fullCmd);
+            } else {
+                processBuilder.command("/bin/bash", "-c", fullCmd);
+            }
+            processBuilder.redirectErrorStream(true);
+            Process process = processBuilder.start();
+            processRef.set(process); // 将process存入AtomicReference
+
+            StringBuilder output = new StringBuilder();
+            new Thread(() -> {
+                // 关键修改：从AtomicReference中获取process
+                Process innerProcess = processRef.get();
+                try (BufferedReader reader = new BufferedReader(new InputStreamReader(innerProcess.getInputStream()))) {
+                    String line;
+                    while ((line = reader.readLine()) != null) {
+                        output.append(line).append("\n");
+                        logger.info("{}输出：{}", stageName, line);
+                    }
+                } catch (IOException e) {
+                    logger.error("读取{}输出异常", stageName, e);
+                }
+            }).start();
+
+            // 原有逻辑不变（后续操作process变量）
+            boolean isCompleted = process.waitFor(30, TimeUnit.MINUTES);
+            long executeTime = System.currentTimeMillis() - startTime;
+            
+            if (!isCompleted) {
+                process.destroyForcibly();
+                logger.error("[性能] {}执行超时，已执行时间: {}ms", stageName, executeTime);
+                return Body.error(stageName + "执行超时");
+            }
+
+            int exitCode = process.exitValue();
+            if (exitCode != 0) {
+                logger.error("[性能] {}执行失败，耗时: {}ms, 退出码：{}", stageName, executeTime, exitCode);
+                return Body.error(stageName + "执行失败，退出码：" + exitCode);
+            }
+
+            logger.info("[性能] {}执行成功，耗时: {}ms", stageName, executeTime);
+            return Body.success(output.toString(), stageName + "执行成功，耗时：" + executeTime + "ms");
+
+        } catch (Exception e) {
+            long executeTime = System.currentTimeMillis() - startTime;
+            logger.error("[性能] {}命令异常，已执行时间: {}ms", stageName, executeTime);
+            logger.error("执行{}命令异常", stageName, e);
+            return Body.error(stageName + "执行异常：" + e.getMessage());
+        } finally {
+            // 关键修改：从AtomicReference中获取process并销毁
+            Process process = processRef.get();
+            if (process != null && process.isAlive()) {
+                process.destroyForcibly();
+            }
+        }
+    }
+
+    /**
+     * 辅助方法：压缩目录为ZIP文件
+     */
+    public void zipDirectory(java.io.File dir, java.io.File zipFile) throws IOException {
+        try (ZipOutputStream zos = new ZipOutputStream(Files.newOutputStream(zipFile.toPath()))) {
+            Path sourcePath = dir.toPath();
+            Files.walk(sourcePath)
+                    .filter(path -> !Files.isDirectory(path))
+                    .forEach(path -> {
+                        ZipEntry zipEntry = new ZipEntry(sourcePath.relativize(path).toString());
+                        try (FileInputStream fis = new FileInputStream(path.toFile())) {
+                            zos.putNextEntry(zipEntry);
+                            byte[] buffer = new byte[1024];
+                            int len;
+                            while ((len = fis.read(buffer)) > 0) {
+                                zos.write(buffer, 0, len);
+                            }
+                            zos.closeEntry();
+                        } catch (IOException e) {
+                            throw new RuntimeException("压缩目录失败：" + e.getMessage(), e);
+                        }
+                    });
+        }
+    }
+}
