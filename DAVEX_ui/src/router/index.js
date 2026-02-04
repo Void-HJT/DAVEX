@@ -11,7 +11,7 @@ const router = createRouter({
     {
       path: '/',
       component: () => import('@/views/layout/newLayoutContainer.vue'),
-      redirect: '/verdict/transfer',
+      redirect: '/datashare/fileTrans',
       children: [
         {
           path: 'locate/locateCompute',

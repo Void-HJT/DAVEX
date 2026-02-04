@@ -31,8 +31,7 @@ const handleCommand = (key) => {
 <!--      <div>-->
 <!--        <img src="@/assets/DAVEX.png" class="logo-img" />-->
 <!--      </div>-->
-      <div class="header-text">跨部门类案类判平台 - Agent 操作界面</div>
-      <div class="user-info">您好，C1-G1-A1</div>
+      <div class="header-text">隐私计算平台 (DAVEX) - Agent 操作界面</div>
     </el-header>
     <el-container>
       <el-aside style="background-color: #010927; margin-right: 10px">
@@ -44,38 +43,34 @@ const handleCommand = (key) => {
             text-color="#bac9df"
             router
         >
-          <el-menu-item index="/dve/folderController">
-            <el-icon><Files /></el-icon>
-            <span class="centered-text">一般文件管理</span>
-          </el-menu-item>
-          <el-menu-item index="/dve/privateFolderController">
-            <el-icon><Files /></el-icon>
-            <span class="centered-text">隐私文件管理</span>
-          </el-menu-item>
-<!--          <el-sub-menu index="/dve">-->
-<!--            <template #title>-->
-<!--              <el-icon><UserFilled /></el-icon>-->
-<!--              <span class="centered-text">用户与文件管理</span>-->
-<!--            </template>-->
-<!--            <el-menu-item index="/dve/testTrans">-->
-<!--              <el-icon><User /></el-icon>-->
-<!--              <span class="centered-text">用户管理</span>-->
-<!--            </el-menu-item>-->
-<!--            <el-menu-item index="/dve/folderController">-->
-<!--              <el-icon><User /></el-icon>-->
-<!--              <span class="centered-text">文件管理</span>-->
-<!--            </el-menu-item>-->
-<!--          </el-sub-menu>-->
-<!--          <el-sub-menu index="/auth">-->
-<!--            <template #title>-->
-<!--              <el-icon><UserFilled /></el-icon>-->
-<!--              <span class="centered-text">认证管理</span>-->
-<!--            </template>-->
-<!--            <el-menu-item index="/auth/tokens">-->
-<!--              <el-icon><EditPen /></el-icon>-->
-<!--              <span class="centered-text">Token管理</span>-->
-<!--            </el-menu-item>-->
-<!--          </el-sub-menu>-->
+          <el-sub-menu index="/dve">
+            <template #title>
+              <el-icon><UserFilled /></el-icon>
+              <span class="centered-text">用户与文件管理</span>
+            </template>
+            <el-menu-item index="/dve/testTrans">
+              <el-icon><User /></el-icon>
+              <span class="centered-text">用户管理</span>
+            </el-menu-item>
+            <el-menu-item index="/dve/folderController">
+              <el-icon><User /></el-icon>
+              <span class="centered-text">文件管理</span>
+            </el-menu-item>
+            <el-menu-item index="/dve/privateFolderController">
+              <el-icon><Files /></el-icon>
+              <span class="centered-text">隐私文件管理（用于类案类判）</span>
+            </el-menu-item>
+          </el-sub-menu>
+          <el-sub-menu index="/auth">
+            <template #title>
+              <el-icon><UserFilled /></el-icon>
+              <span class="centered-text">认证管理</span>
+            </template>
+            <el-menu-item index="/auth/tokens">
+              <el-icon><EditPen /></el-icon>
+              <span class="centered-text">Token管理</span>
+            </el-menu-item>
+          </el-sub-menu>
         </el-menu>
       </el-aside>
       <el-main>
