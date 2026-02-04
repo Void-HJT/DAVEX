@@ -102,7 +102,7 @@
             <template v-slot="scope">
               <el-button
                   class="small-default-button"
-                  v-if="scope.row.type === 'file' && scope.row.fileType?.includes('psi')"
+                  v-if="scope.row.type === 'file'"
                   @click="
                     chooseFileMethod(
                       scope.row.agentId,
@@ -119,7 +119,7 @@
                     'small-default-button',
                     { 'small-default-button-disabled': partyNumber === 2 }
                   ]"
-                  v-if="scope.row.type === 'file' && scope.row.fileType?.includes('psi')"
+                  v-if="scope.row.type === 'file'"
                   :disabled="partyNumber === 2"
                   @click="
                     chooseFileMethod(

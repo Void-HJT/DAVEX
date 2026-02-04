@@ -166,17 +166,17 @@
               >
                 <el-icon><Edit /></el-icon> 重命名
               </el-button>
-              <el-button
-                  v-if="scope.row.type === 'file'"
-                  class="small-default-button"
-                  @click="
-                  openFileFuncEditBlockMethod(
-                        scope.row
-                      )
-                "
-              >
-                <el-icon><Edit /></el-icon> 功能权限
-              </el-button>
+<!--              <el-button-->
+<!--                  v-if="scope.row.type === 'file'"-->
+<!--                  class="small-default-button"-->
+<!--                  @click="-->
+<!--                  openFileFuncEditBlockMethod(-->
+<!--                        scope.row-->
+<!--                      )-->
+<!--                "-->
+<!--              >-->
+<!--                <el-icon><Edit /></el-icon> 功能权限-->
+<!--              </el-button>-->
 <!--              <el-button-->
 <!--                v-if="scope.row.type === 'file'"-->
 <!--                link-->

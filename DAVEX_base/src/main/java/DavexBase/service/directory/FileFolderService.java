@@ -383,141 +383,143 @@ public class FileFolderService {
         fileRecord.setLastUpdate(new Timestamp(System.currentTimeMillis()));
 
         // 新增解析逻辑
-        try {
-            String content = new String(file.getBytes(), StandardCharsets.UTF_8);
+        if (privacy == 1) {
+            try {
+                String content = new String(file.getBytes(), StandardCharsets.UTF_8);
 
-            // 判决时间（中文数字日期）
-            String judgeTimeStr = null;
-            Pattern timePattern = Pattern.compile(
-                    "([〇一二三四五六七八九零十]{4})年" + // 匹配4位中文年份（如“二〇二四”）
-                            "([〇一二三四五六七八九零十]{1,3})月" +
-                            "([〇一二三四五六七八九零十]{1,3})日"
-            );
-            Matcher timeMatcher = timePattern.matcher(content);
+                // 判决时间（中文数字日期）
+                String judgeTimeStr = null;
+                Pattern timePattern = Pattern.compile(
+                        "([〇一二三四五六七八九零十]{4})年" + // 匹配4位中文年份（如“二〇二四”）
+                                "([〇一二三四五六七八九零十]{1,3})月" +
+                                "([〇一二三四五六七八九零十]{1,3})日"
+                );
+                Matcher timeMatcher = timePattern.matcher(content);
 
-            if (timeMatcher.find()) {
-                try {
-                    // 1. 提取中文年、月、日（重点确保年份是4个字符）
-                    String yearChinese = timeMatcher.group(1);
-                    String monthChinese = timeMatcher.group(2);
-                    String dayChinese = timeMatcher.group(3);
+                if (timeMatcher.find()) {
+                    try {
+                        // 1. 提取中文年、月、日（重点确保年份是4个字符）
+                        String yearChinese = timeMatcher.group(1);
+                        String monthChinese = timeMatcher.group(2);
+                        String dayChinese = timeMatcher.group(3);
 
-                    // 新增：打印原始中文年份，验证是否为4个字符（如“二〇二四”）
-                    System.out.println("原始中文年份：" + yearChinese + "（长度：" + yearChinese.length() + "）");
+                        // 新增：打印原始中文年份，验证是否为4个字符（如“二〇二四”）
+                        System.out.println("原始中文年份：" + yearChinese + "（长度：" + yearChinese.length() + "）");
 
-                    // 2. 中文转阿拉伯数字（重点修复年份转换逻辑）
-                    String yearArabic = chineseYearToArabic(yearChinese); // 专门处理年份
-                    String monthArabic = chineseNumToArabic(monthChinese);
-                    String dayArabic = chineseNumToArabic(dayChinese);
+                        // 2. 中文转阿拉伯数字（重点修复年份转换逻辑）
+                        String yearArabic = chineseYearToArabic(yearChinese); // 专门处理年份
+                        String monthArabic = chineseNumToArabic(monthChinese);
+                        String dayArabic = chineseNumToArabic(dayChinese);
 
-                    // 3. 补零（确保月/日为2位，年份已确保4位）
-                    monthArabic = String.format("%02d", Integer.parseInt(monthArabic));
-                    dayArabic = String.format("%02d", Integer.parseInt(dayArabic));
+                        // 3. 补零（确保月/日为2位，年份已确保4位）
+                        monthArabic = String.format("%02d", Integer.parseInt(monthArabic));
+                        dayArabic = String.format("%02d", Integer.parseInt(dayArabic));
 
-                    // 4. 构建标准格式（此时年份应为2024，而非4）
-                    judgeTimeStr = yearArabic + "-" + monthArabic + "-" + dayArabic;
-                    String fullTimeStr = judgeTimeStr + " 00:00:00"; // 完整时分秒
-                    System.out.println("待转换的完整时间：" + fullTimeStr);
+                        // 4. 构建标准格式（此时年份应为2024，而非4）
+                        judgeTimeStr = yearArabic + "-" + monthArabic + "-" + dayArabic;
+                        String fullTimeStr = judgeTimeStr + " 00:00:00"; // 完整时分秒
+                        System.out.println("待转换的完整时间：" + fullTimeStr);
 
-                    // 5. 转换为Timestamp（此时格式合法）
-                    Timestamp judgeTime = Timestamp.valueOf(fullTimeStr);
-                    fileRecord.setJudgeTime(judgeTime);
-                    System.out.println("成功解析日期：" + judgeTimeStr);
+                        // 5. 转换为Timestamp（此时格式合法）
+                        Timestamp judgeTime = Timestamp.valueOf(fullTimeStr);
+                        fileRecord.setJudgeTime(judgeTime);
+                        System.out.println("成功解析日期：" + judgeTimeStr);
 
-                } catch (NumberFormatException e) {
-                    System.err.println("数字转换错误：" + e.getMessage() + "（当前日期字符串：" + judgeTimeStr + "）");
-                } catch (IllegalArgumentException e) {
-                    System.err.println("Timestamp格式错误：" + judgeTimeStr + "（需yyyy-MM-dd HH:mm:ss）");
-                } catch (Exception e) {
-                    System.err.println("日期解析异常：" + e.getMessage());
+                    } catch (NumberFormatException e) {
+                        System.err.println("数字转换错误：" + e.getMessage() + "（当前日期字符串：" + judgeTimeStr + "）");
+                    } catch (IllegalArgumentException e) {
+                        System.err.println("Timestamp格式错误：" + judgeTimeStr + "（需yyyy-MM-dd HH:mm:ss）");
+                    } catch (Exception e) {
+                        System.err.println("日期解析异常：" + e.getMessage());
+                    }
+                } else {
+                    System.out.println("未匹配到纯中文日期（格式：XXXX年XX月XX日）");
                 }
-            } else {
-                System.out.println("未匹配到纯中文日期（格式：XXXX年XX月XX日）");
-            }
 
-            String titleArea = "";
-            if (content.length() > 200) {
-                titleArea = content.substring(0, 200); // 截取前200字符（覆盖所有判决书标题）
-            } else {
-                titleArea = content; // 文本过短时直接用全部内容
-            }
-            System.out.println("标题区域内容：" + titleArea); // 调试日志，确认标题区域是否正确
+                String titleArea = "";
+                if (content.length() > 200) {
+                    titleArea = content.substring(0, 200); // 截取前200字符（覆盖所有判决书标题）
+                } else {
+                    titleArea = content; // 文本过短时直接用全部内容
+                }
+                System.out.println("标题区域内容：" + titleArea); // 调试日志，确认标题区域是否正确
 
-            // 判决类型
+                // 判决类型
 //            Matcher typeMatcher = Pattern.compile("刑\\s*事\\s*判\\s*决\\s*书").matcher(content);
 //            if (typeMatcher.find()) {
 //                fileRecord.setJudgeType(typeMatcher.group(0).replaceAll("\\s+", ""));
 //            }
-            String judgeDistrict = null;
+                String judgeDistrict = null;
 // 1. 优先匹配标题中的“中华人民共和国XX法院”（如最高人民法院）
-            Matcher nationalCourtMatcher = Pattern.compile("(中华人民共和国[\\u4e00-\\u9fa5]+人民法院)").matcher(titleArea);
-            if (nationalCourtMatcher.find()) {
-                judgeDistrict = nationalCourtMatcher.group(1).replaceAll("\\s+", "");
-            } else {
-                // 2. 若无国家级法院，再匹配标题中的“XX省/市+高级/中级/基层人民法院”
-                Matcher localCourtMatcher = Pattern.compile("([\\u4e00-\\u9fa5]+?)(高级|中级|基层)[\\s\\r\\n]*人民法院").matcher(titleArea);
-                if (localCourtMatcher.find()) {
-                    judgeDistrict = localCourtMatcher.group(1) + localCourtMatcher.group(2) + "人民法院";
+                Matcher nationalCourtMatcher = Pattern.compile("(中华人民共和国[\\u4e00-\\u9fa5]+人民法院)").matcher(titleArea);
+                if (nationalCourtMatcher.find()) {
+                    judgeDistrict = nationalCourtMatcher.group(1).replaceAll("\\s+", "");
+                } else {
+                    // 2. 若无国家级法院，再匹配标题中的“XX省/市+高级/中级/基层人民法院”
+                    Matcher localCourtMatcher = Pattern.compile("([\\u4e00-\\u9fa5]+?)(高级|中级|基层)[\\s\\r\\n]*人民法院").matcher(titleArea);
+                    if (localCourtMatcher.find()) {
+                        judgeDistrict = localCourtMatcher.group(1) + localCourtMatcher.group(2) + "人民法院";
+                    }
                 }
-            }
 // 赋值并验证（此时应得到“中华人民共和国最高人民法院”）
-            if (judgeDistrict != null) {
-                fileRecord.setJudgeDistrict(judgeDistrict);
-                System.out.println("成功解析标题中的法院：" + judgeDistrict);
-            } else {
-                System.out.println("未在标题区域匹配到法院名称");
-            }
+                if (judgeDistrict != null) {
+                    fileRecord.setJudgeDistrict(judgeDistrict);
+                    System.out.println("成功解析标题中的法院：" + judgeDistrict);
+                } else {
+                    System.out.println("未在标题区域匹配到法院名称");
+                }
 
-            // 判决地点
+                // 判决地点
 //            Matcher locMatcher = Pattern.compile("(中华人民共和国[\\u4e00-\\u9fa5]+法院)").matcher(content);
 //            if (locMatcher.find()) {
 //                fileRecord.setJudgeDistrict(locMatcher.group(1).replaceAll("\\s+", "").trim());
 //            }
-            String judgeType = null;
+                String judgeType = null;
 // 匹配标题中的“XX判决书/裁定书”（支持分行/同行格式）
-            Matcher typeMatcher = Pattern.compile("(刑事|民事|行政)[\\s\\r\\n]*(判决|裁定)[\\s\\r\\n]*书").matcher(titleArea);
-            if (typeMatcher.find()) {
-                judgeType = typeMatcher.group(1) + typeMatcher.group(2) + "书";
-                fileRecord.setJudgeType(judgeType);
-                System.out.println("成功解析标题中的判决类型：" + judgeType);
-            } else {
-                System.out.println("未在标题区域匹配到判决类型");
-            }
+                Matcher typeMatcher = Pattern.compile("(刑事|民事|行政)[\\s\\r\\n]*(判决|裁定)[\\s\\r\\n]*书").matcher(titleArea);
+                if (typeMatcher.find()) {
+                    judgeType = typeMatcher.group(1) + typeMatcher.group(2) + "书";
+                    fileRecord.setJudgeType(judgeType);
+                    System.out.println("成功解析标题中的判决类型：" + judgeType);
+                } else {
+                    System.out.println("未在标题区域匹配到判决类型");
+                }
 
-            // 案由
-            String judgeCause = null;
+                // 案由
+                String judgeCause = null;
 // 1. 找“点击了解更多”这个固定锚点
-            int anchorIndex = titleArea.indexOf("点击了解更多");
-            if (anchorIndex != -1) {
-                // 2. 截取锚点上方所有内容，再按换行分割成多行
-                String contentBeforeAnchor = titleArea.substring(0, anchorIndex);
-                String[] lines = contentBeforeAnchor.split("[\\r\\n]+"); // 按任意换行符切分
+                int anchorIndex = titleArea.indexOf("点击了解更多");
+                if (anchorIndex != -1) {
+                    // 2. 截取锚点上方所有内容，再按换行分割成多行
+                    String contentBeforeAnchor = titleArea.substring(0, anchorIndex);
+                    String[] lines = contentBeforeAnchor.split("[\\r\\n]+"); // 按任意换行符切分
 
-                // 3. 取上方最后一行（即“案  由	故意杀人”这行）
-                if (lines.length > 0) {
-                    String targetLine = lines[lines.length - 1];
-                    // 4. 按空白字符分割该行，取最后一个非空片段（就是案由内容）
-                    String[] lineParts = targetLine.split("\\s+"); // 所有空白都能分割
-                    for (int i = lineParts.length - 1; i >= 0; i--) {
-                        String part = lineParts[i].trim();
-                        if (!part.isEmpty()) { // 找到最后一个非空白片段
-                            judgeCause = part;
-                            break;
+                    // 3. 取上方最后一行（即“案  由	故意杀人”这行）
+                    if (lines.length > 0) {
+                        String targetLine = lines[lines.length - 1];
+                        // 4. 按空白字符分割该行，取最后一个非空片段（就是案由内容）
+                        String[] lineParts = targetLine.split("\\s+"); // 所有空白都能分割
+                        for (int i = lineParts.length - 1; i >= 0; i--) {
+                            String part = lineParts[i].trim();
+                            if (!part.isEmpty()) { // 找到最后一个非空白片段
+                                judgeCause = part;
+                                break;
+                            }
                         }
                     }
                 }
-            }
 
 // 赋值并日志
-            if (judgeCause != null) {
-                fileRecord.setJudgeCause(judgeCause);
-                System.out.println("成功解析案由：" + judgeCause);
-            } else {
-                System.out.println("未找到有效案由内容");
-            }
+                if (judgeCause != null) {
+                    fileRecord.setJudgeCause(judgeCause);
+                    System.out.println("成功解析案由：" + judgeCause);
+                } else {
+                    System.out.println("未找到有效案由内容");
+                }
 
-        } catch (Exception e) {
-            System.err.println("解析判决书信息失败：" + e.getMessage());
+            } catch (Exception e) {
+                System.err.println("解析判决书信息失败：" + e.getMessage());
+            }
         }
 
         // 插入数据库
