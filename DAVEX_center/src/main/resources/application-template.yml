@@ -23,6 +23,11 @@ garnet:
 server:
   port: ${SERVER_PORT:9999}
 
+go:
+  base-url: ${GO_BASE_URL:http://localhost:8081}
+  connect-timeout-ms: ${GO_CONNECT_TIMEOUT_MS:2000}
+  request-timeout-ms: ${GO_REQUEST_TIMEOUT_MS:5000}
+
 spring:
   application:
     name: ${SPRING_APPLICATION_NAME:DavexCenter}
