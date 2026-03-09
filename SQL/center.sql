@@ -482,4 +482,88 @@ CREATE TABLE `jwt_metadata` (
                                 PRIMARY KEY (`uid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
+-- ----------------------------
+-- Table structure for go_did_record
+-- ----------------------------
+DROP TABLE IF EXISTS `go_did_record`;
+CREATE TABLE `go_did_record` (
+                                 `uid` bigint NOT NULL AUTO_INCREMENT,
+                                 `did` varchar(255) NOT NULL,
+                                 `did_document` longtext DEFAULT NULL,
+                                 `tx_id` varchar(255) DEFAULT NULL,
+                                 `block_height` bigint DEFAULT NULL,
+                                 `chain_result` longtext DEFAULT NULL,
+                                 `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+                                 `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                                 PRIMARY KEY (`uid`),
+                                 UNIQUE KEY `uk_go_did_record_did` (`did`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- ----------------------------
+-- Table structure for go_vc_record
+-- ----------------------------
+DROP TABLE IF EXISTS `go_vc_record`;
+CREATE TABLE `go_vc_record` (
+                                `uid` bigint NOT NULL AUTO_INCREMENT,
+                                `vc_id` varchar(255) DEFAULT NULL,
+                                `issuer_did` varchar(255) DEFAULT NULL,
+                                `holder_did` varchar(255) DEFAULT NULL,
+                                `credential_type` varchar(255) DEFAULT NULL,
+                                `vc_json` longtext DEFAULT NULL,
+                                `tx_id` varchar(255) DEFAULT NULL,
+                                `block_height` bigint DEFAULT NULL,
+                                `latest_verify_valid` tinyint(1) DEFAULT NULL,
+                                `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+                                `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                                PRIMARY KEY (`uid`),
+                                UNIQUE KEY `uk_go_vc_record_vc_id` (`vc_id`),
+                                KEY `idx_go_vc_record_holder_did` (`holder_did`),
+                                KEY `idx_go_vc_record_issuer_did` (`issuer_did`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- ----------------------------
+-- Table structure for go_privacy_group_record
+-- ----------------------------
+DROP TABLE IF EXISTS `go_privacy_group_record`;
+CREATE TABLE `go_privacy_group_record` (
+                                           `uid` bigint NOT NULL AUTO_INCREMENT,
+                                           `group_id` varchar(255) NOT NULL,
+                                           `group_name` varchar(255) DEFAULT NULL,
+                                           `issuer_did` varchar(255) DEFAULT NULL,
+                                           `credential_type` varchar(255) DEFAULT NULL,
+                                           `attribute_policy` text DEFAULT NULL,
+                                           `min_ring_size` int DEFAULT NULL,
+                                           `member_count` int DEFAULT NULL,
+                                           `member_public_keys_json` longtext DEFAULT NULL,
+                                           `tx_id` varchar(255) DEFAULT NULL,
+                                           `block_height` bigint DEFAULT NULL,
+                                           `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+                                           `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                                           PRIMARY KEY (`uid`),
+                                           UNIQUE KEY `uk_go_privacy_group_record_group_id` (`group_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- ----------------------------
+-- Table structure for go_privacy_vp_record
+-- ----------------------------
+DROP TABLE IF EXISTS `go_privacy_vp_record`;
+CREATE TABLE `go_privacy_vp_record` (
+                                        `uid` bigint NOT NULL AUTO_INCREMENT,
+                                        `vp_id` varchar(255) NOT NULL,
+                                        `group_id` varchar(255) DEFAULT NULL,
+                                        `holder_key_image` varchar(255) DEFAULT NULL,
+                                        `credential_type` varchar(255) DEFAULT NULL,
+                                        `issuer_did` varchar(255) DEFAULT NULL,
+                                        `challenge` varchar(255) DEFAULT NULL,
+                                        `vp_json` longtext DEFAULT NULL,
+                                        `local_verify_valid` tinyint(1) DEFAULT NULL,
+                                        `chain_verify_valid` tinyint(1) DEFAULT NULL,
+                                        `verify_result_json` longtext DEFAULT NULL,
+                                        `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+                                        `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                                        PRIMARY KEY (`uid`),
+                                        UNIQUE KEY `uk_go_privacy_vp_record_vp_id` (`vp_id`),
+                                        KEY `idx_go_privacy_vp_record_group_id` (`group_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
 SET FOREIGN_KEY_CHECKS = 1;

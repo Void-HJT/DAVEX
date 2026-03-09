@@ -138,7 +138,19 @@ const router = createRouter({
         // {
         //   path: 'auth/userManagement',
         //   component: () => import('@/views/auth/userManagement.vue'),
-        // }
+        // },
+        {
+          path: 'auth/didManagement',
+          component: () => import('@/views/auth/didManagement.vue'),
+        },
+        {
+          path: 'auth/vcManagement',
+          component: () => import('@/views/auth/vcManagement.vue'),
+        },
+        {
+          path: 'auth/privacyVpManagement',
+          component: () => import('@/views/auth/privacyVpManagement.vue'),
+        }
       ],
     }, //布局
   ],
