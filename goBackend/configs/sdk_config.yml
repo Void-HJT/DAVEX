@@ -1,0 +1,31 @@
+chain_client:
+  chain_id: did_test
+  org_id: TestCMorg1
+  user_key_file_path: configs/crypto-config/TestCMorg1/user/cmtestuser1/cmtestuser1.tls.key
+  user_crt_file_path: configs/crypto-config/TestCMorg1/user/cmtestuser1/cmtestuser1.tls.crt
+  user_sign_key_file_path: configs/crypto-config/TestCMorg1/user/cmtestuser1/cmtestuser1.sign.key
+  user_sign_crt_file_path: configs/crypto-config/TestCMorg1/user/cmtestuser1/cmtestuser1.sign.crt
+  retry_limit: 10
+  retry_interval: 500
+  nodes:
+  - node_addr: 10.176.37.50:11000
+    conn_cnt: 10
+    enable_tls: true
+    trust_root_paths:
+    - configs/crypto-config/TestCMorg1/ca
+    tls_host_name: chainmaker.org
+  archive:
+    type: mysql
+    dest: root:123456:localhost:3306
+    secret_key: xxx
+  rpc_client:
+    max_receive_message_size: 100
+    max_send_message_size: 100
+  pkcs11:
+    enabled: false
+    type: ""
+    library: /usr/local/lib64/pkcs11/libupkcs11.so
+    label: HSM
+    password: "11111111"
+    session_cache_size: 10
+    hash: SHA256

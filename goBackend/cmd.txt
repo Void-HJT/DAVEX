@@ -1,0 +1,72 @@
+# goBackend 启动/调试命令
+
+## 1) 启动服务（推荐）
+
+```bash
+cd project_test/goBackend
+
+export GO_PORT=8081
+export CHAINMAKER_SDK_CONFIG=./configs/sdk_config.yml
+export CHAINMAKER_CONTRACT=simpleDidTest1
+export CHAINMAKER_TIMEOUT_MS=-1
+
+go run ./cmd/server
+```
+
+## 2) 验证接口（curl）
+
+```bash
+curl -s http://localhost:8081/api/v1/health | jq
+
+curl -s -X POST http://localhost:8081/api/v1/echo \
+  -H 'Content-Type: application/json' \
+  -d '{"hello":"world"}' | jq
+
+curl -s -X POST http://localhost:8081/api/v1/did/generate \
+  -H 'Content-Type: application/json' \
+  -d '{}' | jq
+
+# 先从 generate 的返回里拿 didDocument，再注册上链
+curl -s -X POST http://localhost:8081/api/v1/did/register \
+  -H 'Content-Type: application/json' \
+  -d '{"didDocument":{"id":"did:mychain:xxxx"}}' | jq
+
+curl -s "http://localhost:8081/api/v1/did/query?did=did:mychain:xxxx" | jq
+
+curl -s -X POST http://localhost:8081/api/v1/vc/issue \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "issuerDid":"did:mychain:issuer",
+    "issuerPrivateKey":"0x...",
+    "holderDid":"did:mychain:holder",
+    "credentialType":"UniversityDegree",
+    "credentialSubject":{"name":"alice","age":20}
+  }' | jq
+
+curl -s -X POST http://localhost:8081/api/v1/vp/generate \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "holderDid":"did:mychain:holder",
+    "holderPrivateKeyHex":"0x...",
+    "holderPublicKeyHex":"0x04...",
+    "credentials":[],
+    "challenge":"random-challenge",
+    "verifierDid":"did:mychain:verifier"
+  }' | jq
+
+curl -s -X POST http://localhost:8081/api/v1/privacy/group/create \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "issuerDid":"did:mychain:issuer",
+    "groupId":"group-001",
+    "groupName":"test-group",
+    "credentialType":"IdentityCredential",
+    "attributePolicy":"age>=18",
+    "minRingSize":3
+  }' | jq
+```
+
+## 3) Swagger
+
+- UI：`http://localhost:8081/swagger/`
+- YAML：`http://localhost:8081/swagger/swagger.yaml`
