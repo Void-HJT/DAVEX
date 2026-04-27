@@ -18,7 +18,8 @@ import {
 <!--      <div>-->
 <!--        <img src="@/assets/DAVEX.png" class="logo-img" />-->
 <!--      </div>-->
-      <div class="header-text">隐私计算平台 (DAVEX) - Center 操作界面</div>
+<!--      <div class="header-text">隐私计算平台 (DAVEX) - Center 操作界面</div>-->
+      <div class="header-text">面向法律监督的隐私计算平台（Center）</div>
     </el-header>
     <el-container>
       <el-aside style="background-color: #010927; margin-right: 10px">
@@ -79,7 +80,7 @@ import {
             </el-menu-item>
             <el-menu-item index="/datashare/mPc">
               <el-icon><EditPen /></el-icon>
-              <span class="centered-text">自定义安全多方计算</span>
+              <span class="centered-text">安全多方计算</span>
             </el-menu-item>
             <el-menu-item index="/datashare/secureInfer">
               <el-icon><EditPen /></el-icon>

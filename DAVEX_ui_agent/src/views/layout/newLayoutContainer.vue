@@ -31,7 +31,8 @@ const handleCommand = (key) => {
 <!--      <div>-->
 <!--        <img src="@/assets/DAVEX.png" class="logo-img" />-->
 <!--      </div>-->
-      <div class="header-text">隐私计算平台 (DAVEX) - Agent 操作界面</div>
+<!--      <div class="header-text">隐私计算平台 (DAVEX) - Agent 操作界面</div>-->
+      <div class="header-text">面向法律监督的隐私计算平台（Agent）</div>
     </el-header>
     <el-container>
       <el-aside style="background-color: #010927; margin-right: 10px">
