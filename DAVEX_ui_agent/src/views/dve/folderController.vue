@@ -132,7 +132,7 @@
           <el-table-column
             fixed="right"
             label="操作"
-            mid-width="300"
+            width="180"
             header-align="center"
             align="center"
           >
@@ -259,7 +259,7 @@
 <!--          <el-table-column-->
 <!--            label="拥有权限"-->
 <!--            prop="allowedMethod"-->
-<!--            mid-width="180"-->
+<!--            min-width="180"-->
 <!--            align="center"-->
 <!--          ></el-table-column>-->
 <!--        </el-table>-->
@@ -555,7 +555,7 @@
 <!--        <el-table-column-->
 <!--          label="更新时间"-->
 <!--          prop="lastUpdate"-->
-<!--          mid-width="380"-->
+<!--          min-width="380"-->
 <!--          :formatter="formatDate"-->
 <!--          align="center"-->
 <!--        ></el-table-column>-->

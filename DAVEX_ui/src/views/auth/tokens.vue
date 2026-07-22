@@ -54,7 +54,7 @@
         fixed="right"
         label="操作"
         width="120"
-        mid-width="60"
+        min-width="60"
         header-align="center"
         align="center"
     >

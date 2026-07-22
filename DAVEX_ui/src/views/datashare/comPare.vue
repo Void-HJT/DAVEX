@@ -81,7 +81,7 @@
           <el-table-column
               fixed="right"
               label="操作"
-              mid-width="300"
+              width="180"
               header-align="center"
               align="center"
           >

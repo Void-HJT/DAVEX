@@ -184,7 +184,7 @@
           </el-table-column>
 
           <!-- 操作列：删除按钮 -->
-          <el-table-column label="操作" mid-width="100" align="center">
+          <el-table-column label="操作" min-width="100" align="center">
             <template #default="scope">
               <el-button
                 type="danger"
@@ -319,7 +319,7 @@
           </el-table-column>
 
           <!-- 操作列：删除按钮 -->
-          <el-table-column label="操作" mid-width="100" align="center">
+          <el-table-column label="操作" min-width="100" align="center">
             <template #default="scope">
               <el-button
                 type="danger"
@@ -355,7 +355,7 @@
           align="center"
         ></el-table-column>
         <!-- 操作列：删除按钮 -->
-        <el-table-column label="操作" mid-width="100" align="center">
+        <el-table-column label="操作" min-width="100" align="center">
           <template #default="scope">
             <el-button
               type="primary"

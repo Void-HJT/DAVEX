@@ -22,7 +22,10 @@ import {
       <div class="header-text">面向法律监督的隐私计算平台（Center）</div>
     </el-header>
     <el-container>
-      <el-aside style="background-color: #010927; margin-right: 10px">
+      <el-aside
+        width="220px"
+        style="background-color: #010927; margin-right: 10px"
+      >
         <el-menu
             active-text-color="#fff"
             active-text-background
@@ -39,6 +42,10 @@ import {
             <el-icon><Message /></el-icon>
             <span class="centered-text">历史记录</span>
           </el-menu-item>
+          <!-- <el-menu-item index="/user/userdata">
+            <el-icon><Connection /></el-icon>
+            <span class="centered-text">Agent管理</span>
+          </el-menu-item> -->
           <el-sub-menu index="/dve">
             <template #title>
               <el-icon><Menu /></el-icon>
@@ -188,6 +195,10 @@ import {
 .logo-img {
   width: 120px;
   height: auto;
+}
+/* 固定侧边栏文字大小，避免业务页面样式影响导航栏。 */
+.centered-text {
+  font-size: 16px;
 }
 .el-menu-item.is-active {
   color: #fff;

@@ -63,7 +63,7 @@
         <el-table-column
           fixed="right"
           label="操作"
-          mid-width="60"
+          min-width="60"
           header-align="center"
           align="center"
         >
@@ -169,7 +169,7 @@
       <el-table-column
         fixed="right"
         label="操作"
-        mid-width="60"
+        min-width="60"
         header-align="center"
         align="center"
       >
