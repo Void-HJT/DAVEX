@@ -144,65 +144,66 @@
       <div class="icon-text">
         <el-icon><Tickets /></el-icon>
         <span>选择MPC文件</span>
-      </div>
-    </el-header>
-    <el-main>
-      <div>
-        <el-table
+          </div>
+            </el-header>
+            <el-main>
+              <div class="mpc-table-wrapper">
+          <el-table
             :data="mpcList"
             max-height="400"
-        >
-          <el-table-column fixed label="" width="50" align="center">
-            <template #default="scope">
-              <el-icon>
-                <template>
-                  <el-icon><Files /></el-icon>
-                </template>
-              </el-icon>
-            </template>
-          </el-table-column>
-          <el-table-column
+            style="width: 100%"
+            stripe
+          >
+            <el-table-column
               label="MPC文件ID"
               prop="uid"
-              width="200"
+              width="280"
               align="center"
-          ></el-table-column>
-          <el-table-column
+            ></el-table-column>
+
+            <el-table-column
               label="名称"
               prop="name"
-              width="180"
+              width="260"
               align="center"
-          ></el-table-column>
-          <el-table-column
-              fixed="right"
+            ></el-table-column>
+
+            <el-table-column
               label="操作"
-              width="180"
+              min-width="480"
               header-align="center"
               align="center"
-          >
-            <template v-slot="scope">
-              <el-button
-                  class="small-default-button"
-                  @click="showParameters(scope.row, 'compile')"
-              >
-                <el-icon><Tickets /></el-icon> 查看编译参数
-              </el-button>
-              <el-button
-                  class="small-default-button"
-                  @click="showParameters(scope.row, 'runtime')"
-              >
-                <el-icon><Tickets /></el-icon> 查看运行参数
-              </el-button>
-              <el-button
-                  class="small-default-button"
-                  @click="chooseMpcMethod(scope.row)"
-              >
-                <el-icon><Tickets /></el-icon> 选择该MPC文件
-              </el-button>
-            </template>
-          </el-table-column>
-        </el-table>
-      </div>
+            >
+              <template #default="scope">
+                <div class="mpc-operation-actions">
+                  <el-button
+                    class="small-default-button"
+                    @click="showParameters(scope.row, 'compile')"
+                  >
+                    <el-icon><Tickets /></el-icon>
+                    查看编译参数
+                  </el-button>
+
+                  <el-button
+                    class="small-default-button"
+                    @click="showParameters(scope.row, 'runtime')"
+                  >
+                    <el-icon><Tickets /></el-icon>
+                    查看运行参数
+                  </el-button>
+
+                  <el-button
+                    class="small-default-button"
+                    @click="chooseMpcMethod(scope.row)"
+                  >
+                    <el-icon><Tickets /></el-icon>
+                    选择该MPC文件
+                  </el-button>
+                </div>
+              </template>
+            </el-table-column>
+          </el-table>
+        </div>
     </el-main>
   </el-container>
 
@@ -851,5 +852,25 @@ const saveRuntimeParameters = () => {
   display: flex; /* 使用 Flexbox */
   flex-direction: column; /* 设置为纵向布局 */
   align-items: center; /* 居中对齐子元素 */
+}
+
+/* MPC 文件表格占满容器，窄屏时允许横向滚动。 */
+.mpc-table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+}
+
+/* MPC 操作按钮在操作列中横向居中排列。 */
+.mpc-operation-actions {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  white-space: nowrap;
+}
+
+/* 清除 Element Plus 相邻按钮自带的左边距。 */
+.mpc-operation-actions .el-button + .el-button {
+  margin-left: 0;
 }
 </style>

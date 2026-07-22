@@ -490,8 +490,8 @@ import { getMpcList, uploadMpc } from '../../api/mpC.js'
 import {genFileId, UploadInstance, UploadProps, UploadRawFile} from "element-plus";
 import { addOperationHistory } from '../../api/operationHistory.js'
 
+// 页面加载时只查询 MPC 列表，参数由用户按需添加。
 onMounted(() => {
-  addcompileRarameter()
   getMpcListMethod()
 })
 
@@ -508,8 +508,12 @@ const handleExceed: UploadProps['onExceed'] = (files) => {
   upload.value!.handleStart(file)
 }
 
-const handleFileChange: UploadProps['onChange'] = (file, fileList) => {
+const handleFileChange: UploadProps['onChange'] = (file) => {
   uploadBody.value.file = file.raw
+
+  if (!mpcTaskInfo.value.name.trim()) {
+    mpcTaskInfo.value.name = file.name.replace(/\.[^.]+$/, '')
+  }
 }
 
 const submitUpload = () => {
@@ -529,8 +533,35 @@ const uploadBody = ref({
 })
 const uploadMethod = async () => {
   try {
-    console.log(uploadBody.value)
-    const res = await uploadMpc(uploadBody.value)
+     // 上传前检查必要字段，避免生成名称为空的数据库记录。
+    if (!uploadBody.value.file) {
+      mpcFailedMessage.value = '请先选择 MPC 文件'
+      mpcFailedVisible.value = true
+      return
+    }
+
+    const name = mpcTaskInfo.value.name.trim()
+    if (!name) {
+      mpcFailedMessage.value = 'MPC 文件名不能为空'
+      mpcFailedVisible.value = true
+      return
+    }
+
+    // 不发送页面中尚未配置类型的空参数，避免后端枚举解析失败。
+    const mpc = {
+      ...mpcTaskInfo.value,
+      name,
+      compileParameters: mpcTaskInfo.value.compileParameters.filter(
+        (parameter) => parameter.parameterType,
+      ),
+      runtimeParameters: mpcTaskInfo.value.runtimeParameters.filter(
+        (parameter) => parameter.parameterType,
+      ),
+    }
+    const res = await uploadMpc({
+      file: uploadBody.value.file,
+      mpc,
+    })
     console.log(res.data)
     if (res.data.body.code == 1) {
       mpcSuccessMessage.value = `MPC文件上传成功`
@@ -545,7 +576,8 @@ const uploadMethod = async () => {
       })
     }
     else {
-      mpcFailedMessage.value = res.data.message
+      // 后端业务消息位于响应的 body 中。
+      mpcFailedMessage.value = res.data.body?.message || 'MPC 文件上传失败'
       mpcFailedVisible.value = true
       // 记录失败操作
       await addOperationHistory({
