@@ -588,7 +588,8 @@ import {
   getRoot
 } from '../../api/folderController.js'
 import { getGroup, getRuleByGroup, getApplication } from '../../api/testDve.js'
-import { genFileId } from 'element-plus'
+import { ElMessage, genFileId } from 'element-plus'
+import 'element-plus/theme-chalk/el-message.css'
 import type { UploadInstance, UploadProps, UploadRawFile } from 'element-plus'
 import { nextTick, onMounted } from 'vue'
 
@@ -874,18 +875,30 @@ const handleFileChange: UploadProps['onChange'] = (file, fileList) => {
 const submitUpload = async () => {
   uploadFileBody.value.agentId = agentId.value
   uploadFileBody.value.folderId = currentParentId.value
-  await uploadFileMethod()
-  findCurrentFolder()
+
+  // 只有上传成功后才刷新当前目录。
+  const uploaded = await uploadFileMethod()
+  if (uploaded) {
+    await findCurrentFolder()
+  }
 }
 
 const uploadFileMethod = async () => {
   try {
-    console.log(uploadFileBody.value)
     const res = await uploadFile(uploadFileBody.value)
-    console.log(res.data)
-  }
-  catch (error) {
-    console.error('Failed to create MPC task:', error)
+
+    // 后端使用 code=1 表示成功，code=0 表示业务失败。
+    if (res.data?.code !== 1) {
+      ElMessage.error(res.data?.message || '文件上传失败')
+      return false
+    }
+
+    ElMessage.success(res.data?.message || '文件上传成功')
+    return true
+  } catch (error) {
+    console.error('Failed to upload file:', error)
+    ElMessage.error('文件上传失败')
+    return false
   }
 }
 

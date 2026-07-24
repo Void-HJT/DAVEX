@@ -315,6 +315,10 @@ public class FileFolderService {
 
     // 上传文件
     public Body<String> uploadFile(String agentId, String folderId, MultipartFile file, String baseDirectory, Integer privacy) {
+        // 空文件不能生成有效的本地文件和数据库记录。
+        if (file == null || file.isEmpty()) {
+            return Body.error("上传文件不能为空");
+        }
         // 查找是否存在该文件夹
         LambdaQueryWrapper<Folder> queryFolderWrapper = Wrappers.<Folder>lambdaQuery()
                 .eq(Folder::getUid, folderId);
