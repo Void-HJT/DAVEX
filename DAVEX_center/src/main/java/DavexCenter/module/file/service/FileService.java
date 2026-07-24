@@ -12,7 +12,6 @@ import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 import java.util.*;
@@ -297,18 +296,27 @@ public class FileService {
         newDownloadTask.setDownloadTime(Timestamp.valueOf(LocalDateTime.now()));
         newDownloadTask.setType("common");
         newDownloadTask.setPath(downloadPath.resolve(fileName).toString());
-        downloadTaskMapper.insert(newDownloadTask);
 
         // 直接通过路径访问文件
         try {
-//            copyFile(filePath, fileName, downloadPath.toString());
+            // copyFile(filePath, fileName, downloadPath.toString());
             Files.createDirectories(downloadPath);
             Files.copy(Paths.get(filePath), downloadPath.resolve(fileName), StandardCopyOption.REPLACE_EXISTING);
+
+            // common 中同一路径只有一个实际文件，因此只保留当前所有者记录。
+            downloadTaskMapper.delete(
+                    Wrappers.<DownloadTask>lambdaQuery()
+                            .eq(DownloadTask::getApplicationId, applicationId)
+                            .eq(DownloadTask::getType, "common")
+                            .eq(DownloadTask::getPath, newDownloadTask.getPath()));
+
+            downloadTaskMapper.insert(newDownloadTask);
         } catch (Exception e) {
             e.printStackTrace();
             return Body.error(String.format("获取失败: 结果id %d，文件名: %s，错误信息: %s", outputId, fileName, e.getMessage()));
         }
-        return Body.success(String.format("获取成功，结果id: %d，文件名: %s，保存路径: %s", outputId, fileName, newDownloadTask.getPath()));
+        return Body.success(
+                String.format("获取成功，结果id: %d，文件名: %s，保存路径: %s", outputId, fileName, newDownloadTask.getPath()));
     }
 
     public Body<List<Output>> queryFile(String applicationId) {
@@ -335,34 +343,87 @@ public class FileService {
 
     public Body<String> deleteFile(String applicationId, Long outputId) {
 
-        // 根据文件id查找结果表
+        // 根据结果ID和应用ID查找结果记录。
         LambdaQueryWrapper<Output> queryWrapper = Wrappers.<Output>lambdaQuery()
                 .eq(Output::getApplicationId, applicationId)
                 .eq(Output::getUid, outputId);
         Output queryOutput = outputMapper.selectOne(queryWrapper);
+
         if (queryOutput == null) {
             return Body.error(String.format("找不到该文件，结果id: %d", outputId));
         }
+
         String filePath = queryOutput.getPath();
         String fileName = queryOutput.getName();
 
-        // 禁用外键检查
-        jdbcTemplate.execute("SET FOREIGN_KEY_CHECKS = 0");
-
-        // 删除文件及结果表
-        try {
-            outputMapper.deleteById(outputId);
-            deleteFileFromPath(filePath);
-            // 启用外键检查
-            jdbcTemplate.execute("SET FOREIGN_KEY_CHECKS = 1");
-        } catch (Exception e) {
-            // 确保在异常情况下重新启用外键检查
-            jdbcTemplate.execute("SET FOREIGN_KEY_CHECKS = 1");
-            e.printStackTrace();
-            return Body.error(String.format("删除失败: 结果id %d，文件名: %s，错误信息: %s", outputId, fileName, e.getMessage()));
+        if (fileName == null || fileName.isBlank()) {
+            return Body.error(String.format("文件名为空，结果id: %d", outputId));
         }
 
-        return Body.success(String.format("删除成功，结果id: %d，文件名: %s", outputId, fileName));
+        // 构造并校验 common 下载副本路径。
+        Path downloadRoot = Paths.get(my.getBase_path())
+                .resolve("download")
+                .toAbsolutePath()
+                .normalize();
+        Path commonDirectory = downloadRoot
+                .resolve(applicationId)
+                .resolve("common")
+                .normalize();
+        Path commonFilePath = commonDirectory
+                .resolve(fileName)
+                .normalize();
+
+        // 防止 applicationId 或文件名使删除路径越出 download 目录。
+        if (!commonDirectory.startsWith(downloadRoot)
+                || !commonFilePath.startsWith(commonDirectory)) {
+            return Body.error("下载文件路径不合法");
+        }
+
+        // 历史数据可能存在同路径记录，只取最后一次成功下载记录。
+        DownloadTask currentDownloadTask = downloadTaskMapper.selectOne(
+                Wrappers.<DownloadTask>lambdaQuery()
+                        .eq(DownloadTask::getApplicationId, applicationId)
+                        .eq(DownloadTask::getType, "common")
+                        .eq(DownloadTask::getPath, commonFilePath.toString())
+                        .orderByDesc(DownloadTask::getDownloadTime)
+                        .orderByDesc(DownloadTask::getUid)
+                        .last("LIMIT 1"));
+
+        boolean ownsCommonFile = currentDownloadTask != null
+                && outputId.equals(currentDownloadTask.getOutputId());
+
+        jdbcTemplate.execute("SET FOREIGN_KEY_CHECKS = 0");
+
+        try {
+            // 删除结果数据库记录。
+            outputMapper.deleteById(outputId);
+
+            // 删除结果源文件。
+            deleteFileFromPath(filePath);
+
+            // 只有当前结果拥有 common 文件时才删除，避免旧记录误删新文件。
+            if (ownsCommonFile) {
+                Files.deleteIfExists(commonFilePath);
+
+                downloadTaskMapper.delete(
+                        Wrappers.<DownloadTask>lambdaQuery()
+                                .eq(DownloadTask::getApplicationId, applicationId)
+                                .eq(DownloadTask::getType, "common")
+                                .eq(DownloadTask::getPath, commonFilePath.toString()));
+            }
+
+            return Body.success(String.format(
+                    "删除成功，结果id: %d，文件名: %s",
+                    outputId, fileName));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return Body.error(String.format(
+                    "删除失败: 结果id %d，文件名: %s，错误信息: %s",
+                    outputId, fileName, e.getMessage()));
+        } finally {
+            // 无论删除成功或失败，都恢复当前数据库连接的外键检查。
+            jdbcTemplate.execute("SET FOREIGN_KEY_CHECKS = 1");
+        }
     }
 
     public String getSha256(MultipartFile file) {
@@ -427,11 +488,14 @@ public class FileService {
     }
 
     public void deleteFileFromPath(String filePath) throws Exception {
-        java.io.File file = new java.io.File(filePath);
-        // 路径是个文件且不为空时删除文件
-        if (file.isFile() && file.exists()) {
-            file.delete();
+        Path path = Paths.get(filePath).toAbsolutePath().normalize();
+
+        // 文件不存在时视为已删除；目录或其他类型不允许按文件删除。
+        if (Files.exists(path) && !Files.isRegularFile(path)) {
+            throw new IOException("目标路径不是普通文件: " + path);
         }
+
+        Files.deleteIfExists(path);
     }
 
     public Body<String> readFile(String applicationId, Long outputId) throws IOException {
