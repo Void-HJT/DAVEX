@@ -326,13 +326,13 @@ public class FileFolderService {
         if (folder == null) {
             return Body.error("该文件夹不存在");
         }
-        // 查找是否存在同名文件
+        // 同一 Agent 的同一文件夹中存在同名文件时覆盖原文件。
         LambdaQueryWrapper<File> queryFileWrapper = Wrappers.<File>lambdaQuery()
-                .eq(File::getName, file.getOriginalFilename())
-                .eq(File::getFolderId, folderId);
-        if (fileMapper.selectOne(queryFileWrapper) != null) {
-            return Body.error("有重名文件");
-        }
+                .eq(File::getAgentId, agentId)
+                .eq(File::getFolderId, folderId)
+                .eq(File::getName, file.getOriginalFilename());
+        File existingFile = fileMapper.selectOne(queryFileWrapper);
+        boolean overwrite = existingFile != null;
         // 构建文件夹路径
         List<String> parentFolderIds = new ArrayList<>();
         List<String> path = new ArrayList<>();
@@ -366,12 +366,16 @@ public class FileFolderService {
         }
 
         String fileName = file.getOriginalFilename();
-        //
-        GetMaxUid getMaxUid = new GetMaxUid();
-        //
-        int maxTailNumber = getMaxUid.getFileMaxUid(agentId, fileMapper);
-        String uid = agentId + "-D" + (maxTailNumber + 1);
-        fileRecord.setUid(uid);
+
+        if (overwrite) {
+            // 覆盖文件时保留原 UID，避免 Center 产生重复文件记录。
+            fileRecord.setUid(existingFile.getUid());
+        } else {
+            // 新文件才生成新的 UID。
+            GetMaxUid getMaxUid = new GetMaxUid();
+            int maxTailNumber = getMaxUid.getFileMaxUid(agentId, fileMapper);
+            fileRecord.setUid(agentId + "-D" + (maxTailNumber + 1));
+        }
         // fileRecord.setType(file.getOriginalFilename().substring(file.getOriginalFilename().lastIndexOf(".")));
         fileRecord.setAgentId(agentId);
         fileRecord.setFolderId(folderId);
@@ -383,8 +387,11 @@ public class FileFolderService {
             fileRecord.setType("default"); // 默认/传0时置为default
         }
 
-        fileRecord.setCreateDate(new Timestamp(System.currentTimeMillis()));
-        fileRecord.setLastUpdate(new Timestamp(System.currentTimeMillis()));
+        Timestamp now = new Timestamp(System.currentTimeMillis());
+
+        // 覆盖文件保留原创建时间，只更新最后修改时间。
+        fileRecord.setCreateDate(overwrite ? existingFile.getCreateDate() : now);
+        fileRecord.setLastUpdate(now);
 
         // 新增解析逻辑
         if (privacy == 1) {
@@ -526,14 +533,18 @@ public class FileFolderService {
             }
         }
 
-        // 插入数据库
-        fileMapper.insert(fileRecord);
+        // 新文件新增记录，重名文件更新原记录。
+        if (overwrite) {
+            fileMapper.updateById(fileRecord);
+        } else {
+            fileMapper.insert(fileRecord);
+        }
 
         List<Center> centerList = centerMapper.selectList(new LambdaQueryWrapper<>());
         for (Center center : centerList) {
             try {
                 // 准备 target 参数，可以根据实际情况选择 add, delete 或 update
-                String target = "add";
+                String target = overwrite ? "update" : "add";
                 if (center.getUid().equals(my.getId())) {// 跳过自己
                     continue;
                 }
