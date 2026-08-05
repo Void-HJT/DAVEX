@@ -1,10 +1,19 @@
 <template>
-  <router-view></router-view>
+  <!-- 全局限制消息数量，并合并短时间内重复出现的相同消息。 -->
+  <el-config-provider :message="messageConfig">
+    <router-view></router-view>
+  </el-config-provider>
 </template>
 
 <script setup>
 import { onMounted, onUnmounted } from 'vue'
 import { useNotificationStore } from './stores/index'
+// 最多同时显示3条消息，相同内容合并，3秒后自动关闭。
+const messageConfig = {
+  max: 3,
+  grouping: true,
+  duration: 3000,
+}
 
 const applicationId = 'DAVEX-C1-A1'
 const notificationStore = useNotificationStore()
@@ -40,7 +49,7 @@ body {
 .el-select .el-input__inner {
   height: 34px;
   line-height: 34px;
-  //padding: 5px 10px;
+  padding: 5px 10px;
   border-radius: 3px;
 }
 /* 悬停选项背景颜色和文字颜色 */

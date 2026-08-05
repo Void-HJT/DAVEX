@@ -921,20 +921,47 @@ const createFolderMethod = async () => {
 
 const deleteFolderMethod = async (uid, agentId, type, parentId) => {
   try {
-    //如果是文件夹
+    let res
+
     if (type === 'folder') {
-      deleteFolderBody.value.agentId = agentId
-      deleteFolderBody.value.folderId = uid
-      await deleteFolder(deleteFolderBody.value)
+      // 删除文件夹。
+      res = await deleteFolder({
+        agentId,
+        folderId: uid,
+      })
     } else {
-      deleteFileBody.value.agentId = agentId
-      deleteFileBody.value.fileId = uid
-      deleteFileBody.value.folderId = parentId
-      await deleteFile(deleteFileBody.value)
+      // 删除文件。
+      res = await deleteFile({
+        agentId,
+        fileId: uid,
+        folderId: parentId,
+      })
     }
-    findCurrentFolder()
+
+    // HTTP 请求成功不代表业务操作成功。
+    if (res.data.code === 0) {
+      ElMessage.error(
+        res.data.message ||
+        (type === 'folder' ? '文件夹删除失败' : '文件删除失败'),
+      )
+      return
+    }
+
+    ElMessage.success(
+      res.data.message ||
+      (type === 'folder' ? '文件夹删除成功' : '文件删除成功'),
+    )
+
+    // 只有删除成功才刷新目录。
+    await findCurrentFolder()
   } catch (error) {
-    console.error('Failed to delete folder:', error)
+    console.error('Failed to delete file or folder:', error)
+
+    ElMessage.error(
+      error?.response?.data?.message ||
+      error?.message ||
+      (type === 'folder' ? '文件夹删除失败' : '文件删除失败'),
+    )
   }
 }
 
