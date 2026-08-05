@@ -18,9 +18,11 @@ export const createMpcTask = ({ file, mpcTask }) => {
   return res
 }
 
-export const getMpcList = () => {
-  let res = request.get('/Mpc/list')
-  return res
+// MPC 管理页面不传参数时查询全部，隐私计算页面传参数时按功能查询。
+export const getMpcList = (taskType) => {
+  return request.get('/Mpc/list', {
+    params: taskType ? { taskType } : {},
+  })
 }
 
 export const uploadMpc = ({ file, mpc }) => {

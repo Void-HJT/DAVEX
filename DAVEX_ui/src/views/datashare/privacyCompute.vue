@@ -1,14 +1,112 @@
 <template>
+  <!-- 先保留原页面布局，只在顶部增加统一的隐私计算任务选择。 -->
+  <el-container class="privacy-task-container">
+    <el-header class="custom-header">
+      <div class="icon-text">
+        <span>隐私计算任务</span>
+      </div>
+    </el-header>
+    <el-main>
+      <el-form label-width="140px" class="privacy-task-form">
+        <el-form-item label="任务类型" required>
+          <el-radio-group v-model="taskType" @change="handleTaskTypeChange">
+            <el-radio-button label="GARNET_MPC">安全多方计算</el-radio-button>
+            <el-radio-button label="GARNET_PSI">隐私集合求交</el-radio-button>
+            <el-radio-button label="GARNET_INFERENCE">安全推理</el-radio-button>
+          </el-radio-group>
+        </el-form-item>
+
+        <el-form-item label="功能介绍">
+          <el-alert
+            :title="taskTypeDescription"
+            type="info"
+            :closable="false"
+            show-icon
+          />
+        </el-form-item>
+
+      </el-form>
+    </el-main>
+  </el-container>
+
+   <!-- 将 MPC 文件选择移动到隐私计算任务之后、代理文件选择之前。 -->
+  <el-container>
+    <el-header class="custom-header">
+      <div class="icon-text">
+        <el-icon><Tickets /></el-icon>
+        <span>选择MPC文件</span>
+      </div>
+    </el-header>
+
+    <el-main>
+      <div class="mpc-table-wrapper">
+        <el-table
+          :data="filteredMpcList"
+          empty-text="当前功能暂无可用MPC文件"
+          max-height="400"
+          style="width: 100%"
+          stripe
+        >
+          <el-table-column
+          label="名称"
+          prop="name"
+          width="420"
+          align="center"
+        ></el-table-column>
+
+          <el-table-column
+            label="操作"
+            min-width="480"
+            header-align="center"
+            align="center"
+          >
+            <template #default="scope">
+              <div class="mpc-operation-actions">
+                <el-button
+                  class="small-default-button"
+                  @click="showParameters(scope.row, 'compile')"
+                >
+                  <el-icon><Tickets /></el-icon>
+                  查看编译参数
+                </el-button>
+
+                <el-button
+                  class="small-default-button"
+                  @click="showParameters(scope.row, 'runtime')"
+                >
+                  <el-icon><Tickets /></el-icon>
+                  查看运行参数
+                </el-button>
+
+                <el-button
+                  class="small-default-button"
+                  @click="chooseMpcMethod(scope.row)"
+                >
+                  <el-icon><Tickets /></el-icon>
+                  选择该MPC文件
+                </el-button>
+              </div>
+            </template>
+          </el-table-column>
+        </el-table>
+      </div>
+    </el-main>
+  </el-container>
+
   <el-container>
     <div style="display: flex; gap: 10px; align-items: center;">
-      <div>
+      <div v-if="taskType === 'GARNET_MPC'">
         <span style="display: block; margin-bottom: 5px;">参与方数量</span>
-        <el-select v-model="partyNumber" placeholder="选择参与方数量" @change="handleSelectPartyNumber">
+        <el-select
+          v-model="partyNumber"
+          placeholder="选择参与方数量"
+          @change="handleSelectPartyNumber"
+        >
           <el-option
-              v-for="item in partyNumbers"
-              :key="item.value"
-              :label="item.label"
-              :value="item.value"
+            v-for="item in partyNumbers"
+            :key="item.value"
+            :label="item.label"
+            :value="item.value"
           />
         </el-select>
       </div>
@@ -143,75 +241,6 @@
     <el-header class="custom-header">
       <div class="icon-text">
         <el-icon><Tickets /></el-icon>
-        <span>选择MPC文件</span>
-      </div>
-    </el-header>
-    <el-main>
-      <!-- MPC 文件表格：ID 和名称紧凑排列，操作列占据剩余宽度。 -->
-      <div class="mpc-table-wrapper">
-        <el-table
-          :data="mpcList"
-          max-height="400"
-          style="width: 100%"
-          stripe
-        >
-          <el-table-column
-            label="MPC文件ID"
-            prop="uid"
-            width="280"
-            align="center"
-          ></el-table-column>
-
-          <el-table-column
-            label="名称"
-            prop="name"
-            width="260"
-            align="center"
-          ></el-table-column>
-
-          <el-table-column
-            label="操作"
-            min-width="480"
-            header-align="center"
-            align="center"
-          >
-            <template #default="scope">
-              <div class="mpc-operation-actions">
-                <el-button
-                  class="small-default-button"
-                  @click="showParameters(scope.row, 'compile')"
-                >
-                  <el-icon><Tickets /></el-icon>
-                  查看编译参数
-                </el-button>
-
-                <el-button
-                  class="small-default-button"
-                  @click="showParameters(scope.row, 'runtime')"
-                >
-                  <el-icon><Tickets /></el-icon>
-                  查看运行参数
-                </el-button>
-
-                <el-button
-                  class="small-default-button"
-                  @click="chooseMpcMethod(scope.row)"
-                >
-                  <el-icon><Tickets /></el-icon>
-                  选择该MPC文件
-                </el-button>
-              </div>
-            </template>
-          </el-table-column>
-        </el-table>
-      </div>
-    </el-main>
-  </el-container>
-
-  <el-container>
-    <el-header class="custom-header">
-      <div class="icon-text">
-        <el-icon><Tickets /></el-icon>
         <span>上传输入数据</span>
       </div>
     </el-header>
@@ -234,6 +263,18 @@
       <!--          </el-form-item>-->
       <!--        </el-form>-->
       <!--      </div>-->
+      <div v-if="taskType === 'GARNET_PSI'" class="psi-primary-key-form">
+        <el-form label-width="80px">
+          <el-form-item label="主键" required>
+            <el-input
+              v-model="psiPrimaryKey"
+              placeholder="请输入CSV文件中的主键列名，例如 id"
+              style="width: 375px"
+            />
+          </el-form-item>
+        </el-form>
+      </div>
+
       <el-upload
           ref="upload"
           class="upload-demo"
@@ -254,8 +295,13 @@
           配置运行参数
         </el-button>
         <div style="margin-top: 10px">
-          <el-button class="start-button" @click="submitUpload">
-            创建MPC任务
+          <el-button
+            class="start-button"
+            :loading="creatingTask"
+            :disabled="creatingTask"
+            @click="submitUpload"
+          >
+            {{ creatingTask ? '正在创建任务...' : '创建MPC任务' }}
           </el-button>
         </div>
         <template #tip>
@@ -447,13 +493,52 @@ import {getAgent} from '../../api/testDve.js'
 import {getDirectory, getRootByAgent} from '../../api/folderController.js'
 import {ref, computed, onMounted} from 'vue'
 import { createMpcTask, getMpcList } from '../../api/mpC.js'
-import {genFileId, UploadInstance, UploadProps, UploadRawFile} from 'element-plus'
+import {ElMessage,genFileId, UploadInstance, UploadProps, UploadRawFile} from 'element-plus'
 import {Connection, Tickets} from "@element-plus/icons-vue";
 
 onMounted(() => {
   getAgentMethod()
   getMpcListMethod()
 })
+
+// 当前只增加统一入口，后续再按任务类型接入三个页面各自的提交逻辑。
+const taskType = ref('GARNET_MPC')
+const taskTypeDescriptions = {
+  GARNET_MPC:
+    '使用通用MPC程序，在不公开参与方原始输入的情况下完成联合计算。',
+  GARNET_PSI:
+    '在不公开参与方完整数据集的情况下，根据指定主键计算数据交集。',
+  GARNET_INFERENCE:
+    '参与方分别提供私有模型和待推理数据，在不泄露模型参数及原始数据的情况下完成安全推理。',
+}
+const taskTypeDescription = computed(
+  () => taskTypeDescriptions[taskType.value],
+)
+const psiPrimaryKey = ref('')
+
+// PSI和安全推理当前固定为两方；只有通用MPC开放参与方数量选择。
+const handleTaskTypeChange = async (value) => {
+ // 将页面选择同步到实际提交对象。
+  createMpcTaskBody.value.taskType = value
+
+  if (value !== 'GARNET_MPC') {
+    partyNumber.value = 2
+    handleSelectPartyNumber(2)
+  }
+
+  if (value !== 'GARNET_PSI') {
+    psiPrimaryKey.value = ''
+    delete createMpcTaskBody.value.runtimeParameters.PK
+  }
+
+  // 切换功能后清除上一个功能选择的 MPC 和参数。
+  createMpcTaskBody.value.mpcId = ''
+  createMpcTaskBody.value.mpcName = ''
+  createMpcTaskBody.value.compileParameters = {}
+  createMpcTaskBody.value.runtimeParameters = {}
+  mpcFileName.value = ''
+  await getMpcListMethod()
+}
 
 const mpcSuccessVisible = ref(false)
 const mpcFailedVisible = ref(false)
@@ -507,8 +592,8 @@ const createMpcTaskBody = ref({
   compileParameters: {
   },
   host: '10.176.37.50', //后台配置
-  mpcId: 'decision-tree', //后台配置
-  mpcName: "决策树训练",
+  mpcId: '', //后台配置
+  mpcName: "",
   n: 2, //目前只需要2方
   part: 0, //发起方默认为第0方
   port: 6000, //后台配置 无需用户在前端选择端口
@@ -525,22 +610,182 @@ const createBody = ref({
   mpcTask: createMpcTaskBody.value
 })
 
-const createMethod = async () => {
-  try {
-    console.log(createBody.value)
-    const res = await createMpcTask(createBody.value)
-    console.log(res.data)
-    if (res.data.body.code == 1) {
-      mpcSuccessMessage.value = `MPC任务创建完成，执行完成后将通过消息中心提示`
-      mpcSuccessVisible.value = true
+const countInputValues = async (file: File) => {
+  const content = await file.text()
+
+  if (!content.trim()) {
+    return 0
+  }
+
+  return content.trim().split(/\s+/).filter(Boolean).length
+}
+
+const validatePsiFile = async (file: File, primaryKey: string) => {
+  const content = await file.text()
+  const lines = content
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean)
+
+  if (lines.length < 2) {
+    ElMessage.error('PSI输入文件必须包含表头和至少一条数据')
+    return false
+  }
+
+  const headers = lines[0]
+    .split(',')
+    .map((header) => header.trim())
+
+  if (!headers.includes(primaryKey)) {
+    ElMessage.error(`PSI输入文件中不存在主键列：${primaryKey}`)
+    return false
+  }
+
+  return true
+}
+
+const validateCreateTask = async () => {
+  if (!createMpcTaskBody.value.mpcId) {
+    ElMessage.warning('请先选择MPC文件')
+    return false
+  }
+
+  if (!createBody.value.file) {
+    ElMessage.warning('请先上传所需文件')
+    return false
+  }
+
+  if (
+    !createMpcTaskBody.value.partInfo ||
+    createMpcTaskBody.value.partInfo.length === 0
+  ) {
+    ElMessage.warning('请先选择Agent参与方')
+    return false
+  }
+
+  const incompletePart = createMpcTaskBody.value.partInfo.find(
+    (part) => !part.agentID || !part.fileID,
+  )
+
+  if (incompletePart) {
+    ElMessage.warning('请为每个Agent参与方选择输入文件')
+    return false
+  }
+
+  if (taskType.value === 'GARNET_PSI') {
+    const primaryKey = psiPrimaryKey.value.trim()
+
+    if (!primaryKey) {
+      ElMessage.warning('请输入隐私集合求交的主键')
+      return false
     }
-    else {
-      mpcFailedMessage.value = res.data.message
-      mpcFailedVisible.value = true
+
+    const valid = await validatePsiFile(
+      createBody.value.file,
+      primaryKey,
+    )
+
+    if (!valid) {
+      return false
     }
   }
-  catch (error) {
-    console.error('Failed to create MPC task:', error)
+
+  if (taskType.value === 'GARNET_INFERENCE') {
+    const params = createMpcTaskBody.value.compileParameters
+    const m = Number(params.m)
+    const testSamples = Number(params.test_samples)
+    const labelNumber = Number(params.label_number)
+    const treeHeight = Number(params.tree_h)
+
+    if (
+      !Number.isInteger(m) ||
+      m < 2 ||
+      !Number.isInteger(testSamples) ||
+      testSamples < 1 ||
+      !Number.isInteger(labelNumber) ||
+      labelNumber < 1 ||
+      !Number.isInteger(treeHeight) ||
+      treeHeight < 1
+    ) {
+      ElMessage.warning('请完整配置安全推理编译参数')
+      return false
+    }
+
+    if (createMpcTaskBody.value.mpcId === 'davex-dt-inference') {
+      const actualCount = await countInputValues(createBody.value.file)
+      const expectedCount = m * testSamples
+
+      if (actualCount !== expectedCount) {
+        ElMessage.error(
+          `安全推理输入数量不正确：需要 ${expectedCount} 个数，实际有 ${actualCount} 个`,
+        )
+        return false
+      }
+    }
+  }
+
+  return true
+}
+
+const createMethod = async () => {
+  if (creatingTask.value) {
+    return
+  }
+
+  createMpcTaskBody.value.taskType = taskType.value
+  createMpcTaskBody.value.n =
+    taskType.value === 'GARNET_MPC' ? partyNumber.value : 2
+
+  if (taskType.value === 'GARNET_PSI') {
+    createMpcTaskBody.value.runtimeParameters.PK =
+      psiPrimaryKey.value.trim()
+  }
+
+  if (!(await validateCreateTask())) {
+    return
+  }
+
+  creatingTask.value = true
+
+  ElMessage.info({
+    message: '任务正在创建，请稍候',
+    duration: 2000,
+  })
+
+  try {
+    const res = await createMpcTask({
+      file: createBody.value.file,
+      mpcTask: createMpcTaskBody.value,
+    })
+
+    const body = res?.data?.body
+
+    if (body?.code === 1) {
+      mpcSuccessMessage.value =
+        body.message || '任务创建成功，执行完成后将通过消息中心提示'
+      mpcSuccessVisible.value = true
+      // ElMessage.success('任务创建成功')
+    } else {
+      mpcFailedMessage.value =
+        body?.message || res?.data?.message || '任务创建失败'
+      mpcFailedVisible.value = true
+      // ElMessage.error(mpcFailedMessage.value)
+    }
+  } catch (error) {
+    const message =
+      error?.response?.data?.body?.message ||
+      error?.response?.data?.message ||
+      error?.response?.data?.error ||
+      error?.message ||
+      '任务创建请求失败'
+
+    mpcFailedMessage.value = message
+    mpcFailedVisible.value = true
+    ElMessage.error(`创建失败：${message}`)
+
+    console.error('Failed to create privacy task:', error)
+  } finally {
+    creatingTask.value = false
   }
 }
 
@@ -635,12 +880,23 @@ const handleExceed: UploadProps['onExceed'] = (files) => {
 }
 
 const handleFileChange: UploadProps['onChange'] = (file, fileList) => {
+ if (!file.raw) {
+    createBody.value.file = null
+    return
+  }
+
+  if (file.raw.size === 0) {
+    createBody.value.file = null
+    upload.value?.clearFiles()
+    ElMessage.error('输入文件不能为空')
+    return
+  }
+
   createBody.value.file = file.raw
 }
 
-const submitUpload = () => {
-  createMethod()
-  console.log(createMpcTaskBody.value)
+const submitUpload = async () => {
+  await createMethod()
 }
 
 const getRootByAgentMethod = async (agentId) => {
@@ -693,19 +949,45 @@ const showParameters = (row, type) => {
 }
 
 const mpcList = ref([])
+// 即使后端意外返回全部 MPC，页面也只显示当前功能对应的数据。
+const filteredMpcList = computed(() =>
+  mpcList.value.filter(
+    (item) => item.taskType === taskType.value,
+  ),
+)
+
 const getMpcListMethod = async () => {
+  // 查询前清空旧列表，避免切换功能时短暂显示错误的 MPC。
+  mpcList.value = []
+
   try {
-    const res = await getMpcList()
-    mpcList.value = res.data.body.data
-    console.log(mpcList.value)
+    // 只查询当前隐私计算功能对应的 MPC 文件。
+    const res = await getMpcList(taskType.value)
+
+    if (res.data.body?.code !== 1) {
+      ElMessage.error(res.data.body?.message || '查询MPC文件失败')
+      return
+    }
+
+    mpcList.value = res.data.body.data || []
   } catch (error) {
-    console.error('Failed to get mpc list:', error)
+    // 向用户显示查询失败，而不是只写入控制台。
+    const message =
+      error.response?.data?.body?.message ||
+      error.response?.data?.message ||
+      error.message ||
+      '查询MPC文件失败'
+
+    ElMessage.error(message)
   }
 }
 
 const mpcFileName = ref('')
 const chooseMpcMethod = async (row) => {
   try {
+    createMpcTaskBody.value.compileParameters = {}
+    createMpcTaskBody.value.runtimeParameters = {}
+
     // 遍历传入的 parameters 并将 defaultValue 保存到 createMpcTaskBody 中
     row.compileParameters.forEach(param => {
       if (param.limit && param.limit.defaultValue !== undefined) {
@@ -733,54 +1015,141 @@ const editRuntimeVisible = ref(false)
 const currentCompileParameters = ref([])
 const currentRuntimeParameters = ref([])
 const editCompileDialog = () => {
+  if (!createMpcTaskBody.value.mpcId) {
+    ElMessage.warning('请先选择MPC文件')
+    return
+  }
+
   const mpc = mpcList.value.find(
-      (t) => t.uid === createMpcTaskBody.value.mpcId,
+    (item) => item.uid === createMpcTaskBody.value.mpcId,
   )
-  if (mpc) {
-    currentCompileParameters.value = mpc.compileParameters.map((param) => ({
-      ...param,
-      // value: param.limit.defaultValue || '',
-      value: param.limit?.defaultValue ?? '',
-    }))
-    editCompileVisible.value = true
+
+  if (!mpc) {
+    ElMessage.error('找不到已选择的MPC文件')
+    return
   }
+
+  // 优先显示用户已经保存的值；没有保存时才使用默认值。
+  currentCompileParameters.value = mpc.compileParameters.map(
+    (param) => ({
+      ...param,
+      value:
+        createMpcTaskBody.value.compileParameters[param.name] ??
+        param.limit?.defaultValue ??
+        '',
+    }),
+  )
+
+  editCompileVisible.value = true
 }
+
 const editRuntimeDialog = () => {
-  const task = mpcList.value.find(
-      (t) => t.uid === createMpcTaskBody.value.mpcId,
-  )
-  if (task) {
-    currentRuntimeParameters.value = task.runtimeParameters.map((param) => ({
-      ...param,
-      // value: param.limit.defaultValue || '',
-      value: param.limit?.defaultValue ?? '',
-    }))
+  if (!createMpcTaskBody.value.mpcId) {
+    ElMessage.warning('请先选择MPC文件')
+    return
   }
+
+  const mpc = mpcList.value.find(
+    (item) => item.uid === createMpcTaskBody.value.mpcId,
+  )
+
+  if (!mpc) {
+    ElMessage.error('找不到已选择的MPC文件')
+    return
+  }
+
+  // 优先显示已经保存到任务对象中的运行参数。
+  currentRuntimeParameters.value = mpc.runtimeParameters.map(
+    (param) => ({
+      ...param,
+      value:
+        createMpcTaskBody.value.runtimeParameters[param.name] ??
+        param.limit?.defaultValue ??
+        '',
+    }),
+  )
+
   editRuntimeVisible.value = true
 }
 
 const saveCompileParameters = () => {
-  currentCompileParameters.value.forEach((param) => {
-    // 检查参数值是否为数字，如果是则转换为数字
-    if (!isNaN(param.value) && param.limitType === 'NUM') {
-      createMpcTaskBody.value.compileParameters[param.name] = Number(param.value)
-    } else {
-      // 对于其他类型（如字符串），直接存储
-      createMpcTaskBody.value.compileParameters[param.name] = param.value
+  for (const param of currentCompileParameters.value) {
+    const value =
+      typeof param.value === 'string'
+        ? param.value.trim()
+        : param.value
+
+    if (
+      param.required &&
+      (value === '' || value === null || value === undefined)
+    ) {
+      ElMessage.warning(`编译参数“${param.name}”不能为空`)
+      return
     }
-  })
+
+    if (param.limitType === 'NUM') {
+      const numberValue = Number(value)
+
+      if (!Number.isFinite(numberValue)) {
+        ElMessage.warning(`编译参数“${param.name}”必须是数字`)
+        return
+      }
+
+      createMpcTaskBody.value.compileParameters[param.name] =
+        numberValue
+    } else {
+      createMpcTaskBody.value.compileParameters[param.name] =
+        value
+    }
+  }
+
   editCompileVisible.value = false
+  ElMessage.success('编译参数已保存')
 }
 
 const saveRuntimeParameters = () => {
-  currentRuntimeParameters.value.forEach((param) => {
-    createMpcTaskBody.value.runtimeParameters[param.name] = param.value
-  })
+  for (const param of currentRuntimeParameters.value) {
+    const value =
+      typeof param.value === 'string'
+        ? param.value.trim()
+        : param.value
+
+    if (
+      param.required &&
+      (value === '' || value === null || value === undefined)
+    ) {
+      ElMessage.warning(`运行参数“${param.name}”不能为空`)
+      return
+    }
+
+    createMpcTaskBody.value.runtimeParameters[param.name] = value
+  }
+
   editRuntimeVisible.value = false
+  ElMessage.success('运行参数已保存')
 }
+
+const creatingTask = ref(false)
 </script>
 
 <style scoped>
+.privacy-task-container {
+  display: block;
+  width: 100%;
+}
+
+.privacy-task-form {
+  width: 100%;
+  max-width: 1250px;
+}
+
+.privacy-task-form :deep(.el-alert) {
+  width: 100%;
+}
+
+.psi-primary-key-form {
+  margin-bottom: 10px;
+}
 .form-container {
   display: flex;
   justify-content: center;
