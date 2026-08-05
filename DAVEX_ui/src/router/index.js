@@ -62,20 +62,12 @@ const router = createRouter({
           component: () => import('@/views/datashare/fileTrans.vue'),
         },
         {
-          path: 'datashare/mPc',
-          component: () => import('@/views/datashare/newMpc.vue'),
-        },
-        {
-          path: 'datashare/pSi',
-          component: () => import('@/views/datashare/pSi.vue'),
+          path: 'datashare/privacyCompute',
+          component: () => import('@/views/datashare/privacyCompute.vue'),
         },
         {
           path: 'datashare/quEry',
           component: () => import('@/views/datashare/quEry.vue'),
-        },
-        {
-          path: 'datashare/secureInfer',
-          component: () => import('@/views/datashare/secureInfer.vue'),
         },
         {
           path: 'datashare/fLearning',

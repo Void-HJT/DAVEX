@@ -21,6 +21,8 @@ public class Mpc {
     @TableId(type = IdType.ASSIGN_UUID)
     private String uid;
     private String name;
+    // 记录 MPC 文件所属的隐私计算功能。可选值：GARNET_MPC、GARNET_PSI、GARNET_INFERENCE。
+    private String taskType;
     @TableField(typeHandler = ParameterListTypeHandler.class)
     private List<Parameter> compileParameters;
     @TableField(typeHandler = ParameterListTypeHandler.class)

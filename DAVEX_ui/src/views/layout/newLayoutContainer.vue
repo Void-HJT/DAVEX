@@ -81,17 +81,9 @@ import {
               <el-icon><EditPen /></el-icon>
               <span class="centered-text">比对</span>
             </el-menu-item>
-            <el-menu-item index="/datashare/pSi">
+            <el-menu-item index="/datashare/privacyCompute">
               <el-icon><EditPen /></el-icon>
-              <span class="centered-text">隐私集合求交</span>
-            </el-menu-item>
-            <el-menu-item index="/datashare/mPc">
-              <el-icon><EditPen /></el-icon>
-              <span class="centered-text">安全多方计算</span>
-            </el-menu-item>
-            <el-menu-item index="/datashare/secureInfer">
-              <el-icon><EditPen /></el-icon>
-              <span class="centered-text">安全推理</span>
+              <span class="centered-text">隐私计算</span>
             </el-menu-item>
             <el-menu-item index="/datashare/fLearning">
               <el-icon><EditPen /></el-icon>

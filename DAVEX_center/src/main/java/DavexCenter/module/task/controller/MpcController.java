@@ -41,8 +41,23 @@ public class MpcController {
     MpcMapper mpcMapper;
 
     @GetMapping("/list")
-    public R<List<Mpc>> list() {
+    public R<List<Mpc>> list(
+            @RequestParam(required = false) String taskType) {
+        // 不传 taskType 时返回全部 MPC，供可能的 MPC 管理页面使用。
         LambdaQueryWrapper<Mpc> queryWrapper = Wrappers.<Mpc>lambdaQuery();
+
+        if (taskType != null && !taskType.isBlank()) {
+            // 拒绝未知功能类型，避免返回不符合预期的数据。
+            if (!"GARNET_MPC".equals(taskType)
+                    && !"GARNET_PSI".equals(taskType)
+                    && !"GARNET_INFERENCE".equals(taskType)) {
+                return R.error("不支持的MPC功能类型");
+            }
+
+            // 统一隐私计算页面只查询当前功能对应的 MPC。
+            queryWrapper.eq(Mpc::getTaskType, taskType);
+        }
+
         return R.success(mpcMapper.selectList(queryWrapper), "查询成功");
     }
 
@@ -68,6 +83,14 @@ public class MpcController {
 
     @PostMapping("/create")
     public R<Mpc> create(@RequestPart("file") MultipartFile file, @RequestPart Mpc mpc) {
+        //上传 MPC 文件时必须指定有效的隐私计算功能。
+        String taskType = mpc.getTaskType();
+        if (!"GARNET_MPC".equals(taskType)
+                && !"GARNET_PSI".equals(taskType)
+                && !"GARNET_INFERENCE".equals(taskType)) {
+            return R.error("请选择正确的MPC所属功能");
+        }
+
         String fileName = file.getOriginalFilename();
         Path path = Utils.resolveFileNameConflict(Paths.get(my.getBase_path()).resolve("programs").resolve(fileName));
         mpc.setPath(Paths.get("programs").resolve(path.getFileName()).toString());
