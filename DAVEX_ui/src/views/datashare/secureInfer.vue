@@ -415,6 +415,8 @@ const inferenceInfo = ref({
   agentId: '',
   fileId: '',
   applicationId: applicationId,
+  compileParameters: {},
+  runtimeParameters: {},
 })
 const createBody = ref({
   file: null as File | null,
@@ -592,24 +594,26 @@ const getMpcListMethod = async () => {
 const mpcFileName = ref('')
 const chooseMpcMethod = async (row) => {
   try {
-    // 遍历传入的 parameters 并将 defaultValue 保存到 createMpcTaskBody 中
-    // row.compileParameters.forEach(param => {
-    //   if (param.limit && param.limit.defaultValue !== undefined) {
-    //     createMpcTaskBody.value.compileParameters[param.name] = param.limit.defaultValue
-    //   }
-    // })
-    // row.runtimeParameters.forEach(param => {
-    //   if (param.limit && param.limit.defaultValue !== undefined) {
-    //     createMpcTaskBody.value.runtimeParameters[param.name] = param.limit.defaultValue
-    //   }
-    // })
-    // createMpcTaskBody.value.mpcId = row.uid
-    // createMpcTaskBody.value.mpcName = row.name
-    // console.log(createMpcTaskBody.value.compileParameters)
-    // console.log(createMpcTaskBody.value.runtimeParameters)
+    // 选择 MPC 时先复制注册默认值，参数编辑弹窗可在此基础上覆盖。
+    inferenceInfo.value.compileParameters = {}
+    inferenceInfo.value.runtimeParameters = {}
+
+    row.compileParameters.forEach((param) => {
+      if (param.limit?.defaultValue !== undefined) {
+        inferenceInfo.value.compileParameters[param.name] =
+            param.limit.defaultValue
+      }
+    })
+
+    row.runtimeParameters.forEach((param) => {
+      if (param.limit?.defaultValue !== undefined) {
+        inferenceInfo.value.runtimeParameters[param.name] =
+            param.limit.defaultValue
+      }
+    })
+
     mpcFileName.value = row.name
-  }
-  catch (error) {
+  } catch (error) {
     console.error('Failed to choose mpc file:', error)
   }
 }
@@ -647,24 +651,25 @@ const editRuntimeDialog = () => {
 
 const saveCompileParameters = () => {
   currentCompileParameters.value.forEach((param) => {
-    // 检查参数值是否为数字，如果是则转换为数字
+    // 数值编译参数保持 Number 类型，避免后端收到无法用于编译的字符串。
     if (!isNaN(param.value) && param.limitType === 'NUM') {
-      // createMpcTaskBody.value.compileParameters[param.name] = Number(param.value)
+      inferenceInfo.value.compileParameters[param.name] =
+          Number(param.value)
     } else {
-      // 对于其他类型（如字符串），直接存储
-      // createMpcTaskBody.value.compileParameters[param.name] = param.value
+      inferenceInfo.value.compileParameters[param.name] = param.value
     }
   })
+
   editCompileVisible.value = false
 }
 
 const saveRuntimeParameters = () => {
   currentRuntimeParameters.value.forEach((param) => {
-    // createMpcTaskBody.value.runtimeParameters[param.name] = param.value
+    inferenceInfo.value.runtimeParameters[param.name] = param.value
   })
+
   editRuntimeVisible.value = false
 }
 </script>
 
 <style scoped></style>
-  

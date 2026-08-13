@@ -3,15 +3,15 @@ package DavexCenter.module.task.service;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
-import DavexBase.service.notification.NotificationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
-import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 
@@ -20,14 +20,20 @@ import DavexBase.common.My;
 import DavexBase.common.R;
 import DavexBase.entity.MpcTask;
 import DavexBase.entity.MpcTaskAgent;
-import DavexBase.info.UploadAgentTaskInfo;
 import DavexBase.mapper.AgentMapper;
 import DavexBase.mapper.MpcTaskAgentMapper;
 import DavexBase.mapper.MpcTaskMapper;
 import DavexBase.service.auth.CenterWebClientService;
 import DavexBase.service.programs.GarnetService;
+import DavexBase.task.command.MpcTaskCommand;
+import DavexBase.task.command.ParticipantInput;
+import DavexBase.task.command.TaskOptions;
+import DavexBase.service.notification.NotificationService;
+
 import DavexCenter.entity.Input;
 import DavexCenter.mapper.InputMapper;
+import DavexCenter.module.task.assembler.AgentMpcTaskRequestProjector;
+import DavexCenter.module.task.assembler.MpcTaskCommandAssembler;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -86,45 +92,55 @@ public class MpcTaskService {
         return mpcTaskMapper.selectOne(queryWrapper);
     }
 
-    public UploadAgentTaskInfo create(UploadAgentTaskInfo mpcTaskInfo) throws Exception {
-        if (!my.getId().equals(mpcTaskInfo.getCenterId())) {
+    public MpcTask create(MpcTaskCommand command) throws Exception {
+        if (!my.getId().equals(command.centerId())) {
             throw new Exception("发送错误");
         }
 
-        for (UploadAgentTaskInfo.PartInfo partInfo : mpcTaskInfo.getPartInfo()) {
-            if (agentMapper.selectById(partInfo.getAgentID()) == null) {
+        for (ParticipantInput participant : command.participants()) {
+            if (agentMapper.selectById(participant.agentId()) == null) {
                 throw new Exception("Agent不存在");
             }
-            // TODO 检查app有权访问File
-            // if (fileMapper.selectById(entry.getValue().getRight()) == null) {
-            // throw new Exception("文件不存在");
-            // }
         }
-        mpcTaskInfo = parameterUpdate(mpcTaskInfo);
-        mpcTaskMapper.insert(mpcTaskInfo);
-        List<Mono<R<?>>> monos = new ArrayList<Mono<R<?>>>();
-        for (UploadAgentTaskInfo.PartInfo partInfo : mpcTaskInfo.getPartInfo()) {
+
+        command = parameterUpdate(command);
+
+        MpcTask mpcTask = MpcTaskCommandAssembler.toEntity(command);
+        mpcTaskMapper.insert(mpcTask);
+
+        // 数据库生成 UID 后同步回不可变命令，供参与方记录和 Agent 请求使用。
+        command = command.withUid(mpcTask.getUid());
+
+        List<Mono<R<?>>> monos = new ArrayList<>();
+
+        for (ParticipantInput participant : command.participants()) {
             MpcTaskAgent mpcTaskAgent = new MpcTaskAgent();
-            mpcTaskAgent.setAgentId(partInfo.getAgentID());
-            mpcTaskAgent.setPart(partInfo.getPart());
-            mpcTaskAgent.setMpcTaskId(mpcTaskInfo.getUid());
-            mpcTaskAgent.setCenterId(mpcTaskInfo.getCenterId());
+            mpcTaskAgent.setAgentId(participant.agentId());
+            mpcTaskAgent.setPart(participant.part());
+            mpcTaskAgent.setMpcTaskId(command.uid());
+            mpcTaskAgent.setCenterId(command.centerId());
             mpcTaskAgentMapper.insert(mpcTaskAgent);
-            UploadAgentTaskInfo mpcTaskInfoCopy = new UploadAgentTaskInfo(mpcTaskInfo);
-            mpcTaskInfoCopy.maskFileID();
-            mpcTaskInfoCopy.setPart(partInfo.getPart());
-            mpcTaskInfoCopy.setDataId(partInfo.getFileID());
-            monos.add(centerWebClientService.center2AgentWebClient(partInfo.getAgentID()).post().uri("/MpcTasks/create")
-                    .bodyValue((UploadAgentTaskInfo) mpcTaskInfoCopy).retrieve()
-                    .bodyToMono(new ParameterizedTypeReference<R<?>>() {
-                    }));
+
+            monos.add(
+                    centerWebClientService
+                            .center2AgentWebClient(participant.agentId())
+                            .post()
+                            .uri("/MpcTasks/create")
+                            .bodyValue(
+                                    AgentMpcTaskRequestProjector.toRequest(
+                                            command,
+                                            participant))
+                            .retrieve()
+                            .bodyToMono(new ParameterizedTypeReference<R<?>>() {
+                            }));
         }
+
         Mono.when(monos).block();
-        return mpcTaskInfo;
+        return mpcTask;
     }
 
     @Async("customExecutor")
-    public void mpcRun(UploadAgentTaskInfo mpcTask) throws Exception {
+    public void mpcRun(MpcTask mpcTask) throws Exception {
         try {
             garnetService.compile(mpcTask);
         } catch (Exception e) {
@@ -158,7 +174,7 @@ public class MpcTaskService {
     }
 
     @Async("customExecutor")
-    public void psiRun(UploadAgentTaskInfo mpcTask) throws Exception {
+    public void psiRun(MpcTask mpcTask) throws Exception {
         try {
             garnetService.compile(mpcTask);
         } catch (Exception e) {
@@ -268,30 +284,57 @@ public class MpcTaskService {
         return mpcTaskMapper.selectList(null);
     }
 
-    public UploadAgentTaskInfo parameterUpdate(UploadAgentTaskInfo mpcTask) {
-        MpcTask.TaskType type = mpcTask.getTaskType();
-        if (type == MpcTask.TaskType.GARNET_PSI) {
-            JSONObject compileParameters = new JSONObject();
-            Long P0_data = garnetService.csvCount(inputMapper.selectById(mpcTask.getDataId()).getPath());
-            Long P1_data = null;
-            UploadAgentTaskInfo.PartInfo p1 = mpcTask.getPartInfo().get(0);
-            try {
-                P1_data = centerWebClientService.center2AgentWebClient(p1.getAgentID()).post()
-                        .uri(uriBuilder -> uriBuilder.path("/directory/fileFolder/getRowCount")
-                                .queryParam("agentId", p1.getAgentID())
-                                .queryParam("fileId", p1.getFileID())
-                                .build())
-                        .retrieve().bodyToMono(new ParameterizedTypeReference<Body<Long>>() {
-                        }).block().getData();
-            } catch (Exception e) {
-                e.printStackTrace();
-                return mpcTask;
-            }
-            compileParameters.put("P0_Data", P0_data);
-            // directory/fileFolder/getRowCoun得到的csv行数包含表头
-            compileParameters.put("P1_Data", P1_data - 1);
-            mpcTask.setCompileParameters(compileParameters);
+    public MpcTaskCommand parameterUpdate(MpcTaskCommand command) {
+
+        if (command.taskType() != MpcTaskCommand.TaskType.GARNET_PSI) {
+            return command;
         }
-        return mpcTask;
+
+        Map<String, Object> compileParameters = new LinkedHashMap<>();
+
+        Long p0Data = garnetService.csvCount(
+                inputMapper.selectById(command.dataId()).getPath());
+
+        ParticipantInput participant = command.participants().get(0);
+
+        try {
+            Long p1Data = centerWebClientService
+                    .center2AgentWebClient(participant.agentId())
+                    .post()
+                    .uri(uriBuilder -> uriBuilder
+                            .path(
+                                    "/directory/fileFolder/getRowCount")
+                            .queryParam(
+                                    "agentId",
+                                    participant.agentId())
+                            .queryParam(
+                                    "fileId",
+                                    participant.fileId())
+                            .build())
+                    .retrieve()
+                    .bodyToMono(new ParameterizedTypeReference<Body<Long>>() {
+                    })
+                    .block()
+                    .getData();
+
+            compileParameters.put("P0_Data", p0Data);
+
+            // Agent 返回的 CSV 行数包含表头。
+            compileParameters.put("P1_Data", p1Data - 1);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return command;
+        }
+
+        TaskOptions currentOptions = command.options();
+        Map<String, Object> runtimeParameters =
+                currentOptions == null
+                        ? null
+                        : currentOptions.runtimeParameters();
+
+        return command.withOptions(
+                new TaskOptions(
+                        compileParameters,
+                        runtimeParameters));
     }
 }

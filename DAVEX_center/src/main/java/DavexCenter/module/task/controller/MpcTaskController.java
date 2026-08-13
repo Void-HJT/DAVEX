@@ -17,13 +17,15 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
+import org.dsg.davex.contract.mpc.MpcTaskCreateRequest;
 
 import DavexBase.common.My;
 import DavexBase.common.R;
 import DavexBase.common.Utils;
+import DavexBase.contract.MpcTaskCreateRequestMapper;
 import DavexBase.entity.MpcTask;
 import DavexBase.entity.MpcTaskOutput;
-import DavexBase.info.UploadAgentTaskInfo;
+import DavexBase.task.command.MpcTaskCommand;
 import DavexCenter.entity.Input;
 import DavexCenter.mapper.InputMapper;
 import DavexCenter.module.task.service.MpcTaskOutputService;
@@ -49,60 +51,74 @@ public class MpcTaskController {
     private static final Logger logger = LoggerFactory.getLogger(MpcTaskController.class);
 
     @PostMapping("/create")
-    public R<MpcTask> createMpcTask(@RequestBody UploadAgentTaskInfo mpcTask) {
-        logger.info("接收到任务：{}", mpcTask);
+    public R<MpcTask> createMpcTask(
+            @RequestBody MpcTaskCreateRequest request) {
+
+        logger.info("接收到任务：{}", request);
+
         try {
-            mpcTask = mpcTaskService.create(mpcTask);
-            switch (mpcTask.getTaskType()) {
+            MpcTaskCommand command = MpcTaskCreateRequestMapper.toCommand(request);
+            MpcTask created = mpcTaskService.create(command);
+
+            switch (created.getTaskType()) {
                 case GARNET_MPC:
                 default:
-                    mpcTaskService.mpcRun(mpcTask);
+                    mpcTaskService.mpcRun(created);
                     break;
                 case GARNET_PSI:
-                    mpcTaskService.psiRun(mpcTask);
+                    mpcTaskService.psiRun(created);
                     break;
             }
+
+            logger.info("任务创建成功");
+            return R.success(created, "成功创建");
         } catch (Exception e) {
             logger.error(e.getMessage());
             return R.error(e.getMessage());
         }
-        logger.info("任务创建成功");
-        return R.success(mpcTask, "成功创建");
     }
-
     @PostMapping("/create_with_input")
-    public R<MpcTask> createWithInput(@RequestPart("file") MultipartFile file,
-            @RequestPart("mpcTask") UploadAgentTaskInfo mpcTask) {
-        logger.info("接收到任务：{}", mpcTask);
+    public R<MpcTask> createWithInput(
+            @RequestPart("file") MultipartFile file,
+            @RequestPart("mpcTask") MpcTaskCreateRequest request) {
+
+        logger.info("接收到任务：{}", request);
+
         Path path = Utils.resolveFileNameConflict(
                 Paths.get(my.getBase_path()).resolve("Input").resolve(file.getOriginalFilename()));
+
         Input input = new Input();
-        input.setApplicationId(mpcTask.getApplicationId());
-        input.setPath(Paths.get("Input").resolve(path.getFileName()).toString());
+        input.setApplicationId(request.applicationId());
+        input.setPath(Paths.get("Input")
+                .resolve(path.getFileName()).toString());
+
         try {
             Files.createDirectories(path.getParent());
             Files.write(path, file.getBytes());
             inputMapper.insert(input);
-            mpcTask.setDataId(input.getUid());
-            mpcTask.setHost(my.getIp());
-            mpcTask = mpcTaskService.create(mpcTask);
-            switch (mpcTask.getTaskType()) {
+
+            MpcTaskCommand command =
+                    MpcTaskCreateRequestMapper.toCommand(request)
+                            .withInput(input.getUid(), my.getIp());
+            MpcTask created = mpcTaskService.create(command);
+
+            switch (created.getTaskType()) {
                 case GARNET_MPC:
                 default:
-                    mpcTaskService.mpcRun(mpcTask);
+                    mpcTaskService.mpcRun(created);
                     break;
                 case GARNET_PSI:
-                    mpcTaskService.psiRun(mpcTask);
+                    mpcTaskService.psiRun(created);
                     break;
             }
+
+            logger.info("任务创建成功");
+            return R.success(created, "成功创建");
         } catch (Exception e) {
             logger.error(e.getMessage());
             return R.error(e.getMessage());
         }
-        logger.info("任务创建成功");
-        return R.success(mpcTask, "成功创建");
     }
-
     @GetMapping("/ready")
     public R<?> checkTaskStatus(@PathVariable String mpcTaskId) {
         try {
@@ -131,4 +147,5 @@ public class MpcTaskController {
     public List<MpcTask> list() {
         return mpcTaskService.list();
     }
+
 }

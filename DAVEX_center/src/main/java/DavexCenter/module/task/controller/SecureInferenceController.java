@@ -17,7 +17,7 @@ import DavexBase.common.R;
 import DavexBase.common.Utils;
 import DavexBase.entity.MpcTask;
 import DavexBase.info.InferenceInfo;
-import DavexBase.info.UploadAgentTaskInfo;
+import DavexBase.task.command.MpcTaskCommand;
 import DavexCenter.entity.Input;
 import DavexCenter.mapper.InputMapper;
 import DavexCenter.module.task.service.SecureInferenceService;
@@ -46,11 +46,13 @@ public class SecureInferenceController {
             Files.createDirectories(path.getParent());
             Files.write(path, file.getBytes());
             inputMapper.insert(input);
-            UploadAgentTaskInfo mpcTask = secureInferenceService.wrapMpcTaskInfo(inferenceInfo);
-            mpcTask.setDataId(input.getUid());
-            mpcTask = secureInferenceService.create(mpcTask);
-            secureInferenceService.run(mpcTask);
-            return R.success(mpcTask, "成功创建");
+            MpcTaskCommand command =
+                    secureInferenceService.wrapMpcTaskCommand(
+                            inferenceInfo,
+                            input.getUid());
+            MpcTask created = secureInferenceService.create(command);
+            secureInferenceService.run(created);
+            return R.success(created, "成功创建");
         } catch (Exception e) {
             return R.error(e.getMessage());
         }

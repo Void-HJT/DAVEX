@@ -6,6 +6,9 @@ import java.time.format.DateTimeFormatter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import org.dsg.davex.contract.mpc.MpcTaskCreateRequest;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import DavexBase.common.My;
 import DavexBase.common.envelope.Audit;
@@ -19,7 +22,7 @@ import DavexBase.info.ComparisonInfo;
 import DavexBase.info.FileExchangeInfo;
 import DavexBase.info.InferenceInfo;
 import DavexBase.info.QueryInfo;
-import DavexBase.info.UploadAgentTaskInfo;
+
 import DavexCenter.module.comparison.ComparisonController;
 import DavexCenter.module.file.controller.FileController;
 import DavexCenter.module.query.controller.DatabaseController;
@@ -50,6 +53,9 @@ public class EnvelopeService {
 
     @Autowired
     private SecretFlowController secretFlowController;
+
+    @Autowired
+    private ObjectMapper objectMapper;
 
     public void check(RequestEnvelope requestEnvelope) throws Exception {
         if (!requestEnvelope.verifyHash()) {
@@ -119,7 +125,11 @@ public class EnvelopeService {
                 break;
             case MPC:
             case PSI:
-                mpcTaskController.createWithInput(data, sharing.getSetting().toJavaObject(UploadAgentTaskInfo.class));
+                mpcTaskController.createWithInput(
+                        data,
+                        objectMapper.readValue(
+                                sharing.getSetting().toJSONString(),
+                                MpcTaskCreateRequest.class));
                 break;
             case SECURITY_INFERENCE:
                 secureInferenceController.create(data, sharing.getSetting().toJavaObject(InferenceInfo.class));

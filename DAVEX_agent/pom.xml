@@ -19,6 +19,12 @@
             <artifactId>davex-base</artifactId>
             <version>0.0.1</version>
         </dependency>
+        <!-- Agent Controller 直接使用 Center-Agent MPC 通信协议。 -->
+        <dependency>
+            <groupId>org.dsg</groupId>
+            <artifactId>davex-contract</artifactId>
+            <version>0.0.1</version>
+        </dependency>
         <dependency>
             <groupId>com.opencsv</groupId>
             <artifactId>opencsv</artifactId>

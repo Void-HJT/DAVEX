@@ -19,6 +19,12 @@
             <artifactId>davex-base</artifactId>
             <version>0.0.1</version>
         </dependency>
+        <!-- Center 发送 MPC 任务时直接使用 Center-Agent 通信协议。 -->
+        <dependency>
+            <groupId>org.dsg</groupId>
+            <artifactId>davex-contract</artifactId>
+            <version>0.0.1</version>
+        </dependency>
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-csv</artifactId>

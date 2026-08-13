@@ -14,12 +14,11 @@ import DavexBase.service.blockchain.UpChainService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.MediaType;
-import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
-import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.reactive.function.BodyInserters;
+import org.springframework.core.io.ByteArrayResource;
 
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
@@ -27,8 +26,6 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import DavexBase.common.Body;
-import DavexBase.common.R;
 import DavexBase.entity.OutsideDatabase;
 import DavexBase.entity.OutsideDatabaseTable;
 import DavexBase.info.QueryRequest;
@@ -261,12 +258,17 @@ public class DatabaseService {
             // 构建文件名
             String fileName = "application_" + applicationId + "_" + "database_" + databaseId + "_" + "table_"
                     + request.getTableName() + "_query_results.json";
-            MultipartFile multipartFile = new MockMultipartFile("file", fileName, "application/json", jsonData);
+            ByteArrayResource fileResource = new ByteArrayResource(jsonData) {
+                @Override
+                public String getFilename() {
+                    return fileName;
+                }
+            };
 
             String hash;
             try {
                 // 获取文件的byte信息
-                byte[] uploadBytes = multipartFile.getBytes();
+                byte[] uploadBytes = jsonData;
                 // 拿到一个SHA-256转换器
                 MessageDigest sha256 = MessageDigest.getInstance("SHA-256");
                 byte[] digest = sha256.digest(uploadBytes);
@@ -277,7 +279,7 @@ public class DatabaseService {
             // 发送文件
             try {
                 MultiValueMap<String, Object> multipartBody = new LinkedMultiValueMap<>();
-                multipartBody.add("file", multipartFile.getResource()); // 这里的 "file" 是服务端期望的文件字段名
+                multipartBody.add("file", fileResource); // 这里的 "file" 是服务端期望的文件字段名
 
 
                 String centerId = my.getId();
@@ -312,7 +314,7 @@ public class DatabaseService {
                 return Body.error("发送失败");
             }
             // 返回封装的结果
-            String result = new String(multipartFile.getBytes(), StandardCharsets.UTF_8);
+            String result = new String(jsonData, StandardCharsets.UTF_8);
             return Body.success("发送成功" + result);
         } catch (Exception e) {
             e.printStackTrace();

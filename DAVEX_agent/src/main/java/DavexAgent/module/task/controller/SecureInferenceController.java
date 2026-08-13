@@ -13,8 +13,11 @@ import DavexBase.common.Body;
 import DavexBase.common.R;
 import DavexBase.entity.File;
 import DavexBase.entity.Mpc;
-import DavexBase.info.UploadAgentTaskInfo;
 import DavexBase.mapper.FileMapper;
+import DavexBase.contract.MpcTaskCreateRequestMapper;
+import DavexBase.task.command.MpcTaskCommand;
+
+import org.dsg.davex.contract.mpc.MpcTaskCreateRequest;
 
 @RestController
 @RequestMapping("/SecureInference")
@@ -52,13 +55,21 @@ public class SecureInferenceController {
         return secureInferenceService.setMpc(file, mpcID);
     }
 
+    /**
+     * 接收标准 MPC 创建协议，并转换给现有安全推理业务。
+     */
     @PostMapping("/create")
-    public R<?> create(@RequestBody UploadAgentTaskInfo mpcTask) {
+    public R<?> create(@RequestBody MpcTaskCreateRequest request) {
+        // 将 Center 发送的网络通信契约转换为内部业务命令，
+        // 避免后续 Service 直接依赖网络 DTO。
+        MpcTaskCommand command =
+                MpcTaskCreateRequestMapper.toCommand(request);
         try {
-            secureInferenceService.create(mpcTask);
+            secureInferenceService.create(command);
         } catch (Exception e) {
             return R.error(e.getMessage());
         }
+
         return R.success("成功创建");
     }
 

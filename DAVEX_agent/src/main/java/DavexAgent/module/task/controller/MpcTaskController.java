@@ -1,5 +1,6 @@
 package DavexAgent.module.task.controller;
 
+import org.dsg.davex.contract.mpc.MpcTaskCreateRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,8 +14,9 @@ import org.springframework.web.bind.annotation.RestController;
 import DavexAgent.module.task.service.MpcTaskService;
 import DavexBase.common.R;
 import DavexBase.entity.MpcTask;
-import DavexBase.info.UploadAgentTaskInfo;
 import DavexBase.mapper.MpcTaskMapper;
+import DavexBase.contract.MpcTaskCreateRequestMapper;
+import DavexBase.task.command.MpcTaskCommand;
 
 @RestController
 @RequestMapping("/MpcTasks")
@@ -28,14 +30,25 @@ public class MpcTaskController {
     @Autowired
     MpcTaskMapper mpcTaskMapper;
 
+    /**
+     * 接收标准 MPC 创建协议，并在接口边界转换为内部命令。
+     */
     @PostMapping("create")
-    public R<?> createMpcTask(@RequestBody UploadAgentTaskInfo mpcTask) {
-        logger.info("接收到任务：" + mpcTask.getUid() + "  来自：" + mpcTask.getCenterId());
+    public R<?> createMpcTask(@RequestBody MpcTaskCreateRequest request) {
+        MpcTaskCommand command =
+                MpcTaskCreateRequestMapper.toCommand(request);
+
+        logger.info(
+                "接收到任务：" + command.uid()
+                        + "  来自：" + command.centerId()
+        );
+
         try {
-            mpcTaskService.createMpcTask(mpcTask);
+            mpcTaskService.createMpcTask(command);
         } catch (Exception e) {
             return R.error(e.getMessage());
         }
+
         return R.success("成功创建");
     }
 

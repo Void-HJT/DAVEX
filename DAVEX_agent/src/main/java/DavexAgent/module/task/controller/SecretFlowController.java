@@ -15,7 +15,6 @@ import java.io.InputStreamReader;
 import java.io.File;
 import java.io.FileInputStream;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.mock.web.MockMultipartFile;
 import DavexBase.common.Body;
 import java.io.FileNotFoundException;
 import java.nio.file.Files;
@@ -26,7 +25,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.mock.web.MockMultipartFile; // 导入 MockMultipartFile 的包
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;

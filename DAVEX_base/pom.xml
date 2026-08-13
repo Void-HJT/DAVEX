@@ -14,5 +14,15 @@
     <version>0.0.1</version>
     <packaging>jar</packaging>
 
-
+    <dependencies>
+        <!--
+            Base 中的旧 MPC DTO 通过该依赖与新通信协议进行兼容转换。
+            旧 DTO 删除后，应重新评估该依赖所在模块。
+        -->
+        <dependency>
+            <groupId>org.dsg</groupId>
+            <artifactId>davex-contract</artifactId>
+            <version>0.0.1</version>
+        </dependency>
+    </dependencies>
 </project>

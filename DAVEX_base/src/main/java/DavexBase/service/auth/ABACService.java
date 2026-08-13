@@ -88,9 +88,6 @@ public class ABACService {
     }
 
     public boolean getAccess(Application app, File file, String action) {
-        if (action.equals("pass")) {
-            return true;
-        }
         logger.info("处理数据访问ABAC请求\nsubject:{}\nobject:{}\naction:{}", app, file, action);
         StandardEvaluationContext context = new StandardEvaluationContext();
 

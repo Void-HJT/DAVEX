@@ -24,7 +24,6 @@ import DavexBase.common.Utils;
 import DavexBase.entity.MpcTask;
 import DavexBase.entity.MpcTaskAgent;
 import DavexBase.entity.MpcTaskOutput;
-import DavexBase.info.UploadAgentTaskInfo;
 import DavexBase.mapper.FileMapper;
 import DavexBase.mapper.MpcMapper;
 import DavexBase.mapper.MpcTaskAgentMapper;
@@ -32,6 +31,10 @@ import DavexBase.mapper.MpcTaskMapper;
 import DavexBase.service.auth.AgentWebClientService;
 import DavexBase.service.directory.FileFolderService;
 import DavexBase.service.programs.GarnetService;
+import DavexBase.task.command.MpcTaskCommand;
+import DavexBase.task.command.ParticipantInput;
+
+import DavexAgent.module.task.assembler.MpcTaskCommandAssembler;
 
 @Service
 public class MpcTaskService {
@@ -67,37 +70,50 @@ public class MpcTaskService {
     NotificationService notificationService;
 
     // TODO 检查File权限
-    public void createMpcTask(UploadAgentTaskInfo mpctTaskInfo) throws Exception {
+    public void createMpcTask(MpcTaskCommand command) throws Exception {
 
-        if (mpctTaskInfo.getUid() != null && mpcTaskMapper.selectById(mpctTaskInfo.getUid()) != null) {
+        if (command.uid() != null
+                && mpcTaskMapper.selectById(command.uid()) != null) {
             throw new Exception("任务已存在");
         }
-        for (UploadAgentTaskInfo.PartInfo partInfo : mpctTaskInfo.getPartInfo()) {
+
+        for (ParticipantInput participant : command.participants()) {
             MpcTaskAgent mpcTaskAgent = new MpcTaskAgent();
-            mpcTaskAgent.setAgentId(partInfo.getAgentID());
-            mpcTaskAgent.setPart(partInfo.getPart());
-            mpcTaskAgent.setMpcTaskId(mpctTaskInfo.getUid());
-            mpcTaskAgent.setCenterId(mpctTaskInfo.getCenterId());
+            mpcTaskAgent.setAgentId(participant.agentId());
+            mpcTaskAgent.setPart(participant.part());
+            mpcTaskAgent.setMpcTaskId(command.uid());
+            mpcTaskAgent.setCenterId(command.centerId());
             mpcTaskAgentMapper.insert(mpcTaskAgent);
         }
-        if (mpcMapper.selectById(mpctTaskInfo.getMpcId()) == null) {
-            mpcService.downloadMPC(mpctTaskInfo.getCenterId(), mpctTaskInfo.getMpcId());
-        }
-        mpcTaskMapper.insert(mpctTaskInfo);
 
-        switch (mpctTaskInfo.getTaskType()) {
+        if (mpcMapper.selectById(command.mpcId()) == null) {
+            mpcService.downloadMPC(command.centerId(), command.mpcId());
+        }
+
+        MpcTask mpcTask = MpcTaskCommandAssembler.toEntity(command);
+        mpcTaskMapper.insert(mpcTask);
+
+        switch (command.taskType()) {
             case GARNET_MPC:
             default:
-                preprocess(mpctTaskInfo);
+                preprocess(mpcTask);
                 break;
             case GARNET_PSI:
-                psiPreprocess(mpctTaskInfo);
+                psiPreprocess(mpcTask);
                 break;
         }
     }
 
+    /**
+     * 编译 MPC 程序并准备当前 Agent 的任务输入文件。
+     *
+     * 编译失败时向 Center 发送失败通知，然后继续抛出原异常，
+     * 由上层业务入口按原有错误语义处理。
+     *
+     * @param mpcTask 已完成持久化装配的 MPC 任务实体
+     */
     @Async("customExecutor")
-    public void preprocess(UploadAgentTaskInfo mpcTask) throws Exception {
+    public void preprocess(MpcTask mpcTask) throws Exception {
         try {
             garnetService.compile(mpcTask);
         } catch (Exception e) {
@@ -123,7 +139,7 @@ public class MpcTaskService {
     }
 
     @Async("customExecutor")
-    private void psiPreprocess(UploadAgentTaskInfo mpcTask) throws Exception {
+    private void psiPreprocess(MpcTask mpcTask) throws Exception {
         try {
             garnetService.compile(mpcTask);
         } catch (Exception e) {

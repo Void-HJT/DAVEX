@@ -8,13 +8,16 @@ import com.alibaba.fastjson.JSONObject;
 import DavexBase.common.Body;
 import DavexBase.entity.File;
 import DavexBase.entity.Mpc;
-import DavexBase.entity.MpcTask.TaskType;
 import DavexBase.entity.MpcTaskAgent;
-import DavexBase.info.UploadAgentTaskInfo;
+import DavexBase.entity.MpcTask;
 import DavexBase.mapper.FileMapper;
 import DavexBase.mapper.MpcMapper;
 import DavexBase.mapper.MpcTaskAgentMapper;
 import DavexBase.mapper.MpcTaskMapper;
+import DavexBase.task.command.MpcTaskCommand;
+import DavexBase.task.command.ParticipantInput;
+
+import DavexAgent.module.task.assembler.MpcTaskCommandAssembler;
 
 @Service
 public class SecureInferenceService {
@@ -59,34 +62,43 @@ public class SecureInferenceService {
         return mpc;
     }
 
-    public void create(UploadAgentTaskInfo mpcTaskInfo) throws Exception {
-        if (mpcTaskInfo.getUid() != null && mpcTaskMapper.selectById(mpcTaskInfo.getUid()) != null) {
+    public void create(MpcTaskCommand command) throws Exception {
+        if (command.uid() != null
+                && mpcTaskMapper.selectById(command.uid()) != null) {
             throw new Exception("任务已存在");
         }
-        if (mpcTaskInfo.getTaskType() != TaskType.GARNET_INFERENCE) {
+
+        if (command.taskType()
+                != MpcTaskCommand.TaskType.GARNET_INFERENCE) {
             throw new Exception("任务类型不匹配");
         }
-        File file = fileMapper.selectById(mpcTaskInfo.getDataId());
+
+        File file = fileMapper.selectById(command.dataId());
         if (file == null) {
             throw new Exception("文件不存在");
         }
+
         if (!file.getType().toLowerCase().contains("secureinfer")) {
             throw new Exception("文件类型不符");
         }
-        for (UploadAgentTaskInfo.PartInfo partInfo : mpcTaskInfo.getPartInfo()) {
+
+        for (ParticipantInput participant : command.participants()) {
             MpcTaskAgent mpcTaskAgent = new MpcTaskAgent();
-            mpcTaskAgent.setAgentId(partInfo.getAgentID());
-            mpcTaskAgent.setPart(partInfo.getPart());
-            mpcTaskAgent.setMpcTaskId(mpcTaskInfo.getUid());
-            mpcTaskAgent.setCenterId(mpcTaskInfo.getCenterId());
+            mpcTaskAgent.setAgentId(participant.agentId());
+            mpcTaskAgent.setPart(participant.part());
+            mpcTaskAgent.setMpcTaskId(command.uid());
+            mpcTaskAgent.setCenterId(command.centerId());
             mpcTaskAgentMapper.insert(mpcTaskAgent);
         }
-        mpcTaskMapper.insert(mpcTaskInfo);
-        preprocess(mpcTaskInfo);
 
+        // 将内部业务命令装配为数据库实体，参与方等命令信息由 Service
+        // 单独处理，实体只负责任务持久化和执行。
+        MpcTask mpcTask = MpcTaskCommandAssembler.toEntity(command);
+        mpcTaskMapper.insert(mpcTask);
+        preprocess(mpcTask);
     }
 
-    public void preprocess(UploadAgentTaskInfo mpcTask) throws Exception {
+    public void preprocess(MpcTask mpcTask) throws Exception {
         mpcTaskService.preprocess(mpcTask);
     }
 }
