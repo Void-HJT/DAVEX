@@ -8,6 +8,8 @@ import java.sql.Timestamp;
 import java.time.LocalDateTime;
 
 import DavexBase.entity.File;
+import DavexBase.entity.Mpc;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.scheduling.annotation.Async;
@@ -88,10 +90,16 @@ public class MpcTaskService {
             mpcTaskAgentMapper.insert(mpcTaskAgent);
         }
 
-        if (mpcMapper.selectById(command.mpcId()) == null) {
+        // 元数据不存在或本地程序文件丢失时，重新从 Center 下载 MPC 程序。
+        Mpc localMpc = mpcMapper.selectById(command.mpcId());
+        if (localMpc == null
+                || localMpc.getPath() == null
+                || !Files.isRegularFile(
+                        Paths.get(my.getBase_path())
+                                .resolve(localMpc.getPath())
+                                .normalize())) {
             mpcService.downloadMPC(command.centerId(), command.mpcId());
         }
-
         MpcTask mpcTask = MpcTaskCommandAssembler.toEntity(command);
         mpcTaskMapper.insert(mpcTask);
 

@@ -33,6 +33,8 @@ public class MpcService {
 
     public void downloadMPC(String centerId, String mpcId) throws Exception {
 
+        Mpc existing = mpcMapper.selectById(mpcId);
+
         CenterMpcArtifactClient.Artifact artifact = artifactClient.fetchArtifact(centerId, mpcId);
 
         // 业务层只负责本地落盘，不再处理 HTTP 和 Resource。
@@ -46,7 +48,12 @@ public class MpcService {
         mpc.setPath(Paths.get("programs")
                 .resolve(filePath.getFileName())
                 .toString());
-        mpcMapper.insert(mpc);
+        // 允许修复“数据库有元数据、磁盘无程序文件”的不一致状态。
+        if (existing == null) {
+            mpcMapper.insert(mpc);
+        } else {
+            mpcMapper.updateById(mpc);
+        }
 
         logger.info("成功下载{} : {}", mpc.getUid(), mpc.getName());
     }

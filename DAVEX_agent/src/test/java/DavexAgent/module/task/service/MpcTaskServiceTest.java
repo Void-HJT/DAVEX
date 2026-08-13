@@ -80,18 +80,20 @@ class MpcTaskServiceTest {
     private MpcTaskService service;
 
     @Test
-    void savesCommandAsEntityAndPreprocessesRegularMpcTask()
+    void savesCommandAsEntityAndPreprocessesRegularMpcTask(
+            @TempDir Path tempDir)
             throws Exception {
 
         MpcTaskCommand command = command(
                 MpcTaskCommand.TaskType.GARNET_MPC,
                 Map.of());
         File input = inputFile();
-        when(mpcMapper.selectById("MPC-1")).thenReturn(new Mpc());
+        when(mpcMapper.selectById("MPC-1"))
+                .thenReturn(existingProgram(tempDir));
         when(fileMapper.selectById("FILE-1")).thenReturn(input);
-        when(my.getBase_path()).thenReturn("/data/davex");
-        when(fileFolderService.getFilePath(input, "/data/davex"))
-                .thenReturn("/data/davex/input.csv");
+        when(my.getBase_path()).thenReturn(tempDir.toString());
+        when(fileFolderService.getFilePath(input, tempDir.toString()))
+                .thenReturn(tempDir.resolve("input.csv").toString());
 
         service.createMpcTask(command);
 
@@ -106,25 +108,27 @@ class MpcTaskServiceTest {
                 savedTask.getTaskType());
         verify(garnetComputeAdapter).compile(savedTask);
         verify(garnetService).link(
-                "/data/davex/input.csv", "TASK-1", 1L);
+                tempDir.resolve("input.csv").toString(), "TASK-1", 1L);
         verify(garnetService, never()).csvExtract(
                 any(), any(), any(), any());
         verify(mpcService, never()).downloadMPC(any(), any());
     }
 
     @Test
-    void savesCommandAsEntityAndPreprocessesPsiTask()
+    void savesCommandAsEntityAndPreprocessesPsiTask(
+            @TempDir Path tempDir)
             throws Exception {
 
         MpcTaskCommand command = command(
                 MpcTaskCommand.TaskType.GARNET_PSI,
                 Map.of("PK", "id"));
         File input = inputFile();
-        when(mpcMapper.selectById("MPC-1")).thenReturn(new Mpc());
+        when(mpcMapper.selectById("MPC-1"))
+                .thenReturn(existingProgram(tempDir));
         when(fileMapper.selectById("FILE-1")).thenReturn(input);
-        when(my.getBase_path()).thenReturn("/data/davex");
-        when(fileFolderService.getFilePath(input, "/data/davex"))
-                .thenReturn("/data/davex/input.csv");
+        when(my.getBase_path()).thenReturn(tempDir.toString());
+        when(fileFolderService.getFilePath(input, tempDir.toString()))
+                .thenReturn(tempDir.resolve("input.csv").toString());
 
         service.createMpcTask(command);
 
@@ -136,8 +140,32 @@ class MpcTaskServiceTest {
                 savedTask.getRuntimeParameters().getString("PK"));
         verify(garnetComputeAdapter).compile(savedTask);
         verify(garnetService).csvExtract(
-                "/data/davex/input.csv", "id", "TASK-1", 1L);
+                tempDir.resolve("input.csv").toString(),
+                "id", "TASK-1", 1L);
         verify(garnetService, never()).link(any(), any(), any());
+    }
+
+    @Test
+    void redownloadsMpcWhenMetadataExistsButProgramFileIsMissing(
+            @TempDir Path tempDir) throws Exception {
+
+        Mpc localMpc = new Mpc();
+        localMpc.setUid("MPC-1");
+        localMpc.setPath(Path.of("programs", "missing.mpc").toString());
+        when(mpcMapper.selectById("MPC-1")).thenReturn(localMpc);
+        when(my.getBase_path()).thenReturn(tempDir.toString());
+
+        File input = inputFile();
+        when(fileMapper.selectById("FILE-1")).thenReturn(input);
+        when(fileFolderService.getFilePath(input, tempDir.toString()))
+                .thenReturn(tempDir.resolve("input.csv").toString());
+
+        service.createMpcTask(command(
+                MpcTaskCommand.TaskType.GARNET_MPC,
+                Map.of()));
+
+        verify(mpcService).downloadMPC("CENTER-1", "MPC-1");
+        verify(garnetComputeAdapter).compile(any(MpcTask.class));
     }
 
     @Test
@@ -273,6 +301,17 @@ class MpcTaskServiceTest {
         file.setUid("FILE-1");
         file.setName("input.csv");
         return file;
+    }
+
+    private Mpc existingProgram(Path tempDir) throws Exception {
+        Path program = tempDir.resolve("programs/demo.mpc");
+        Files.createDirectories(program.getParent());
+        Files.writeString(program, "program");
+
+        Mpc mpc = new Mpc();
+        mpc.setUid("MPC-1");
+        mpc.setPath(Path.of("programs", "demo.mpc").toString());
+        return mpc;
     }
 
     private MpcTask task(MpcTask.TaskType taskType) {

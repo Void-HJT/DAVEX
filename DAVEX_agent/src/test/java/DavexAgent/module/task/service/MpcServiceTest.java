@@ -17,7 +17,9 @@ import java.nio.file.Path;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.when;
+import static org.mockito.ArgumentMatchers.any;
 
 @ExtendWith(MockitoExtension.class)
 class MpcServiceTest {
@@ -52,5 +54,34 @@ class MpcServiceTest {
         assertArrayEquals(program, Files.readAllBytes(saved));
         assertEquals(Path.of("programs/demo.mpc").toString(), mpc.getPath());
         verify(mpcMapper).insert(mpc);
+    }
+
+    @Test
+    void updatesMetadataWhenRedownloadingMissingLocalArtifact(
+            @TempDir Path tempDir) throws Exception {
+        Mpc existing = new Mpc();
+        existing.setUid("MPC-1");
+        existing.setPath(Path.of("programs/missing.mpc").toString());
+
+        Mpc downloaded = new Mpc();
+        downloaded.setUid("MPC-1");
+        downloaded.setName("demo");
+        byte[] program = new byte[] {4, 5, 6};
+
+        when(mpcMapper.selectById("MPC-1")).thenReturn(existing);
+        when(my.getBase_path()).thenReturn(tempDir.toString());
+        when(artifactClient.fetchArtifact("CENTER-1", "MPC-1"))
+                .thenReturn(new CenterMpcArtifactClient.Artifact(
+                        downloaded, "demo.mpc", program));
+
+        service.downloadMPC("CENTER-1", "MPC-1");
+
+        assertArrayEquals(program, Files.readAllBytes(
+                tempDir.resolve("programs/demo.mpc")));
+        assertEquals(
+                Path.of("programs/demo.mpc").toString(),
+                downloaded.getPath());
+        verify(mpcMapper).updateById(downloaded);
+        verify(mpcMapper, never()).insert(any());
     }
 }
