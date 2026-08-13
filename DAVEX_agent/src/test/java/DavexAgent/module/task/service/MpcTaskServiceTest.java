@@ -4,6 +4,7 @@ import DavexAgent.module.task.port.CenterMpcResultClient;
 import DavexAgent.module.task.port.CenterTaskNotificationClient;
 import com.alibaba.fastjson.JSONObject;
 import DavexBase.common.My;
+import DavexBase.compute.garnet.GarnetComputeAdapter;
 import DavexBase.entity.File;
 import DavexBase.entity.Mpc;
 import DavexBase.entity.MpcTask;
@@ -55,6 +56,9 @@ class MpcTaskServiceTest {
     private GarnetService garnetService;
 
     @Mock
+    private GarnetComputeAdapter garnetComputeAdapter;
+
+    @Mock
     private MpcMapper mpcMapper;
 
     @Mock
@@ -100,7 +104,7 @@ class MpcTaskServiceTest {
                 savedTask.getCompileParameters().getInteger("prime"));
         assertEquals(MpcTask.TaskType.GARNET_MPC,
                 savedTask.getTaskType());
-        verify(garnetService).compile(savedTask);
+        verify(garnetComputeAdapter).compile(savedTask);
         verify(garnetService).link(
                 "/data/davex/input.csv", "TASK-1", 1L);
         verify(garnetService, never()).csvExtract(
@@ -130,7 +134,7 @@ class MpcTaskServiceTest {
                 savedTask.getTaskType());
         assertEquals("id",
                 savedTask.getRuntimeParameters().getString("PK"));
-        verify(garnetService).compile(savedTask);
+        verify(garnetComputeAdapter).compile(savedTask);
         verify(garnetService).csvExtract(
                 "/data/davex/input.csv", "id", "TASK-1", 1L);
         verify(garnetService, never()).link(any(), any(), any());
@@ -153,15 +157,15 @@ class MpcTaskServiceTest {
         assertEquals("任务已存在", error.getMessage());
         verify(mpcTaskAgentMapper, never()).insert(any());
         verify(mpcTaskMapper, never()).insert(any());
-        verify(garnetService, never()).compile(any());
+        verify(garnetComputeAdapter, never()).compile(any());
     }
 
     @Test
     void reportsMpcCompileFailureThroughNotificationPort()
             throws Exception {
         MpcTask task = task(MpcTask.TaskType.GARNET_MPC);
-        doThrow(new Exception("compile failed"))
-                .when(garnetService).compile(task);
+        doThrow(new IllegalStateException("compile failed"))
+                .when(garnetComputeAdapter).compile(task);
 
         Exception error = assertThrows(
                 Exception.class,
@@ -201,6 +205,7 @@ class MpcTaskServiceTest {
 
         service.psiRun(task);
 
+        verify(garnetComputeAdapter).run(task);
         ArgumentCaptor<Path> pathCaptor = ArgumentCaptor.forClass(Path.class);
         ArgumentCaptor<DavexBase.entity.MpcTaskOutput> metadataCaptor =
                 ArgumentCaptor.forClass(DavexBase.entity.MpcTaskOutput.class);

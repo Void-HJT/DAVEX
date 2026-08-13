@@ -26,6 +26,7 @@ import DavexBase.service.directory.FileFolderService;
 import DavexBase.service.programs.GarnetService;
 import DavexBase.task.command.MpcTaskCommand;
 import DavexBase.task.command.ParticipantInput;
+import DavexBase.compute.garnet.GarnetComputeAdapter;
 
 import DavexAgent.module.task.assembler.MpcTaskCommandAssembler;
 import DavexAgent.module.task.port.CenterMpcResultClient;
@@ -45,6 +46,12 @@ public class MpcTaskService {
 
     @Autowired
     GarnetService garnetService;
+
+    /**
+     * 统一管理Garnet编译、运行、状态和取消。
+     */
+    @Autowired
+    private GarnetComputeAdapter garnetComputeAdapter;
 
     @Autowired
     MpcMapper mpcMapper;
@@ -110,7 +117,7 @@ public class MpcTaskService {
     @Async("customExecutor")
     public void preprocess(MpcTask mpcTask) throws Exception {
         try {
-            garnetService.compile(mpcTask);
+            garnetComputeAdapter.compile(mpcTask);
         } catch (Exception e) {
             // 编译失败的通知
             String errorContent = String.format("MPC任务编译失败\n任务ID: %s\n任务类型: %s\n错误信息: %s",
@@ -129,7 +136,7 @@ public class MpcTaskService {
     @Async("customExecutor")
     private void psiPreprocess(MpcTask mpcTask) throws Exception {
         try {
-            garnetService.compile(mpcTask);
+            garnetComputeAdapter.compile(mpcTask);
         } catch (Exception e) {
             // 编译失败的通知
             String errorContent = String.format("PSI任务编译失败\n任务ID: %s\n任务类型: %s\n错误信息: %s",
@@ -148,7 +155,7 @@ public class MpcTaskService {
     @Async("customExecutor")
     public void run(MpcTask mpcTask) throws Exception {
         try {
-            garnetService.run(mpcTask);
+            garnetComputeAdapter.run(mpcTask);
         } catch (Exception e) {
             // 运行失败的通知
             String errorContent = String.format("MPC任务运行失败\n任务ID: %s\n任务类型: %s\n错误信息: %s",
@@ -165,7 +172,7 @@ public class MpcTaskService {
     @Async("customExecutor")
     public void psiRun(MpcTask mpcTask) throws Exception {
         try {
-            garnetService.run(mpcTask);
+            garnetComputeAdapter.run(mpcTask);
         } catch (Exception e) {
             // 任务执行失败的通知
             String errorContent = String.format("PSI任务运行失败\n任务ID: %s\n任务类型: %s\n错误信息: %s",

@@ -24,6 +24,7 @@ import DavexBase.task.command.MpcTaskCommand;
 import DavexBase.task.command.ParticipantInput;
 import DavexBase.task.command.TaskOptions;
 import DavexBase.service.notification.NotificationService;
+import DavexBase.compute.garnet.GarnetComputeAdapter;
 
 import DavexCenter.entity.Input;
 import DavexCenter.mapper.InputMapper;
@@ -53,6 +54,12 @@ public class MpcTaskService {
 
     @Autowired
     private GarnetService garnetService;
+
+    /**
+     * 统一管理Garnet编译、运行、状态和取消。
+     */
+    @Autowired
+    private GarnetComputeAdapter garnetComputeAdapter;
 
     @Autowired
     private MpcTaskOutputService mpcTaskOutputService;
@@ -127,7 +134,7 @@ public class MpcTaskService {
     @Async("customExecutor")
     public void mpcRun(MpcTask mpcTask) throws Exception {
         try {
-            garnetService.compile(mpcTask);
+            garnetComputeAdapter.compile(mpcTask);
         } catch (Exception e) {
             // 编译失败的通知
             String errorContent = String.format("MPC任务编译失败\n任务ID: %s\n任务类型: %s\n错误信息: %s",
@@ -148,7 +155,7 @@ public class MpcTaskService {
             throw new Exception("任务未就绪");
         }
         try {
-            garnetService.run(mpcTask);
+            garnetComputeAdapter.run(mpcTask);
         } catch (Exception e) {
             // 运行失败的通知
             String errorContent = String.format("MPC任务运行失败\n任务ID: %s\n任务类型: %s\n错误信息: %s",
@@ -163,7 +170,7 @@ public class MpcTaskService {
     @Async("customExecutor")
     public void psiRun(MpcTask mpcTask) throws Exception {
         try {
-            garnetService.compile(mpcTask);
+            garnetComputeAdapter.compile(mpcTask);
         } catch (Exception e) {
             // 编译失败的通知
             String errorContent = String.format("PSI任务编译失败\n任务ID: %s\n任务类型: %s\n错误信息: %s",
@@ -181,7 +188,7 @@ public class MpcTaskService {
             throw new Exception("任务未就绪");
         }
         try {
-            garnetService.run(mpcTask);
+            garnetComputeAdapter.run(mpcTask);
         } catch (Exception e) {
             // 运行失败的通知
             String errorContent = String.format("PSI任务运行失败\n任务ID: %s\n任务类型: %s\n错误信息: %s",

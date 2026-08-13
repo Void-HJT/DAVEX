@@ -1,12 +1,14 @@
 package DavexCenter.module.task.service;
 
 import DavexBase.common.My;
+import DavexBase.compute.garnet.GarnetComputeAdapter;
 import DavexBase.entity.Agent;
 import DavexBase.entity.MpcTask;
 import DavexBase.entity.MpcTaskAgent;
 import DavexBase.mapper.AgentMapper;
 import DavexBase.mapper.MpcTaskAgentMapper;
 import DavexBase.mapper.MpcTaskMapper;
+import DavexBase.service.notification.NotificationService;
 import DavexBase.service.programs.GarnetService;
 import DavexBase.task.command.MpcTaskCommand;
 import DavexBase.task.command.ParticipantInput;
@@ -20,6 +22,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
+import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -62,6 +65,15 @@ class MpcTaskServiceTest {
 
     @Mock
     private GarnetService garnetService;
+
+    @Mock
+    private GarnetComputeAdapter garnetComputeAdapter;
+
+    @Mock
+    private MpcTaskOutputService mpcTaskOutputService;
+
+    @Mock
+    private NotificationService notificationService;
 
     @InjectMocks
     private MpcTaskService service;
@@ -146,6 +158,34 @@ class MpcTaskServiceTest {
         assertEquals(32, updated.options().runtimeParameters().get("batch"));
         assertEquals(1, command.options().compileParameters().get("old"));
         assertSame(command.participants().get(0), updated.participants().get(0));
+    }
+
+    @Test
+    void runsMpcInCompileInputRunAndCollectOrder() throws Exception {
+        MpcTask task = new MpcTask();
+        task.setUid("TASK-1");
+        task.setApplicationId("APPLICATION-1");
+        task.setDataId("CENTER-FILE");
+        task.setPart(0L);
+        task.setStatus(MpcTask.Status.READY);
+
+        Input input = new Input();
+        input.setPath("Input/center.csv");
+        when(my.getBase_path()).thenReturn("/srv/davex");
+        when(inputMapper.selectById("CENTER-FILE")).thenReturn(input);
+        when(mpcTaskMapper.selectById("TASK-1")).thenReturn(task);
+        when(mpcTaskAgentMapper.selectList(any())).thenReturn(List.of());
+
+        service.mpcRun(task);
+
+        // 阶段 6 重构前先锁定现有 MPC 外部计算的关键执行顺序。
+        InOrder executionOrder = org.mockito.Mockito.inOrder(
+                garnetComputeAdapter, garnetService, mpcTaskOutputService);
+        executionOrder.verify(garnetComputeAdapter).compile(task);
+        executionOrder.verify(garnetService).link(
+                "/srv/davex/Input/center.csv", "TASK-1", 0L);
+        executionOrder.verify(garnetComputeAdapter).run(task);
+        executionOrder.verify(mpcTaskOutputService).saveOutputFromInner(task);
     }
 
     private MpcTaskCommand command() {
