@@ -21,6 +21,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -117,6 +118,49 @@ class DockerComputeExecutorTest {
 
         verify(killCmd).withCmd("kill", "-TERM", "42");
         assertEquals(ExecutionStatus.CANCELLED, executor.status(executionId));
+    }
+
+    @Test
+    void keepsExecutionRunningUntilOutputCallbackCompletes() {
+        AtomicReference<ResultCallback<Frame>> callbackReference =
+                new AtomicReference<>();
+
+        when(dockerClient.execCreateCmd("container-1")).thenReturn(createCmd);
+        when(createCmd.withWorkingDir("/usr/src/Garnet")).thenReturn(createCmd);
+        when(createCmd.withCmd("python3", "compile.py")).thenReturn(createCmd);
+        when(createCmd.withAttachStdout(true)).thenReturn(createCmd);
+        when(createCmd.withAttachStderr(true)).thenReturn(createCmd);
+        when(createCmd.exec()).thenReturn(createResponse);
+        when(createResponse.getId()).thenReturn("docker-exec-starting");
+        when(dockerClient.execStartCmd("docker-exec-starting"))
+                .thenReturn(startCmd);
+        when(startCmd.exec(any())).thenAnswer(invocation -> {
+            ResultCallback<Frame> callback = invocation.getArgument(0);
+            callbackReference.set(callback);
+            return callback;
+        });
+
+        when(dockerClient.inspectExecCmd("docker-exec-starting"))
+                .thenReturn(inspectCmd);
+        when(inspectCmd.exec()).thenReturn(inspectResponse);
+
+        // Docker may expose exit code 0 before the output callback completes.
+        when(inspectResponse.isRunning()).thenReturn(false);
+        when(inspectResponse.getExitCode()).thenReturn(0);
+
+        ExecutionId executionId =
+                executor.start(command(Duration.ofSeconds(5)));
+
+        // An incomplete callback means execution has not reached a final state.
+        assertEquals(
+                ExecutionStatus.RUNNING,
+                executor.status(executionId));
+
+        callbackReference.get().onComplete();
+
+        assertEquals(
+                ExecutionStatus.SUCCEEDED,
+                executor.status(executionId));
     }
 
     private void arrangeStart(String execId, String stdout, String stderr) {

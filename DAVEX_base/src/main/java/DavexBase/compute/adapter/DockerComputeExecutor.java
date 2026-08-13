@@ -93,7 +93,7 @@ public class DockerComputeExecutor implements ComputeExecutor<DockerComputeComma
         synchronized (execution) {
             InspectExecResponse response = dockerClient.inspectExecCmd(executionId.value()).exec();
 
-            if (Boolean.TRUE.equals(response.isRunning())) {
+           if (Boolean.TRUE.equals(response.isRunning())) {
                 return ExecutionStatus.RUNNING;
             }
             if (execution.timedOut().get()) {
@@ -101,6 +101,12 @@ public class DockerComputeExecutor implements ComputeExecutor<DockerComputeComma
             }
             if (execution.cancelled().get()) {
                 return ExecutionStatus.CANCELLED;
+            }
+
+            // Docker exec 启动瞬间可能暂时返回未运行和默认退出码 0；
+            // 输出回调完成前仍按运行中处理，避免把启动阶段误判为失败。
+            if (!execution.callback().completed()) {
+                return ExecutionStatus.RUNNING;
             }
 
             Integer exitCode = response.getExitCode();
@@ -293,6 +299,9 @@ public class DockerComputeExecutor implements ComputeExecutor<DockerComputeComma
         private final StringBuilder stdout = new StringBuilder();
         private final StringBuilder stderr = new StringBuilder();
 
+        // 只有Docker输出流关闭后，退出码才可以作为最终执行结果。
+        private final AtomicBoolean completed = new AtomicBoolean(false);
+
         @Override
         public synchronized void onNext(Frame frame) {
             if (frame == null || frame.getPayload() == null) {
@@ -310,6 +319,22 @@ public class DockerComputeExecutor implements ComputeExecutor<DockerComputeComma
                     // 忽略未使用的Docker流类型。
                 }
             }
+        }
+
+        @Override
+        public void onComplete() {
+            super.onComplete();
+            completed.set(true);
+        }
+
+        @Override
+        public void onError(Throwable throwable) {
+            super.onError(throwable);
+            completed.set(true);
+        }
+
+        private boolean completed() {
+            return completed.get();
         }
 
         private synchronized String stdout() {

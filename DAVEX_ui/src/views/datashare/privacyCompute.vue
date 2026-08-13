@@ -591,7 +591,7 @@ const createMpcTaskBody = ref({
   centerId: "DAVEX-C1", //后台配置
   compileParameters: {
   },
-  host: '10.176.37.50', //后台配置
+  host: '10.176.34.171', //后台配置
   mpcId: '', //后台配置
   mpcName: "",
   n: 2, //目前只需要2方
