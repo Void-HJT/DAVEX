@@ -42,10 +42,13 @@ public class CenterWebClientService {
     public WebClient center2AgentWebClient(String agent_id) throws Exception {
         LambdaQueryWrapper<Agent> queryWrapper = Wrappers.<Agent>lambdaQuery().eq(Agent::getUid, agent_id);
         Agent agent = agentMapper.selectOne(queryWrapper);
-        HttpClient httpClient = HttpClient.create();
+        // 所有 Center 到 Agent 的请求使用统一超时配置。
+        HttpClient httpClient = NodeHttpClientFactory.create();
         return WebClient.builder().clientConnector(new ReactorClientHttpConnector(httpClient))
                 .baseUrl("http://" + agent.getIp() + ":" + agent.getPort())
                 .exchangeStrategies(strategies)
+                // 统一转换 Center 到 Agent 的底层通信失败。
+                .filter(NodeCommunicationFilter.forNode(agent_id))
                 .build();
     }
 
@@ -63,12 +66,14 @@ public class CenterWebClientService {
 
         LambdaQueryWrapper<Agent> queryWrapper = Wrappers.<Agent>lambdaQuery().eq(Agent::getUid, agentId);
         Agent agent = agentMapper.selectOne(queryWrapper);
-        HttpClient httpClient = HttpClient.create();
+        // 所有 Center 到 Agent 的请求使用统一超时配置。
+        HttpClient httpClient = NodeHttpClientFactory.create();
 
         // 3. 创建WebClient并应用配置
         return WebClient.builder().clientConnector(new ReactorClientHttpConnector(httpClient))
                 .baseUrl("http://" + agent.getIp() + ":" + agent.getPort())
                 .exchangeStrategies(customizeStrategies)
+                .filter(NodeCommunicationFilter.forNode(agentId))
                 .build();
     }
 

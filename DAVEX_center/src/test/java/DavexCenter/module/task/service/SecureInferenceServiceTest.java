@@ -1,7 +1,6 @@
 package DavexCenter.module.task.service;
 
 import DavexBase.common.My;
-import DavexBase.common.R;
 import DavexBase.entity.Agent;
 import DavexBase.entity.Mpc;
 import DavexBase.entity.MpcTask;
@@ -12,25 +11,26 @@ import DavexBase.mapper.AgentMapper;
 import DavexBase.mapper.MpcMapper;
 import DavexBase.mapper.MpcTaskAgentMapper;
 import DavexBase.mapper.MpcTaskMapper;
-import DavexBase.service.auth.CenterWebClientService;
 import DavexBase.task.command.MpcTaskCommand;
 import DavexBase.task.command.ParticipantInput;
 import DavexBase.task.command.TaskOptions;
+import DavexCenter.module.task.port.AgentSecureInferenceClient;
 import org.dsg.davex.contract.mpc.MpcTaskCreateRequest;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.web.reactive.function.client.WebClient;
-import reactor.core.publisher.Mono;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -59,19 +59,7 @@ class SecureInferenceServiceTest {
     private My my;
 
     @Mock
-    private CenterWebClientService centerWebClientService;
-
-    @Mock
-    private WebClient webClient;
-
-    @Mock
-    private WebClient.RequestBodyUriSpec requestSpec;
-
-    @Mock
-    private WebClient.RequestHeadersSpec<?> headersSpec;
-
-    @Mock
-    private WebClient.ResponseSpec responseSpec;
+    private AgentSecureInferenceClient inferenceClient;
 
     @Spy
     @InjectMocks
@@ -88,8 +76,6 @@ class SecureInferenceServiceTest {
             task.setUid("TASK-1");
             return 1;
         }).when(mpcTaskMapper).insert(any(MpcTask.class));
-        stubAgentPost("/SecureInference/create");
-
         MpcTask result = service.create(command);
 
         assertNotSame(command, result);
@@ -107,16 +93,43 @@ class SecureInferenceServiceTest {
         assertEquals("AGENT-1", participant.getAgentId());
         assertEquals(1L, participant.getPart());
 
-        ArgumentCaptor<Object> bodyCaptor = ArgumentCaptor.forClass(Object.class);
-        verify(requestSpec).bodyValue(bodyCaptor.capture());
-        MpcTaskCreateRequest request =
-                (MpcTaskCreateRequest) bodyCaptor.getValue();
+        @SuppressWarnings("rawtypes")
+        ArgumentCaptor<List> dispatchCaptor =
+                ArgumentCaptor.forClass(List.class);
+        verify(inferenceClient).createTasks(dispatchCaptor.capture());
+        AgentSecureInferenceClient.TaskDispatch dispatch =
+                (AgentSecureInferenceClient.TaskDispatch)
+                        dispatchCaptor.getValue().get(0);
+        assertEquals("AGENT-1", dispatch.agentId());
+        MpcTaskCreateRequest request = dispatch.request();
         assertEquals("TASK-1", request.uid());
         assertEquals("MODEL-1", request.dataId());
         assertEquals(1L, request.part());
         assertEquals(MpcTaskCreateRequest.TaskType.GARNET_INFERENCE,
                 request.taskType());
         assertNull(request.partInfo().get(0).fileID());
+    }
+
+    @Test
+    void downloadsInferenceArtifactAndPersistsItsLocalPath(
+            @TempDir Path tempDir) throws Exception {
+        Mpc mpc = new Mpc();
+        mpc.setUid("MPC-1");
+        mpc.setName("inference");
+        byte[] program = new byte[] {1, 2, 3};
+        when(my.getBase_path()).thenReturn(tempDir.toString());
+        when(inferenceClient.fetchArtifact("AGENT-1", "MODEL-1"))
+                .thenReturn(new AgentSecureInferenceClient.Artifact(
+                        mpc, "inference.mpc", program));
+
+        Mpc result = service.downloadMPC("AGENT-1", "MODEL-1");
+
+        assertEquals(mpc, result);
+        assertArrayEquals(program, Files.readAllBytes(
+                tempDir.resolve("programs/inference.mpc")));
+        assertEquals(Path.of("programs/inference.mpc").toString(),
+                mpc.getPath());
+        verify(mpcMapper).insert(mpc);
     }
 
     @Test
@@ -192,19 +205,6 @@ class SecureInferenceServiceTest {
                 command.options().compileParameters().get("Ring"));
         assertEquals("semi2k-party",
                 command.options().runtimeParameters().get("protocol"));
-    }
-
-    @SuppressWarnings({"rawtypes", "unchecked"})
-    private void stubAgentPost(String uri) throws Exception {
-        when(centerWebClientService.center2AgentWebClient("AGENT-1"))
-                .thenReturn(webClient);
-        when(webClient.post()).thenReturn(requestSpec);
-        when(requestSpec.uri(uri)).thenReturn(requestSpec);
-        doReturn(headersSpec).when(requestSpec).bodyValue(any());
-        when(headersSpec.retrieve()).thenReturn(responseSpec);
-        doReturn(Mono.just(R.success("created")))
-                .when(responseSpec)
-                .bodyToMono(any(ParameterizedTypeReference.class));
     }
 
     private MpcTaskCommand inferenceCommand() {

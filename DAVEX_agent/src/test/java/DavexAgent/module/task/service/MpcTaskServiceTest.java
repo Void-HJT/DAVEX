@@ -1,5 +1,8 @@
 package DavexAgent.module.task.service;
 
+import DavexAgent.module.task.port.CenterMpcResultClient;
+import DavexAgent.module.task.port.CenterTaskNotificationClient;
+import com.alibaba.fastjson.JSONObject;
 import DavexBase.common.My;
 import DavexBase.entity.File;
 import DavexBase.entity.Mpc;
@@ -15,12 +18,15 @@ import DavexBase.task.command.MpcTaskCommand;
 import DavexBase.task.command.ParticipantInput;
 import DavexBase.task.command.TaskOptions;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 
@@ -28,6 +34,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -57,6 +65,12 @@ class MpcTaskServiceTest {
 
     @Mock
     private FileFolderService fileFolderService;
+
+    @Mock
+    private CenterTaskNotificationClient notificationClient;
+
+    @Mock
+    private CenterMpcResultClient resultClient;
 
     @InjectMocks
     private MpcTaskService service;
@@ -142,6 +156,72 @@ class MpcTaskServiceTest {
         verify(garnetService, never()).compile(any());
     }
 
+    @Test
+    void reportsMpcCompileFailureThroughNotificationPort()
+            throws Exception {
+        MpcTask task = task(MpcTask.TaskType.GARNET_MPC);
+        doThrow(new Exception("compile failed"))
+                .when(garnetService).compile(task);
+
+        Exception error = assertThrows(
+                Exception.class,
+                () -> service.preprocess(task));
+
+        assertEquals("compile failed", error.getMessage());
+        verify(notificationClient).sendNotification(
+                "CENTER-1",
+                "APPLICATION-1",
+                "MPC任务编译失败",
+                "MPC任务编译失败\n任务ID: TASK-1\n任务类型: GARNET_MPC\n错误信息: compile failed",
+                "TASK-1",
+                0,
+                "mpc");
+    }
+
+    @Test
+    void uploadsPsiResultAndReportsSuccess(@TempDir Path tempDir)
+            throws Exception {
+        MpcTask task = task(MpcTask.TaskType.GARNET_PSI);
+        JSONObject runtimeParameters = new JSONObject();
+        runtimeParameters.put("PK", "id");
+        task.setRuntimeParameters(runtimeParameters);
+        task.setStatus(MpcTask.Status.FINISHED);
+
+        File input = inputFile();
+        when(my.getBase_path()).thenReturn(tempDir.toString());
+        when(fileMapper.selectById("FILE-1")).thenReturn(input);
+        when(fileFolderService.getFilePath(input, tempDir.toString()))
+                .thenReturn(tempDir.resolve("input.csv").toString());
+        doAnswer(invocation -> {
+            Path output = invocation.getArgument(4);
+            Files.writeString(output, "id\n1001\n");
+            return null;
+        }).when(garnetService).csvQuery(
+                any(), any(), any(), any(), any(Path.class));
+
+        service.psiRun(task);
+
+        ArgumentCaptor<Path> pathCaptor = ArgumentCaptor.forClass(Path.class);
+        ArgumentCaptor<DavexBase.entity.MpcTaskOutput> metadataCaptor =
+                ArgumentCaptor.forClass(DavexBase.entity.MpcTaskOutput.class);
+        verify(resultClient).uploadPsiResult(
+                org.mockito.ArgumentMatchers.eq("CENTER-1"),
+                pathCaptor.capture(),
+                metadataCaptor.capture());
+        assertEquals("TASK-1.csv", pathCaptor.getValue().getFileName().toString());
+        assertEquals("TASK-1", metadataCaptor.getValue().getTaskId());
+        assertEquals("APPLICATION-1", metadataCaptor.getValue().getApplicationId());
+        assertEquals("TASK-1.csv", metadataCaptor.getValue().getName());
+        verify(notificationClient).sendNotification(
+                "CENTER-1",
+                "APPLICATION-1",
+                "PSI任务运行结束",
+                "PSI任务结果保存成功\n任务ID: TASK-1\n任务类型: GARNET_PSI\n运行结果: FINISHED",
+                "TASK-1",
+                1,
+                "psi");
+    }
+
     private void assertParticipantWasSaved() {
         ArgumentCaptor<MpcTaskAgent> participantCaptor =
                 ArgumentCaptor.forClass(MpcTaskAgent.class);
@@ -188,5 +268,16 @@ class MpcTaskServiceTest {
         file.setUid("FILE-1");
         file.setName("input.csv");
         return file;
+    }
+
+    private MpcTask task(MpcTask.TaskType taskType) {
+        MpcTask task = new MpcTask();
+        task.setUid("TASK-1");
+        task.setApplicationId("APPLICATION-1");
+        task.setCenterId("CENTER-1");
+        task.setDataId("FILE-1");
+        task.setPart(1L);
+        task.setTaskType(taskType);
+        return task;
     }
 }

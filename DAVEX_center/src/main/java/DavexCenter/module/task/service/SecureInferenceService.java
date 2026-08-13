@@ -3,7 +3,6 @@ package DavexCenter.module.task.service;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.LinkedHashMap;
@@ -13,14 +12,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.core.io.Resource;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
-import org.springframework.web.reactive.function.client.WebClient;
 
 import DavexBase.common.My;
-import DavexBase.common.R;
 import DavexBase.common.Utils;
 import DavexBase.entity.Mpc;
 import DavexBase.entity.MpcTask;
@@ -31,14 +26,13 @@ import DavexBase.mapper.AgentMapper;
 import DavexBase.mapper.MpcMapper;
 import DavexBase.mapper.MpcTaskAgentMapper;
 import DavexBase.mapper.MpcTaskMapper;
-import DavexBase.service.auth.CenterWebClientService;
 import DavexBase.task.command.MpcTaskCommand;
 import DavexBase.task.command.ParticipantInput;
 import DavexBase.task.command.TaskOptions;
+
 import DavexCenter.module.task.assembler.AgentMpcTaskRequestProjector;
 import DavexCenter.module.task.assembler.MpcTaskCommandAssembler;
-
-import reactor.core.publisher.Mono;
+import DavexCenter.module.task.port.AgentSecureInferenceClient;
 
 @Service
 @ConditionalOnProperty(name = "garnet.enabled", havingValue = "true")
@@ -56,12 +50,11 @@ public class SecureInferenceService {
     @Autowired
     private My my;
     @Autowired
-    private CenterWebClientService centerWebClientService;
+    private AgentSecureInferenceClient inferenceClient;
     private static final Logger logger = LoggerFactory.getLogger(SecureInferenceService.class);
 
     public MpcTask create(MpcTaskCommand command) throws Exception {
-        if (command.taskType()
-                != MpcTaskCommand.TaskType.GARNET_INFERENCE) {
+        if (command.taskType() != MpcTaskCommand.TaskType.GARNET_INFERENCE) {
             throw new Exception("任务类型不匹配");
         }
 
@@ -81,7 +74,8 @@ public class SecureInferenceService {
         // 数据库生成 UID 后同步回命令。
         command = command.withUid(mpcTask.getUid());
 
-        List<Mono<R<?>>> monos = new ArrayList<>();
+        // 收集任务后由通信适配器并发发送，业务层不再操作 WebClient。
+        List<AgentSecureInferenceClient.TaskDispatch> dispatches = new ArrayList<>();
 
         for (ParticipantInput participant : command.participants()) {
             MpcTaskAgent mpcTaskAgent = new MpcTaskAgent();
@@ -91,57 +85,45 @@ public class SecureInferenceService {
             mpcTaskAgent.setCenterId(command.centerId());
             mpcTaskAgentMapper.insert(mpcTaskAgent);
 
-            monos.add(
-                    centerWebClientService
-                            .center2AgentWebClient(participant.agentId())
-                            .post()
-                            .uri("/SecureInference/create")
-                            .bodyValue(
-                                    AgentMpcTaskRequestProjector.toRequest(
-                                            command,
-                                            participant))
-                            .retrieve()
-                            .bodyToMono(new ParameterizedTypeReference<R<?>>() {
-                            }));
+            dispatches.add(new AgentSecureInferenceClient.TaskDispatch(
+                    participant.agentId(),
+                    AgentMpcTaskRequestProjector.toRequest(
+                            command,
+                            participant)));
         }
 
-        Mono.when(monos).block();
+        inferenceClient.createTasks(dispatches);
         return mpcTask;
     }
 
+    /**
+     * 获取安全推理程序，并在本地尚未登记时保存文件和元数据。
+     */
     @Async("customExecutor")
-    public Mpc downloadMPC(String agentId, String fileID) throws Exception {
-        WebClient webClient = centerWebClientService.center2AgentWebClient(agentId);
-        Mpc mpc = webClient.get()
-                .uri(UriBuilder -> UriBuilder.path("/SecureInference/getMpc").queryParam("FileID", fileID)
-                        .build())
-                .retrieve()
-                .bodyToMono(new ParameterizedTypeReference<R<Mpc>>() {
-                }).block().getBody().getData();
+    public Mpc downloadMPC(String agentId, String fileId) throws Exception {
+
+        AgentSecureInferenceClient.Artifact artifact = inferenceClient.fetchArtifact(agentId, fileId);
+        Mpc mpc = artifact.metadata();
+
         if (mpcMapper.selectById(mpc.getUid()) != null) {
             logger.info("MPC文件：{} 已存在", mpc.getUid());
             return mpc;
         }
-        logger.info("开始下载mpc文件：{}", mpc.getUid());
-        Resource resource = webClient.get()
-                .uri(UriBuilder -> UriBuilder.path("/Mpc/download").queryParam("MpcID", mpc.getUid()).build())
-                .retrieve()
-                .bodyToMono(Resource.class)
-                .block();
-        if (resource != null) {
-            Path filePath = Paths.get(my.getBase_path()).resolve("programs").resolve(resource.getFilename());
-            filePath = Utils.resolveFileNameConflict(filePath);
-            try {
-                Files.createDirectories(filePath.getParent());
-                Files.copy(resource.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
-                mpc.setPath(Paths.get("programs").resolve(filePath.getFileName()).toString());
-                mpcMapper.insert(mpc);
-            } catch (Exception e) {
-                e.printStackTrace();
-                throw e;
-            }
 
-        }
+        logger.info("开始下载mpc文件：{}", mpc.getUid());
+
+        Path programsDirectory = Paths.get(my.getBase_path()).resolve("programs");
+        Files.createDirectories(programsDirectory);
+
+        Path filePath = Utils.resolveFileNameConflict(
+                programsDirectory.resolve(artifact.fileName()));
+        Files.write(filePath, artifact.content());
+
+        mpc.setPath(Paths.get("programs")
+                .resolve(filePath.getFileName())
+                .toString());
+        mpcMapper.insert(mpc);
+
         return mpc;
     }
 
@@ -192,10 +174,8 @@ public class SecureInferenceService {
             throw new Exception("Mpc is null");
         }
 
-        Map<String, Object> compileParameters =
-                defaultParameters(mpc.getCompileParameters());
-        Map<String, Object> runtimeParameters =
-                defaultParameters(mpc.getRuntimeParameters());
+        Map<String, Object> compileParameters = defaultParameters(mpc.getCompileParameters());
+        Map<String, Object> runtimeParameters = defaultParameters(mpc.getRuntimeParameters());
 
         if (info.getCompileParameters() != null) {
             compileParameters.putAll(info.getCompileParameters());

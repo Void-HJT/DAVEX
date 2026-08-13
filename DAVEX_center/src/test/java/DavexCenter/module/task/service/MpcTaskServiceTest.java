@@ -1,21 +1,20 @@
 package DavexCenter.module.task.service;
 
-import DavexBase.common.Body;
 import DavexBase.common.My;
-import DavexBase.common.R;
 import DavexBase.entity.Agent;
 import DavexBase.entity.MpcTask;
 import DavexBase.entity.MpcTaskAgent;
 import DavexBase.mapper.AgentMapper;
 import DavexBase.mapper.MpcTaskAgentMapper;
 import DavexBase.mapper.MpcTaskMapper;
-import DavexBase.service.auth.CenterWebClientService;
 import DavexBase.service.programs.GarnetService;
 import DavexBase.task.command.MpcTaskCommand;
 import DavexBase.task.command.ParticipantInput;
 import DavexBase.task.command.TaskOptions;
 import DavexCenter.entity.Input;
 import DavexCenter.mapper.InputMapper;
+import DavexCenter.module.task.port.AgentFileMetadataClient;
+import DavexCenter.module.task.port.AgentMpcTaskClient;
 import org.dsg.davex.contract.mpc.MpcTaskCreateRequest;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -23,9 +22,6 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.web.reactive.function.client.WebClient;
-import reactor.core.publisher.Mono;
 
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -37,7 +33,6 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -60,22 +55,13 @@ class MpcTaskServiceTest {
     private My my;
 
     @Mock
-    private CenterWebClientService centerWebClientService;
+    private AgentMpcTaskClient agentMpcTaskClient;
+
+    @Mock
+    private AgentFileMetadataClient agentFileMetadataClient;
 
     @Mock
     private GarnetService garnetService;
-
-    @Mock
-    private WebClient webClient;
-
-    @Mock
-    private WebClient.RequestBodyUriSpec requestSpec;
-
-    @Mock
-    private WebClient.RequestHeadersSpec<?> headersSpec;
-
-    @Mock
-    private WebClient.ResponseSpec responseSpec;
 
     @InjectMocks
     private MpcTaskService service;
@@ -91,8 +77,6 @@ class MpcTaskServiceTest {
             task.setUid("TASK-1");
             return 1;
         }).when(mpcTaskMapper).insert(any(MpcTask.class));
-        stubAgentPost("/MpcTasks/create");
-
         MpcTask result = service.create(command);
 
         assertNotSame(command, result);
@@ -113,10 +97,12 @@ class MpcTaskServiceTest {
         assertEquals("AGENT-1", participant.getAgentId());
         assertEquals(1L, participant.getPart());
 
-        ArgumentCaptor<Object> bodyCaptor = ArgumentCaptor.forClass(Object.class);
-        verify(requestSpec).bodyValue(bodyCaptor.capture());
-        MpcTaskCreateRequest request =
-                (MpcTaskCreateRequest) bodyCaptor.getValue();
+        ArgumentCaptor<MpcTaskCreateRequest> requestCaptor =
+                ArgumentCaptor.forClass(MpcTaskCreateRequest.class);
+        verify(agentMpcTaskClient).createTask(
+                org.mockito.ArgumentMatchers.eq("AGENT-1"),
+                requestCaptor.capture());
+        MpcTaskCreateRequest request = requestCaptor.getValue();
         assertEquals("TASK-1", request.uid());
         assertEquals("CENTER-1", request.centerId());
         assertEquals("MPC-1", request.mpcId());
@@ -129,7 +115,6 @@ class MpcTaskServiceTest {
     }
 
     @Test
-    @SuppressWarnings({"rawtypes", "unchecked"})
     void updatesPsiCompileParametersWithoutMutatingOriginalCommand()
             throws Exception {
         MpcTaskCommand command = new MpcTaskCommand(
@@ -150,15 +135,8 @@ class MpcTaskServiceTest {
         input.setPath("Input/center.csv");
         when(inputMapper.selectById("CENTER-FILE")).thenReturn(input);
         when(garnetService.csvCount("Input/center.csv")).thenReturn(8L);
-        when(centerWebClientService.center2AgentWebClient("AGENT-1"))
-                .thenReturn(webClient);
-        when(webClient.post()).thenReturn(requestSpec);
-        when(requestSpec.uri(any(java.util.function.Function.class)))
-                .thenReturn(requestSpec);
-        when(requestSpec.retrieve()).thenReturn(responseSpec);
-        doReturn(Mono.just(Body.success(11L, "ok")))
-                .when(responseSpec)
-                .bodyToMono(any(ParameterizedTypeReference.class));
+        when(agentFileMetadataClient.getRowCount("AGENT-1", "FILE-1"))
+                .thenReturn(11L);
 
         MpcTaskCommand updated = service.parameterUpdate(command);
 
@@ -168,19 +146,6 @@ class MpcTaskServiceTest {
         assertEquals(32, updated.options().runtimeParameters().get("batch"));
         assertEquals(1, command.options().compileParameters().get("old"));
         assertSame(command.participants().get(0), updated.participants().get(0));
-    }
-
-    @SuppressWarnings({"rawtypes", "unchecked"})
-    private void stubAgentPost(String uri) throws Exception {
-        when(centerWebClientService.center2AgentWebClient("AGENT-1"))
-                .thenReturn(webClient);
-        when(webClient.post()).thenReturn(requestSpec);
-        when(requestSpec.uri(uri)).thenReturn(requestSpec);
-        doReturn(headersSpec).when(requestSpec).bodyValue(any());
-        when(headersSpec.retrieve()).thenReturn(responseSpec);
-        doReturn(Mono.just(R.success("created")))
-                .when(responseSpec)
-                .bodyToMono(any(ParameterizedTypeReference.class));
     }
 
     private MpcTaskCommand command() {

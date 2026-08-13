@@ -1,31 +1,27 @@
 package DavexAgent.module.task.service;
 
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.core.io.Resource;
-import org.springframework.stereotype.Service;
-import org.springframework.web.reactive.function.client.WebClient;
-
+import DavexAgent.module.task.port.CenterMpcArtifactClient;
 import DavexBase.common.My;
-import DavexBase.common.R;
 import DavexBase.common.Utils;
 import DavexBase.entity.Mpc;
 import DavexBase.mapper.MpcMapper;
-import DavexBase.service.auth.AgentWebClientService;
-import DavexBase.service.programs.GarnetService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
+/**
+ * 负责将远端 MPC 程序包保存到 Agent 本地并登记其存储路径。
+ */
 @Service
 public class MpcService {
+
     @Autowired
-    private AgentWebClientService agentWebClientService;
+    private CenterMpcArtifactClient artifactClient;
 
     @Autowired
     private My my;
@@ -33,35 +29,25 @@ public class MpcService {
     @Autowired
     private MpcMapper mpcMapper;
 
-    private static final Logger logger = LoggerFactory.getLogger(GarnetService.class);
+    private static final Logger logger = LoggerFactory.getLogger(MpcService.class);
 
-    public void downloadMPC(String centerId, String MpcID) throws Exception {
-        WebClient webClient = agentWebClientService.agent2CenterWebClient(centerId);
-        Mpc mpc = webClient.get()
-                .uri(UriBuilder -> UriBuilder.path("/Mpc/select").queryParam("MpcID", MpcID).build()).retrieve()
-                .bodyToMono(new ParameterizedTypeReference<R<Mpc>>() {
-                }).block().getBody().getData();
-        Resource resource = webClient.get()
-                .uri(UriBuilder -> UriBuilder.path("/Mpc/download").queryParam("MpcID", MpcID).build())
-                .retrieve()
-                .bodyToMono(Resource.class)
-                .block();
+    public void downloadMPC(String centerId, String mpcId) throws Exception {
 
-        if (resource != null) {
-            Path filePath = Paths.get(my.getBase_path()).resolve("programs").resolve(resource.getFilename());
-            filePath = Utils.resolveFileNameConflict(filePath);
-            try {
-                Files.createDirectories(filePath.getParent());
-                Files.copy(resource.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
-                mpc.setPath(Paths.get("programs").resolve(filePath.getFileName()).toString());
-                mpcMapper.insert(mpc);
-            } catch (IOException e) {
-                e.printStackTrace();
-                logger.error(e.getMessage());
-            }
-        }
-        logger.info("成功下载" + mpc.getUid() + " : " + mpc.getName());
-        return;
+        CenterMpcArtifactClient.Artifact artifact = artifactClient.fetchArtifact(centerId, mpcId);
+
+        // 业务层只负责本地落盘，不再处理 HTTP 和 Resource。
+        Path programsDirectory = Paths.get(my.getBase_path()).resolve("programs");
+        Files.createDirectories(programsDirectory);
+
+        Path filePath = Utils.resolveFileNameConflict(programsDirectory.resolve(artifact.fileName()));
+        Files.write(filePath, artifact.content());
+
+        Mpc mpc = artifact.metadata();
+        mpc.setPath(Paths.get("programs")
+                .resolve(filePath.getFileName())
+                .toString());
+        mpcMapper.insert(mpc);
+
+        logger.info("成功下载{} : {}", mpc.getUid(), mpc.getName());
     }
-
 }
