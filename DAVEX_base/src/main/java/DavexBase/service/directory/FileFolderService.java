@@ -338,15 +338,13 @@ public class FileFolderService {
         if (folder == null) {
             return Body.error("该文件夹不存在");
         }
-        // 同一 Agent、同一文件夹内不允许出现重名文件。
+        // 同一 Agent、同一文件夹内存在重名文件时覆盖原文件。
         LambdaQueryWrapper<File> queryFileWrapper = Wrappers.<File>lambdaQuery()
                 .eq(File::getAgentId, agentId)
                 .eq(File::getFolderId, folderId)
                 .eq(File::getName, file.getOriginalFilename());
-
-        if (fileMapper.selectOne(queryFileWrapper) != null) {
-            return Body.error("有重名文件");
-        }
+        File existingFile = fileMapper.selectOne(queryFileWrapper);
+        boolean overwrite = existingFile != null;
         // 构建文件夹路径
         List<String> parentFolderIds = new ArrayList<>();
         List<String> path = new ArrayList<>();
@@ -377,12 +375,14 @@ public class FileFolderService {
         }
 
         String fileName = file.getOriginalFilename();
-        //
-        GetMaxUid getMaxUid = new GetMaxUid();
-        //
-        int maxTailNumber = getMaxUid.getFileMaxUid(agentId, fileMapper);
-        String uid = agentId + "-D" + (maxTailNumber + 1);
-        fileRecord.setUid(uid);
+        if (overwrite) {
+            // 覆盖时保留 UID，避免 Center 产生第二条文件记录。
+            fileRecord.setUid(existingFile.getUid());
+        } else {
+            GetMaxUid getMaxUid = new GetMaxUid();
+            int maxTailNumber = getMaxUid.getFileMaxUid(agentId, fileMapper);
+            fileRecord.setUid(agentId + "-D" + (maxTailNumber + 1));
+        }
         // fileRecord.setType(file.getOriginalFilename().substring(file.getOriginalFilename().lastIndexOf(".")));
         fileRecord.setAgentId(agentId);
         fileRecord.setFolderId(folderId);
@@ -394,8 +394,9 @@ public class FileFolderService {
             fileRecord.setType("default"); // 默认/传0时置为default
         }
 
-        fileRecord.setCreateDate(new Timestamp(System.currentTimeMillis()));
-        fileRecord.setLastUpdate(new Timestamp(System.currentTimeMillis()));
+        Timestamp now = new Timestamp(System.currentTimeMillis());
+        fileRecord.setCreateDate(overwrite ? existingFile.getCreateDate() : now);
+        fileRecord.setLastUpdate(now);
 
         // 新增解析逻辑
         if (privacy == 1) {
@@ -537,12 +538,19 @@ public class FileFolderService {
             }
         }
 
-        // 文件先完整落盘，再提交元数据；失败时由协调服务清理本次上传结果。
+        // 新文件原子上传；覆盖时先隔离旧文件，失败则恢复旧文件。
         try (InputStream content = file.getInputStream()) {
-            atomicFileUploadService.upload(
-                    targetPath,
-                    content,
-                    fileRecord);
+            if (overwrite) {
+                atomicFileUploadService.replace(
+                        targetPath,
+                        content,
+                        fileRecord);
+            } else {
+                atomicFileUploadService.upload(
+                        targetPath,
+                        content,
+                        fileRecord);
+            }
         } catch (Exception exception) {
             return Body.error("文件上传失败: " + exception.getMessage());
         }
@@ -551,7 +559,7 @@ public class FileFolderService {
         for (Center center : centerList) {
             try {
                 // 准备 target 参数，可以根据实际情况选择 add, delete 或 update
-                String target = "add";
+                String target = overwrite ? "update" : "add";
                 if (center.getUid().equals(my.getId())) {// 跳过自己
                     continue;
                 }

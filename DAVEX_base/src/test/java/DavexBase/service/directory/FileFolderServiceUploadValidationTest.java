@@ -23,6 +23,7 @@ import org.springframework.mock.web.MockMultipartFile;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.sql.Timestamp;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -34,7 +35,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /**
- * 阶段 5.4 上传入口测试：空文件、同名冲突和远端同步失败均有明确行为。
+ * 阶段 5.4 上传入口测试：空文件、同名覆盖和远端同步失败均有明确行为。
  */
 @ExtendWith(MockitoExtension.class)
 class FileFolderServiceUploadValidationTest {
@@ -68,18 +69,33 @@ class FileFolderServiceUploadValidationTest {
     }
 
     @Test
-    void rejectsSameNameWithoutWritingAnotherFile() throws Exception {
+    void replacesSameNameWhileKeepingUidAndCreationTime() throws Exception {
         Folder folder = folder("FOLDER-1", "input");
         MockMultipartFile upload = file("dataset.csv");
+        Timestamp createdAt = Timestamp.valueOf("2026-07-24 10:00:00");
+        File existing = new File();
+        existing.setUid("AGENT-1-D7");
+        existing.setCreateDate(createdAt);
         when(folderMapper.selectOne(any())).thenReturn(folder);
-        when(fileMapper.selectOne(any())).thenReturn(new File());
+        when(fileMapper.selectOne(any())).thenReturn(existing);
+        when(safeFilePathResolver.resolve(
+                eq(Path.of("/data")), any(), eq("dataset.csv")))
+                .thenReturn(Path.of("/data/input/dataset.csv"));
+        when(centerMapper.selectList(any())).thenReturn(List.of());
 
         Body<String> result = service.uploadFile(
                 "AGENT-1", "FOLDER-1", upload, "/data", 0);
 
-        assertEquals(0, result.getCode());
-        assertTrue(result.getMessage().contains("重名"));
+        assertEquals(1, result.getCode());
         verify(atomicFileUploadService, never()).upload(any(), any(), any());
+        org.mockito.ArgumentCaptor<File> metadata =
+                org.mockito.ArgumentCaptor.forClass(File.class);
+        verify(atomicFileUploadService).replace(
+                eq(Path.of("/data/input/dataset.csv")),
+                any(),
+                metadata.capture());
+        assertEquals("AGENT-1-D7", metadata.getValue().getUid());
+        assertEquals(createdAt, metadata.getValue().getCreateDate());
     }
 
     @Test

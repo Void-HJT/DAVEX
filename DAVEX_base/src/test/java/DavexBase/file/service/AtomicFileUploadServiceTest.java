@@ -13,6 +13,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 
 import static org.junit.jupiter.api.Assertions.assertSame;
@@ -106,6 +107,67 @@ class AtomicFileUploadServiceTest {
         assertSame(diskFailure, actual);
         verify(fileStore, never()).moveAtomically(any(), any());
         verify(metadataRepository, never()).upsert(metadata);
+    }
+
+    @Test
+    void replacesExistingFileAndDeletesBackupAfterMetadataCommit() throws Exception {
+        Path target = Path.of("/data/input.csv");
+        Path previous = Path.of("/data/.input.csv.delete");
+        Path staged = Path.of("/data/.input.csv.upload");
+        InputStream content = new ByteArrayInputStream(new byte[] {2});
+        File metadata = metadata("FILE-1");
+        when(fileStore.stageForDeletion(target)).thenReturn(previous);
+        when(fileStore.writeTemporary(target, content)).thenReturn(staged);
+
+        uploadService.replace(target, content, metadata);
+
+        InOrder order = inOrder(fileStore, metadataRepository);
+        order.verify(fileStore).stageForDeletion(target);
+        order.verify(fileStore).writeTemporary(target, content);
+        order.verify(fileStore).moveAtomically(staged, target);
+        order.verify(metadataRepository).upsert(metadata);
+        order.verify(fileStore).deleteIfExists(previous);
+    }
+
+    @Test
+    void restoresExistingFileWhenReplacementMetadataCommitFails() throws Exception {
+        Path target = Path.of("/data/input.csv");
+        Path previous = Path.of("/data/.input.csv.delete");
+        Path staged = Path.of("/data/.input.csv.upload");
+        InputStream content = new ByteArrayInputStream(new byte[] {2});
+        File metadata = metadata("FILE-1");
+        IllegalStateException failure = new IllegalStateException("database unavailable");
+        when(fileStore.stageForDeletion(target)).thenReturn(previous);
+        when(fileStore.writeTemporary(target, content)).thenReturn(staged);
+        doThrow(failure).when(metadataRepository).upsert(metadata);
+
+        IllegalStateException actual = assertThrows(
+                IllegalStateException.class,
+                () -> uploadService.replace(target, content, metadata));
+
+        assertSame(failure, actual);
+        verify(fileStore).deleteIfExists(target);
+        verify(fileStore).restore(previous, target);
+        verify(fileStore, never()).deleteIfExists(previous);
+    }
+
+    @Test
+    void recreatesMissingFileWhenOnlyMetadataStillExists() throws Exception {
+        Path target = Path.of("/data/input.csv");
+        Path staged = Path.of("/data/.input.csv.upload");
+        InputStream content = new ByteArrayInputStream(new byte[] {2});
+        File metadata = metadata("FILE-1");
+        when(fileStore.stageForDeletion(target))
+                .thenThrow(new NoSuchFileException(target.toString()));
+        when(fileStore.writeTemporary(target, content)).thenReturn(staged);
+
+        uploadService.replace(target, content, metadata);
+
+        InOrder order = inOrder(fileStore, metadataRepository);
+        order.verify(fileStore).stageForDeletion(target);
+        order.verify(fileStore).writeTemporary(target, content);
+        order.verify(fileStore).moveAtomically(staged, target);
+        order.verify(metadataRepository).upsert(metadata);
     }
 
     private File metadata(String uid) {
