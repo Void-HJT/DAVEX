@@ -5,7 +5,8 @@ my:
   ip: ${MY_IP:10.176.34.171}
   name: ${MY_NAME:DAVEX_CENTER}
   description: ${MY_DESCRIPTION:开发环境}
-  base_path: ${MY_BASE_PATH:/home/user/DAVEX/base}
+  # 数据目录必须由部署环境显式提供，禁止默认写入源码目录。
+  base_path: ${MY_BASE_PATH}
   davex_type: ${MY_DAVEX_TYPE:DAVEX_CENTER}
   keycloak_username: ${MY_KEYCLOAK_USERNAME:DAVEX_ADMIN}
   keycloak_password: ${MY_KEYCLOAK_PASSWORD:DAVEX_ADMIN}

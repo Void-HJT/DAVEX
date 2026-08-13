@@ -1,5 +1,6 @@
 package DavexBase.service.directory;
 
+import java.io.InputStream;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
@@ -45,6 +46,9 @@ import DavexBase.common.GetMaxUid;
 import DavexBase.info.DirectoryInfo;
 import DavexBase.info.FileInfo;
 import DavexBase.service.auth.CenterWebClientService;
+import DavexBase.file.service.AtomicFileUploadService;
+import DavexBase.file.service.AtomicFileDeleteService;
+import DavexBase.file.service.SafeFilePathResolver;
 
 @Service
 public class FileFolderService {
@@ -69,6 +73,15 @@ public class FileFolderService {
 
     @Autowired
     private My my;
+
+    @Autowired
+    private AtomicFileUploadService atomicFileUploadService;
+
+    @Autowired
+    private AtomicFileDeleteService atomicFileDeleteService;
+
+    @Autowired
+    private SafeFilePathResolver safeFilePathResolver;
 
     // 使用 Jackson ObjectMapper
     private final ObjectMapper objectMapper = new ObjectMapper();
@@ -315,6 +328,9 @@ public class FileFolderService {
 
     // 上传文件
     public Body<String> uploadFile(String agentId, String folderId, MultipartFile file, String baseDirectory, Integer privacy) {
+        if (file == null || file.isEmpty()) {
+            return Body.error("上传文件不能为空");
+        }
         // 查找是否存在该文件夹
         LambdaQueryWrapper<Folder> queryFolderWrapper = Wrappers.<Folder>lambdaQuery()
                 .eq(Folder::getUid, folderId);
@@ -322,10 +338,12 @@ public class FileFolderService {
         if (folder == null) {
             return Body.error("该文件夹不存在");
         }
-        // 查找是否存在同名文件
+        // 同一 Agent、同一文件夹内不允许出现重名文件。
         LambdaQueryWrapper<File> queryFileWrapper = Wrappers.<File>lambdaQuery()
-                .eq(File::getName, file.getOriginalFilename())
-                .eq(File::getFolderId, folderId);
+                .eq(File::getAgentId, agentId)
+                .eq(File::getFolderId, folderId)
+                .eq(File::getName, file.getOriginalFilename());
+
         if (fileMapper.selectOne(queryFileWrapper) != null) {
             return Body.error("有重名文件");
         }
@@ -334,18 +352,15 @@ public class FileFolderService {
         List<String> path = new ArrayList<>();
         findAllParentFolders(folderId, parentFolderIds, path);
         Collections.reverse(path); // 反转路径列表，确保路径顺序正确
-        StringBuilder fullPathBuilder = new StringBuilder(baseDirectory);
-        for (String folderName : path) {
-            fullPathBuilder.append(java.io.File.separator).append(folderName);
-        }
-        fullPathBuilder.append(java.io.File.separator).append(file.getOriginalFilename());
-        String folderPath = fullPathBuilder.toString();
-        // 将文件存储到实际目录中
-        java.io.File destFile = new java.io.File(folderPath);
+        Path targetPath;
+
         try {
-            org.apache.commons.io.FileUtils.writeByteArrayToFile(destFile, file.getBytes());
-        } catch (IOException e) {
-            return Body.error("文件上传失败: " + e.getMessage());
+            targetPath = safeFilePathResolver.resolve(
+                    Paths.get(baseDirectory),
+                    path,
+                    file.getOriginalFilename());
+        } catch (IllegalArgumentException exception) {
+            return Body.error("文件路径不合法: " + exception.getMessage());
         }
         // 将文件元数据添加到数据库中
         File fileRecord = new File();
@@ -522,8 +537,15 @@ public class FileFolderService {
             }
         }
 
-        // 插入数据库
-        fileMapper.insert(fileRecord);
+        // 文件先完整落盘，再提交元数据；失败时由协调服务清理本次上传结果。
+        try (InputStream content = file.getInputStream()) {
+            atomicFileUploadService.upload(
+                    targetPath,
+                    content,
+                    fileRecord);
+        } catch (Exception exception) {
+            return Body.error("文件上传失败: " + exception.getMessage());
+        }
 
         List<Center> centerList = centerMapper.selectList(new LambdaQueryWrapper<>());
         for (Center center : centerList) {
@@ -625,16 +647,13 @@ public class FileFolderService {
         fullPathBuilder.append(java.io.File.separator).append(file.getName());
         String folderPath = fullPathBuilder.toString();
 
-        fileMapper.delete(queryFileWrapper);
-        // 3.本地实际删除file
-        java.io.File oldFolder = new java.io.File(folderPath);
-        if (oldFolder.exists()) {
-            boolean deleted = oldFolder.delete();
-            if (!deleted) {
-                return Body.error("本地文件删除失败");
-            }
-        } else {
-            return Body.error("本地文件不存在或不是一个目录");
+        // 文件先移入隔离区，再删除元数据；元数据失败时自动恢复文件。
+        try {
+            atomicFileDeleteService.delete(
+                    Paths.get(folderPath),
+                    file);
+        } catch (Exception exception) {
+            return Body.error("文件删除失败: " + exception.getMessage());
         }
 
         List<Center> centerList = centerMapper.selectList(new LambdaQueryWrapper<>());

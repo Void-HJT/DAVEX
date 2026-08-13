@@ -21,3 +21,5 @@ DAVEX_center/read.md
 /AGENTS.md
 /contracts/
 /.agents/
+# 真实运行配置由部署环境维护，仓库只保留 application-template.yml。
+**/src/main/resources/application.yml

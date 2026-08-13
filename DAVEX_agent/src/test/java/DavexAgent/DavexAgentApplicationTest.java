@@ -12,7 +12,10 @@ import DavexBase.service.programs.GarnetService;
 @SpringBootTest(
         classes = DavexAgentApplication.class,
         webEnvironment = SpringBootTest.WebEnvironment.NONE,
-        properties = "spring.config.name=application-template"
+        properties = {
+                "spring.config.name=application-template",
+                "my.base_path=${java.io.tmpdir}/davex-agent-test-data"
+        }
 )
 class DavexAgentApplicationTest {
 
